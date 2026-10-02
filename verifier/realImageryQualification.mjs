@@ -6,6 +6,9 @@ import { WORLD_VIEW_REALISM_RIGHTS, evaluateWorldViewRealismAdmission,
 // ignored: only the existing publication/admission owner can release a source.
 export function describeDetachedRealImageryReceipt(receipt) {
   const manifest = receipt?.manifest
+  const recordedDay = manifest?.capture?.start
+  const day = typeof recordedDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(recordedDay)
+    ? new Date(`${recordedDay}T00:00:00Z`) : null
   if (receipt?.schema !== 'mip.real-imagery-consumer-receipt.v1'
     || receipt.status !== 'bounded-derivative-bytes-verified'
     || receipt.derivativePixelsVerifiedLocally !== true || receipt.metadataXmlVerifiedLocally !== true
@@ -18,6 +21,13 @@ export function describeDetachedRealImageryReceipt(receipt) {
     || receipt.packageBytes + receipt.decodedRgbaBytes > receipt.resourceCeilingBytes
     || manifest?.schema !== 'mip.real-imagery-derivative.v1'
     || typeof manifest.sourceId !== 'string' || !manifest.sourceId
+    || !/^[a-f0-9]{64}$/.test(manifest.metadata?.sha256 ?? '')
+    || !Array.isArray(manifest.metadata?.xmlBindings)
+    || !['attribution', 'use_constraints'].every(id => manifest.metadata.xmlBindings.some(field => field?.id === id
+      && typeof field.text === 'string' && field.text.trim() && typeof field.path === 'string' && field.path.startsWith('./')))
+    || !['EPSG:3753', 'EPSG:4326'].includes(manifest.derivation?.targetCrs)
+    || manifest.capture?.precision !== 'day' || !day || !Number.isFinite(day.getTime())
+    || day.toISOString().slice(0, 10) !== recordedDay
     || manifest.evidencePoint?.synthetic !== true || manifest.evidencePoint?.datum !== 'unknown'
     || manifest.evidencePoint?.registered !== false) {
     return { status: 'refused', reason: 'invalid-detached-receipt', source: null, applicationAdmitted: false }

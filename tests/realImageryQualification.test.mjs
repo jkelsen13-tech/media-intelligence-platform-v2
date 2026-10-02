@@ -59,3 +59,14 @@ test('supplied admission booleans never grant application admission or rights', 
   assert.equal(result.source.rights.publicWeb, false)
   assert.deepEqual(result.source.admission, { approved: false, reference: null })
 })
+
+test('malformed nested metadata, missing derivative and invalid capture day refuse without throwing', () => {
+  assert.equal(describeDetachedRealImageryReceipt(null).status, 'refused')
+  assert.equal(describeDetachedRealImageryReceipt({}).status, 'refused')
+  for (const edit of [r => { r.manifest.metadata = null }, r => { r.manifest.metadata.xmlBindings = {} },
+    r => { delete r.manifest.derivation }, r => { r.manifest.capture.start = '2023-02-30' },
+    r => { r.manifest.capture.start = '2023-03-07T00:00:00Z' }]) {
+    const input = receipt(); edit(input)
+    assert.equal(describeDetachedRealImageryReceipt(input).status, 'refused')
+  }
+})
