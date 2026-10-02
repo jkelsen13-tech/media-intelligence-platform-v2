@@ -16,9 +16,11 @@ begin
       'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'options',c.reloptions,
       'definition',case when c.relkind='v' then pg_get_viewdef(c.oid,true) else null end,
       'columns',(select jsonb_agg(jsonb_build_object('name',a.attname,'type',format_type(a.atttypid,a.atttypmod),
-        'not_null',a.attnotnull,'acl',a.attacl::text) order by a.attnum) from pg_attribute a
+        'not_null',a.attnotnull,'acl',a.attacl::text,
+        'default',(select pg_get_expr(d.adbin,d.adrelid) from pg_attrdef d where d.adrelid=a.attrelid and d.adnum=a.attnum)) order by a.attnum) from pg_attribute a
         where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),
       'constraints',(select coalesce(jsonb_agg(pg_get_constraintdef(x.oid) order by x.conname),'[]') from pg_constraint x where x.conrelid=c.oid),
+      'indexes',(select coalesce(jsonb_agg(pg_get_indexdef(i.indexrelid) order by i.indexrelid::regclass::text),'[]') from pg_index i where i.indrelid=c.oid),
       'policies',(select coalesce(jsonb_agg(jsonb_build_object('name',p.polname,'cmd',p.polcmd,'roles',p.polroles,
         'using',pg_get_expr(p.polqual,p.polrelid),'check',pg_get_expr(p.polwithcheck,p.polrelid)) order by p.polname),'[]') from pg_policy p where p.polrelid=c.oid),
       'triggers',(select coalesce(jsonb_agg(jsonb_build_object('name',t.tgname,'enabled',t.tgenabled,
@@ -29,14 +31,25 @@ begin
         'public.event_articles'::regclass,'public.events'::regclass,'public.citations'::regclass,
         'mip_private.reader_claim_surfaces'::regclass,'public.news_detail_public'::regclass,
         'public.comparison_public'::regclass,'public.authors_public'::regclass])),
+    'schemas',(select jsonb_agg(jsonb_build_object('name',n.nspname,'owner',pg_get_userbyid(n.nspowner),'acl',n.nspacl::text) order by n.nspname)
+      from pg_namespace n where n.nspname in ('public','mip_private','evidence_pipeline')),
     'roles',(select jsonb_agg(jsonb_build_object('name',r.rolname,'superuser',r.rolsuper,'bypass_rls',r.rolbypassrls,
       'memberships',(select coalesce(jsonb_agg(p.rolname order by p.rolname),'[]') from pg_roles p
         where p.oid<>r.oid and pg_has_role(r.oid,p.oid,'MEMBER'))) order by r.rolname)
       from pg_roles r where r.rolname in ('anon','authenticated','service_role')),
     'new_objects',(select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by n.nspname,c.relname),'[]')
-      from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_private'
+      from pg_class c join pg_namespace n on n.oid=c.relnamespace where (n.nspname='mip_private'
       and c.relname in ('reviewed_public_article_versions','reviewed_public_article_evidence','reviewed_public_stories',
         'reviewed_public_story_versions','reviewed_public_story_members','public_reviewed_article_versions','public_reviewed_article_evidence'))
+        or (n.nspname='public' and c.relname='news_reviewed_articles_public')),
+    'function_names',(select coalesce(jsonb_agg(jsonb_build_object('identity',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),
+      'acl',p.proacl::text,'definition',pg_get_functiondef(p.oid)) order by p.oid::regprocedure::text),'[]')
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where (n.nspname='mip_private' and p.proname in ('public_article_evidence_is_visible','public_article_version_is_visible',
+        'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
+        'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
+      or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1',
+        'read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')))
   ) into actual;
   -- END REVIEWED VERSION BASELINE
   if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'reviewed public version catalog baseline missing or drifted'; end if;
@@ -391,7 +404,8 @@ end $$;
 -- Ordinary News list/detail fields come from this same reviewed snapshot. A
 -- missing mapping or newly ineligible head is unavailable; no older fallback.
 create view public.news_reviewed_articles_public with (security_barrier=true,security_invoker=false) as
-select v.article_id as id,v.public_version_id,v.source_snapshot->>'title' as title,v.source_snapshot->>'url' as url,
+select v.article_id as id,v.public_version_id,case when v.admission_kind='reviewed_proposition' then 'proposition' else 'source_report' end as admission,
+  v.source_snapshot->>'title' as title,v.source_snapshot->>'url' as url,
   v.source_snapshot->>'summary' as summary,v.source_snapshot->>'outlet' as outlet,v.source_snapshot->>'feed' as feed,
   (v.source_snapshot->>'published_at')::timestamptz as published_at,(v.source_snapshot->>'fetched_at')::timestamptz as fetched_at,
   (v.source_snapshot->>'monoculture')::boolean as monoculture,(v.source_snapshot->>'unattributed')::boolean as unattributed,
@@ -437,11 +451,21 @@ do $acl$ declare t text; f record; begin
     execute format('create trigger reviewed_no_rewrite before update or delete on mip_private.%I for each row execute function evidence_pipeline.reject_history_mutation()',t);
     execute format('create trigger reviewed_no_truncate before truncate on mip_private.%I for each statement execute function evidence_pipeline.reject_history_mutation()',t);
   end loop;
-  for f in select p.oid::regprocedure signature,p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where (n.nspname='mip_private' and p.proname in ('public_article_evidence_is_visible','public_article_version_is_visible',
-      'bind_reviewed_public_article_version','require_reviewed_public_article_version','public_story_version_is_visible',
-      'bind_reviewed_public_story_version','reviewed_public_article_payload','reviewed_public_story_payload'))
-      or (n.nspname='public' and p.proname in ('read_reviewed_public_article_v1','read_reviewed_public_story_v1','read_reviewed_public_story_for_article_v1','read_reviewed_public_stories_for_article_v1','read_reviewed_public_story_directory_v1')) loop
+  for f in select p.oid::regprocedure signature,p.proname from pg_proc p
+    where p.oid=any(array[
+      'mip_private.public_article_evidence_is_visible(uuid,uuid)'::regprocedure,
+      'mip_private.public_article_version_is_visible(uuid)'::regprocedure,
+      'mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text)'::regprocedure,
+      'mip_private.require_reviewed_public_article_version(uuid,uuid,text)'::regprocedure,
+      'mip_private.public_story_version_is_visible(uuid)'::regprocedure,
+      'mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text)'::regprocedure,
+      'mip_private.reviewed_public_article_payload(uuid)'::regprocedure,
+      'mip_private.reviewed_public_story_payload(uuid)'::regprocedure,
+      'public.read_reviewed_public_article_v1(uuid,uuid)'::regprocedure,
+      'public.read_reviewed_public_story_v1(uuid,uuid)'::regprocedure,
+      'public.read_reviewed_public_story_for_article_v1(uuid)'::regprocedure,
+      'public.read_reviewed_public_stories_for_article_v1(uuid)'::regprocedure,
+      'public.read_reviewed_public_story_directory_v1(uuid,integer)'::regprocedure]) loop
     execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
     if f.proname like 'read_reviewed_public_%' then execute format('grant execute on function %s to anon,authenticated,service_role',f.signature);
     elsif f.proname in ('public_article_evidence_is_visible','public_article_version_is_visible','public_story_version_is_visible',

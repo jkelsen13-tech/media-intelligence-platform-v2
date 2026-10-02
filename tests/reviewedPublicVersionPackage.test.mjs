@@ -10,6 +10,9 @@ test('unapplied install requires exact fresh owner catalog; guarded empty rollba
   const db=await PGlite.create()
   t.after(()=>db.close())
   await applyFoundation(db)
+  await db.exec("create role unrelated_publication_owner;create function public.read_reviewed_public_story_v1(p_unrelated text) returns text language sql immutable security invoker as $$select 'unrelated-overload'::text$$;alter function public.read_reviewed_public_story_v1(text) owner to unrelated_publication_owner;revoke all on function public.read_reviewed_public_story_v1(text) from public;grant execute on function public.read_reviewed_public_story_v1(text) to authenticated with grant option")
+  const sentinel=async()=>(await db.query("select pg_get_userbyid(proowner) owner,proacl::text acl,pg_get_functiondef(oid) definition from pg_proc where oid='public.read_reviewed_public_story_v1(text)'::regprocedure")).rows[0]
+  const originalSentinel=await sentinel()
   const sql=await readFile(REVIEWED_VERSION_PROPOSAL,'utf8')
   await assert.rejects(db.exec(sql),/catalog baseline missing or drifted/)
   await db.exec('rollback;set search_path=pg_catalog')
@@ -20,6 +23,7 @@ test('unapplied install requires exact fresh owner catalog; guarded empty rollba
   await db.exec('rollback')
   assert.equal((await db.query("select to_regclass('mip_private.reviewed_public_stories') name")).rows[0].name,null)
   await installReviewedPublicVersionFixture(db)
+  assert.deepEqual(await sentinel(),originalSentinel)
   await db.exec('set search_path=pg_catalog')
   const installed=(await db.query(await reviewedVersionInstalledCatalogQuery())).rows[0].jsonb_build_object
   const rollback=await readFile(new URL('../supabase/source-proposals/public-reviewed-versions-v1.rollback.sql',import.meta.url),'utf8')
@@ -43,6 +47,7 @@ test('unapplied install requires exact fresh owner catalog; guarded empty rollba
     return result
   }
   assert.deepEqual(await canonicalCatalog(restored),await canonicalCatalog(original))
+  assert.deepEqual(await sentinel(),originalSentinel)
 })
 
 test('rollback never deletes admitted history or cascades other owner dependencies',async t=>{

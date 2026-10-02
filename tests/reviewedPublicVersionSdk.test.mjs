@@ -54,6 +54,7 @@ test('actual installed SDK executes reviewed native list/detail/Story projection
     assert.equal(page.articles[0].title,f.article.title)
     assert.equal(detail.public_version.capture_id,f.first.capture_id)
     assert.equal(detail.public_version.capture_hash,f.first.capture_hash)
+    assert.equal(await f.scalar('select admission from public.news_reviewed_articles_public where id=$1',[f.first.article_id]),'proposition')
     assert.equal(detail.claims[0].span_start,2)
     assert.deepEqual(detail.citations,[])
     assert.deepEqual(detail.evidenceRecords,[])
