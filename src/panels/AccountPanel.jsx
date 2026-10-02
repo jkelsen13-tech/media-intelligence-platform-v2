@@ -11,8 +11,8 @@ import {
   sendMagicLink,
   signOut,
   useAuthSession,
-  loadOwnProfile,
-  parseAuthRedirectError,
+  useOwnProfile,
+  authRedirectError,
   clearAuthRedirectError,
 } from '../lib/auth.js'
 import '../styles/auth.css'
@@ -23,24 +23,18 @@ export default function AccountPanel({ onClose }) {
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState(null)
   const [redirectError, setRedirectError] = useState(null)
-  const [profile, setProfile] = useState(null)
+  const profile = useOwnProfile(user?.id)
+  const [logoutBusy, setLogoutBusy] = useState(false)
+  const [logoutError, setLogoutError] = useState(null)
 
   // Expired/invalid magic link comes back as a URL-hash error on load.
   useEffect(() => {
-    const err = parseAuthRedirectError(window.location.hash)
+    const err = authRedirectError()
     if (err) {
       setRedirectError(err)
       clearAuthRedirectError()
     }
   }, [])
-
-  useEffect(() => {
-    if (!user) {
-      setProfile(null)
-      return
-    }
-    loadOwnProfile(user.id).then(setProfile)
-  }, [user])
 
   const handleSend = async (e) => {
     e.preventDefault()
@@ -58,7 +52,15 @@ export default function AccountPanel({ onClose }) {
   }
 
   const handleLogout = async () => {
-    await signOut()
+    if (logoutBusy) return
+    setLogoutBusy(true)
+    setLogoutError(null)
+    const result = await signOut()
+    setLogoutBusy(false)
+    if (result?.error) {
+      setLogoutError('Could not log out. Please try again.')
+      return
+    }
     setStatus('idle')
     setEmail('')
   }
@@ -96,9 +98,10 @@ export default function AccountPanel({ onClose }) {
             {profile?.display_name && (
               <p className="sheet-body muted">{user.email}</p>
             )}
-            <button type="button" className="auth-logout-btn" onClick={handleLogout}>
-              Log out
+            <button type="button" className="auth-logout-btn" disabled={logoutBusy} onClick={handleLogout}>
+              {logoutBusy ? 'Logging out…' : 'Log out'}
             </button>
+            {logoutError && <p className="sheet-body auth-error" role="alert">{logoutError}</p>}
           </div>
         ) : (
           <form className="auth-form" onSubmit={handleSend}>

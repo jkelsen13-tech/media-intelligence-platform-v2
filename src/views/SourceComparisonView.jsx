@@ -4,6 +4,7 @@ import { mipBackend } from '../lib/mipBackend.js'
 import { comparisonInvestigationScope } from '../lib/comparisonInvestigationScope.js'
 import { filterEventsByTitle } from '../lib/listFilters.js'
 import { formatWorkspaceDate } from '../lib/workspacePresentation.js'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 import WorkspaceAvailability from '../components/WorkspaceAvailability'
 import './sourcecomparison.css'
 
@@ -108,9 +109,9 @@ function SurfaceRow({ surface, onOpenArticle }) {
         {surface.publishedAt && (
           <span className="sc-meta">Source publication: {formatWorkspaceDate(surface.publishedAt)}</span>
         )}
-        {surface.url && (
-          <a className="sc-src" href={surface.url} target="_blank" rel="noreferrer">Article ↗</a>
-        )}
+        {safeExternalHttpUrl(surface.url) ? (
+          <a className="sc-src" href={safeExternalHttpUrl(surface.url)} target="_blank" rel="noreferrer">Article ↗</a>
+        ) : surface.url ? <span className="sc-meta">Article locator (not opened as a link): {surface.url}</span> : null}
         {(surface.articleId || surface.url) && onOpenArticle && (
           <button
             type="button"
@@ -186,9 +187,9 @@ function ClaimCard({ claim, onOpenArticle }) {
         <p className="sc-meta">
           Primary evidence:{' '}
           {claim.evidenceLinks.map((l) => (
-            <a key={l.id} className="sc-src" href={l.evidence_url} target="_blank" rel="noreferrer">
+            safeExternalHttpUrl(l.evidence_url) ? <a key={l.id} className="sc-src" href={safeExternalHttpUrl(l.evidence_url)} target="_blank" rel="noreferrer">
               {l.evidence_type.replace(/_/g, ' ')} ↗
-            </a>
+            </a> : <span key={l.id} className="sc-meta">{l.evidence_type.replace(/_/g, ' ')} locator unavailable</span>
           ))}
         </p>
       )}

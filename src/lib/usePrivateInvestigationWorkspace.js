@@ -185,10 +185,10 @@ export function usePrivateInvestigationWorkspace({
   }, [invalidateAllRequests])
 
   useEffect(() => {
-    if (userRef.current === userId) return
+    if (userRef.current === userId && !sessionLoading) return
     userRef.current = userId
     clearPrivateState()
-  }, [userId, clearPrivateState])
+  }, [userId, sessionLoading, clearPrivateState])
 
   const loadCatalog = useCallback(async ({ after = null, append = false, refresh = false } = {}) => {
     if (sessionLoading || !userId || !client) return
@@ -1356,13 +1356,17 @@ export function usePrivateInvestigationWorkspace({
     applyCatalog((current) => ({ ...current, activeSection }))
   }, [applyCatalog])
 
+  // Withhold the previous identity's records on the very first render of a
+  // session change, before passive effects invalidate requests and state.
+  const visibleState = sessionLoading || !userId || userRef.current !== userId
+    ? emptyPrivateWorkspaceState() : state
   const status = useMemo(
-    () => statusFromSession({ sessionLoading, userId, state }),
-    [sessionLoading, userId, state],
+    () => statusFromSession({ sessionLoading, userId, state: visibleState }),
+    [sessionLoading, userId, visibleState],
   )
 
   return {
-    state,
+    state: visibleState,
     status,
     userId,
     sessionLoading,

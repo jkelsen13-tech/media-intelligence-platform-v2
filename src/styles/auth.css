@@ -83,11 +83,12 @@
 }
 
 .auth-send-btn:hover:not(:disabled),
-.auth-logout-btn:hover {
+.auth-logout-btn:hover:not(:disabled) {
   background: rgba(128, 128, 128, 0.15);
 }
 
-.auth-send-btn:disabled {
+.auth-send-btn:disabled,
+.auth-logout-btn:disabled {
   opacity: 0.6;
   cursor: default;
 }

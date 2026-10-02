@@ -37,6 +37,21 @@ export function readViteSupabaseAnonKey() {
   }
 }
 
+// This validates browser configuration, not JWT authenticity or user access.
+// Privileged Supabase keys must never reach createClient in a public bundle.
+export function isSafeSupabaseBrowserKey(raw) {
+  if (typeof raw !== 'string' || !raw || /[\s\u0000-\u001f\u007f]/.test(raw)) return false
+  if (/^sb_publishable_[A-Za-z0-9_-]+$/.test(raw)) return true
+  const parts = raw.split('.')
+  if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) return false
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return payload?.role === 'anon'
+  } catch {
+    return false
+  }
+}
+
 /**
  * Allowlist V2 only.
  * @returns {{ ok: true, url: string, reason: null } | { ok: false, url: null, reason: 'missing' | 'empty' | 'origin_not_v2' }}

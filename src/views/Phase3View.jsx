@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 import './phase3.css'
 
 // Phase 3 (02C) internal closed-beta view — legal cases + policy lifecycles.
@@ -60,11 +61,11 @@ function EvidenceRow({ row }) {
       )}
       <p className="p3-ev-desc">{row.description}</p>
       {row.source_passage && <blockquote className="p3-ev-passage">{row.source_passage}</blockquote>}
-      {row.source_url && (
-        <a className="p3-ev-src" href={row.source_url} target="_blank" rel="noreferrer">
+      {safeExternalHttpUrl(row.source_url) ? (
+        <a className="p3-ev-src" href={safeExternalHttpUrl(row.source_url)} target="_blank" rel="noreferrer">
           Source ↗
         </a>
-      )}
+      ) : row.source_url ? <p className="p3-ev-meta">Source locator (not opened as a link): {row.source_url}</p> : null}
       {row.authentication_state && (
         <p className="p3-ev-meta">Authentication: {row.authentication_state}</p>
       )}
@@ -164,9 +165,9 @@ function LifecycleStrip({ events, emptyCopy }) {
                 <p className="p3-marker-copy">Outcome evidence missing — labeled missing, not failure or contradiction.</p>
               )}
               {e.source_passage && <blockquote className="p3-ev-passage">{e.source_passage}</blockquote>}
-              {typeof e.source_locator?.url === 'string' && /^https:\/\//.test(e.source_locator.url) && (
-                <a className="p3-ev-src" href={e.source_locator.url} target="_blank" rel="noreferrer">Official source ↗</a>
-              )}
+              {safeExternalHttpUrl(e.source_locator?.url) ? (
+                <a className="p3-ev-src" href={safeExternalHttpUrl(e.source_locator.url)} target="_blank" rel="noreferrer">Official source ↗</a>
+              ) : e.source_locator?.url ? <p className="p3-ev-meta">Source locator (not opened as a link): {e.source_locator.url}</p> : null}
               {e.method_version && <p className="p3-ev-meta">Method: {e.method_version}</p>}
               {e.remaining_uncertainty && (
                 <p className="p3-ev-meta">Remaining uncertainty: {e.remaining_uncertainty}</p>

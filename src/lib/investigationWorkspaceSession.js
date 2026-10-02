@@ -3,6 +3,7 @@
 
 import { investigationWorkspacePanels } from './investigationWorkspaceClient.js'
 import { formatWorkspaceDate } from './workspacePresentation.js'
+import { safeExternalHttpUrl } from './externalUrls.js'
 
 export const PRIVATE_INVESTIGATION_VIEW = 'investigations'
 export const INVESTIGATION_WORKSPACE_PANELS = Object.freeze([
@@ -518,14 +519,5 @@ export function resolveWorkspaceMetadata(bundle, reference) {
 }
 
 export function safeWorkspaceHttpUrl(raw) {
-  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 2048) return null
-  if (!/^https?:\/\//i.test(raw) || /[\s\\]/.test(raw)) return null
-  try {
-    const url = new URL(raw)
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
-    if (url.username || url.password) return null
-    return url.href
-  } catch {
-    return null
-  }
+  return safeExternalHttpUrl(raw)
 }
