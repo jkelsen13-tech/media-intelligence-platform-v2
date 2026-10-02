@@ -1,3 +1,4 @@
+import {assertMountedWorldViewExploreStack} from './assertWorldViewExploreStack.mjs'
 import {spawnSync} from 'node:child_process'
 import {cameraStatesEqual} from '../src/lib/worldViewCameraState.js'
 // Synthetic full-App execution only. No live reader/auth or source qualification.
@@ -8,6 +9,7 @@ import {PROJECTION_FIXTURE_COLUMNS,makeClusteringContractRows,clusteringGraphCon
 const require=createRequire('/tmp/mip-browser/package.json'),{chromium}=require('playwright')
 const candidate=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
 const scenario=process.env.MIP_INTEGRATION_SCENARIO ?? 'city'
+const evidenceDir=process.env.MIP_INTEGRATION_EVIDENCE_DIR ?? '/workspace/mip-oct02/evidence/lane1-2'
 const template={...Object.fromEntries(PROJECTION_FIXTURE_COLUMNS.map(k=>[k,null])),projection_contract_version:'v1',mip_object_id:'synthetic',subject_graph_node_id:'synthetic',revision_id:'synthetic',revision_ordinal:1,revision_known_at_utc:'2025-12-01T00:00:00Z',review_effective_at_utc:'2026-01-01T12:00:00Z',release_effective_at_utc:'2025-12-01T00:00:00Z',precision_class:scenario==='facility'?'facility':'city',object_type:'event',spatial_role:'event',geometry_status:'coarsened_to_precision_class',release_state:'released',review_state:'reviewed',valid_from_utc:'2026-01-01T00:00:00Z',valid_to_utc:'2026-01-02T00:00:00Z',display_geometry:{type:'Point',coordinates:[-81.7,41.4]},evidence_refs:[]}
 const rows=makeClusteringContractRows(template,'US-local',{count:12}),graph=clusteringGraphContractRows(rows)
 const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--enable-unsafe-swiftshader']})
@@ -93,19 +95,12 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
   const summary=exploreChooser.locator('summary');await summary.focus();await summary.press('Space')
  }
  assert.equal(await exploreChooser.evaluate(details=>details.open),false,'original chooser summary remains keyboard closable')
- const controls=page.getByRole('navigation',{name:'Explore controls',exact:true})
- for(const name of ['Interact','Options']){
-  const button=controls.getByRole('button',{name,exact:true})
-  assert.ok(await button.evaluate(node=>{const r=node.getBoundingClientRect();return node.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}),'collapsed chooser must not intercept '+name)
-  await button.click()
-  if(name==='Interact')await controls.getByRole('button',{name:'Done — scroll',exact:true}).click()
-  else {assert.equal(await button.getAttribute('aria-expanded'),'true');await button.click()}
- }
+ await assertMountedWorldViewExploreStack(page)
 
  if(scenario!=='atlas'){
   const tabs=page.getByRole('tablist',{name:'Selected record modules',exact:true})
   for(const tab of ['Context','Sources','Evidence'])await tabs.getByRole('tab',{name:tab,exact:true}).click()
-  await page.locator('.wv-explore-map').screenshot({path:`/workspace/mip-oct02/evidence/lane1-2/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
+  await page.locator('.wv-explore-map').screenshot({path:`${evidenceDir}/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
   await page.getByRole('button',{name:'Open inspector',exact:true}).click()
   assert.ok(await page.locator('.wv-explore-context-body:not([hidden])').count(),'explicit inspector remains reachable after chooser collapse')
   const nativeHeight=await page.locator('.cesium-widget canvas').evaluate(canvas=>canvas.clientHeight)
@@ -124,10 +119,10 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
 
  assert.deepEqual(errors,[])
  // Existing read-only HEAD count queries are mocked; other non-GETs are aborted.
- const screenshot=`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
+ const screenshot=`${evidenceDir}/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
  await page.screenshot({path:screenshot,fullPage:true})
  receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
  await page.close()
 }
-await writeFile(`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
+await writeFile(`${evidenceDir}/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
 }finally{await browser.close()}

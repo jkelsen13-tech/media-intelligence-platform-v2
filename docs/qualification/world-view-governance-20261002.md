@@ -1,6 +1,6 @@
 # World View resource governance — October 2
 
-Base: dde42b88b52c43f253c1b7fd8d4fab79371f0a01. This provider-independent adapter extends existing worldViewResourcePolicy; it activates no provider and changes no App wiring. Public GET diagnosis was CONNECT 403 before PostgREST, not evidence of a reader or RLS fault.
+Base: dde42b88b52c43f253c1b7fd8d4fab79371f0a01. This provider-independent adapter extends existing worldViewResourcePolicy; it activates no provider. The original detached packet changed no App wiring; the deb45e2 full-App integration now opens product sessions, forwards visibility/Explore transitions, and exposes polled governance snapshots through the browser usage probe. Public GET diagnosis was CONNECT 403 before PostgREST, not evidence of a reader or RLS fault.
 
 ## Integration contract
 
@@ -20,4 +20,4 @@ External monthly preferences are $100 preferred/$200 hard, excluding Supabase; t
 
 ## Qualification
 
-`node --test tests/worldViewResourceGovernance.test.mjs tests/worldViewResourcePolicy.test.mjs` covers spending refusal, parallel pending reservation, stale settled allowance, hard cap, unknown estimate, hidden/idle lifecycle, late receipt, expiry, caller mutation, token replay, bounded retention, actual unit overrun and disposed authority immutability, alongside existing policy tests. Full App wiring and authenticated backend enforcement remain separate integration gates.
+`node --test tests/worldViewResourceGovernance.test.mjs tests/worldViewResourcePolicy.test.mjs` covers spending refusal, parallel pending reservation, stale settled allowance, hard cap, unknown estimate, hidden/idle lifecycle, late receipt, expiry, caller mutation, token replay, bounded retention, actual unit overrun and disposed authority immutability, alongside existing policy tests. Session/visibility/poll/probe wiring is active in WorldMapCanvas. Authority, reservation/settlement, interaction forwarding, drained lifecycle effects and authenticated backend enforcement remain unwired. Native cheap-renderer activity is independently adapter-owned; polling an effect is not evidence of paid resource disposal.
