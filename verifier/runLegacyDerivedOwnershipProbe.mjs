@@ -7,7 +7,7 @@ import { build } from 'esbuild'
 import { createClient } from '@supabase/supabase-js'
 import { PGlite } from '@electric-sql/pglite'
 import { applyFoundation } from '../scripts/mipConsolidationRestore.mjs'
-import { createNewsBackend } from '../src/lib/newsBackend.js'
+import { loadArticleDetail as historicalArticleDetail } from '../tests/fixtures/legacyReaderBeforeVersions-2026-10-02.mjs'
 
 const ARTICLE = '10000000-0000-4000-8000-000000000011'
 const ALICE = '20000000-0000-4000-8000-000000000011'
@@ -19,8 +19,11 @@ const identifier = value => { assert.match(value, /^[a-z_][a-z0-9_]*$/i); return
 const hash = value => createHash('sha256').update(value).digest('hex')
 const digestArticle = article => hash(JSON.stringify({ title:article.title,summary:article.summary,body_text:article.body_text,source_status:article.source_status }))
 
-async function actualExtractor() {
-  const source=await readFile(LEGACY,'utf8')
+async function predecessorExtractor() {
+  const current=await readFile(LEGACY,'utf8')
+  const predecessor=await readFile(new URL('../tests/fixtures/legacyExtractBatchBeforeAtomic-2026-10-02.ts',import.meta.url),'utf8')
+  const start=current.indexOf('async function extractBatch('),end=current.indexOf('// Review-gated candidate pass.',start)
+  const source=current.slice(0,start)+predecessor+current.slice(end)
   const compiled=await build({stdin:{contents:source+'\nexport {extractBatch,EntityResolver};\n',resolveDir:new URL('../supabase/functions/backfill-legacy/',import.meta.url).pathname,loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,
     plugins:[{name:'no-live-entrypoint',setup(b){b.onResolve({filter:/^https:/},()=>({path:'sdk',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const createClient=()=>{throw Error("live entrypoint prohibited")}',loader:'js'}))}}]})
   const prior=globalThis.Deno
@@ -123,7 +126,7 @@ async function fixture({writer='postgres',body=SUMMARY,promotion=false,sourceRev
     }catch(error){return new Response(JSON.stringify({code:error.code??'fixture_transport_error',message:error.message}),{status:error.code==='42501'?403:400,headers})}
   }
   const clients=Object.fromEntries(['postgres','service_role','anon'].map(role=>[role,createClient('https://legacy-derived.example.invalid','sb_publishable_fixture',{accessToken:async()=>`fixture-${role}`,global:{fetch:forRole(role)},realtime:{transport:class{constructor(){throw Error('fixture websocket forbidden')}}}})]))
-  reader=createNewsBackend(clients.anon)
+  reader={loadArticleDetail:id=>historicalArticleDetail(id,{supabaseClient:clients.anon})}
   return {db,clients,client:clients[writer],reader,requests,executed,events,capture,currentArticle,get atPromotion(){return atPromotion},close:()=>db.close()}
 }
 
@@ -150,7 +153,7 @@ async function installNewUrlOwnerFixture(db){
 }
 
 export async function runLegacyDerivedOwnershipProbe({receiptPath}={}){
-  const actual=await actualExtractor(),cases=[]
+  const actual=await predecessorExtractor(),cases=[]
   const check=async(name,options,work)=>{const f=await fixture(options);try{const result=await work(f);cases.push({name,status:'PASS',...result,requests:f.requests,executed_sql:f.executed,events:f.events})}finally{await f.close()}}
   const extract=async f=>{
     const resolver=new actual.module.EntityResolver({});await resolver.load(f.client)
@@ -161,7 +164,7 @@ export async function runLegacyDerivedOwnershipProbe({receiptPath}={}){
   }
   await check('regular extraction: approval after source RETURNING permits later entity and reader-presented citation mutation',{promotion:true},async f=>{
     const report=await extract(f);assert.equal(report.errors.length,0);assert.equal(report.extracted,0);assert.equal(report.reviewedSourceSkipped,1)
-    assert.ok(f.atPromotion);assert.equal(f.atPromotion.prior_citations[0].cited_entity,'Explicit fixture prior citation')
+    assert.ok(f.atPromotion,JSON.stringify(report));assert.equal(f.atPromotion.prior_citations[0].cited_entity,'Explicit fixture prior citation')
     const after=await f.currentArticle(),detail=await f.reader.loadArticleDetail(ARTICLE)
     assert.equal(after.reader_state,'eligible');assert.equal(after.entities_extracted_at,null);assert.equal(digestArticle(after),f.atPromotion.source_hash)
     assert.ok(detail.citations.some(row=>row.cited_type==='court_doc'));assert.ok(!detail.citations.some(row=>row.cited_entity==='Explicit fixture prior citation'))
@@ -256,8 +259,8 @@ export async function runLegacyDerivedOwnershipProbe({receiptPath}={}){
     assert.equal((await f.reader.loadArticleDetail(child.id)).articleMissing,true)
     return {gate:'EXISTING_OWNER_SCOPE_PROVED',existing_url_inserted:0,existing_citation_unchanged:true,new_url_inserted:1,new_url_pending:true,canonical_entity_payload_ignored:true,fixture_prerequisites:'Synthetic active source/run/key; sha256-only digest compatibility function, not full crypto/deployed activation qualification'}
   })
-  const sourceFiles=[LEGACY,new URL('../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql',import.meta.url),new URL('../supabase/migrations/20260905203600_mip_legacy_graph_private_staging.sql',import.meta.url),new URL('../supabase/migrations/20260819_authenticated_ingestion_writer.sql',import.meta.url),new URL('../supabase/migrations/20260906042413_evidence_change_queue_v1.sql',import.meta.url),new URL(import.meta.url)]
-  const receipt={status:'PROBE_PASS_CLOSURE_UNBOUND',base:'8f495ffe040adcb7c20d69fedfd269b948c5ea0b',live_operations:0,source_repair:false,legacy_reactivated:false,existing_guards_preserved:true,extractor_sha256:actual.source_sha256,cases,limits:['Explicit isolated postgres mutation authority; current service_role denial control included','Interleaved committed SDK statements, not independent PostgreSQL multi-session concurrency','Actual reader DTO demonstrates citation change after synthetic approval','Supplied unchanged-source-status trigger clause only, not full deployed function replay','No existing owner closes legacy existing-row/global-entity/capture-bound completion; no new RPC/trusted grant/publication policy introduced'],artifacts:await Promise.all(sourceFiles.map(async file=>({file:file.pathname,sha256:hash(await readFile(file))})))}
+  const sourceFiles=[LEGACY,new URL('../tests/fixtures/legacyExtractBatchBeforeAtomic-2026-10-02.ts',import.meta.url),new URL('../tests/fixtures/legacyReaderBeforeVersions-2026-10-02.mjs',import.meta.url),new URL('../supabase/migrations/20260905082406_evidence_pipeline_reliability.sql',import.meta.url),new URL('../supabase/migrations/20260905203600_mip_legacy_graph_private_staging.sql',import.meta.url),new URL('../supabase/migrations/20260819_authenticated_ingestion_writer.sql',import.meta.url),new URL('../supabase/migrations/20260906042413_evidence_change_queue_v1.sql',import.meta.url),new URL(import.meta.url)]
+  const receipt={status:'PROBE_PASS_CLOSURE_UNBOUND',base:'8f495ffe040adcb7c20d69fedfd269b948c5ea0b',live_operations:0,source_repair:false,extractor_scope:'historical predecessor function composed with current unchanged helpers',legacy_reactivated:false,existing_guards_preserved:true,extractor_sha256:actual.source_sha256,cases,limits:['Explicit isolated postgres mutation authority; current service_role denial control included','Interleaved committed SDK statements, not independent PostgreSQL multi-session concurrency','Frozen predecessor reader DTO demonstrates citation change after synthetic approval','Supplied unchanged-source-status trigger clause only, not full deployed function replay','Historical pre-extension owner scope only; the new atomic package is not installed in these historical fixtures'],artifacts:await Promise.all(sourceFiles.map(async file=>({file:file.pathname,sha256:hash(await readFile(file))})))}
   if(receiptPath){await mkdir(dirname(receiptPath),{recursive:true});await writeFile(receiptPath,JSON.stringify(receipt,null,2)+'\n')}
   return receipt
 }

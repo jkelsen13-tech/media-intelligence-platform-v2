@@ -1,0 +1,6 @@
+-- UNEXECUTED. No implicit baseline capture, migration replay, role enablement or worker deployment.
+\set ON_ERROR_STOP on
+-- Supply the separately reviewed exact JSON baseline as -v expected_catalog='<one-line JSON>'.
+select set_config('mip.legacy_atomic_expected_catalog', :'expected_catalog', false);
+\ir ../legacy-atomic-completion-v1.sql
+\ir run-preflight.sql

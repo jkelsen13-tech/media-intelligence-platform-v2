@@ -1367,108 +1367,62 @@ async function wipeArcLayer(supabase: any) {
   await deleteAll(supabase, 'nodes')
 }
 
+// The service gathers proposals only. Selection and completion use the same
+// installed, narrow RPC; its SQL owner locks and checks the selected source
+// version before retaining a native capture and private completion atomically.
+const LEGACY_EXTRACTOR_VERSION = 'legacy-pure-candidates-v1'
 async function extractBatch(
   supabase: any,
-  resolver: EntityResolver,
+  _resolver: EntityResolver | null,
   outletNames: Set<string>,
   cfg: any,
   report: any,
   runTag: string | null = null,
 ): Promise<boolean> {
-  // Legacy extraction must never rewrite the source currently admitted to
-  // ordinary readers. Recheck this predicate in each UPDATE, including races
-  // where a selected pending record becomes eligible before its write.
-  const nonPublicSource = 'reader_state.neq.eligible,source_status.neq.active'
-  const guardedArticleUpdate = (articleId: string, updates: any) => supabase
-    .from('articles').update(updates).eq('id', articleId).or(nonPublicSource).select('id')
-  const recordSkippedSource = () => {
-    report.reviewedSourceSkipped = (report.reviewedSourceSkipped ?? 0) + 1
-  }
-  // Scoped mode (Doc 07 Item 2b): when runTag is set, selection is narrowed
-  // to that ingestion run's rows ONLY — the corpus-wide null markers must
-  // never pull legacy articles into a scoped run.
-  let q = supabase
-    .from('articles')
-    .select('id, title, summary, body_text, image_url, image_alt, ingestion_run_id')
-    .is('entities_extracted_at', null)
-    .or(nonPublicSource)
-    .order('fetched_at', { ascending: true })
-    .limit(EXTRACT_BATCH)
-  if (runTag) q = q.eq('ingestion_run_id', runTag)
-  const { data: batch, error } = await q
-  if (error) throw error
-  if (!batch || batch.length === 0) return false
-
-  const ENT_MIN_CONF = Number(cfg.entity_resolve_min_confidence ?? 0.5)
-  const DIGEST_ENTITY_COUNT = Number(cfg.digest_entity_count ?? 8)
-  const DOC_WEIGHTS = cfg.doc_strength_weights ?? {}
-
+  const { data: selection, error } = await supabase.rpc('mip_legacy_extraction_v1', {
+    p_action: 'read_pending', p_input: { run_tag: runTag, limit: EXTRACT_BATCH, extractor_version: LEGACY_EXTRACTOR_VERSION },
+  })
+  if (error) throw new Error(`private legacy selection: ${error.message}`)
+  const batch = selection?.articles
+  if (!Array.isArray(batch)) throw new Error('private legacy selection contract missing')
+  if (!batch.length) return false
+  let completed = 0
   for (const art of batch) {
     try {
-      const t = sanitize(art.title)
-      const s = sanitize(art.summary)
-      const b = sanitize(art.body_text)
-      const extractedAt = new Date().toISOString()
-      const updates: any = {}
-      if (t.text !== (art.title ?? '')) updates.title = t.text
-      if (s.text !== (art.summary ?? '')) updates.summary = s.text || null
-      if (b.text !== (art.body_text ?? '')) updates.body_text = b.text || null
-      if (!art.image_url && s.imageUrl) updates.image_url = s.imageUrl
-      if (!art.image_alt && s.imageAlt) updates.image_alt = s.imageAlt
-
-      if (isMetadataOnlyReferenceBody(b.text)) {
-        // Preserve the article for News and chronological Timeline access, but
-        // explicitly withhold every inferred cross-surface relation until an
-        // original publisher body is hydrated and can supply literal evidence.
-        updates.claims = []
-        updates.is_digest = false
-        updates.arc_assign_attempted_at = new Date().toISOString()
-        updates.source_status_changed_at = new Date().toISOString()
-        updates.source_status_note = 'Reference-manifest metadata only; original publisher body is unavailable for literal extraction or cross-surface assignment.'
-        const { data: written, error: upErr } = await guardedArticleUpdate(art.id, updates)
-        if (upErr) throw upErr
-        if (!written?.length) { recordSkippedSource(); continue }
-        await supabase.from('citations').delete().eq('article_id', art.id)
-        await supabase.from('article_entities').delete().eq('article_id', art.id)
-        const { data: completed, error: completedErr } = await guardedArticleUpdate(art.id, { entities_extracted_at: extractedAt })
-        if (completedErr) throw completedErr
-        if (!completed?.length) { recordSkippedSource(); continue }
-        report.metadataOnlySkipped = (report.metadataOnlySkipped ?? 0) + 1
-        continue
+      const t = sanitize(art.title), s = sanitize(art.summary), b = sanitize(art.body_text)
+      const metadataOnly = isMetadataOnlyReferenceBody(b.text)
+      const text = `${t.text}. ${b.text || s.text}`
+      // Heuristics produce private proposals. Canonical resolution, aliases,
+      // mention counts and shared citations are never touched by extraction.
+      const entities = metadataOnly ? [] : extractEntityCandidates(text, outletNames).slice(0, 50)
+        .map(e => ({ ...e, entity_type: guessEntityType(e.surface) }))
+      const plan = {
+        metadata_only: metadataOnly,
+        normalization: { title: t.text, summary: s.text || null, body_text: b.text || null,
+          image_url: art.image_url || s.imageUrl || null, image_alt: art.image_alt || s.imageAlt || null },
+        claims: metadataOnly ? [] : extractClaims(text), entities,
+        citations: metadataOnly ? [] : extractCitations(text, cfg.doc_strength_weights ?? {}),
+        proposed_digest: !metadataOnly && isDigest(t.text, entities.filter(e => ['person','organization','institution'].includes(e.entity_type)).length, Number(cfg.digest_entity_count ?? 8)),
       }
-
-      const analysisText = `${t.text}. ${b.text || s.text}`
-      const claims = extractClaims(analysisText)
-      updates.claims = claims
-
-      // A denied or raced source write must not delete public citations or
-      // resolve/upsert derived entities. Separate later requests still require
-      // an atomic approval boundary before legacy extraction is reactivated.
-      const { data: written, error: upErr } = await guardedArticleUpdate(art.id, updates)
-      if (upErr) throw upErr
-      if (!written?.length) { recordSkippedSource(); continue }
-      const resolved = await extractAndResolveEntities(supabase, resolver, art.id, analysisText, outletNames)
-      report.entitiesResolved += resolved.length
-      const strong = resolved.filter((r) => r.confidence >= ENT_MIN_CONF)
-      const orgPersonCount = strong.filter((r) => ['person', 'organization', 'institution'].includes(r.entity_type)).length
-      const isDigestArticle = isDigest(t.text, orgPersonCount, DIGEST_ENTITY_COUNT)
-      await supabase.from('citations').delete().eq('article_id', art.id)
-      for (const c of extractCitations(analysisText, DOC_WEIGHTS)) {
-        await supabase.from('citations').insert({ ...c, article_id: art.id })
-        report.citations++
+      const { data: receipt, error: completionError } = await supabase.rpc('mip_legacy_extraction_v1', {
+        p_action: 'complete_private', p_input: { article_id: art.id, record_version_id: art.record_version_id,
+          source_hash: art.source_hash, extractor_version: LEGACY_EXTRACTOR_VERSION, plan },
+      })
+      if (completionError) throw new Error(completionError.message)
+      if (receipt?.publication !== 'withheld' || !receipt?.completion_id || !receipt?.capture_id || !receipt?.capture_hash) {
+        throw new Error('private legacy completion contract missing')
       }
-
-      const { data: completed, error: completedErr } = await guardedArticleUpdate(art.id, { is_digest: isDigestArticle, entities_extracted_at: extractedAt })
-      if (completedErr) throw completedErr
-      if (!completed?.length) { recordSkippedSource(); continue }
-      if (isDigestArticle) report.digests++
-      report.extracted++
+      completed++
+      report.privateCompletions = (report.privateCompletions ?? 0) + 1
+      if (metadataOnly) report.metadataOnlySkipped = (report.metadataOnlySkipped ?? 0) + 1
+      else report.extracted++
     } catch (err) {
-      report.errors.push(`extract ${String(art.id).slice(0, 8)}: ${String(err)}`)
-      await guardedArticleUpdate(art.id, { entities_extracted_at: new Date().toISOString() })
+      // A failed/stale completion never marks the article finished. Stop this
+      // batch when none succeed so one invocation cannot spin on denied work.
+      report.errors.push(`private extract ${String(art.id).slice(0, 8)}: ${String(err)}`)
     }
   }
-  return true
+  return completed > 0
 }
 
 // Review-gated candidate pass. It assesses only literal source text that is
@@ -1956,8 +1910,7 @@ Deno.serve(async (req: Request) => {
       return Response.json({ ok: false, error: 'reset is forbidden in scoped mode (?run=); scoped runs never touch the arc layer outside their own tag' }, { status: 400 })
     }
     report.scopedRun = runTag
-    const resolver = new EntityResolver(cfg)
-    await resolver.load(supabase)
+    const resolver = null
     const { data: outletRows } = await supabase.from('outlets').select('id, name')
     const outletNames = new Set<string>((outletRows ?? []).map((o: any) => normalizeEntityName(o.name)))
     while (Date.now() < deadline0) {
@@ -2006,8 +1959,7 @@ Deno.serve(async (req: Request) => {
 
   const deadline = Date.now() + BUDGET_MS
   if (state.phase === 'extract') {
-    const resolver = new EntityResolver(cfg)
-    await resolver.load(supabase)
+    const resolver = null
     const { data: outletRows } = await supabase.from('outlets').select('id, name')
     const outletNames = new Set<string>((outletRows ?? []).map((o: any) => normalizeEntityName(o.name)))
     while (Date.now() < deadline) {

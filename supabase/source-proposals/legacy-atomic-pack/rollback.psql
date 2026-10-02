@@ -1,0 +1,4 @@
+-- UNEXECUTED. Supply separately reviewed installed JSON as -v expected_installed_catalog='<one-line JSON>'.
+\set ON_ERROR_STOP on
+select set_config('mip.legacy_atomic_rollback_expected_catalog', :'expected_installed_catalog', false);
+\ir rollback.sql

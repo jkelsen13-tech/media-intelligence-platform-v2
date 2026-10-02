@@ -5,9 +5,13 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { createClient } from '@supabase/supabase-js'
 import { PGlite } from '@electric-sql/pglite'
 import { applyFoundation } from '../scripts/mipConsolidationRestore.mjs'
-import { createNewsBackend } from '../src/lib/newsBackend.js'
+import { loadArticleDetail as historicalArticleDetail } from './fixtures/legacyReaderBeforeVersions-2026-10-02.mjs'
 
-const source = await readFile(new URL('../supabase/functions/backfill-legacy/index.ts', import.meta.url), 'utf8')
+// Historical predecessor qualification. Current atomic handler is qualified in legacyAtomicCompletion.test.mjs.
+const current = await readFile(new URL('../supabase/functions/backfill-legacy/index.ts', import.meta.url), 'utf8')
+const predecessor = await readFile(new URL('./fixtures/legacyExtractBatchBeforeAtomic-2026-10-02.ts', import.meta.url), 'utf8')
+const start = current.indexOf('async function extractBatch('), end = current.indexOf('// Review-gated candidate pass.',start)
+const source = current.slice(0,start) + predecessor + current.slice(end)
 const compiled = await build({ stdin: { contents: source + '\nexport { extractBatch };\n', resolveDir: new URL('../supabase/functions/backfill-legacy/', import.meta.url).pathname, loader: 'ts' }, bundle: true, platform: 'node', format: 'esm', write: false,
   plugins: [{ name: 'no-live-sdk', setup(b) { b.onResolve({ filter: /^https:/ }, () => ({ path: 'sdk', namespace: 'local' })); b.onLoad({ filter: /.*/, namespace: 'local' }, () => ({ contents: 'export const createClient=()=>{throw Error("live function entrypoint forbidden")}', loader: 'js' })) } }],
 })
@@ -89,7 +93,7 @@ async function fixture({ readerState = 'eligible', body = original, race = false
     } catch (error) { return new Response(JSON.stringify({ code:error.code ?? 'fixture_error',message:error.message }), { status:400,headers }) }
   }
   const client = createClient('https://legacy-source.example.invalid', 'sb_publishable_fixture', { accessToken: async () => 'fixture-mutation-role', global:{fetch}, realtime:{transport:class{constructor(){throw Error('unexpected websocket')}}} })
-  return { db, client, calls, backend:createNewsBackend(client), close:()=>db.close() }
+  return { db, client, calls, backend:{loadArticleDetail:id=>historicalArticleDetail(id,{supabaseClient:client})}, close:()=>db.close() }
 }
 const nativeArticle = async f => (await f.db.query('select * from articles where id=$1',[id])).rows[0]
 const run = async f => {
@@ -99,7 +103,7 @@ const run = async f => {
   return {more,report}
 }
 
-test('legacy scan leaves already eligible active source bytes and public reviewed span untouched', async () => {
+test('historical legacy scan leaves already eligible active source bytes and public reviewed span untouched', async () => {
   const f=await fixture()
   try {
     const before=await nativeArticle(f), result=await run(f)
@@ -113,7 +117,7 @@ test('legacy scan leaves already eligible active source bytes and public reviewe
   } finally {await f.close()}
 })
 
-test('legacy pending extraction remains possible without changing publication state', async () => {
+test('historical legacy pending extraction remains possible without changing publication state', async () => {
   const f=await fixture({readerState:'pending_review'})
   try {
     const result=await run(f), after=await nativeArticle(f)
@@ -130,7 +134,7 @@ test('legacy pending extraction remains possible without changing publication st
 })
 
 for(const scenario of [{name:'normal',body:original},{name:'metadata sentinel',body:SENTINEL},{name:'error catch',body:original,failWrite:true}]) {
-  test(`atomic source update guards the selected-pending to eligible race: ${scenario.name}`,async()=>{
+  test(`historical source update guards the selected-pending to eligible race: ${scenario.name}`,async()=>{
     const f=await fixture({readerState:'pending_review',race:true,...scenario})
     try {
       const before=await nativeArticle(f),result=await run(f),after=await nativeArticle(f)

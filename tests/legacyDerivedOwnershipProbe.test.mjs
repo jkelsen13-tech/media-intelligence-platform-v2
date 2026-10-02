@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { runLegacyDerivedOwnershipProbe } from '../verifier/runLegacyDerivedOwnershipProbe.mjs'
 
-test('actual legacy extractor proves the after-RETURNING gap and precise existing transaction-owner limits', async () => {
+test('frozen predecessor legacy extractor proves the after-RETURNING gap and precise existing transaction-owner limits', async () => {
   const receipt = await runLegacyDerivedOwnershipProbe()
   assert.equal(receipt.status, 'PROBE_PASS_CLOSURE_UNBOUND')
   assert.equal(receipt.cases.length, 8)

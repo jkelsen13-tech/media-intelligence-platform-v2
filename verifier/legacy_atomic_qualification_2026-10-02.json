@@ -1,0 +1,147 @@
+{
+  "status": "SOURCE_QUALIFIED_UNAPPLIED",
+  "base": "cbc1581dd79ba35c9ab6a4b86899aa65da984942",
+  "branch": "codex/mip-launch-legacy-atomic-20261002",
+  "live_operations": 0,
+  "source_repair": true,
+  "legacy_reactivated": false,
+  "installed": false,
+  "tests": [
+    {
+      "runtime": "v22.23.3",
+      "status": "PASS",
+      "tests": 36,
+      "failed": 0,
+      "actual_current_handler_cases": 15,
+      "raw_tap": "/workspace/mip-legacy-atomic-qualification/focused-node22.tap",
+      "tap_sha256": "63463b3994218ff914d97f2af6641a237fd8d95ad901c72ccc477dced0d63dde",
+      "actual_receipt": "/workspace/mip-legacy-atomic-qualification/actual-node22.json",
+      "actual_receipt_sha256": "5dd4a62a20abfd67c952bb8209abefa1d480b422eda5274d32bda8b3ad635566",
+      "command": "MIP_LEGACY_ATOMIC_RECEIPT=/workspace/mip-legacy-atomic-qualification/actual-node22.json /workspace/mip-runtime22/node_modules/node/bin/node --test tests/legacyAtomicCompletion.test.mjs tests/legacyReviewedSourceGuard.test.mjs tests/legacyDerivedOwnershipProbe.test.mjs tests/reviewedPublicVersionPackage.test.mjs tests/reviewedPublicVersionDatabase.test.mjs tests/reviewedPublicVersionSdk.test.mjs",
+      "final_actual_path": {
+        "status": "PASS",
+        "tests": 15,
+        "failed": 0,
+        "raw_tap": "/workspace/mip-legacy-atomic-qualification/actual-final-node22.tap",
+        "tap_sha256": "5ee8763fdf6c77dde7d451db21ba0d9f10c3487a5f7422c68ef1cd5850ad353b",
+        "command": "MIP_LEGACY_ATOMIC_RECEIPT=/workspace/mip-legacy-atomic-qualification/actual-node22.json /workspace/mip-runtime22/node_modules/node/bin/node --test tests/legacyAtomicCompletion.test.mjs"
+      },
+      "focused_suite_scope": "36 focused tests passed before final contract hardening; final changed path separately rerun, 15/15."
+    },
+    {
+      "runtime": "v24.19.0",
+      "status": "PASS",
+      "tests": 36,
+      "failed": 0,
+      "actual_current_handler_cases": 15,
+      "raw_tap": "/workspace/mip-legacy-atomic-qualification/focused-node24.tap",
+      "tap_sha256": "0bb31d95eb820127eca286b7143498ee7f17383894f64be39a7a62811b272036",
+      "actual_receipt": "/workspace/mip-legacy-atomic-qualification/actual-node24.json",
+      "actual_receipt_sha256": "f610f2e1e992bf57a01e483a24e8873daadae888d348d10fa6e24b85b7e63c41",
+      "command": "MIP_LEGACY_ATOMIC_RECEIPT=/workspace/mip-legacy-atomic-qualification/actual-node24.json node --test tests/legacyAtomicCompletion.test.mjs tests/legacyReviewedSourceGuard.test.mjs tests/legacyDerivedOwnershipProbe.test.mjs tests/reviewedPublicVersionPackage.test.mjs tests/reviewedPublicVersionDatabase.test.mjs tests/reviewedPublicVersionSdk.test.mjs",
+      "final_actual_path": {
+        "status": "PASS",
+        "tests": 15,
+        "failed": 0,
+        "raw_tap": "/workspace/mip-legacy-atomic-qualification/actual-final-node24.tap",
+        "tap_sha256": "1c74b4dc855e512c1fb2239727409942979966f125db3021b3bc0fe93a052b34",
+        "command": "MIP_LEGACY_ATOMIC_RECEIPT=/workspace/mip-legacy-atomic-qualification/actual-node24.json node --test tests/legacyAtomicCompletion.test.mjs"
+      },
+      "focused_suite_scope": "36 focused tests passed before final contract hardening; final changed path separately rerun, 15/15."
+    }
+  ],
+  "case_names": [
+    "atomic private capture and completion; unchanged public/source bytes",
+    "pending selection -> admission before RPC is denied",
+    "selected source version revision is denied without overwrite",
+    "uninstalled route default denial",
+    "private job/capture/change dispatch/receipt whole transaction rollback",
+    "exact hash/version/idempotency CAS",
+    "metadata-only plan withheld; existing shared rows preserved",
+    "private eligibility and source-version reconsideration",
+    "exact owner-reviewed derived application",
+    "reviewed capture/hash/evidence/newest-head CAS denial",
+    "owner-reviewed derived and receipt whole transaction rollback",
+    "exact least privilege source role and default browser denial",
+    "expected catalog drift denied; unrelated overload ACL/owner preserved",
+    "unfinished native capture owner retained; no alternate engine",
+    "exact revoke-only rollback keeps private/native audit history"
+  ],
+  "limits": [
+    "Synthetic isolated PostgreSQL administrator admission and role fixture; no genuine reviewer/right/installation authority",
+    "Actual compiled repaired handler + installed SDK request adapter + SQL functions; not live PostgREST/JWT or independent multi-session concurrency",
+    "Revoke-only rollback retains captures/receipts/narrow NOLOGIN role; no destructive uninstall",
+    "Source-only receipt is not claim or source publication; owner-only reviewed application requires exact native newest admitted capture/hash"
+  ],
+  "artifacts": [
+    {
+      "path": "supabase/functions/backfill-legacy/index.ts",
+      "sha256": "0241a6bbb91f5df4782378ba085ea97058f080dbd453b12b1bd24f9015204c4f"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066"
+    },
+    {
+      "path": "scripts/legacyAtomicCompletionPackage.mjs",
+      "sha256": "c6652e41325a163575e2ad52b0170ebeec673705bac032f4f3e9b6c8b97d68ce"
+    },
+    {
+      "path": "tests/legacyAtomicCompletion.test.mjs",
+      "sha256": "e4343febd29bfc846460871fd65a15eb12797dee8cb3ad7da2d970541c6b605d"
+    },
+    {
+      "path": "tests/legacyAtomicCompletionFixture.mjs",
+      "sha256": "2cec9ece782e9ee645f3a3e7ffc1c56d9edb76f02d797c5d4b66af987da74047"
+    },
+    {
+      "path": "tests/fixtures/legacyExtractBatchBeforeAtomic-2026-10-02.ts",
+      "sha256": "67ce4873c7817479b0023ef97451c8aa585a120f86e7a9fef16e26e1ca27646a"
+    },
+    {
+      "path": "tests/fixtures/legacyReaderBeforeVersions-2026-10-02.mjs",
+      "sha256": "30e8158ac14373f486ec2d5af64788542bf54a069d8f34f8f8882a5f3f39dc69"
+    },
+    {
+      "path": "tests/legacyReviewedSourceGuard.test.mjs",
+      "sha256": "d10a260eaf6a76a8e041ca7d868f1bae31f3705363b95ef323b23f3cef85bbb5"
+    },
+    {
+      "path": "tests/legacyDerivedOwnershipProbe.test.mjs",
+      "sha256": "36faaf52e4a7963afd42a93ecee5f2f1b6a6b3ae3166ea01dc0cbbbc599526ff"
+    },
+    {
+      "path": "verifier/runLegacyDerivedOwnershipProbe.mjs",
+      "sha256": "4e80506b2613c4faff9b42800a2ab0ffd22f5c9ffad31c2a1a685474b58b4c6a"
+    },
+    {
+      "path": "docs/MIP_LEGACY_ATOMIC_COMPLETION_2026-10-02.md",
+      "sha256": "16fa59ce7b2cd71dcd5bafcb52be559f12d652111799ad855a35205e68fdefb1"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/catalog.sql",
+      "sha256": "0ab83e6350413166e4f17da9705970f1e0c41e1c11d390d2d4d6d07475acdb72"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/install.psql",
+      "sha256": "5c8d2e1a3023c3eaf2fe6cc319e594878bdd3507da744f225ce926327caa93c1"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/installed-catalog.sql",
+      "sha256": "60b9bb8a786a5f8c49d755db5f70a7f159c7de6fa858312ff9281423e0efb13a"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.psql",
+      "sha256": "e50bbacca8e2350d4a809e02e7bf1108a42abaef6e50b61720099363d5f9761d"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+      "sha256": "bae96d0483e818826bfee191bafa702c7baec0e5a08a342297c811db7ffebe5c"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/run-preflight.sql",
+      "sha256": "91697413e1f45dadb874abba0d1f2f0625da43049aac2943cbf6819db72c18a9"
+    }
+  ],
+  "final_contract_hardening": "Null/unsupported actions deny; private eligibility must be explicitly true; reviewed fixture entity identity matches its literal surface."
+}
