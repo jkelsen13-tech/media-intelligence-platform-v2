@@ -1,3 +1,5 @@
+import { createStoryFollowingBackend } from './storyFollowingClient.js'
+import { createReviewedPublicVersionBackend } from './reviewedPublicVersionBackend.js'
 import {
   loadArticles,
   loadOutletDirectory,
@@ -18,7 +20,12 @@ import {
 // Options cannot replace that client, and no request or session is cached.
 export function createNewsBackend(supabaseClient = null) {
   const options = Object.freeze({ supabaseClient })
+  const stories = createStoryFollowingBackend(supabaseClient)
+  const reviewed = createReviewedPublicVersionBackend(supabaseClient)
   return Object.freeze({
+    loadStoryStateContext: (storyId, versionOptions) => stories.loadStoryContext(storyId, versionOptions),
+    loadStoryDirectory: (directoryOptions) => reviewed.loadStoryDirectory(directoryOptions),
+    loadArticleStory: (articleId) => reviewed.loadStoryForArticle(articleId),
     loadArticles: (filters) => loadArticles({ ...filters, ...options }),
     loadOutletDirectory: () => loadOutletDirectory(options),
     loadArticleDetail: (id) => loadArticleDetail(id, options),

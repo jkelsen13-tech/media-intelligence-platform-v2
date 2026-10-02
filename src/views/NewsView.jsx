@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import { safeExternalHttpUrl } from '../lib/externalUrls.js'
+import { normalizePublicStoryContext } from '../lib/storyFollowingClient.js'
 import { inspectionInstantMilliseconds } from '../lib/inspectionTime.js'
 import {
   PROVENANCE_LABELS,
   groupArticlesByEvent,
   provenanceBasis,
   readThenAdvanceLastVisit,
+  evaluateNewsStoryState,
+  reconstructNewsStateHistory,
+  newsSourceReports,
 } from '../lib/newsFeedModel'
+import NewsStoryReader from './NewsStoryReader.jsx'
+import StoryFollowingPanel from '../components/StoryFollowingPanel.jsx'
+import StoryFollowingControls from '../components/StoryFollowingControls.jsx'
 import EpistemicBanner from '../components/EpistemicBanner'
 import SourceAttributionLine from '../components/SourceAttributionLine'
 import SkyBadge from '../panels/SkyBadge'
@@ -175,8 +182,11 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusStoryId, publicVersionId = null, onOpenStory, onCloseStory, readerActorId = null, sessionReady = false, followingBackend, clockNow, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
   const isDrawer = variant === 'drawer'
+  const [readerMode, setReaderMode] = useState('home')
+  const [homeResponse, setHomeResponse] = useState(null)
+  const [homeLoading, setHomeLoading] = useState(false)
   const [q, setQ] = useState(initialSearch)
   const [debouncedQ, setDebouncedQ] = useState(() => initialSearch.trim())
   const [discovery, setDiscovery] = useState(() => emptyDiscoveryFilters())
@@ -192,6 +202,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const [articlesUnavailable, setArticlesUnavailable] = useState(null)
   const [expanded, setExpanded] = useState(null) // article id
   const [detail, setDetail] = useState(null)
+  const [articleStory, setArticleStory] = useState(null)
+  const [storyResponse, setStoryResponse] = useState(null)
+  const [storyLoading, setStoryLoading] = useState(false)
+  const [storyClock, setStoryClock] = useState(() => clockNow ?? Date.now())
   const [graphLinks, setGraphLinks] = useState([])
   const [detailError, setDetailError] = useState(null)
   const [detailUnavailable, setDetailUnavailable] = useState(null)
@@ -223,6 +237,76 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   const loadingMoreRef = useRef(false)
   const detailRequestRef = useRef(0)
   useEffect(() => () => { detailRequestRef.current += 1 }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setStoryResponse(null)
+    if (!focusStoryId) { setStoryLoading(false); return }
+    setStoryLoading(true)
+    if (typeof backend.loadStoryStateContext !== 'function') {
+      setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
+      setStoryLoading(false)
+      return
+    }
+    backend.loadStoryStateContext(focusStoryId, { publicVersionId })
+      .then(result => {
+        if (cancelled) return
+        const parsed = !result?.error && normalizePublicStoryContext(result?.data)
+        const data = parsed?.story.story_id === focusStoryId
+          && (!publicVersionId || parsed.story.public_version_id === publicVersionId) ? parsed : null
+        setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data })
+      })
+      .catch(() => { if (!cancelled) setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null }) })
+      .finally(() => { if (!cancelled) setStoryLoading(false) })
+    return () => { cancelled = true }
+  }, [focusStoryId, publicVersionId, backend])
+
+  useEffect(() => {
+    let cancelled = false
+    setHomeResponse(null)
+    if (isDrawer || focusStoryId || readerMode !== 'home') { setHomeLoading(false); return }
+    setHomeLoading(true)
+    if (typeof backend.loadStoryDirectory !== 'function' || typeof backend.loadStoryStateContext !== 'function') {
+      setHomeResponse({ available: false, entries: [] }); setHomeLoading(false); return
+    }
+    Promise.resolve().then(() => backend.loadStoryDirectory({ limit: 30 })).then(async directory => {
+      if (cancelled) return
+      if (directory?.status !== 'available' || !Array.isArray(directory.stories)) {
+        setHomeResponse({ available: false, entries: [] }); return
+      }
+      const entries = await Promise.all(directory.stories.map(async story => {
+        const result = await backend.loadStoryStateContext(story.story_id, { publicVersionId: story.public_version_id })
+        const parsed = !result?.error && normalizePublicStoryContext(result?.data)
+        const context = parsed?.story.story_id === story.story_id
+          && parsed.story.public_version_id === story.public_version_id ? parsed : null
+        return context ? { context, story } : null
+      }))
+      if (!cancelled) setHomeResponse({ available: true, entries: entries.filter(Boolean), hasMore: directory.has_more,
+        incomplete: entries.some(entry => entry === null) })
+    }).catch(() => { if (!cancelled) setHomeResponse({ available: false, entries: [] }) })
+      .finally(() => { if (!cancelled) setHomeLoading(false) })
+    return () => { cancelled = true }
+  }, [readerMode, isDrawer, focusStoryId, backend])
+
+  const storyContext = storyResponse?.storyId === focusStoryId && storyResponse?.versionId === publicVersionId ? storyResponse.data : null
+  const evaluationNow = clockNow ?? storyClock
+  const storyState = useMemo(() => evaluateNewsStoryState(storyContext, evaluationNow), [storyContext, evaluationNow])
+  const storyHistory = useMemo(() => reconstructNewsStateHistory(storyContext, evaluationNow), [storyContext, evaluationNow])
+  const sourceReports = useMemo(() => newsSourceReports(storyContext, evaluationNow), [storyContext, evaluationNow])
+  useEffect(() => {
+    if (clockNow !== undefined || (!storyContext && !homeResponse?.available)) return
+    // Local display-clock decay at the next deterministic boundary. No backend
+    // polling, continuously repeating timer or subscription write is involved.
+    const current = Date.now()
+    if (storyClock < current && current - storyClock > 1000) { setStoryClock(current); return }
+    const boundaries = [storyState.next_evaluation_at, ...sourceReports.map(report => report.next_evaluation_at),
+      ...(homeResponse?.entries ?? []).flatMap(entry => [evaluateNewsStoryState(entry.context, storyClock).next_evaluation_at, ...newsSourceReports(entry.context, storyClock).map(report => report.next_evaluation_at)])]
+      .map(value => inspectionInstantMilliseconds(value)).filter(value => value !== null && value > storyClock)
+    if (!boundaries.length) return
+    const timer = setTimeout(() => setStoryClock(Date.now()), Math.max(1, Math.min(2147483647, Math.min(...boundaries) - current)))
+    return () => clearTimeout(timer)
+  }, [storyContext, clockNow, storyClock, storyState.next_evaluation_at, sourceReports, homeResponse])
+
 
   useEffect(() => {
     backend.loadOutletDirectory().then(setOutlets).catch(() => {})
@@ -339,6 +423,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     const isCurrent = () => seq === detailRequestRef.current
     setExpanded(id)
     setDetail(null)
+    setArticleStory(null)
     setGraphLinks([])
     setDetailError(null)
     setDetailUnavailable(null)
@@ -346,6 +431,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
+    if (onOpenStory && typeof backend.loadArticleStory === 'function') {
+      backend.loadArticleStory(id).then(result => {
+        if (!isCurrent()) return
+        const story = result?.status === 'available' ? result.version : null
+        setArticleStory(story?.members?.some(member => member.article_id === id) ? { articleId: id, story } : null)
+      }).catch(() => {})
+    }
     backend.loadArticleDetail(id)
       .then((d) => {
         if (!isCurrent()) return
@@ -482,10 +574,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
   // not the global corpus. Arc unknown (focused-miss detail) → arcId null
   // → the contract's declared global fallback applies.
   const expandedArcId = articles.find((a) => a.id === expanded)?.arc_id ?? null
-  const crossWindowChips = (timelineKey || comparisonEvents.length > 0) && (
+  const currentArticleStory = articleStory?.articleId === expanded ? articleStory.story : null
+  const crossWindowChips = (timelineKey || comparisonEvents.length > 0 || currentArticleStory) && (
     <div className="news-graph-links">
       <span className="ap-label">Other views</span>
       <div className="news-filter-row">
+        {currentArticleStory && onOpenStory && <button type="button" className="news-chip graph-link" onClick={() => onOpenStory({ storyId: currentArticleStory.story_id, publicVersionId: currentArticleStory.public_version_id })}>Read story →</button>}
         {timelineKey && onOpenTimeline && (
           <button
             className="news-chip graph-link"
@@ -927,6 +1021,38 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         </div>
       )}
 
+      {!isDrawer && !focusStoryId && <>
+        <nav className="news-reader-modes" aria-label="News reader views">
+          {['home', 'feed', 'following'].map(mode => <button type="button" key={mode} className={`news-chip${readerMode === mode ? ' active' : ''}`} aria-pressed={readerMode === mode} onClick={() => setReaderMode(mode)}>{mode === 'home' ? 'Home / Breaking' : mode === 'feed' ? 'Feed' : 'Following'}</button>)}
+        </nav>
+        {readerMode === 'following' && <StoryFollowingPanel userId={readerActorId} sessionReady={sessionReady} backend={followingBackend}
+          onOpenStory={(storyId, options) => onOpenStory?.({ storyId, publicVersionId: options.publicVersionId })} />}
+        {readerMode === 'home' && <section className="news-home-breaking" aria-label="Home and Breaking stories">
+          <h2>Home / Breaking</h2>
+          {homeLoading ? <p>Loading reviewed story states…</p> : !homeResponse?.available ? <p>Reviewed story discovery is unavailable. Eligible source reporting remains readable in the feed below.</p> : <>
+            <p>State uses admitted material declarations for this directory page. Source-report urgency remains attributed and pending verification.</p>
+            {homeResponse.incomplete && <p>Some story contexts are unavailable; coverage is incomplete.</p>}
+            {homeResponse.hasMore && <p>This page contains at most 30 reviewed stories. It does not establish complete story coverage.</p>}
+            <ul>{homeResponse.entries.flatMap(({ context, story }) => {
+              const state = evaluateNewsStoryState(context, evaluationNow)
+              const reports = newsSourceReports(context, evaluationNow).filter(report => report.label === 'BREAKING • SOURCE REPORT')
+              if (state.state !== 'Breaking' && !reports.length) return []
+              return <li key={story.story_id}><strong>{state.state === 'Breaking' ? state.label : 'BREAKING • SOURCE REPORT'}</strong>
+                {reports.length > 0 && <p>Pending MIP verification / reconciliation · {reports.map(report => report.source_outlet).join(', ')}</p>}
+                <h3>{state.state === 'Breaking' ? story.members.find(member => member.admission_kind === 'reviewed_proposition')?.title : reports[0]?.title}</h3>
+                <p>{state.state === 'Breaking' ? state.reason : reports[0]?.review_uncertainty}</p>
+                <button type="button" className="news-chip" disabled={!onOpenStory} onClick={() => onOpenStory?.({ storyId: story.story_id, publicVersionId: story.public_version_id })}>Read story →</button></li>
+            })}</ul>
+            {!homeResponse.entries.some(({ context }) => evaluateNewsStoryState(context, evaluationNow).state === 'Breaking' || newsSourceReports(context, evaluationNow).some(report => report.label === 'BREAKING • SOURCE REPORT')) && <p>No qualifying Breaking state is recorded on this directory page. Unknown coverage is not an absence of events.</p>}
+          </>}
+        </section>}
+      </>}
+
+      {focusStoryId && (storyContext ? <NewsStoryReader context={storyContext} state={storyState} history={storyHistory} reports={sourceReports}
+        onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={expandArticle}
+        followingControls={<StoryFollowingControls story={storyContext.story} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} />} />
+        : <section className="news-story-reader" aria-label="Story reader"><p>{storyLoading ? 'Loading reviewed story…' : 'This exact story version is unavailable. No latest-version or private-source fallback is displayed.'}</p>{onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}</section>)}
+
       {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
       {error && <div className="notice error">Failed to load articles: {error}</div>}
       {!loading && !error && !articlesUnavailable && articles.length === 0 && !focusedMissing && (
@@ -935,7 +1061,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
         </div>
       )}
 
-      <ol className="news-list">
+      <ol className="news-list" hidden={!isDrawer && !focusStoryId && readerMode === 'following'}>
         {feedEntries.map((entry) =>
           entry.kind === 'group' ? (
             <li key={`ev-${entry.eventId}`} className="news-item">

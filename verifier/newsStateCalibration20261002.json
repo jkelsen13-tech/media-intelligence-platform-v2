@@ -1,0 +1,511 @@
+{
+  "contract": "mip-news-state-synthetic-calibration-v1",
+  "date": "2026-10-02",
+  "selected_policy": "mip-news-state-2026-10-02-v1",
+  "scope": "synthetic risk constraints only; no production corpus or observed accuracy claim",
+  "selection_rule": "Retain the simplest candidate satisfying every predeclared calibration risk constraint; evaluate untouched holdout and adversarial regressions separately. No label-volume target or learned model.",
+  "thresholds_approved_for_live_use": false,
+  "candidates": [
+    {
+      "policy": {
+        "version": "candidate-short",
+        "qualification": "synthetic_calibrated_candidate",
+        "breakingFreshMs": 1800000,
+        "breakingMaxMs": 7200000,
+        "rapidArrivalMs": 3600000,
+        "velocityWindowMs": 14400000,
+        "developingQuietMs": 28800000,
+        "updatedQuietMs": 86400000,
+        "minimumVelocityChanges": 2
+      },
+      "calibration_errors": 2,
+      "holdout_errors": 4,
+      "cases": [
+        {
+          "id": "rapid-new-event",
+          "split": "calibration",
+          "risk": "premature_decay",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": false
+        },
+        {
+          "id": "review-latency-new-event",
+          "split": "calibration",
+          "risk": "rapid_update_missed",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": false
+        },
+        {
+          "id": "single-update-no-long-urgency",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "rapid-continuing-phase",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "quiet-unresolved-phase",
+          "split": "calibration",
+          "risk": "quiet_unresolved_persistence",
+          "result": "Historical",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": true
+        },
+        {
+          "id": "correction-is-a-correction",
+          "split": "calibration",
+          "risk": "correction_urgency",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "material-single-update",
+          "split": "calibration",
+          "risk": "overstatement",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "hourly-updates-stop-breaking",
+          "split": "holdout",
+          "risk": "false_persistence",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "narrow-rapid-update",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": false
+        },
+        {
+          "id": "two-updates-following-initial-phase",
+          "split": "holdout",
+          "risk": "premature_decay",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": false
+        },
+        {
+          "id": "quiet-but-unresolved-holdout",
+          "split": "holdout",
+          "risk": "quiet_unresolved_persistence",
+          "result": "Historical",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": true
+        },
+        {
+          "id": "late-source-report",
+          "split": "holdout",
+          "risk": "stale_report_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "permitted-new-source-report",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "BREAKING • SOURCE REPORT"
+          ],
+          "passes": false
+        },
+        {
+          "id": "source-report-correction",
+          "split": "holdout",
+          "risk": "correction_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "new-major-update-after-quiet-phase",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "policy": {
+        "version": "mip-news-state-2026-10-02-v1",
+        "qualification": "synthetic_calibrated_candidate",
+        "breakingFreshMs": 7200000,
+        "breakingMaxMs": 21600000,
+        "rapidArrivalMs": 10800000,
+        "velocityWindowMs": 43200000,
+        "developingQuietMs": 86400000,
+        "updatedQuietMs": 259200000,
+        "minimumVelocityChanges": 2
+      },
+      "calibration_errors": 0,
+      "holdout_errors": 0,
+      "cases": [
+        {
+          "id": "rapid-new-event",
+          "split": "calibration",
+          "risk": "premature_decay",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "review-latency-new-event",
+          "split": "calibration",
+          "risk": "rapid_update_missed",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "single-update-no-long-urgency",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "rapid-continuing-phase",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "quiet-unresolved-phase",
+          "split": "calibration",
+          "risk": "quiet_unresolved_persistence",
+          "result": "Historical",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": true
+        },
+        {
+          "id": "correction-is-a-correction",
+          "split": "calibration",
+          "risk": "correction_urgency",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "material-single-update",
+          "split": "calibration",
+          "risk": "overstatement",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "hourly-updates-stop-breaking",
+          "split": "holdout",
+          "risk": "false_persistence",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "narrow-rapid-update",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "two-updates-following-initial-phase",
+          "split": "holdout",
+          "risk": "premature_decay",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "quiet-but-unresolved-holdout",
+          "split": "holdout",
+          "risk": "quiet_unresolved_persistence",
+          "result": "Historical",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": true
+        },
+        {
+          "id": "late-source-report",
+          "split": "holdout",
+          "risk": "stale_report_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "permitted-new-source-report",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "BREAKING • SOURCE REPORT",
+          "allowed": [
+            "BREAKING • SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "source-report-correction",
+          "split": "holdout",
+          "risk": "correction_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "new-major-update-after-quiet-phase",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        }
+      ]
+    },
+    {
+      "policy": {
+        "version": "candidate-long",
+        "qualification": "synthetic_calibrated_candidate",
+        "breakingFreshMs": 21600000,
+        "breakingMaxMs": 86400000,
+        "rapidArrivalMs": 43200000,
+        "velocityWindowMs": 86400000,
+        "developingQuietMs": 259200000,
+        "updatedQuietMs": 604800000,
+        "minimumVelocityChanges": 2
+      },
+      "calibration_errors": 3,
+      "holdout_errors": 3,
+      "cases": [
+        {
+          "id": "rapid-new-event",
+          "split": "calibration",
+          "risk": "premature_decay",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "review-latency-new-event",
+          "split": "calibration",
+          "risk": "rapid_update_missed",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "single-update-no-long-urgency",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "Breaking",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": false
+        },
+        {
+          "id": "rapid-continuing-phase",
+          "split": "calibration",
+          "risk": "false_persistence",
+          "result": "Breaking",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": false
+        },
+        {
+          "id": "quiet-unresolved-phase",
+          "split": "calibration",
+          "risk": "quiet_unresolved_persistence",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": false
+        },
+        {
+          "id": "correction-is-a-correction",
+          "split": "calibration",
+          "risk": "correction_urgency",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "material-single-update",
+          "split": "calibration",
+          "risk": "overstatement",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "UpdatedEstablished"
+          ],
+          "passes": true
+        },
+        {
+          "id": "hourly-updates-stop-breaking",
+          "split": "holdout",
+          "risk": "false_persistence",
+          "result": "Breaking",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": false
+        },
+        {
+          "id": "narrow-rapid-update",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "Breaking",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "two-updates-following-initial-phase",
+          "split": "holdout",
+          "risk": "premature_decay",
+          "result": "Developing",
+          "allowed": [
+            "Developing"
+          ],
+          "passes": true
+        },
+        {
+          "id": "quiet-but-unresolved-holdout",
+          "split": "holdout",
+          "risk": "quiet_unresolved_persistence",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Historical"
+          ],
+          "passes": false
+        },
+        {
+          "id": "late-source-report",
+          "split": "holdout",
+          "risk": "stale_report_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "permitted-new-source-report",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "BREAKING • SOURCE REPORT",
+          "allowed": [
+            "BREAKING • SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "source-report-correction",
+          "split": "holdout",
+          "risk": "correction_urgency",
+          "result": "SOURCE REPORT",
+          "allowed": [
+            "SOURCE REPORT"
+          ],
+          "passes": true
+        },
+        {
+          "id": "new-major-update-after-quiet-phase",
+          "split": "holdout",
+          "risk": "rapid_update_missed",
+          "result": "UpdatedEstablished",
+          "allowed": [
+            "Breaking"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ]
+}

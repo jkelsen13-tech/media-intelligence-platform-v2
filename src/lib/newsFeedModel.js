@@ -146,3 +146,6 @@ export function readThenAdvanceLastVisit(storage, now) {
     return null
   }
 }
+
+// Shared native Home/Story display seam; never derive story identity from page groups.
+export { evaluateNewsStoryState, reconstructNewsStateHistory, newsSourceReports } from './newsStoryState.js'
