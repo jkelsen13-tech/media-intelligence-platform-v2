@@ -13,7 +13,7 @@ const receipt = () => ({ schema: 'mip.real-imagery-consumer-receipt.v1',
     outerLibrary: { sha256: 'd'.repeat(64), locallyVerified: false },
     metadata: { sha256: 'e'.repeat(64), xmlBindings: [
       { id: 'attribution', text: 'SYNTHETIC TEST attribution', path: './credit' },
-      { id: 'use_constraints', text: 'SYNTHETIC TEST planning only; noncadastral' }],
+      { id: 'use_constraints', text: 'SYNTHETIC TEST planning only; noncadastral', path: './notice' }],
       rightsInterpretation: { classification: 'SYNTHETIC TEST only' } },
     capture: { start: '2023-03-07', precision: 'day' },
     evidencePoint: { coordinates: [-81.7, 41.4], synthetic: true, datum: 'unknown', registered: false },
