@@ -242,6 +242,107 @@ begin
 end $$;
 
 
+-- Additive declaration provenance over saved snapshots. No source arrival,
+-- reassessment, truth judgment or public eligibility is implied by this event.
+create function evidence_pipeline.diff_relevance_declarations(p_before jsonb,p_after jsonb) returns jsonb
+language plpgsql immutable security invoker set search_path='' as $$
+declare previous jsonb:=coalesce(p_before->'relevance_declarations','[]');
+  current_rows jsonb:=coalesce(p_after->'relevance_declarations','[]'); rows jsonb; snapshot jsonb; row_value jsonb; prior jsonb;
+  result jsonb:='[]';
+begin
+  if p_before is null then return result; end if;
+  if p_before->'scope_candidate_ids' is distinct from p_after->'scope_candidate_ids' then raise exception 'comparison scope mismatch';end if;
+  foreach snapshot in array array[p_before,p_after] loop
+    rows:=coalesce(snapshot->'relevance_declarations','[]');
+    if jsonb_typeof(snapshot->'scope_candidate_ids') is distinct from 'array' or jsonb_typeof(snapshot->'inputs') is distinct from 'array' then
+      raise exception 'invalid retained relevance snapshot';end if;
+    if jsonb_typeof(rows)<>'array' then raise exception 'invalid retained relevance declarations';end if;
+    if exists(select 1 from jsonb_array_elements(rows) x group by x->>'candidate_id',x->>'change_position' having count(*)>1) then
+      raise exception 'duplicate retained relevance identity';end if;
+    for row_value in select value from jsonb_array_elements(rows) loop
+      if jsonb_typeof(row_value)<>'object' or (select count(*) from jsonb_object_keys(row_value))<>6
+        or jsonb_typeof(row_value->'candidate_id') is distinct from 'string'
+        or (row_value->>'candidate_id') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        or jsonb_typeof(row_value->'change_position') is distinct from 'string'
+        or (row_value->>'change_position') !~ '^[1-9][0-9]*$'
+        or jsonb_typeof(row_value->'selection_method') is distinct from 'string'
+        or length(btrim(row_value->>'selection_method')) not between 1 and 120
+        or jsonb_typeof(row_value->'selection_ref') is distinct from 'string'
+        or length(btrim(row_value->>'selection_ref')) not between 1 and 1000
+        or jsonb_typeof(row_value->'rationale') is distinct from 'string'
+        or length(btrim(row_value->>'rationale')) not between 1 and 4000
+        or jsonb_typeof(row_value->'declared_at') is distinct from 'string'
+        or (row_value->>'declared_at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$'
+        or not (snapshot->'scope_candidate_ids' ? (row_value->>'candidate_id'))
+        or not exists(select 1 from jsonb_array_elements(snapshot->'inputs') x where x->>'position'=row_value->>'change_position') then
+        raise exception 'invalid retained relevance declaration tuple';end if;
+      -- Range-check without converting the returned decimal string to JSON numeric.
+      perform (row_value->>'change_position')::bigint;
+      perform (row_value->>'declared_at')::timestamptz;
+    end loop;
+  end loop;
+  -- The retained table is append-only with this composite primary key. Changed
+  -- or disappearing tuples are incompatible snapshots, never replacement events.
+  for row_value in select value from jsonb_array_elements(previous) loop
+    select value into prior from jsonb_array_elements(current_rows) x
+      where x->>'candidate_id'=row_value->>'candidate_id' and x->>'change_position'=row_value->>'change_position';
+    -- Timestamptz serialization can change offset with the observing session.
+    -- Compare the retained instant; copy the after timestamp string unchanged.
+    if prior is null or (prior-'declared_at') is distinct from (row_value-'declared_at')
+      or (prior->>'declared_at')::timestamptz is distinct from (row_value->>'declared_at')::timestamptz then
+      raise exception 'retained relevance identity changed';end if;
+  end loop;
+  for row_value in select value from jsonb_array_elements(current_rows) x order by x->>'candidate_id',(x->>'change_position')::bigint loop
+    if not exists(select 1 from jsonb_array_elements(previous) x
+      where x->>'candidate_id'=row_value->>'candidate_id' and x->>'change_position'=row_value->>'change_position') then
+      result:=result||jsonb_build_array(jsonb_build_object('kind','relevant_input_declared','candidate_id',row_value->>'candidate_id',
+        'position',row_value->>'change_position','selection_method',row_value->>'selection_method','selection_ref',row_value->>'selection_ref',
+        'rationale',row_value->>'rationale','declared_at',row_value->>'declared_at'));
+    end if;
+  end loop;
+  return result;
+end $$;
+revoke all on function evidence_pipeline.diff_relevance_declarations(jsonb,jsonb) from public,anon,authenticated;
+grant execute on function evidence_pipeline.diff_relevance_declarations(jsonb,jsonb) to service_role;
+
+-- Preserve the native event body and append the bounded declaration delta.
+create or replace function evidence_pipeline.diff_investigation_snapshots(p_before jsonb,p_after jsonb) returns jsonb
+language plpgsql immutable security invoker set search_path='' as $$
+declare changes jsonb:='[]'; a jsonb; b jsonb; x jsonb; prev jsonb;
+begin
+  if p_before is null then return changes; end if;
+  if p_before->'scope_candidate_ids' is distinct from p_after->'scope_candidate_ids' then
+    raise exception 'comparison scope mismatch';
+  end if;
+  for x in select value from jsonb_array_elements(p_after->'inputs') loop
+    if not exists(select 1 from jsonb_array_elements(p_before->'inputs') v where v->>'position'=x->>'position') then
+      changes:=changes||jsonb_build_array(jsonb_build_object('kind','evidence_entered_observation','position',x->>'position'));
+    end if;
+  end loop;
+  for a in select value from jsonb_array_elements(p_after->'assessments')
+    where p_after->'selected_assessment_ids' ? (value->>'id') loop
+    select value into b from jsonb_array_elements(p_before->'assessments') where value->>'id'=a->>'id';
+    if b is null then
+      changes:=changes||jsonb_build_array(jsonb_build_object('kind','assessment_added','assessment_id',a->>'id','candidate_id',a->>'candidate_id'));
+    else
+      if a->'stale_causes' is distinct from b->'stale_causes' then
+        changes:=changes||jsonb_build_array(jsonb_build_object('kind','assessment_dependency_change',
+          'assessment_id',a->>'id','candidate_id',a->>'candidate_id',
+          'before_stale',b->'stale','after_stale',a->'stale',
+          'before_causes',b->'stale_causes','after_causes',a->'stale_causes'));
+      end if;
+      for x in select value from jsonb_array_elements(a->'superseded_by') loop
+        if not (b->'superseded_by' @> jsonb_build_array(x)) then
+          select value into prev from jsonb_array_elements(p_after->'assessments') where value->'id'=x;
+          changes:=changes||jsonb_build_array(jsonb_build_object('kind','assessment_replaced','candidate_id',a->>'candidate_id',
+            'before_assessment_id',a->>'id','after_assessment_id',x,'before_outcome',b->>'outcome','after_outcome',prev->>'outcome'));
+        end if;
+      end loop;
+    end if;
+  end loop;
+  return changes||evidence_pipeline.diff_relevance_declarations(p_before,p_after);
+end $$;
+
 -- Existing private RPC: one additive action; historical actions preserved.
 create or replace function public.mip_assessments_v1(p_action text,p_input jsonb default '{}') returns jsonb
 language plpgsql security invoker set search_path='' as $$
