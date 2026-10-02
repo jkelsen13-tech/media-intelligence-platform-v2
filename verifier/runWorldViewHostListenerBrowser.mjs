@@ -68,13 +68,16 @@ try{
  await modes.getByRole('tab',{name:'Graph',exact:true}).click()
  const afterUnmount=await page.evaluate(()=>window.__MIP_HOST_TEST__.stats())
  assert.equal(afterUnmount.bindings.filter(e=>e.active).length,0)
+ assert.equal(afterUnmount.subscriptions,afterUnmount.unsubscriptions,'Graph unmount leaves no active service subscription')
  await modes.getByRole('tab',{name:'Map',exact:true}).click()
  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__?.getCameraState(),{},{timeout:60000})
  const nativeRenderer=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getState().rendererKind)
  const fresh=await page.locator('.wv-map-host').elementHandle()
  assert.deepEqual(await fresh.evaluate(host=>window.__MIP_HOST_TEST__.currentBindings(host)),types,'remounted native host owns exactly one of each handler')
  const remount=await page.evaluate(()=>window.__MIP_HOST_TEST__.stats())
- assert.equal(remount.subscriptions,atlas.subscriptions+1);assert.equal(remount.unsubscriptions,atlas.unsubscriptions+1)
+ // Dev entrypoint wraps App in React.StrictMode: setup/cleanup/setup replays on remount.
+ assert.equal(remount.subscriptions,atlas.subscriptions+2);assert.equal(remount.unsubscriptions,atlas.unsubscriptions+2)
+ assert.equal(remount.subscriptions-remount.unsubscriptions,1,'exactly one current service subscription survives StrictMode replay')
  for(const type of ['pointerup','keyup','wheel']){
   const count=(await page.evaluate(()=>window.__MIP_HOST_TEST__.stats())).requestCalls
   await fresh.evaluate((host,type)=>host.dispatchEvent(new Event(type,{bubbles:true})),type)
@@ -83,6 +86,7 @@ try{
  await modes.getByRole('tab',{name:'Graph',exact:true}).click()
  assert.deepEqual(await fresh.evaluate(host=>window.__MIP_HOST_TEST__.currentBindings(host)),[])
  const final=await page.evaluate(()=>window.__MIP_HOST_TEST__.stats())
+ assert.equal(final.subscriptions,final.unsubscriptions,'final unmount releases the last service subscription')
  await fresh.evaluate(host=>{for(const type of ['pointerdown','pointerup','keydown','keyup','wheel'])host.dispatchEvent(new Event(type,{bubbles:true}))})
  assert.equal((await page.evaluate(()=>window.__MIP_HOST_TEST__.stats())).requestCalls,final.requestCalls)
  assert.deepEqual(receipt.errors,[])
