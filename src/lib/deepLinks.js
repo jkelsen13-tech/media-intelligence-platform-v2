@@ -38,6 +38,7 @@ export const DEEP_LINK_SLUG_TO_VIEW = Object.freeze({
   world: 'world',
   news: 'news',
   investigations: 'investigations',
+  markets: 'markets',
 })
 
 export const VIEW_TO_DEEP_LINK_SLUG = Object.freeze({
@@ -48,6 +49,7 @@ export const VIEW_TO_DEEP_LINK_SLUG = Object.freeze({
   world: 'world',
   news: 'news',
   investigations: 'investigations',
+  markets: 'markets',
 })
 
 export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place', 'at', 'arc'])

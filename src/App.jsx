@@ -18,6 +18,9 @@ import NewsView from './views/NewsView'
 import Phase3View from './views/Phase3View'
 import SourceComparisonView from './views/SourceComparisonView'
 import WorldView from './views/WorldView'
+import MarketsView from './views/MarketsView'
+import { createMarketSourceLookup } from './lib/marketSourceLookup.js'
+import { temporalAssessmentConfigKey } from './lib/temporalAssessment.js'
 import { buildNavViews, buildMoreEntries, isMoreViewKey } from './lib/navViews'
 import { supabase } from './lib/supabase'
 import { surfaceJoinDisclosures } from './lib/investigationSurface'
@@ -106,6 +109,16 @@ import WorkspaceTechnicalDisclosure from './components/WorkspaceTechnicalDisclos
 // Mobile-first graph entry: the top N hubs by degree centrality.
 const HUB_LIST_SIZE = 30
 
+// The current temporal composer is event-bound. Generic subject reconstruction
+// must not create that event assessment key for a listing or cryptoasset.
+export function marketContextWithoutInventedAssessment(context) {
+  if (['equity', 'cryptoasset'].includes(context?.canonical_subject_type)
+    && context.temporal_assessment_reference === temporalAssessmentConfigKey(context.canonical_subject_id)) {
+    return { ...context, temporal_assessment_reference: null }
+  }
+  return context
+}
+
 function subObjectFromUi(selected, activeLocationKey) {
   if (selected?.id != null || selected?.slug != null) {
     return { kind: 'entity', id: String(selected.id ?? selected.slug) }
@@ -137,7 +150,7 @@ function readInitialDeepLink() {
   }
   return {
     view: hydrated.investigationContext.active_view ?? hydrated.parsed.view ?? 'graph',
-    investigationContext: hydrated.investigationContext,
+    investigationContext: marketContextWithoutInventedAssessment(hydrated.investigationContext),
     linkSelection: hydrated.selection,
     selectionFallbacks: hydrated.fallbacks,
   }
@@ -209,6 +222,7 @@ export default function App({
   investigationEvidenceReviewsClient = null,
   authSessionOverride = null,
   privateInvestigationPreview = null,
+  marketSourceSnapshot = null,
 } = {}) {
   const [graph, setGraph] = useState(null)
   // Aggregate coverage is optional: unavailable data omits the disclosure but
@@ -219,6 +233,8 @@ export default function App({
   const [pinned, setPinned] = useState(false)
   const [view, setView] = useState(INITIAL_DEEP_LINK.view)
   const [savedInvestigationHandoff, setSavedInvestigationHandoff] = useState(null)
+  const [marketReturnContext, setMarketReturnContext] = useState(null)
+  const [marketReturnSelection, setMarketReturnSelection] = useState(null)
   // R4.75 Step 1 — one shared Investigation Context. Tab switches update
   // active_view only. Explicit subject select replaces identity fields.
   const [investigationContext, setInvestigationContext] = useState(INITIAL_DEEP_LINK.investigationContext)
@@ -316,6 +332,9 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const suppliedMarketSnapshot = marketSourceSnapshot ?? mipBackend.publicData.marketSourceSnapshot ?? null
+  const marketSource = useMemo(() => createMarketSourceLookup(suppliedMarketSnapshot), [suppliedMarketSnapshot])
+  useEffect(() => { setMarketReturnContext(null); setMarketReturnSelection(null) }, [auth.user?.id])
   const workspaceClient = investigationWorkspaceClient
     ?? devPreview?.client
     ?? mipBackend.investigations.workspace
@@ -395,11 +414,21 @@ export default function App({
     writeRecentInvestigations(unauthenticatedRecentStorage(), recentInvestigations)
   }, [recentInvestigations])
 
-  const deepLinkCatalogForSubject = useCallback((id) => graphSelectionCatalog(
-    graph, recordedGeography(graph?.nodes ?? [], locationMentions), id,
-  ), [graph, locationMentions])
-  const deepLinkCatalog = useMemo(() => deepLinkCatalogForSubject(investigationContext.canonical_subject_id),
-    [deepLinkCatalogForSubject, investigationContext.canonical_subject_id])
+  const deepLinkCatalogForSubject = useCallback((id, subjectType = null, inspectionTime = null) => {
+    const current = investigationContextRef.current
+    const kind = subjectType ?? (current?.canonical_subject_id === id ? current.canonical_subject_type : null)
+    const asset = ['equity', 'cryptoasset'].includes(kind) ? marketSource.lookup({ id, kind, at: inspectionTime ?? (current?.canonical_subject_id === id
+      ? current.as_of_time ?? marketSource.validAt : marketSource.validAt) }) : { status: 'unavailable' }
+    if (asset.status === 'ok') {
+      const sourceIds = new Set(asset.model.reporting.sections.flatMap(section => section.records)
+        .flatMap(record => record.path).flatMap(hop => hop.supports).map(support => support.captureId))
+      return { entity: [], place: [], claim: [], arc: [], source: [...sourceIds].map(sourceId => ({ id: sourceId, parentId: id })) }
+    }
+    return graphSelectionCatalog(graph, recordedGeography(graph?.nodes ?? [], locationMentions), id)
+  }, [graph, locationMentions, marketSource])
+  const deepLinkCatalog = useMemo(() => deepLinkCatalogForSubject(investigationContext.canonical_subject_id,
+    investigationContext.canonical_subject_type, investigationContext.as_of_time),
+    [deepLinkCatalogForSubject, investigationContext.canonical_subject_id, investigationContext.canonical_subject_type, investigationContext.as_of_time])
 
   // Explicit subject changes clear focuses from every analytical surface.
   // Discovery filters stay in NewsView and do not filter this investigation.
@@ -872,6 +901,60 @@ export default function App({
     void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle).catch(() => {})
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
+  const selectMarketAsset = useCallback(({ asset, at }) => {
+    // Recheck the supplied canonical identity through the same authorized
+    // projection; symbols and arbitrary result payloads never select an asset.
+    const qualified = marketSource.lookup({ id: asset?.id, kind: asset?.kind, at })
+    if (qualified.status !== 'ok' || qualified.model.asset.recordVersionId !== asset?.recordVersionId) return
+    const current = investigationContextRef.current
+    const sameAsset = current?.canonical_subject_id === asset.id && current?.canonical_subject_type === asset.kind
+    resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
+    if (sameAsset) setLinkSelection(applySelectionAgainstCatalog(linkSelection,
+      deepLinkCatalogForSubject(asset.id, asset.kind, current.as_of_time ?? at), asset.id).selection)
+    setMarketReturnContext(null)
+    setMarketReturnSelection(null)
+    setView('markets')
+    setInvestigationContext(ic => {
+      const same = ic.canonical_subject_id === asset.id && ic.canonical_subject_type === asset.kind
+      const next = commitNewSubjectFromApp(ic, { canonical_subject_type: asset.kind, canonical_subject_id: asset.id,
+        as_of_time: same ? ic.as_of_time : at, selected_time_range: same ? ic.selected_time_range : null,
+        temporal_assessment_reference: same ? ic.temporal_assessment_reference : null }, { landingView: 'markets' })
+      return marketContextWithoutInventedAssessment(next)
+    })
+  }, [marketSource, linkSelection, deepLinkCatalogForSubject, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
+
+  const rememberMarketForReturn = useCallback(() => {
+    const current = investigationContextRef.current
+    if (['equity', 'cryptoasset'].includes(current?.canonical_subject_type)) {
+      setMarketReturnContext({ ...current })
+      setMarketReturnSelection({ ...linkSelection })
+    }
+  }, [linkSelection])
+  const openMarketEvent = useCallback(eventId => {
+    const current = investigationContextRef.current
+    const qualified = marketSource.lookup({ id: current?.canonical_subject_id, kind: current?.canonical_subject_type,
+      at: current?.as_of_time ?? marketSource.validAt })
+    if (qualified.status !== 'ok' || !qualified.model.reporting.sections.some(section => section.records.some(record => record.eventId === eventId))) return
+    rememberMarketForReturn()
+    resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
+    const node = graph?.nodes?.find(item => item.id === eventId && item.type === 'event')
+    setView('graph')
+    if (node) { setSelected(node); setFocusStack(jumpFocusStack('node', node.id, node.label ?? node.id)) }
+    setInvestigationContext(ic => commitNewSubjectFromApp(ic, node ?? { type: 'event', id: eventId }, { landingView: 'graph' }))
+  }, [marketSource, graph, rememberMarketForReturn, resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
+  const returnToMarketAsset = useCallback(() => {
+    if (!marketReturnContext) return
+    resetJumpContext()
+    clearInvalidNewSubjectSubSelections()
+    setInvestigationContext({ ...marketReturnContext, active_view: 'markets' })
+    setLinkSelection(marketReturnSelection ?? emptyDeepLinkSelection())
+    setView('markets')
+    setMarketReturnContext(null)
+    setMarketReturnSelection(null)
+  }, [marketReturnContext, marketReturnSelection, resetJumpContext, clearInvalidNewSubjectSubSelections])
+
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
   // contract: the jump target is resolved through lib/navigationContract.js.
   // Return-to-origin (Three-Screen Review named finding): when the target
@@ -1047,9 +1130,9 @@ export default function App({
     clearInvalidNewSubjectSubSelections()
     const restored = restoreRecentInvestigation(item, {
       currentIc: current,
-      catalog: deepLinkCatalogForSubject(item?.canonical_subject_id),
+      catalog: deepLinkCatalogForSubject(item?.canonical_subject_id, item?.canonical_subject_type),
     })
-    setInvestigationContext(restored.investigationContext)
+    setInvestigationContext(marketContextWithoutInventedAssessment(restored.investigationContext))
     setView(restored.investigationContext.active_view ?? item?.active_view ?? 'news')
     setLinkSelection(restored.selection)
     setSelectionFallbacks(restored.fallbacks)
@@ -1097,14 +1180,14 @@ export default function App({
       const current = investigationContextRef.current
       const parsed = parseDeepLink(hash)
       const hydrated = hydrateDeepLink(hash, { currentIc: current,
-        catalog: deepLinkCatalogForSubject(parsed.subjectId) })
+        catalog: deepLinkCatalogForSubject(parsed.subjectId, parsed.subjectType ?? 'event') })
       if (!hydrated.committed) return
       resetJumpContext()
       clearInvalidNewSubjectSubSelections()
       if (hydrated.parsed.subjectId) {
         rememberPriorSubject(current, hydrated.parsed.subjectId)
       }
-      setInvestigationContext(hydrated.investigationContext)
+      setInvestigationContext(marketContextWithoutInventedAssessment(hydrated.investigationContext))
       if (hydrated.investigationContext.active_view) setView(hydrated.investigationContext.active_view)
       setLinkSelection(hydrated.selection)
       setSelectionFallbacks(hydrated.fallbacks)
@@ -1224,7 +1307,7 @@ export default function App({
   const nodeDimensions = selected
     ? workspaceEvidenceDimensions(selected, { forNode: true })
     : null
-  const workspaceNavItems = WORKSPACE_NAV_ITEMS.filter((item) => {
+  const workspaceNavItems = [...WORKSPACE_NAV_ITEMS, ...navViews.filter(item => item.key === 'markets')].filter((item) => {
     if (item.key === 'phase3') return phase3Beta
     if (item.key === 'compare') return sourceComparisonBeta
     return true
@@ -1920,6 +2003,22 @@ export default function App({
           </>
         )}
 
+        {marketReturnContext && view !== 'markets' && <section className="market-return" aria-label="Market asset return">
+          <button type="button" onClick={returnToMarketAsset}>Return to market asset</button>
+          <p>Return to the selected {marketReturnContext.canonical_subject_type} with its recorded inspection scope.</p>
+        </section>}
+        {['equity', 'cryptoasset'].includes(investigationContext.canonical_subject_type) && ['timeline', 'graph', 'world'].includes(view)
+          && <p className="market-join-disclosure" role="status">This surface has no supported asset join. Your selected asset is preserved; use Markets for its sourced reporting. No location, event or price history is inferred.</p>}
+        {view === 'markets' && <MarketsView
+          key={auth.user?.id ?? 'public'}
+          sourceSnapshot={suppliedMarketSnapshot}
+          investigationContext={investigationContext}
+          onSelectAsset={selectMarketAsset}
+          onOpenEvent={openMarketEvent}
+          onOpenArticle={id => { rememberMarketForReturn(); openArticleInNews(id) }}
+          onOpenTimeline={() => { rememberMarketForReturn(); changeView('timeline') }}
+          onExploreConnections={() => { rememberMarketForReturn(); changeView('graph') }}
+        />}
         {view === 'timeline' && (
           <TimelineView
             onOpenArc={openArcInView}

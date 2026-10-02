@@ -1,8 +1,8 @@
 import { marketInstant, validateMarketAsset, validateMarketEvidencePath } from '../../supabase/functions/_shared/marketsEvidenceContract.mjs'
 
-// Initial-release Markets display preparation. No runtime reader or provider
-// adapter calls this helper. Inputs must come from a future trusted retained-
-// record/publication adapter: caller-authored eligibility flags are not authority.
+// Initial-release Markets display preparation, used by the supplied-source
+// reader. Inputs require a trusted retained-record/publication adapter;
+// caller-authored eligibility flags are not authority. No provider is activated.
 // The existing semantic contract owns identity, rights and relationship checks.
 export const MARKET_CONTEXT_COPY = Object.freeze({
   introduction: 'Explore available stock and crypto prices alongside related reporting collected by MIP. Prices come from the provider named on the chart or quote. Reporting covers MIP’s ingested sources and may be incomplete.',

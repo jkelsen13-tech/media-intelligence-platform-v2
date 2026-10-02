@@ -13,33 +13,33 @@ import {
   isMoreViewKey,
 } from '../src/lib/navViews.js'
 
-test('both flags on: 6 tabs, More last, core order unchanged including World View', () => {
+test('both flags on: Markets is core and More remains last', () => {
   const nav = buildNavViews({ phase3Beta: true, sourceComparisonBeta: true })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world', 'more'],
+    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world', 'markets', 'more'],
   )
-  assert.equal(nav.length, 7)
+  assert.equal(nav.length, 8)
 })
 
-test('both flags off: More hides entirely — 5 core tabs including World View, no trace', () => {
+test('both flags off: More hides and required Markets stays available', () => {
   const nav = buildNavViews({ phase3Beta: false, sourceComparisonBeta: false })
   assert.deepEqual(
     nav.map((v) => v.key),
-    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world'],
+    ['news', 'investigations', 'graph', 'timeline', 'arcs', 'world', 'markets'],
   )
   assert.equal(buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: false }).length, 0)
 })
 
 test('single flag on: More still appears; sheet lists only the authorized surface', () => {
   const phase3Only = buildNavViews({ phase3Beta: true, sourceComparisonBeta: false })
-  assert.equal(phase3Only.length, 7)
+  assert.equal(phase3Only.length, 8)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: true, sourceComparisonBeta: false }).map((v) => v.key),
     ['phase3'],
   )
   const compareOnly = buildNavViews({ phase3Beta: false, sourceComparisonBeta: true })
-  assert.equal(compareOnly.length, 7)
+  assert.equal(compareOnly.length, 8)
   assert.deepEqual(
     buildMoreEntries({ phase3Beta: false, sourceComparisonBeta: true }).map((v) => v.key),
     ['compare'],

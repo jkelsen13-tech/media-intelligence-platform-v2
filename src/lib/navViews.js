@@ -23,6 +23,7 @@ export const CORE_VIEWS = [
   // R4 launch-minimum World View — core tab, not flag-gated. Shares the
   // Graph selected-node seam in App.jsx (mip_object_id / subject_graph_node_id).
   { key: 'world', label: 'World View', shortLabel: 'World' },
+  { key: 'markets', label: 'Markets', shortLabel: 'Markets' },
 ]
 
 // 02C Phase 3 internal closed beta. Public release stays blocked per the
