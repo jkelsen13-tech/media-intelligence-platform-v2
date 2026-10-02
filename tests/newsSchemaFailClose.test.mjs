@@ -296,7 +296,7 @@ test('loadArticles: story_arcs.title is not selected; pending_review stays empty
 })
 
 test('loadArticleDetail: does not join story_arcs; arc_title stays null', async () => {
-  const eligible = { ...NASA_PENDING, reader_state: 'eligible' }
+  const eligible = { ...NASA_PENDING, reader_state: 'eligible', source_status: 'active' }
   const client = fakeClient({
     articles: [eligible],
     citations: [],

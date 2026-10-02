@@ -23,7 +23,10 @@ test('News visibly distinguishes verified retained-source claims from unverified
   assert.match(newsView, /news-claim-auditability/)
   assert.match(readPath, /auditability_state: row\.auditability_state/)
   assert.match(readPath, /evidence_source_field: row\.evidence_source_field/)
-  assert.match(readPath, /\[\.\.\.reviewedClaims, \.\.\.storedClaims\]/)
+  // The later nested-publication contract admits only retained-source surfaces.
+  // Raw article extraction JSON has no corresponding publication authority.
+  assert.match(readPath, /from\('news_detail_public'\)/)
+  assert.doesNotMatch(readPath, /\.\.\.storedClaims|artRes\.data\.claims/)
 })
 
 test('News claim auditability remains projection-only and exposes only rendered source-span fields', () => {

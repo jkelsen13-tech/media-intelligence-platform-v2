@@ -1,6 +1,6 @@
 # MIP convergence: auth and security source gate — 2026-10-02
 
-Bounded source/dependency repair from `b8ac1663fa75c4c7a26d653a288f745070bafcae`. This is not a live auth journey, release approval, backend privilege change, or account creation receipt. The historical original Account Pipeline closure remains closed; V2 source and the coordinator's fresh V2 metadata establish an existing identity foundation, not a from-scratch auth build. Current Library successor inputs preserve separate provider, security, physical-device, live consumer and release gates.
+Bounded source/dependency repair from `b8ac1663fa75c4c7a26d653a288f745070bafcae`. This is not a live auth journey, release approval, backend privilege change, or account creation receipt. The historical original Account Pipeline closure remains closed; current frontend source and the coordinator's fresh survivor metadata establish an existing identity foundation, not a from-scratch auth build. Current Library successor inputs preserve separate provider, security, physical-device, live consumer and release gates.
 
 ## Implemented behavior
 
@@ -8,7 +8,7 @@ Bounded source/dependency repair from `b8ac1663fa75c4c7a26d653a288f745070bafcae`
 - Expired/malformed expiry sessions are withheld. Refresh updates the expiry deadline; if refresh never arrives, the deadline clears frontend identity and private records. Subscription/timer cleanup prevents late updates after unmount. This browser state is UI visibility, not an authorization substitute.
 - Profiles are bound to their requested user ID and cancelled on identity change. The previous identity is hidden on the first render of a change. Private workspace state is also hidden immediately and outstanding requests are invalidated when identity becomes unknown or changes.
 - Account logout disables repeat submission while pending and shows an error if the SDK fails. Failed magic-link requests show a retryable error. Magic-link `app: mip` metadata and `shouldCreateUser: true` remain preserved for the existing scoped trigger.
-- Auth callback errors are captured without tokens before router/SDK hash replacement. Clearing an auth error preserves ordinary application deep links and history state. The outbound callback destination permits only the confirmed V2 Pages path, or a loopback address under explicit development mode. Query/hash/returnTo destinations are discarded; the auth callback owns the fragment. Cross-device restoration of a prior application hash is not implemented or claimed.
+- Auth callback errors are captured without tokens before router/SDK hash replacement. Clearing an auth error preserves ordinary application deep links and history state. The outbound callback destination permits only the confirmed current frontend Pages path, or a loopback address under explicit development mode. Query/hash/returnTo destinations are discarded; the auth callback owns the fragment. Cross-device restoration of a prior application hash is not implemented or claimed.
 - A public browser key guard accepts Supabase publishable keys and legacy JWT-shaped `anon` keys; it rejects secret/service-role/unknown keys. This is configuration validation, not JWT verification. The coordinator integrates the `makeClient` call site from the evidence lane.
 - A shared external URL guard permits absolute HTTP(S) only and rejects credentials, ambiguous backslashes, whitespace/control bytes and excessive length. Source Comparison and Legal & Policy retain unsafe locators as plain text. Other owned surfaces integrate the same helper through their lanes.
 
@@ -35,14 +35,14 @@ Local receipts: `/workspace/mip-lane-auth-receipts/`:
 
 ## Remaining gates
 
-Real V2 magic-link delivery/signup/login persistence/logout/expiry and cross-user denial need separately authorized user-facing qualification. The coordinator verified the live `mip_profiles` identity schema, own-row policies, scoped enabled signup trigger and exactly-true account UI flag; that metadata receipt does not prove the full journey. Browser public-key validation cannot remove a privileged value already embedded by a misconfigured build; build environment/secret hygiene remains operational responsibility.
+Real current frontend magic-link delivery/signup/login persistence/logout/expiry and cross-user denial need separately authorized user-facing qualification. The coordinator verified the live `mip_profiles` identity schema, own-row policies, scoped enabled signup trigger and exactly-true account UI flag; that metadata receipt does not prove the full journey. Browser public-key validation cannot remove a privileged value already embedded by a misconfigured build; build environment/secret hygiene remains operational responsibility.
 
 Independent review and the coherent integrated suite belong to the coordinator. No push, merge, deployment, account creation, new credential, live role/RLS/ACL mutation, paid provider activation, or release occurred in this lane.
 
 
 ## Separate profile privilege source proposal
 
-The coordinator's fresh read-only V2 metadata identified broad table privileges on `mip_profiles` for browser roles, including `TRUNCATE`, `TRIGGER`, `REFERENCES` and `MAINTAIN`. RLS CRUD policies do not enforce row isolation for TRUNCATE. Consumer exposure of a destructive entry point was not established; this is an overbroad privilege finding, not a demonstrated live exploit.
+The coordinator's fresh read-only survivor metadata identified broad table privileges on `mip_profiles` for browser roles, including `TRUNCATE`, `TRIGGER`, `REFERENCES` and `MAINTAIN`. RLS CRUD policies do not enforce row isolation for TRUNCATE. Consumer exposure of a destructive entry point was not established; this is an overbroad privilege finding, not a demonstrated live exploit.
 
 `supabase/source-proposals/mip_profiles_least_privilege_2026-10-02.sql` is an **unapplied source proposal**, deliberately outside migration discovery. It revokes only those four privileges from `anon`/`authenticated`, with no new grants or CASCADE. Existing CRUD grants, owner, RLS, policies, constraints, columns, signup function bytes/ACL/owner and scoped trigger remain preserved. The REFERENCES revoke also removes owned column REFERENCES privileges; column CRUD grants are preserved.
 
