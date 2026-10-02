@@ -1,5 +1,6 @@
 import { marketInstant } from '../../supabase/functions/_shared/marketsEvidenceContract.mjs'
 import { createMarketSourceLookup } from './marketSourceLookup.js'
+import { validateMarketsPublicDirectory } from '../../supabase/functions/_shared/marketsDirectoryContract.mjs'
 
 export const MARKETS_SOURCE_RPC = 'read_markets_source_directory_v1'
 const MAX_PROJECTION_BYTES = 2 * 1024 * 1024
@@ -38,6 +39,9 @@ export function createMarketsBackend(supabaseClient = null) {
         if (!encoded || new TextEncoder().encode(encoded).length > MAX_PROJECTION_BYTES) return unavailable('directory_invalid')
         snapshot = JSON.parse(encoded)
       } catch { return unavailable('directory_invalid') }
+      const admitted = validateMarketsPublicDirectory(snapshot)
+      if (admitted.status !== 'available') return unavailable('directory_invalid')
+      snapshot = admitted.snapshot
       const source = createMarketSourceLookup(snapshot)
       if (source.status !== 'available') return unavailable('directory_invalid')
       if (at !== null && marketInstant(source.validAt) !== marketInstant(at)) return unavailable('inspection_scope_mismatch')

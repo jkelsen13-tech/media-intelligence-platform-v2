@@ -9,7 +9,7 @@ function Clock({ label, value }) { return <div><dt>{label}</dt><dd>{shown(value)
 function Identity({ asset }) {
   return <><span className="market-kind">{asset.kind === 'equity' ? 'Stock listing' : 'Cryptoasset'}</span><strong>{asset.name}</strong>
     <span>{asset.aliases.map(alias => `${alias.namespace}: ${alias.symbol}`).join(' · ') || 'No current symbol recorded'}</span>
-    <span>{asset.kind === 'cryptoasset' ? `${asset.networkId} · ${asset.assetIdentifier}` : `Issuer ${asset.issuerId}`}</span></>
+    <span>{asset.kind === 'cryptoasset' ? `Network ${asset.networkId} · ${asset.assetIdentifierKind ?? 'Asset'}: ${asset.assetIdentifier}` : `Exchange ${asset.exchangeMic ?? 'unavailable'} · Share class ${asset.shareClassId ?? 'unavailable'} · Issuer ${asset.issuerId}`}</span></>
 }
 
 function ReportingRecord({ record, onOpenEvent, onOpenArticle }) {
@@ -26,15 +26,18 @@ function ReportingRecord({ record, onOpenEvent, onOpenArticle }) {
         <button type="button" onClick={() => onOpenArticle?.(support.articleId)}>Open reporting in News</button>
       </div>
     </div>)}
-    {record.explanation && <details><summary>Why this is related</summary>
+    <details><summary>Why this is related</summary>
       <p>This is a recorded relationship path, not proof of a price effect.</p>
-      <ol>{record.explanation.relationships.map(hop => <li key={hop.assessmentId}>
+      <ol>{record.path.map(hop => <li key={hop.assessmentId}>
         <strong>{hop.relationship.replaceAll('_', ' ')}</strong><p>{hop.from} → {hop.to}</p><p>Remaining uncertainty: {hop.uncertainty}</p>
       </li>)}</ol>
-    </details>}
+      {record.reviewRef && <p>Path review: {record.reviewRef} · Method: {record.methodVersion}</p>}
+    </details>
     <details><summary>Evidence identity and provenance</summary><dl className="market-clocks">
       <Clock label="Event identity" value={record.eventId} /><Clock label="Relationship valid time" value={record.at} />
       <Clock label="Retained source roots" value={record.rootIds.join(', ')} />
+      <Clock label="Retained path version" value={record.recordVersionId} />
+      <Clock label="Reviewed public source versions" value={unique.map(support => support.publicVersionId).filter(Boolean).join(', ')} />
       <Clock label="Event occurrence time" value={null} />
     </dl><p>Source roots do not establish independent confirmation. Correction, stale-state and excerpt-rights checks determine whether this path remains visible.</p></details>
     <button type="button" onClick={() => onOpenEvent?.(record.eventId)}>Explore this recorded event</button>
@@ -78,6 +81,15 @@ export default function MarketsView({ sourceSnapshot = null, sourceLoadStatus = 
     {model ? <>
       <section aria-label="Selected market asset" className="market-asset"><Identity asset={{ ...model.asset, aliases: model.aliases }} />
         <details><summary>Canonical asset identity</summary><dl className="market-clocks"><Clock label="Asset identity" value={model.asset.id} /><Clock label="Identity record version" value={model.asset.recordVersionId} /><Clock label="Investigation valid time" value={model.validTime} /><Clock label="MIP observation time" value={model.observationTime} /></dl></details>
+        {model.asset.identityRefs?.length > 0 && <details className="market-identity-provenance"><summary>Identity evidence and review</summary>
+          {model.asset.identityRefs.map(ref => <div key={ref.recordVersionId}><strong>{ref.identityType.replaceAll('_',' ')} · {ref.name}</strong>
+            <p>{ref.id} · Version {ref.recordVersionId}</p><p>Mapping review: {ref.reviewRef} · Method: {ref.methodVersion}</p>
+            {ref.sourceBindings.map(binding => <div key={`${binding.publicVersionId}:${binding.field}:${binding.start}`}>
+              <blockquote>{binding.excerpt}</blockquote><p>{binding.attribution}</p>
+              <p>Reviewed source version {binding.publicVersionId} · Excerpt-rights version {binding.rightsVersionId}</p>
+            </div>)}
+          </div>)}
+        </details>}
       </section>
       <section className="market-price" aria-label="Price availability"><h2>Price context</h2><strong>Prices unavailable</strong><p>{model.price.copy}</p><p>Delay information unavailable · Quote time unavailable · Retrieval time unavailable</p><p>No price provider is active. Historical prices, recent movement and timestamped samples are unavailable.</p></section>
       <div className="market-actions"><button type="button" onClick={onOpenTimeline}>Open news timeline</button><button type="button" onClick={onExploreConnections}>Explore connections</button></div>

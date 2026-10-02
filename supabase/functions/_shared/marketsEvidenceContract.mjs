@@ -42,6 +42,15 @@ function uniqueMap(rows, key) {
   }
   return result
 }
+function matchesRetainedSpan(capture, support) {
+  if (typeof capture[support.field] === 'string') return support.end <= Array.from(capture[support.field]).length
+    && Array.from(capture[support.field]).slice(support.start,support.end).join('') === support.excerpt
+  // The public owner may project only the exact admitted span, keeping complete
+  // captured bodies private. Its version/hash binding is checked by v2 admission.
+  return id(capture.publicVersionId) && Array.isArray(capture.admittedSpans) && capture.admittedSpans.length <= 32
+    && capture.admittedSpans.some(span => span.publicVersionId === capture.publicVersionId && span.payloadHash === capture.payloadHash
+      && span.field === support.field && span.start === support.start && span.end === support.end && span.excerpt === support.excerpt)
+}
 
 // IDs name canonical assets; symbols are venue/network-qualified dated aliases.
 export function validateMarketAsset(asset, at) {
@@ -63,6 +72,9 @@ export function validateMarketAsset(asset, at) {
     || !text(asset.assetIdentifier))) return reject('network_asset_identity_required')
   return { status: 'ok', asset: { id:asset.id,recordVersionId:asset.recordVersionId,name:asset.name,kind:asset.kind,
     validFrom:asset.validFrom,validTo:asset.validTo,
+    ...(asset.identityType ? {identityType:asset.identityType,identityRefs:asset.identityRefs,sourceBindings:asset.sourceBindings,
+      methodVersion:asset.methodVersion,reviewRef:asset.reviewRef,
+      ...(asset.kind === 'equity' ? {shareClassId:asset.shareClassId,exchangeMic:asset.exchangeMic} : {assetIdentifierKind:asset.assetIdentifierKind})} : {}),
     ...(asset.kind === 'equity' ? {issuerId:asset.issuerId} : {networkId:asset.networkId,assetIdentifier:asset.assetIdentifier}) }, aliases }
 }
 
@@ -108,15 +120,14 @@ export function validateMarketEvidencePath(input) {
         || !['title','summary','body'].includes(support.field)
         || !Number.isSafeInteger(support.start) || !Number.isSafeInteger(support.end)
         || support.start < 0 || support.end <= support.start || !text(support.excerpt)
-        || typeof capture[support.field] !== 'string'
-        || support.end > Array.from(capture[support.field]).length
-        || Array.from(capture[support.field]).slice(support.start,support.end).join('') !== support.excerpt) return reject('invalid_or_unavailable_support')
+        || !matchesRetainedSpan(capture,support)) return reject('invalid_or_unavailable_support')
       // Exact source dates/text are retained; date-only publication is never
       // converted to midnight or used to establish a relationship's validity.
       try { const url = new URL(capture.sourceUrl); if (!['http:','https:'].includes(url.protocol) || url.username || url.password) return reject('unsafe_source_url') }
       catch { return reject('unsafe_source_url') }
       roots.add(capture.rootId)
       supports.push({ captureId:support.captureId,field:support.field,start:support.start,end:support.end,excerpt:support.excerpt, articleId:capture.articleId, rootId:capture.rootId,
+        ...(capture.publicVersionId ? {publicVersionId:capture.publicVersionId} : {}),
         payloadHash:capture.payloadHash, publishedAt:capture.publishedAt, recordedAt:capture.recordedAt,
         sourceUrl:capture.sourceUrl, attribution:capture.rights.attribution, rightsRecordVersionId:capture.rights.recordVersionId })
     }

@@ -67,6 +67,8 @@ export function buildMarketPriceContext({ asset = null, at = null, observationTi
     if (seen.has(key)) continue
     seen.add(key)
     sections.find(section => section.id === band).records.push({
+      ...(proposed.id ? {id:proposed.id,recordVersionId:proposed.recordVersionId,methodVersion:proposed.methodVersion,
+        reviewRef:proposed.reviewRef,sourceBindings:proposed.sourceBindings} : {}),
       eventId: result.eventId, relation: band, at: result.at,
       path: result.path, rootIds: result.rootIds,
       explanation: band === 'direct_reporting' ? null : {

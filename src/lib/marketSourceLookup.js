@@ -1,7 +1,8 @@
 import { marketInstant, validateMarketAsset } from '../../supabase/functions/_shared/marketsEvidenceContract.mjs'
 import { buildMarketPriceContext } from './marketPriceContext.js'
+import { MARKETS_DIRECTORY_CONTRACT, validateMarketsPublicDirectory } from '../../supabase/functions/_shared/marketsDirectoryContract.mjs'
 
-export const MARKET_SOURCE_PROJECTION = 'mip-markets-authorized-directory-v1'
+export const MARKET_SOURCE_PROJECTION = MARKETS_DIRECTORY_CONTRACT
 const text = value => typeof value === 'string' && value.trim() ? value : null
 function freeze(value) {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) }
@@ -19,6 +20,9 @@ export function createMarketSourceLookup(snapshot = null) {
   })
   if (!snapshot) return unavailable('directory_unavailable')
   if (snapshot.status !== 'available') return unavailable('directory_unavailable')
+  const admitted = validateMarketsPublicDirectory(snapshot)
+  if (admitted.status !== 'available') return unavailable('directory_invalid')
+  snapshot = admitted.snapshot
   if (snapshot.contract !== MARKET_SOURCE_PROJECTION || !text(snapshot.version)
     || marketInstant(snapshot.validAt) === null || marketInstant(snapshot.observedAt) === null
     || !Array.isArray(snapshot.assets) || snapshot.assets.length > 200
