@@ -121,6 +121,40 @@ test('selective intake declarations bind native immutable intake and investigati
     const next = await observe([candidate, otherCandidate], afterRelevance)
     assert.throws(() => reconsiderSelectiveIntake(newDeclaration, afterRelevance, next, request(trigger)), /new observed relevance/)
   })
+  await t.test('native ancestor closure supports scoped declarations without widening declaration scope', async () => {
+    const parentCapture = await add('https://example.org/closure-parent'), parentCandidate = await makeCandidate(parentCapture)
+    const childCapture = await add('https://example.org/closure-child'), childCandidate = await makeCandidate(childCapture)
+    const parentPosition = await positionFor(parentCapture), childPosition = await positionFor(childCapture)
+    const append = async (candidate_id, parents) => assess('append', { candidate_id, algorithm_key: 'closure-fixture', algorithm_version: '1', parents,
+      outcome: 'insufficient_evidence', rationale: 'Synthetic cross-candidate dependency.', remaining_uncertainty: 'No truth or policy decision.',
+      context_positions: (await assess('context', { candidate_id, parents })).context_positions })
+    const parentAssessment = await append(parentCandidate, []), childAssessment = await append(childCandidate, [parentAssessment])
+    const scoped = await observe([childCandidate])
+    assert.deepEqual(scoped.scope_candidate_ids, [childCandidate])
+    assert.deepEqual(scoped.snapshot.scope_candidate_ids, [childCandidate])
+    assert.deepEqual(new Set(scoped.snapshot.candidates.map(c => c.id)), new Set([childCandidate, parentCandidate]))
+    const payload = { ...declareInput, observation_id: scoped.id, candidate_id: childCandidate, capture_id: childCapture.capture_id,
+      content_hash: scoped.snapshot.inputs.find(i => i.position === childPosition).capture.content_hash, input_position: childPosition,
+      reconsideration_triggers: [{ kind: 'dependency_change', assessment_id: childAssessment, dependency_position: childPosition }] }
+    const row = declareSelectiveIntake(scoped, payload)
+    assert.equal(row.candidate_id, childCandidate)
+    assert.throws(() => declareSelectiveIntake(scoped, { ...payload, candidate_id: parentCandidate, capture_id: parentCapture.capture_id,
+      content_hash: scoped.snapshot.inputs.find(i => i.position === parentPosition).capture.content_hash, input_position: parentPosition,
+      reconsideration_triggers: [{ kind: 'dependency_change', assessment_id: parentAssessment, dependency_position: parentPosition }] }), /outside explicit scope/)
+    const missing = structuredClone(scoped); missing.snapshot.candidates = missing.snapshot.candidates.filter(c => c.id !== childCandidate)
+    assert.throws(() => declareSelectiveIntake(missing, payload), /candidate scope mismatch/)
+    const duplicate = structuredClone(scoped); duplicate.snapshot.candidates.push(duplicate.snapshot.candidates[0])
+    assert.throws(() => declareSelectiveIntake(duplicate, payload), /duplicate candidate/)
+    const correctionPosition = await positionFor(await add('https://example.org/closure-child', 'A corrected report.'))
+    const successor = await observe([childCandidate], scoped)
+    const result = reconsiderSelectiveIntake(row, scoped, successor, request({ kind: 'dependency_change', assessment_id: childAssessment,
+      dependency_position: childPosition, change_position: correctionPosition }))
+    assert.equal(result.status, 'needs_reconsideration'); assert.equal(result.disposition, 'retain_deferred')
+    assert.deepEqual(await brief('read', { observation_id: scoped.id }), scoped)
+    const changed = structuredClone(successor); changed.snapshot.candidates.find(c => c.id === childCandidate).extractor_version = 'phantom-version'
+    assert.throws(() => reconsiderSelectiveIntake(row, scoped, changed, request({ kind: 'dependency_change', assessment_id: childAssessment,
+      dependency_position: childPosition, change_position: correctionPosition })), /changed original/)
+  })
   await t.test('unauthorized and rolled-back native records cannot supply retained declaration inputs', async () => {
     for (const role of ['anon', 'authenticated']) {
       await db.exec(`set role ${role}`)
