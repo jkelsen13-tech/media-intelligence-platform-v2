@@ -196,6 +196,12 @@
   }
 }
 
+@media (pointer: coarse) {
+  /* The toolbar row is already sized by its 44px Close control. Keep the
+     prototype choices equally reachable without changing the map allocation. */
+  .wv-explore-open .wv-explore-directions button { min-height: 44px; }
+}
+
 /* Group inspection must not consume the native map's flex height in Explore.
  * Retain the original details/summary/member controls in a bounded scroll
  * surface; native attribution keeps its bottom44px. Ordinary page flow stays

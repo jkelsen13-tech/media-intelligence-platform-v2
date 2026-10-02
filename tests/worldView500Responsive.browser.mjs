@@ -39,7 +39,7 @@ try{
    await controls.getByRole('button',{name:'Interact',exact:true}).click()
    const paused=await save(mode+'-interacting')
    assert.equal(paused.direction,mode);assert.equal(paused.mounts,1);assert.ok(paused.map.height>=80)
-   for(const target of [...paused.toolbar,...paused.actions]){assert.equal(target.full,true,target.text+' fully painted');assert.equal(target.hit,true,target.text+' center hit');if(viewport.width<768)assert.ok(target.rect.height>=44,target.text+' >=44px high')}
+   for(const target of [...paused.toolbar,...paused.actions]){assert.equal(target.full,true,target.text+' fully painted');assert.equal(target.hit,true,target.text+' center hit');assert.ok(target.rect.height>=44,target.text+' >=44px high')}
    for(let i=0;i<paused.toolbar.length;i++)for(let j=i+1;j<paused.toolbar.length;j++)assert.ok(!overlap(paused.toolbar[i].rect,paused.toolbar[j].rect),'complete toolbar targets never overlap')
    if(viewport.width>=480&&viewport.width<590&&viewport.height<480){assert.equal(paused.map.width,Math.max(402,viewport.width-84));assert.ok(paused.actions.every(n=>n.rect.width>=44));assert.ok(paused.actions.every(n=>!overlap(paused.map,n.rect)))}
    await controls.getByRole('button',{name:'Done — scroll',exact:true}).click()
