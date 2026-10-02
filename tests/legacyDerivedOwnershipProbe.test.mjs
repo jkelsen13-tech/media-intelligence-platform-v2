@@ -1,0 +1,35 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { runLegacyDerivedOwnershipProbe } from '../verifier/runLegacyDerivedOwnershipProbe.mjs'
+
+test('actual legacy extractor proves the after-RETURNING gap and precise existing transaction-owner limits', async () => {
+  const receipt = await runLegacyDerivedOwnershipProbe()
+  assert.equal(receipt.status, 'PROBE_PASS_CLOSURE_UNBOUND')
+  assert.equal(receipt.cases.length, 8)
+  assert.equal(receipt.live_operations, 0)
+  assert.equal(receipt.source_repair, false)
+  assert.equal(receipt.legacy_reactivated, false)
+  assert.equal(receipt.existing_guards_preserved, true)
+  assert.ok(receipt.cases.every(probe => probe.status === 'PASS'))
+  const regular = receipt.cases[0]
+  assert.equal(regular.gate, 'GAP_REPRODUCED')
+  assert.equal(regular.source_unchanged_after_approval, true)
+  assert.equal(regular.completion_refused, true)
+  assert.ok(regular.after_reader_citations.some(row => row.cited_type === 'court_doc'))
+  assert.ok(regular.requests.some(request => request.role === 'anon' && request.table === 'news_detail_public'))
+  assert.ok(regular.executed_sql.some(query => query.role === 'anon' && query.sql.includes('"citations"')))
+  assert.equal(receipt.cases[1].derived_deletions_after_approval, true)
+  assert.equal(receipt.cases[2].gate, 'DENIED_CONTROL')
+  assert.equal(receipt.cases[2].derived_writes, 0)
+  assert.equal(receipt.cases[2].article_for_update_denied, true)
+  assert.equal(receipt.cases[3].gate, 'PENDING_CONTROL')
+  assert.equal(receipt.cases[4].gate, 'SOURCE_VERSION_GAP_REPRODUCED')
+  assert.equal(receipt.cases[5].native_and_staging_reject_legacy_commit, true)
+  assert.equal(receipt.cases[5].native_correction_retained_pending, true)
+  assert.equal(receipt.cases[6].source_or_child_work_executed, false)
+  assert.equal(receipt.cases[7].existing_url_inserted, 0)
+  assert.equal(receipt.cases[7].new_url_inserted, 1)
+  assert.equal(receipt.cases[7].canonical_entity_payload_ignored, true)
+  assert.match(receipt.extractor_sha256, /^[0-9a-f]{64}$/)
+  assert.ok(receipt.artifacts.every(artifact => /^[0-9a-f]{64}$/.test(artifact.sha256)))
+})
