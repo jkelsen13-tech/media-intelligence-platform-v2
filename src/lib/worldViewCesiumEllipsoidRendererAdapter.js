@@ -1,3 +1,4 @@
+import {selectedCardInsetsForControls} from './worldViewSelectedCardViewport.js'
 import { BILLBOARD_DISPLAY_CAPS, layoutWorldBillboards } from './worldViewBillboardLayout.js'
 import { resolveBillboardDistanceStates, updateSelectedBillboardEnvelope } from './worldViewBillboardPresentation.js'
 import { worldBillboardScopeLabel } from './worldViewBillboardModules.js'
@@ -692,9 +693,18 @@ export function createCesiumEllipsoidRendererAdapter({
         selectedKey,cameraHeightMeters,scopePlaques:true})
       distanceMemory = distance.memory
       for(const item of items){item.presentationState=distance.states[item.key];item.nearDetailKind=distance.nearDetails[item.key]?.kind}
-      const layout = layoutWorldBillboards({items,viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},selectedKey})
+      const viewport={width:scene.canvas.clientWidth,height:scene.canvas.clientHeight}
+      if(selectedKey && viewport.width>=480 && viewport.width>viewport.height && viewport.height<480){
+        const surface=scene.canvas.closest?.('.wv-explore-surface')
+        if(surface){
+          const rect=node=>{const r=node.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height}}
+          const controls=[...surface.querySelectorAll('.wv-explore-actions button,.wv-explore-page-strip')].filter(node=>node.getClientRects().length>0)
+          viewport.selectedCardInsets=selectedCardInsetsForControls({viewport,canvasBounds:rect(scene.canvas),controlBounds:controls.map(rect)})
+        }
+      }
+      const layout = layoutWorldBillboards({items,viewport,selectedKey})
       const envelope = updateSelectedBillboardEnvelope({selected:layout.selected,previous:envelopeMemory,
-        viewport:{width:scene.canvas.clientWidth,height:scene.canvas.clientHeight},cameraSignature:JSON.parse(getCameraState() ?? 'null')})
+        viewport,cameraSignature:JSON.parse(getCameraState() ?? 'null')})
       envelopeMemory=envelope.memory;selectedBillboard=envelope.selected ? {...envelope.selected,occlusionBasis:'ellipsoid-and-observed-terrain-center'} : null
       const admittedSingles = new Set(displayPresentation.layout.singles.map(marker=>marker.id))
       // Reuse observed source terrain at the admitted lon/lat without adding

@@ -70,15 +70,16 @@ export function resolveBillboardDistanceStates({items=[],previous=null,datasetKe
 
 function safeBounds(viewport){
   if(!finite(viewport?.width)||!finite(viewport?.height)||viewport.width<=0||viewport.height<=0)return null
-  const landscape=viewport.width>=600&&viewport.width>viewport.height&&viewport.height<480
+  const landscape=viewport.width>=480&&viewport.width>viewport.height&&viewport.height<480
   const inset=(k,defaultValue,size)=>clamp(finite(viewport.safeInsets?.[k])?viewport.safeInsets[k]:defaultValue,0,size*0.4)
-  return {left:inset('left',16,viewport.width),right:viewport.width-inset('right',landscape?40:16,viewport.width),
+  const selectedInset=(side)=>landscape&&finite(viewport.selectedCardInsets?.[side])?clamp(viewport.selectedCardInsets[side],0,viewport.width):0
+  return {heightFraction:landscape?1:0.95,left:Math.max(selectedInset('left'),inset('left',16,viewport.width)),right:viewport.width-Math.max(selectedInset('right'),inset('right',landscape?40:16,viewport.width)),
     top:inset('top',landscape?8:72,viewport.height),bottom:viewport.height-inset('bottom',44,viewport.height)}
 }
 const fits=(c,b)=>validCard(c)&&c.x>=b.left&&c.y>=b.top&&c.x+c.width<=b.right&&c.y+c.height<=b.bottom
 function boundedCard(card,b){
   const width=Math.min(validCard(card)?card.width:360,b.right-b.left)
-  const height=Math.min(validCard(card)?card.height:240,(b.bottom-b.top)*0.95)
+  const height=Math.min(validCard(card)?card.height:240,(b.bottom-b.top)*b.heightFraction)
   return {x:clamp(validCard(card)?card.x:b.right-width,b.left,b.right-width),
     y:clamp(validCard(card)?card.y:b.bottom-height,b.top,b.bottom-height),width,height}
 }
@@ -124,7 +125,7 @@ export function updateSelectedBillboardEnvelope({selected=null,key=selected?.key
   viewport,previous=null,previousCard=null,cameraSignature=null,preferredCard=selected?.card,
   collisions=[],maxStep=24,snapRestore=false,restoreCard=null,largeCameraChange=false}={}){
   const bounds=safeBounds(viewport)
-  if(!bounds||typeof key!=='string'||!key||!validAnchor(anchor))return {selected:null,memory:null,reason:'unavailable',stable:false,restored:false,settling:false}
+  if(!bounds||bounds.right<=bounds.left||bounds.bottom<=bounds.top||typeof key!=='string'||!key||!validAnchor(anchor))return {selected:null,memory:null,reason:'unavailable',stable:false,restored:false,settling:false}
   const step=clamp(finite(maxStep)?maxStep:24,1,24)
   const preferred=boundedCard(preferredCard,bounds)
   const sameSelection=previous?.key===key

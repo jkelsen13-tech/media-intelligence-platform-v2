@@ -28,12 +28,18 @@ function safeRect(viewport) {
 
 function selectedEnvelope(item, rect, viewport) {
   if (!item) return null
-  const narrowLandscape = viewport.width >= 600 && viewport.width > viewport.height && viewport.height < 480
+  const narrowLandscape = viewport.width >= 480 && viewport.width > viewport.height && viewport.height < 480
   // A selected reader may use the free right column above the left gesture
   // controls; reserve the reviewed Page strip and native attribution.
-  if (narrowLandscape) rect = {...rect,top:viewport.safeInsets?.top ?? 8,right:Math.min(rect.right,viewport.width-40)}
+  if (narrowLandscape) rect = {...rect,top:clamp(finite(viewport.safeInsets?.top)?viewport.safeInsets.top:8,0,viewport.height*0.4),right:Math.min(rect.right,viewport.width-40)}
+  if (narrowLandscape) {
+    const insets=viewport.selectedCardInsets
+    if(finite(insets?.left))rect.left=Math.max(rect.left,clamp(insets.left,0,viewport.width))
+    if(finite(insets?.right))rect.right=Math.min(rect.right,viewport.width-clamp(insets.right,0,viewport.width))
+  }
   const availableWidth = rect.right - rect.left, availableHeight = rect.bottom - rect.top
-  const width = Math.min(360, availableWidth), height = Math.min(240, availableHeight * (narrowLandscape ? 0.95 : 0.75))
+  if(availableWidth<=0||availableHeight<=0)return null
+  const width = Math.min(360, availableWidth), height = Math.min(240, availableHeight * (narrowLandscape ? 1 : 0.75))
   // A viewer-relative comfortable envelope is reserved for one explicit
   // selection. Every other marker remains attached to its projected anchor.
   const card = {x:rect.right-width, y:rect.bottom-height, width, height}
