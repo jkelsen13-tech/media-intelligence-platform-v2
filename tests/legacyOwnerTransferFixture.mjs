@@ -1,14 +1,22 @@
 import { PGlite } from '@electric-sql/pglite'
 import { readFile } from 'node:fs/promises'
-import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { prepareLaunchFixtureFoundation, INITIAL_STAGES, launchCatalog, installLaunchStageFixture } from '../scripts/launchInstallationSequence.mjs'
 import { legacyAtomicCatalogQuery, legacyAtomicInstalledCatalogQuery, LEGACY_ATOMIC_PROPOSAL } from '../scripts/legacyAtomicCompletionPackage.mjs'
 
 export const FROZEN_SOURCE_COMMIT = '670efb8ebd6b4d7fb09368d399fe5a2afbc03a77'
+export const FROZEN_SOURCE_SHA256 = 'ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066'
 export const INSTALLER = 'fixture_managed_installer'
 export const TARGET = 'mip_legacy_completion_owner'
 const quote = value => '"' + value.replaceAll('"', '""') + '"'
-export const frozenProposal = () => execFileSync('git', ['show', FROZEN_SOURCE_COMMIT + ':supabase/source-proposals/legacy-atomic-completion-v1.sql'], { cwd: new URL('../', import.meta.url), encoding: 'utf8' })
+// Exact historical bytes are committed for shallow CI/archive exports. Missing
+// or changed fixtures fail closed; there is no Git, network or current-SQL fallback.
+export const frozenProposal = () => {
+  const bytes = readFileSync(new URL('./fixtures/frozenLaunchGate/legacy-atomic-completion-v1.sql', import.meta.url))
+  if (createHash('sha256').update(bytes).digest('hex') !== FROZEN_SOURCE_SHA256) throw Error('Frozen Legacy proposal SHA256 mismatch')
+  return bytes.toString('utf8')
+}
 export const catalogFromSource = source => source.split('-- BEGIN LEGACY ATOMIC BASELINE')[1].split('-- END LEGACY ATOMIC BASELINE')[0].replace('into actual;', ';').trim()
 
 // Synthetic user-object ownership transfers only. Bootstrap OID10 remains a

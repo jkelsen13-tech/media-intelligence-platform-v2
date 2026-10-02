@@ -1,0 +1,13 @@
+{
+  "contract": "mip-frozen-legacy-owner-reproduction-source-v1",
+  "source_commit": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+  "source_path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+  "source_blob_oid": "c55c025a8d86833502bd5c1910c423db8f14f809",
+  "fixture_path": "tests/fixtures/frozenLaunchGate/legacy-atomic-completion-v1.sql",
+  "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
+  "bytes": 27978,
+  "capture_method": "Exact git show bytes from the full source commit; no SQL edits or newline conversion",
+  "purpose": "Historical non-superuser ownership-denial reproduction in shallow CI and Git-free exports",
+  "scope": "Test fixture only; not an installation proposal, activation, admission or live authorization",
+  "runtime_integrity": "Fixture loader verifies the immutable SHA256 and refuses missing or altered bytes; no Git/network/current-source fallback"
+}
