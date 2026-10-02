@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import {
-  SOURCE_HASHES, loadSyntheticManifest, assessLiveReadiness, syntheticBaseline,
+  SOURCE_HASHES, SOURCE_DEADLINES, loadSyntheticManifest, assessLiveReadiness, syntheticBaseline,
   createSyntheticAdapter, runSyntheticRollbackRehearsal,
 } from '../../scripts/qualification/backend-client-contract/contract.mjs'
 
@@ -22,6 +22,15 @@ test('held guarded DO and pre-submit fragment retain exact predecessor bytes', a
     const bytes = await readFile(new URL(path, import.meta.url))
     assert.equal(createHash('sha256').update(bytes).digest('hex'), SOURCE_HASHES[key])
   }
+})
+
+test('modeled statement and lock deadlines are pinned to the unchanged pre-submit fragment', async () => {
+  const fragment = await readFile(new URL('../../scripts/qualification/qik-audit-route-pre-submit-deadlines-20261002.sql', import.meta.url), 'utf8')
+  assert.equal(SOURCE_DEADLINES.statementTimeout, fragment.match(/^SET LOCAL statement_timeout = '(\d+ms)';$/m)?.[1])
+  assert.equal(SOURCE_DEADLINES.lockTimeout, fragment.match(/^SET LOCAL lock_timeout = '(\d+ms)';$/m)?.[1])
+  const { adapter } = await run()
+  assert.equal(phase(adapter, 'set_statement_deadline').session.settings.statementTimeout, SOURCE_DEADLINES.statementTimeout)
+  assert.equal(phase(adapter, 'set_lock_deadline').session.settings.lockTimeout, SOURCE_DEADLINES.lockTimeout)
 })
 
 test('required manifest records missing genuine inputs and self-attestations cannot qualify live execution', async () => {
@@ -79,6 +88,16 @@ for (const aclRaw of [null, '{}', '{synthetic_reader=x/synthetic_owner}']) {
     const cleaned = phase(adapter, 'verify_authority_restored')
     assert.deepEqual(cleaned.columns, baseline.columns); assert.deepEqual(cleaned.memberships, baseline.memberships)
     assert.equal(cleaned.effective.updateConnection, false)
+    for (const { commandId, snapshot } of adapter.inspect().history) {
+      if (!snapshot) continue
+      assert.deepEqual(snapshot.columns.find(c => c.name === 'id'), baseline.columns[0], commandId)
+      if (aclRaw !== null && aclRaw !== '{}') {
+        assert.ok(snapshot.columns.find(c => c.name === 'connection_string').aclRaw.includes('synthetic_reader=x/synthetic_owner'),
+          `unrelated connection_string grant must survive ${commandId}`)
+      }
+    }
+    const duringGrant = phase(adapter, 'grant_column_update').columns.find(c => c.name === 'connection_string').aclRaw
+    assert.ok(duringGrant.includes('postgres=w/synthetic_owner'), 'temporary grant is the exact postgres UPDATE from the owner')
     const commands = adapter.inspect().commands
     assert.ok(commands.indexOf('verify_authority_restored') < commands.indexOf('rollback'))
     assert.ok(commands.indexOf('rollback') < commands.indexOf('verify_independently'))
@@ -91,13 +110,18 @@ for (const aclRaw of [null, '{}', '{synthetic_reader=x/synthetic_owner}']) {
 }
 
 test('pre-existing UPDATE or exact SET-only membership is preserved without unnecessary authority changes', async () => {
-  const withUpdate = syntheticBaseline({ preexistingUpdate: true, connectionAclRaw: '{}' })
-  const first = await run({ baseline: withUpdate })
-  assert.equal(first.receipt.outcome, 'REHEARSAL_ROLLED_BACK')
-  for (const id of ['grant_set_membership', 'grant_column_update', 'revoke_introduced_column_update', 'revoke_introduced_set_membership']) {
-    assert.equal(first.adapter.inspect().commands.includes(id), false)
+  for (const connectionAclRaw of ['{}', '{synthetic_reader=x/synthetic_owner}']) {
+    const withUpdate = syntheticBaseline({ preexistingUpdate: true, connectionAclRaw })
+    const first = await run({ baseline: withUpdate })
+    assert.equal(first.receipt.outcome, 'REHEARSAL_ROLLED_BACK')
+    for (const id of ['grant_set_membership', 'grant_column_update', 'revoke_introduced_column_update', 'revoke_introduced_set_membership']) {
+      assert.equal(first.adapter.inspect().commands.includes(id), false)
+    }
+    for (const { commandId, snapshot } of first.adapter.inspect().history) {
+      if (snapshot) assert.deepEqual(snapshot.columns, withUpdate.columns, commandId)
+    }
+    assert.deepEqual(first.adapter.inspect().snapshot, withUpdate)
   }
-  assert.deepEqual(first.adapter.inspect().snapshot, withUpdate)
   const baseline = syntheticBaseline()
   baseline.memberships.push({ role: 'synthetic_owner', member: 'postgres', grantor: 'postgres', admin: false, inherit: false, set: true })
   const second = await run({ baseline })
@@ -105,6 +129,41 @@ test('pre-existing UPDATE or exact SET-only membership is preserved without unne
   assert.equal(second.adapter.inspect().commands.includes('grant_set_membership'), false)
   assert.equal(second.adapter.inspect().commands.includes('revoke_introduced_set_membership'), false)
   assert.deepEqual(second.adapter.inspect().snapshot.memberships, baseline.memberships)
+})
+
+test('unrelated connection_string ACL survives abort, cleanup failure and late-operation recovery phases', async () => {
+  const baseline = syntheticBaseline({ connectionAclRaw: '{synthetic_reader=x/synthetic_owner}' })
+  for (const [commandId, fault] of [
+    ['grant_column_update', { type: 'abort' }],
+    ['guarded_operation', { type: 'abort' }],
+    ['revoke_introduced_column_update', { type: 'abort' }],
+    ['guarded_operation', { type: 'late', delayMs: 40 }],
+  ]) {
+    const { receipt, adapter } = await run({ baseline, faults: { [commandId]: fault } },
+      m => { if (fault.type === 'late') m.clientDeadlinesMs.operation = 10 })
+    assert.equal(receipt.outcome, 'ABORT_ROLLED_BACK', commandId)
+    if (fault.type === 'late') await wait(50)
+    for (const phase of adapter.inspect().history) {
+      if (!phase.snapshot) continue
+      const raw = phase.snapshot.columns.find(c => c.name === 'connection_string').aclRaw
+      assert.ok(raw.includes('synthetic_reader=x/synthetic_owner'), `${commandId}: preserve unrelated grant during ${phase.commandId}`)
+    }
+    assert.deepEqual(adapter.inspect().snapshot, baseline, `${commandId}: exact post-rollback baseline`)
+  }
+})
+
+test('unknown or inapplicable fault-plan fields are refused rather than claiming their typo was exercised', () => {
+  for (const fault of [
+    { type: 'late', delayMS: 1 }, { type: 'late', delayMs: 40, typo: 'ignored' },
+    { type: 'secret_error', mesage: 'ignored' }, { type: 'abort', delayMs: 1 },
+    { type: 'abort', message: 'ignored' },
+  ]) {
+    assert.throws(() => createSyntheticAdapter({ faults: { guarded_operation: fault } }), /ADAPTER_REFUSED/)
+  }
+  assert.throws(() => createSyntheticAdapter({ faults: { guarded_operaton: { type: 'abort' } } }), /BASELINE_REFUSED/)
+  const baseline = syntheticBaseline()
+  baseline.columns.find(c => c.name === 'connection_string').aclRaw = '{unsupported_column_acl}'
+  assert.throws(() => createSyntheticAdapter({ baseline }), /BASELINE_REFUSED/)
 })
 
 test('multiple original grantors/options for the owner role remain exact through temporary self-grant cleanup', async () => {

@@ -7,6 +7,9 @@ export const SOURCE_HASHES = Object.freeze({
   guardedOperation: '5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46',
   preSubmitDeadlines: '2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d',
 })
+export const SOURCE_DEADLINES = Object.freeze({ statementTimeout: '7000ms', lockTimeout: '500ms' })
+const CONNECTION_ACLS = new Set([null, '{}', '{synthetic_reader=x/synthetic_owner}'])
+const INTRODUCED_UPDATE_ACL = 'postgres=w/synthetic_owner'
 const adapters = new WeakMap()
 const clone = value => structuredClone(value)
 const LIVE_INPUTS = Object.freeze([
@@ -34,6 +37,11 @@ export async function loadSyntheticManifest() {
   ]) {
     const bytes = await readFile(new URL(path, import.meta.url))
     if (createHash('sha256').update(bytes).digest('hex') !== SOURCE_HASHES[name]) throw new Error('SOURCE_DRIFT')
+    if (name === 'preSubmitDeadlines') {
+      const commands = [...bytes.toString('utf8').matchAll(/^SET LOCAL (statement_timeout|lock_timeout) = '(\d+ms)';$/gm)]
+      if (commands.length !== 2 || !isDeepStrictEqual(Object.fromEntries(commands.map(([, setting, value]) => [setting, value])),
+        { statement_timeout: SOURCE_DEADLINES.statementTimeout, lock_timeout: SOURCE_DEADLINES.lockTimeout })) throw new Error('SOURCE_DRIFT')
+    }
   }
   return manifest
 }
@@ -51,8 +59,7 @@ export function assessLiveReadiness(manifest) {
 // Complete raw ACL values intentionally preserve null versus '{}'. The member
 // snapshot includes every grantor/options row, not only the provider grant.
 export function syntheticBaseline({ connectionAclRaw = null, preexistingUpdate = false, bypassRls = true } = {}) {
-  if (connectionAclRaw !== null && connectionAclRaw !== '{}'
-    && connectionAclRaw !== '{synthetic_reader=x/synthetic_owner}') throw new Error('BASELINE_REFUSED')
+  if (!CONNECTION_ACLS.has(connectionAclRaw)) throw new Error('BASELINE_REFUSED')
   return {
     marker: 'synthetic-unbound-baseline-1',
     session: { sessionUser: 'postgres', currentUser: 'postgres', database: 'synthetic_only', settings: { statementTimeout: '0', lockTimeout: '0' } },
@@ -88,7 +95,24 @@ function validBaseline(baseline) {
       && typeof r.admin === 'boolean' && typeof r.inherit === 'boolean' && typeof r.set === 'boolean')
     && baseline.columns.every(c => typeof c.name === 'string' && Number.isInteger(c.attnum) && (c.aclRaw === null || typeof c.aclRaw === 'string'))
     && baseline.columns.filter(c => c.name === 'id').length === 1 && baseline.columns.filter(c => c.name === 'connection_string').length === 1
+    && CONNECTION_ACLS.has(baseline.columns.find(c => c.name === 'connection_string').aclRaw)
     && new Set(baseline.memberships.map(r => JSON.stringify([r.role, r.member, r.grantor]))).size === baseline.memberships.length
+}
+
+// These are the closed fixture's supported raw ACL representations, not a
+// general PostgreSQL ACL parser. Preserve the unrelated reader entry while
+// adding exactly the missing owner-granted postgres column UPDATE.
+function addTemporaryUpdate(aclRaw) {
+  return aclRaw === null || aclRaw === '{}'
+    ? `{${INTRODUCED_UPDATE_ACL}}` : `${aclRaw.slice(0, -1)},${INTRODUCED_UPDATE_ACL}}`
+}
+
+function removeTemporaryUpdate(aclRaw, originalAclRaw) {
+  if (aclRaw !== addTemporaryUpdate(originalAclRaw)) throw safeError('COMMAND_FAILED', true)
+  const retained = aclRaw.slice(1, -1).split(',').filter(entry => entry !== INTRODUCED_UPDATE_ACL)
+  // Preserve NULL versus empty fixture representation without replacing any
+  // retained grant. Real catalog restoration remains a separate live gate.
+  return retained.length ? `{${retained.join(',')}}` : originalAclRaw
 }
 
 function safeError(code, aborted = false) {
@@ -129,7 +153,11 @@ export function createSyntheticAdapter(options = {}) {
   if (boundOptions === null || typeof boundOptions !== 'object' || Object.keys(boundOptions).some(key => !['baseline', 'faults'].includes(key))) throw new Error('ADAPTER_REFUSED')
   const { baseline = syntheticBaseline(), faults = {} } = boundOptions
   if (!validBaseline(baseline) || faults === null || typeof faults !== 'object' || Object.keys(faults).some(id => !IDS.includes(id))) throw new Error('BASELINE_REFUSED')
-  if (Object.values(faults).some(f => !f || !['disconnect', 'timeout', 'late', 'abort', 'secret_error', 'bad_ack', 'negative_verify'].includes(f.type)
+  if (Object.values(faults).some(f => !f || typeof f !== 'object' || Array.isArray(f)
+    || !['disconnect', 'timeout', 'late', 'abort', 'secret_error', 'bad_ack', 'negative_verify'].includes(f.type)
+    || Object.keys(f).some(key => !['type', ...(['timeout', 'late'].includes(f.type) ? ['delayMs'] : []),
+      ...(f.type === 'secret_error' ? ['message'] : [])].includes(key))
+    || (f.message !== undefined && typeof f.message !== 'string')
     || (f.delayMs !== undefined && (!Number.isInteger(f.delayMs) || f.delayMs < 1 || f.delayMs > 30000)))) throw new Error('ADAPTER_REFUSED')
   const state = { original: clone(baseline), current: clone(baseline), transaction: false, aborted: false, connected: true,
     generation: 0, pending: null, introducedMembership: false, introducedUpdate: false, commands: [], history: [] }
@@ -149,22 +177,26 @@ export function createSyntheticAdapter(options = {}) {
       case 'set_owner_for_grant': case 'set_owner_for_cleanup': state.current.session.currentUser = 'synthetic_owner'; break
       case 'grant_column_update':
         if (!ownerActive()) throw safeError('COMMAND_FAILED', true)
-        state.current.columns.find(c => c.name === 'connection_string').aclRaw = '{synthetic-temporary-update}'
+        state.current.columns.find(c => c.name === 'connection_string').aclRaw =
+          addTemporaryUpdate(state.current.columns.find(c => c.name === 'connection_string').aclRaw)
         state.current.effective.updateConnection = true; state.introducedUpdate = true; break
       case 'reset_role_for_operation': case 'reset_role_after_cleanup':
         state.current.session.currentUser = state.current.session.sessionUser
         return acknowledge({ currentUser: state.current.session.currentUser, superuser: false,
           bypassRls: state.current.roles.find(r => r.name === 'postgres').bypassRls })
-      case 'set_statement_deadline': state.current.session.settings.statementTimeout = '7000ms'; break
-      case 'set_lock_deadline': state.current.session.settings.lockTimeout = '500ms'; break
+      case 'set_statement_deadline': state.current.session.settings.statementTimeout = SOURCE_DEADLINES.statementTimeout; break
+      case 'set_lock_deadline': state.current.session.settings.lockTimeout = SOURCE_DEADLINES.lockTimeout; break
       case 'guarded_operation':
         if (state.current.session.currentUser !== 'postgres' || !state.current.effective.updateConnection
-          || state.current.session.settings.statementTimeout !== '7000ms' || state.current.session.settings.lockTimeout !== '500ms') throw safeError('COMMAND_FAILED', true)
+          || state.current.session.settings.statementTimeout !== SOURCE_DEADLINES.statementTimeout
+          || state.current.session.settings.lockTimeout !== SOURCE_DEADLINES.lockTimeout) throw safeError('COMMAND_FAILED', true)
         state.current.rows.find(r => r.id === true).value = 'synthetic-after'
         return acknowledge({ selectedCount: 1, updateCount: 1, unrelatedRowsPreserved: true, syntheticOnly: true })
       case 'revoke_introduced_column_update':
         if (!ownerActive() || !state.introducedUpdate) throw safeError('COMMAND_FAILED', true)
-        state.current.columns.find(c => c.name === 'connection_string').aclRaw = state.original.columns.find(c => c.name === 'connection_string').aclRaw
+        state.current.columns.find(c => c.name === 'connection_string').aclRaw = removeTemporaryUpdate(
+          state.current.columns.find(c => c.name === 'connection_string').aclRaw,
+          state.original.columns.find(c => c.name === 'connection_string').aclRaw)
         state.current.effective.updateConnection = state.original.effective.updateConnection
         state.introducedUpdate = false; break
       case 'revoke_introduced_set_membership':

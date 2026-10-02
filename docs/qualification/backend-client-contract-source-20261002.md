@@ -200,3 +200,64 @@ Followup receipts in `/workspace/mip-backend-client-contract-receipts/`:
 `mutation-counterexamples-red.tap`, `mutation-counterexamples-green.tap`,
 `client-input-binding-final.tap`, and `build-input-binding.log`. Exact successor
 hashes and tested-byte chronology are retained in a separate followup manifest.
+
+## Independent reconciliation: additive ACL and fault-plan correction
+
+Review base `0fe17e338359a123f98048fb34e3cb71c78d25fa`, tree
+`d0706da7d6f28b943ad87041e232eeda612be776`, remains preserved. Its historical
+[Cursor source review](https://cursor.com/agents/bc-28460c56-f9ca-5097-9957-ef28387e6852)
+is not reused as the verdict for this delta. The parent independently identified
+an intermediate-state modeling fault: `grant_column_update` replaced the complete
+column ACL with a temporary marker. Final restoration tests passed while the
+pre-existing reader grant disappeared during the temporary authority window.
+The frozen real GRANT contract is additive, so that simulation was inaccurate.
+
+The correction composes exactly `postgres=w/synthetic_owner` with the supported
+existing column ACL and removes only that introduced entry during success cleanup.
+The reader's grant remains present throughout the grant, role reset, deadline,
+operation, cleanup, abort and cancellation/drain phases. Exact full baseline is
+still restored after rollback. NULL and empty ACL fixtures remain distinct. A
+pre-existing UPDATE needs no temporary grant/revoke and preserves the complete
+original column ACL at every recorded phase.
+
+This remains a closed fixture model. `connection_string` accepts the factory's
+three established representations: NULL, `{}`, and the single synthetic reader
+grant. Caller-supplied baselines now enforce that same set; unsupported ACL strings
+are refused rather than being treated as a general PostgreSQL ACL grammar. Raw
+representations and removal inside this model are not live catalog behavior or
+provider restoration evidence. No adapter, PostgreSQL access or capability was
+added.
+
+Fault records now reject unknown keys and fields inapplicable to their type.
+`delayMs` belongs only to timeout/late faults; `message` belongs only to a
+secret-error fault and must be a string. Typos such as `delayMS` and `mesage`
+produce fixed `ADAPTER_REFUSED` instead of silently qualifying an unexercised
+fault. Unknown symbolic command IDs remain refused. Existing immutable input
+binding and fixed-code error redaction are retained.
+
+`SOURCE_DEADLINES` holds the model's 7000ms statement and 500ms lock values once.
+`loadSyntheticManifest()` checks those values against the exact hash-pinned,
+unchanged pre-submit fragment. A regression also compares the constants to its
+SET commands and to the model's observed command snapshots. No historical SQL
+or required-input manifest was edited.
+
+Qualification chronology in `/workspace/mip-backend-client-contract-receipts/`:
+
+- `additive-acl-fault-plan-red.tap`: **31 passed / 5 failed** before the source
+  repair, reproducing incorrect temporary ACLs, loss of the unrelated reader
+  grant during abort, and acceptance of an unknown fault field.
+- `additive-acl-fault-plan-green.tap`: **37/37 passed** after the repair and the
+  additional frozen-deadline comparison.
+- `additive-acl-fault-plan-final.tap`: **37/37 passed**, including strengthened
+  pre-existing UPDATE phase comparisons and unknown-command/unsupported-ACL
+  refusals. That is 32 client-contract tests plus five unchanged transform tests.
+- `additive-acl-fault-plan-qualification.json`: exact successor/base/tree,
+  changed-path scope, unchanged source/manifest hashes and local receipt hashes.
+
+The targeted command above ran on Node 24 with
+`RUN_SYNTHETIC_PG_QUALIFICATION=0`; no disposable or live PostgreSQL execution,
+network call, credential access, SQL mutation, adapter expansion or dependency
+change occurred. Syntax and whitespace checks passed. This delta did not rerun
+application build or full CI, and has not been pushed. The coordinator owns
+exact-head qualification, push and the one targeted independent review successor.
+All genuine live-input, authorization and provider-security gates remain open.
