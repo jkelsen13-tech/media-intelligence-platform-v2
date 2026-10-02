@@ -1,0 +1,184 @@
+TAP version 13
+# Subtest: actual SDK handler retains one raw native capture and private receipt, leaves source and shared derived rows unchanged
+ok 1 - actual SDK handler retains one raw native capture and private receipt, leaves source and shared derived rows unchanged
+  ---
+  duration_ms: 5430.554699
+  type: 'test'
+  ...
+# Subtest: actual handler denies admission race before completion without capture, source or derived mutation
+ok 2 - actual handler denies admission race before completion without capture, source or derived mutation
+  ---
+  duration_ms: 2669.434336
+  type: 'test'
+  ...
+# Subtest: actual handler denies selected source byte revision and retains the newer bytes
+ok 3 - actual handler denies selected source byte revision and retains the newer bytes
+  ---
+  duration_ms: 3100.031335
+  type: 'test'
+  ...
+# Subtest: actual handler refuses missing atomic RPC and has no table-write fallback
+ok 4 - actual handler refuses missing atomic RPC and has no table-write fallback
+  ---
+  duration_ms: 2888.280397
+  type: 'test'
+  ...
+# Subtest: whole private transaction rolls back newly retained job/capture/change dispatch when final receipt insert fails
+ok 5 - whole private transaction rolls back newly retained job/capture/change dispatch when final receipt insert fails
+  ---
+  duration_ms: 2594.489241
+  type: 'test'
+  ...
+# Subtest: private completion exact version/hash CAS and idempotency reject tampering
+ok 6 - private completion exact version/hash CAS and idempotency reject tampering
+  ---
+  duration_ms: 2564.137265
+  type: 'test'
+  ...
+# Subtest: metadata sentinel retains no inferred relations and neither deletes nor publishes existing shared rows
+ok 7 - metadata sentinel retains no inferred relations and neither deletes nor publishes existing shared rows
+  ---
+  duration_ms: 2362.86029
+  type: 'test'
+  ...
+# Subtest: private selection preserves active/eligible denial, withdrawn eligibility and exact run scope; source updates reconsider completed work
+ok 8 - private selection preserves active/eligible denial, withdrawn eligibility and exact run scope; source updates reconsider completed work
+  ---
+  duration_ms: 2608.864228
+  type: 'test'
+  ...
+# Subtest: only publication owner applies explicit exact admitted evidence links, with no canonical entity or source writes
+ok 9 - only publication owner applies explicit exact admitted evidence links, with no canonical entity or source writes
+  ---
+  duration_ms: 2563.562873
+  type: 'test'
+  ...
+# Subtest: reviewed completion denies wrong capture/hash, unrelated evidence and stale newer public version before any mutation
+ok 10 - reviewed completion denies wrong capture/hash, unrelated evidence and stale newer public version before any mutation
+  ---
+  duration_ms: 2683.164988
+  type: 'test'
+  ...
+# Subtest: reviewed completion rolls back preceding deletes and inserts when final receipt fails
+ok 11 - reviewed completion rolls back preceding deletes and inserts when final receipt fails
+  ---
+  duration_ms: 2906.993408
+  type: 'test'
+  ...
+# Subtest: new narrow owner has no service membership, browser execution or shared canonical mutation privilege
+ok 12 - new narrow owner has no service membership, browser execution or shared canonical mutation privilege
+  ---
+  duration_ms: 4174.217931
+  type: 'test'
+  ...
+# Subtest: catalog drift rejects install atomically and exact additions preserve unrelated overload owner/ACL
+ok 13 - catalog drift rejects install atomically and exact additions preserve unrelated overload owner/ACL
+  ---
+  duration_ms: 3723.231399
+  type: 'test'
+  ...
+# Subtest: pending native job collision fails closed without stealing native leases or creating a second capture engine
+ok 14 - pending native job collision fails closed without stealing native leases or creating a second capture engine
+  ---
+  duration_ms: 2818.065742
+  type: 'test'
+  ...
+# Subtest: exact guarded rollback stops service RPC while retaining every receipt/capture and unrelated overload
+ok 15 - exact guarded rollback stops service RPC while retaining every receipt/capture and unrelated overload
+  ---
+  duration_ms: 2577.34032
+  type: 'test'
+  ...
+# Subtest: frozen source reproduces ownership failure under a distinct non-superuser creator; full rollback restores the catalog
+ok 16 - frozen source reproduces ownership failure under a distinct non-superuser creator; full rollback restores the catalog
+  ---
+  duration_ms: 5522.78497
+  type: 'test'
+  ...
+# Subtest: successor preserves provider/B1 membership, ACLs, policies and overload while installed private read/capture APIs work
+ok 17 - successor preserves provider/B1 membership, ACLs, policies and overload while installed private read/capture APIs work
+  ---
+  duration_ms: 3320.195616
+  type: 'test'
+  ...
+# Subtest: bootstrap role name can differ from postgres; automatic grantor identity and exact restoration remain valid
+ok 18 - bootstrap role name can differ from postgres; automatic grantor identity and exact restoration remain valid
+  ---
+  duration_ms: 3331.689782
+  type: 'test'
+  ...
+# Subtest: superuser installer introduces no role-membership edge and removes temporary schema CREATE
+ok 19 - superuser installer introduces no role-membership edge and removes temporary schema CREATE
+  ---
+  duration_ms: 3118.255621
+  type: 'test'
+  ...
+# Subtest: observed temporary SET window preserves provider edge and exact raw schema ACL after restoration
+ok 20 - observed temporary SET window preserves provider edge and exact raw schema ACL after restoration
+  ---
+  duration_ms: 3036.074349
+  type: 'test'
+  ...
+# Subtest: failure after granting both temporary privileges rolls back ownership, ACLs and every membership
+ok 21 - failure after granting both temporary privileges rolls back ownership, ACLs and every membership
+  ---
+  duration_ms: 2747.706371
+  type: 'test'
+  ...
+# Subtest: nonempty creator self-grant is refused even with a freshly pinned matching catalog
+ok 22 - nonempty creator self-grant is refused even with a freshly pinned matching catalog
+  ---
+  duration_ms: 2906.72044
+  type: 'test'
+  ...
+# Subtest: pinned provider membership option and installer-context drift fail before package authority changes
+ok 23 - pinned provider membership option and installer-context drift fail before package authority changes
+  ---
+  duration_ms: 2873.805127
+  type: 'test'
+  ...
+# Subtest: malformed automatic creator edge is refused without replacing or broadening provider authority
+ok 24 - malformed automatic creator edge is refused without replacing or broadening provider authority
+  ---
+  duration_ms: 3087.208734
+  type: 'test'
+  ...
+# Subtest: a catalog approved in another session identity cannot be replayed under the same article-owner role
+ok 25 - a catalog approved in another session identity cannot be replayed under the same article-owner role
+  ---
+  duration_ms: 2595.903082
+  type: 'test'
+  ...
+# Subtest: revoke-only stop pins installed membership and preserves all roles, provider grants and retained ledgers
+ok 26 - revoke-only stop pins installed membership and preserves all roles, provider grants and retained ledgers
+  ---
+  duration_ms: 4993.941586
+  type: 'test'
+  ...
+# Subtest: failure after private stop revoke restores exact installed ACLs, memberships, histories and installer session
+ok 27 - failure after private stop revoke restores exact installed ACLs, memberships, histories and installer session
+  ---
+  duration_ms: 4101.134448
+  type: 'test'
+  ...
+# Subtest: stop with renamed bootstrap under non-super session restores context; installed membership drift refuses stop
+ok 28 - stop with renamed bootstrap under non-super session restores context; installed membership drift refuses stop
+  ---
+  duration_ms: 3502.533441
+  type: 'test'
+  ...
+# Subtest: superuser stop preserves memberships and schemas without a role switch or membership grant
+ok 29 - superuser stop preserves memberships and schemas without a role switch or membership grant
+  ---
+  duration_ms: 2414.152599
+  type: 'test'
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 47684.974166

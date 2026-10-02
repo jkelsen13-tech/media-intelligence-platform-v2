@@ -1,0 +1,434 @@
+{
+  "status": "PASS",
+  "expected_cases": 14,
+  "source_only": true,
+  "live_operations": 0,
+  "frozen_commit": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+  "cases": [
+    {
+      "name": "frozen non-super ownership denial and exact rollback",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "error": "42501 must be able to SET ROLE",
+      "installer": "fixture_managed_installer",
+      "bootstrap_superuser_preserved": true
+    },
+    {
+      "name": "non-super install plus private native capture/read; unchanged public bytes",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "provider_membership": [
+        {
+          "role": "mip_legacy_completion_owner",
+          "member": "fixture_managed_installer",
+          "grantor": "postgres",
+          "grantor_oid": "10",
+          "admin_option": true,
+          "inherit_option": false,
+          "set_option": false
+        }
+      ],
+      "installer_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18529",
+        "session_user_oid": "18529",
+        "createrole_self_grant": ""
+      },
+      "native_capture_retained": true
+    },
+    {
+      "name": "renamed bootstrap and distinct installer plus packaged readback",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "provider_membership": [
+        {
+          "role": "mip_legacy_completion_owner",
+          "member": "fixture_managed_installer",
+          "grantor": "fixture_provider_admin",
+          "grantor_oid": "10",
+          "admin_option": true,
+          "inherit_option": false,
+          "set_option": false
+        }
+      ],
+      "installer_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18530",
+        "session_user_oid": "18530",
+        "createrole_self_grant": ""
+      },
+      "readback_context": {
+        "database_name": "postgres",
+        "actor": "fixture_managed_installer",
+        "session_actor": "fixture_managed_installer",
+        "actor_oid": "18530",
+        "session_actor_oid": "18530",
+        "bootstrap_grantor_name": "fixture_provider_admin",
+        "server_version": "180003",
+        "createrole_self_grant": "",
+        "exact_executor": "public.mip_legacy_extraction_v1(text,jsonb)",
+        "exact_reviewed_owner": "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)",
+        "exact_native_version_lock": "mip_private.require_reviewed_public_article_version(uuid,uuid,text)",
+        "service_general_article_update_denied": true
+      }
+    },
+    {
+      "name": "superuser compatibility without introduced membership",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "target_memberships": []
+    },
+    {
+      "name": "observed bounded window and byte-exact provider/schema restoration",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "observations": [
+        {
+          "phase": "before",
+          "memberships": [
+            {
+              "oid": "18547",
+              "member": "18529",
+              "roleid": "18546",
+              "grantor": "10",
+              "set_option": false,
+              "admin_option": true,
+              "inherit_option": false
+            }
+          ],
+          "schema_acl": "{fixture_managed_installer=UC/fixture_managed_installer,anon=U/fixture_managed_installer,authenticated=U/fixture_managed_installer,service_role=U/fixture_managed_installer,fixture_b1_provider=U/fixture_managed_installer,mip_legacy_completion_owner=U/fixture_managed_installer}",
+          "schema_tuples": [
+            {
+              "grantee": "16384",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16385",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16386",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "CREATE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18530",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18546",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            }
+          ]
+        },
+        {
+          "phase": "during",
+          "memberships": [
+            {
+              "oid": "18547",
+              "member": "18529",
+              "roleid": "18546",
+              "grantor": "10",
+              "set_option": false,
+              "admin_option": true,
+              "inherit_option": false
+            },
+            {
+              "oid": "18651",
+              "member": "18529",
+              "roleid": "18546",
+              "grantor": "18529",
+              "set_option": true,
+              "admin_option": false,
+              "inherit_option": false
+            }
+          ],
+          "schema_acl": "{fixture_managed_installer=UC/fixture_managed_installer,anon=U/fixture_managed_installer,authenticated=U/fixture_managed_installer,service_role=U/fixture_managed_installer,fixture_b1_provider=U/fixture_managed_installer,mip_legacy_completion_owner=UC/fixture_managed_installer}",
+          "schema_tuples": [
+            {
+              "grantee": "16384",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16385",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16386",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "CREATE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18530",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18546",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "CREATE"
+            },
+            {
+              "grantee": "18546",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            }
+          ]
+        },
+        {
+          "phase": "after",
+          "memberships": [
+            {
+              "oid": "18547",
+              "member": "18529",
+              "roleid": "18546",
+              "grantor": "10",
+              "set_option": false,
+              "admin_option": true,
+              "inherit_option": false
+            }
+          ],
+          "schema_acl": "{fixture_managed_installer=UC/fixture_managed_installer,anon=U/fixture_managed_installer,authenticated=U/fixture_managed_installer,service_role=U/fixture_managed_installer,fixture_b1_provider=U/fixture_managed_installer,mip_legacy_completion_owner=U/fixture_managed_installer}",
+          "schema_tuples": [
+            {
+              "grantee": "16384",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16385",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "16386",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "CREATE"
+            },
+            {
+              "grantee": "18529",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18530",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            },
+            {
+              "grantee": "18546",
+              "grantor": "18529",
+              "is_grantable": false,
+              "privilege_type": "USAGE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "failure inside owner transfer restores full predecessor",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "introduced_memberships": 0,
+      "broader_authority": 0
+    },
+    {
+      "name": "self-grant setting fails closed",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik"
+    },
+    {
+      "name": "predecessor membership option drift fails closed",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik"
+    },
+    {
+      "name": "missing exact provider creator edge fails closed",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik"
+    },
+    {
+      "name": "installer session context replay refused",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "approved_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "postgres",
+        "current_user_oid": "18529",
+        "session_user_oid": "10",
+        "createrole_self_grant": ""
+      },
+      "actual_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18529",
+        "session_user_oid": "18529",
+        "createrole_self_grant": ""
+      }
+    },
+    {
+      "name": "exact revoke-only stop preserves provider/roles/ledgers",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "provider_membership": [
+        {
+          "role": "mip_legacy_completion_owner",
+          "member": "fixture_managed_installer",
+          "grantor": "postgres",
+          "grantor_oid": "10",
+          "admin_option": true,
+          "inherit_option": false,
+          "set_option": false
+        }
+      ],
+      "installer_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18529",
+        "session_user_oid": "18529",
+        "createrole_self_grant": ""
+      }
+    },
+    {
+      "name": "failed stop restores exact installed authority/context",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "installer_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18529",
+        "session_user_oid": "18529",
+        "createrole_self_grant": ""
+      }
+    },
+    {
+      "name": "renamed provider stop and drift refusal",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik",
+      "provider_membership": [
+        {
+          "role": "mip_legacy_completion_owner",
+          "member": "fixture_managed_installer",
+          "grantor": "fixture_provider_admin",
+          "grantor_oid": "10",
+          "admin_option": true,
+          "inherit_option": false,
+          "set_option": false
+        }
+      ],
+      "installer_context": {
+        "current_user": "fixture_managed_installer",
+        "session_user": "fixture_managed_installer",
+        "current_user_oid": "18530",
+        "session_user_oid": "18530",
+        "createrole_self_grant": ""
+      }
+    },
+    {
+      "name": "superuser stop compatibility",
+      "status": "PASS",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "runtime": "v22.23.3",
+      "scope": "PGlite 0.5.8 PostgreSQL 18.3/WASM; not native PostgreSQL17 or qik"
+    }
+  ],
+  "limits": [
+    "Distinct non-superuser synthetic installer; native user objects explicitly transferred, bootstrap remains superuser",
+    "Actual PGlite PostgreSQL18.3/WASM, not native PostgreSQL17 or hosted qik",
+    "Managed provider identity requires independent protected-backend preflight; no live install/grant/release"
+  ]
+}

@@ -1,7 +1,11 @@
 -- READ ONLY. Empty/false required results mean HOLD; does not run extraction or admission.
 begin read only;
 set local search_path=pg_catalog;
-select current_database() database_name,current_user actor,current_setting('server_version_num') server_version,
+select current_database() database_name,current_user actor,session_user session_actor,
+ (select oid::text from pg_roles where rolname=current_user) actor_oid,
+ (select oid::text from pg_roles where rolname=session_user) session_actor_oid,
+ pg_get_userbyid(10) bootstrap_grantor_name,current_setting('server_version_num') server_version,
+ current_setting('createrole_self_grant') createrole_self_grant,
  to_regprocedure('public.mip_legacy_extraction_v1(text,jsonb)') exact_executor,
  to_regprocedure('public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)') exact_reviewed_owner,
  to_regprocedure('mip_private.require_reviewed_public_article_version(uuid,uuid,text)') exact_native_version_lock,
@@ -10,6 +14,15 @@ select r.rolname,not r.rolcanlogin and not r.rolinherit and not r.rolsuper and n
  and not r.rolcreatedb and not r.rolcreaterole and not r.rolreplication as restricted_owner,
  not pg_has_role('service_role',r.oid,'MEMBER') and not pg_has_role('anon',r.oid,'MEMBER') and not pg_has_role('authenticated',r.oid,'MEMBER') as no_executor_or_reader_membership
 from pg_roles r where r.rolname='mip_legacy_completion_owner';
+select m.oid::text membership_oid,m.roleid::text role_oid,m.member::text member_oid,m.grantor::text grantor_oid,
+ pg_get_userbyid(m.roleid) role,pg_get_userbyid(m.member) member,pg_get_userbyid(m.grantor) grantor,
+ m.admin_option,m.inherit_option,m.set_option
+from pg_auth_members m where m.roleid='mip_legacy_completion_owner'::regrole order by m.member,m.grantor;
+select not has_schema_privilege('mip_legacy_completion_owner','mip_private','CREATE') temporary_schema_create_removed,
+ case when (select rolsuper from pg_roles where rolname=current_user) then null
+ else not pg_has_role(current_user,'mip_legacy_completion_owner','SET') end temporary_installer_set_removed,
+ not exists(select 1 from pg_auth_members where roleid='mip_legacy_completion_owner'::regrole
+   and member=(select oid from pg_roles where rolname=current_user) and grantor=(select oid from pg_roles where rolname=current_user)) installer_grantor_edge_removed;
 select p.oid::regprocedure signature,pg_get_userbyid(p.proowner) owner,p.prosecdef,p.proconfig,p.proacl,
  encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex') definition_sha256,
  has_function_privilege('service_role',p.oid,'EXECUTE') service_execute,

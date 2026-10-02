@@ -1,0 +1,1209 @@
+{
+  "status": "PASS",
+  "live_operations": 0,
+  "source_repair": true,
+  "legacy_reactivated": false,
+  "cases": [
+    {
+      "name": "atomic private capture and completion; unchanged public/source bytes",
+      "status": "PASS",
+      "report": {
+        "entitiesResolved": 0,
+        "citations": 0,
+        "extracted": 1,
+        "digests": 0,
+        "errors": [],
+        "privateCompletions": 1
+      },
+      "capture_hash": "1534b6f87b85863a35b11aa5434618f6ef1357a6870c62d74b0526e6e6390ce2",
+      "private_completed": 1,
+      "shared_writes": 0,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "e1574fec-d380-4ec6-b25e-7c8f6ab8c744",
+              "record_version_id": "b121b615-5dca-4574-b356-e0120267f880",
+              "source_hash": "19ea240b4c77499f270f0d25cc841f7ecff5878313aff4e829ff2b6c8de3024a",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pending selection -> admission before RPC is denied",
+      "status": "PASS",
+      "report": {
+        "entitiesResolved": 0,
+        "citations": 0,
+        "extracted": 0,
+        "digests": 0,
+        "errors": [
+          "private extract 124eac5d: Error: private legacy source required"
+        ]
+      },
+      "rolled_back": true,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "124eac5d-9e03-48d8-8dd4-b85d810b1bd7",
+              "record_version_id": "4e936ebf-81df-4d17-845a-b61e5eb98e51",
+              "source_hash": "b31c0215e5a91bd60ea06c47ca7a0c7e026bfad2494204879e64e0329003f7c0",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "selected source version revision is denied without overwrite",
+      "status": "PASS",
+      "report": {
+        "entitiesResolved": 0,
+        "citations": 0,
+        "extracted": 0,
+        "digests": 0,
+        "errors": [
+          "private extract d55a3009: Error: selected legacy source version/hash conflict"
+        ]
+      },
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "d55a3009-3b7b-446b-aced-0ebea44f0e36",
+              "record_version_id": "f0616064-b3a0-41d9-8f36-f7a72d8403be",
+              "source_hash": "3426ac618990fa0684e95e0997fa20fcedfff4ac847b6ad91dc38dc829bf7745",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "uninstalled route default denial",
+      "status": "PASS",
+      "fallback_writes": 0,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "private job/capture/change dispatch/receipt whole transaction rollback",
+      "status": "PASS",
+      "report": {
+        "entitiesResolved": 0,
+        "citations": 0,
+        "extracted": 0,
+        "digests": 0,
+        "errors": [
+          "private extract 987503fa: Error: forced final private receipt failure"
+        ]
+      },
+      "counts": {
+        "evidence_pipeline.import_jobs": 2,
+        "evidence_pipeline.import_receipts": 2,
+        "evidence_pipeline.job_events": 4,
+        "evidence_pipeline.article_captures": 2,
+        "evidence_pipeline.evidence_changes": 8,
+        "evidence_pipeline.change_jobs": 16,
+        "mip_private.legacy_extraction_completions": 0,
+        "mip_private.legacy_reviewed_completions": 0
+      },
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "987503fa-3e88-479c-8217-8a55dd18af58",
+              "record_version_id": "c51465c0-e30a-47b0-9366-3b98717dcc8c",
+              "source_hash": "949b1d603de1a8638c25bdd5f50bcb1aa0669c5ea9d1eb28c63799651517282c",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact hash/version/idempotency CAS",
+      "status": "PASS",
+      "completion_id": "ce1b574b-ea44-4cd8-8488-9d796dd2d10b",
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "ff511f1b-99a6-41c3-a442-5fe71abc6c95",
+              "record_version_id": "f63d1709-64bc-4b96-91f4-af3e212cd3a6",
+              "source_hash": "063ae62d7ac2e9e8b389fb08d1d81dc6837d14b53841670745947337fbb9cdab",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "metadata-only plan withheld; existing shared rows preserved",
+      "status": "PASS",
+      "report": {
+        "entitiesResolved": 0,
+        "citations": 0,
+        "extracted": 0,
+        "digests": 0,
+        "errors": [],
+        "privateCompletions": 1,
+        "metadataOnlySkipped": 1
+      },
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "e0badd88-d342-4f64-a447-417c03810ad5",
+              "record_version_id": "d2acc7ff-ac02-455c-b4b7-21fa86ca8397",
+              "source_hash": "2760f3f7d9db0c2591335ec5cf1ce36f18d9d1af981961562e368cd35a98db0b",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": true,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Read-only reference import: public source metadata only. No original body text, embeddings, entities, claims, or relationship data were copied.",
+                  "body_text": "Read-only reference import: public source metadata only. No original body text, embeddings, entities, claims, or relationship data were copied.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [],
+                "entities": [],
+                "citations": [],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "private eligibility and source-version reconsideration",
+      "status": "PASS",
+      "completion_count": 2,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "different-run",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "f519db31-521b-47ba-a720-2e89aa9221ab",
+              "record_version_id": "72310a76-7185-4bcd-bd8b-c117ebeece6e",
+              "source_hash": "71e9b270cc998c8e0fba85aefa5b7a92a3b60a4ff18d76ace8866272ca1e235f",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "f519db31-521b-47ba-a720-2e89aa9221ab",
+              "record_version_id": "cab8a1bd-eabb-46aa-8ac5-25771f90a6c3",
+              "source_hash": "1174b7408e2f868b7d07d11041b37504be40bcc346c6e4513d3e86c6ccac5e81",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Explicit changed private withdrawn source bytes.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Explicit changed private withdrawn source bytes.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 1,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact owner-reviewed derived application",
+      "status": "PASS",
+      "public_version_id": "0383e9c0-bdb6-4627-b226-9af32e9a3558",
+      "review_completion_id": "19212819-93f7-4386-89d3-6692c3f4d6e0",
+      "article_and_entities_unchanged": true,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": null,
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "93d89445-7f72-46a2-b20e-b94154190ac5",
+              "record_version_id": "57523766-f471-4c40-8d07-64224c111c32",
+              "source_hash": "e0404d7ad1f4870e94a50e4da9a3d99e8b8ffce801e8a1315f1c39dbec867cae",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Recorded vessel source report",
+                  "summary": "😀 A source reports a vessel arrival.",
+                  "body_text": "PRIVATE_BODY_ONLY_TOKEN. ReviewedBodySpanToken reports a recorded observation.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "ReviewedBodySpanToken reports a recorded observation.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [],
+                "citations": [],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "d3a8fc91-bec7-45b6-a669-7ff308db5dec",
+              "record_version_id": "84546f3a-56d1-4c77-9df1-d160cf6b8e59",
+              "source_hash": "4e4ec16956ecacc282274a2454eab7195dcc9861c50231f448fa07cc8ff7b113",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reviewed capture/hash/evidence/newest-head CAS denial",
+      "status": "PASS",
+      "public_version_id": "36db87fd-ddbf-431e-b1ed-4c3b88b224d6",
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": null,
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "eb05168d-4b8b-43ba-9a7d-173de0bf50af",
+              "record_version_id": "cf879dd3-36bc-4612-b101-59ffedf35292",
+              "source_hash": "1923bbcdf47a74e81915a6f34b36f7c925b8db36f5120634d5af89a6f3ae06c7",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Recorded vessel source report",
+                  "summary": "😀 A source reports a vessel arrival.",
+                  "body_text": "PRIVATE_BODY_ONLY_TOKEN. ReviewedBodySpanToken reports a recorded observation.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "ReviewedBodySpanToken reports a recorded observation.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [],
+                "citations": [],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "bd1f1c67-c73c-4e8d-ac7d-63c814a4c623",
+              "record_version_id": "324be01c-27e3-4d5f-b2e6-9c38ea6f68b5",
+              "source_hash": "3ea86f78f76022baa4e0d5e44b4d89e562af530a3f213f67b47d3d2246c5ccd5",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "owner-reviewed derived and receipt whole transaction rollback",
+      "status": "PASS",
+      "rolled_back": true,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": null,
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "789ca768-b972-4e23-b637-176e273aa06d",
+              "record_version_id": "a9c7f5b8-210a-4e16-ad48-61b4077db88e",
+              "source_hash": "e8c914552dc2e6c5436ff85e6c0c9ed96f330ae337a3a58cf22a6e026bde0206",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Recorded vessel source report",
+                  "summary": "😀 A source reports a vessel arrival.",
+                  "body_text": "PRIVATE_BODY_ONLY_TOKEN. ReviewedBodySpanToken reports a recorded observation.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "ReviewedBodySpanToken reports a recorded observation.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [],
+                "citations": [],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "954fcc00-eb0e-4c07-a59d-a4402222c26b",
+              "record_version_id": "7be69da4-4119-4a4e-93eb-9208f97f8e05",
+              "source_hash": "2362c8f410aa4e38b41529cb16d627598d87296a626dba324f71356ed07e0ead",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact least privilege source role and default browser denial",
+      "status": "PASS",
+      "roles": {
+        "rolcanlogin": false,
+        "rolinherit": false,
+        "rolsuper": false,
+        "rolbypassrls": false,
+        "rolcreaterole": false
+      },
+      "service_article_update": false,
+      "requests": []
+    },
+    {
+      "name": "expected catalog drift denied; unrelated overload ACL/owner preserved",
+      "status": "PASS",
+      "unrelated_overload_unchanged": true,
+      "requests": []
+    },
+    {
+      "name": "unfinished native capture owner retained; no alternate engine",
+      "status": "PASS",
+      "native_job": "b5c74638-557a-49c2-a3d0-b44cebaa7461",
+      "stolen_leases": 0,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "5deb5073-314f-4ecc-b290-1565775622a0",
+              "record_version_id": "bf336d21-ed73-4a73-b578-4f7670eba9eb",
+              "source_hash": "0d557a9dac469b1b1b4f4ed1a0000bb406a981203d2bc25de5b8cd22f1a8f90c",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact revoke-only rollback keeps private/native audit history",
+      "status": "PASS",
+      "history_retained": true,
+      "unrelated_overload_unchanged": true,
+      "requests": [
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "complete_private",
+            "p_input": {
+              "article_id": "7edcf8ad-b099-4b13-939d-0bd7b81af14e",
+              "record_version_id": "43d724c8-0186-4d57-b572-cb4ca8c78a8a",
+              "source_hash": "98c5fd6d9ad0d29e3b5f5f5ce16dc746e762712ff35f38c47a8add2afdbe3603",
+              "extractor_version": "legacy-pure-candidates-v1",
+              "plan": {
+                "metadata_only": false,
+                "normalization": {
+                  "title": "Alice Smith recorded a fictional harbor event.",
+                  "summary": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "body_text": "Alice Smith announced the fictional harbor update in a court filing.",
+                  "image_url": null,
+                  "image_alt": null
+                },
+                "claims": [
+                  {
+                    "text": "Alice Smith recorded a fictional harbor event..",
+                    "kind": "substantive"
+                  },
+                  {
+                    "text": "Alice Smith announced the fictional harbor update in a court filing.",
+                    "kind": "substantive"
+                  }
+                ],
+                "entities": [
+                  {
+                    "surface": "Alice Smith",
+                    "role": null,
+                    "mentions": 2,
+                    "entity_type": "person"
+                  }
+                ],
+                "citations": [
+                  {
+                    "cited_entity": "court filing",
+                    "cited_type": "court_doc",
+                    "documentation_strength": 0.2
+                  },
+                  {
+                    "cited_entity": "Alice Smith announced the fictional harbor update in a court filing",
+                    "cited_type": "named_official",
+                    "documentation_strength": 0.2
+                  }
+                ],
+                "proposed_digest": false
+              }
+            }
+          }
+        },
+        {
+          "role": "service_role",
+          "method": "POST",
+          "path": "/rest/v1/rpc/mip_legacy_extraction_v1",
+          "rpc": "mip_legacy_extraction_v1",
+          "payload": {
+            "p_action": "read_pending",
+            "p_input": {
+              "run_tag": "fixture-scoped",
+              "limit": 25,
+              "extractor_version": "legacy-pure-candidates-v1"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Synthetic isolated PostgreSQL administrator fixtures; no live admission or grants",
+    "Installed SDK request adapter exercises SQL; no live PostgREST/JWT or independent multi-session concurrency"
+  ]
+}

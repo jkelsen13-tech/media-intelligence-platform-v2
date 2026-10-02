@@ -1,0 +1,202 @@
+{
+  "contract": "mip-legacy-owner-transfer-source-qualification-v1",
+  "date": "2026-10-02",
+  "status": "PASS",
+  "frozen_parent": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+  "frozen_proposal_sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
+  "source_only": true,
+  "live_operations": 0,
+  "protected_rehearsals": 0,
+  "new_object_signatures": [],
+  "retained_signatures": [
+    "mip_private.legacy_source_snapshot_v1(public.articles)",
+    "mip_private.legacy_extraction_apply_v1(text,jsonb)",
+    "public.mip_legacy_extraction_v1(text,jsonb)",
+    "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)"
+  ],
+  "prospective_d_windows": {
+    "install": "Installer-grantor ADMIN=false/INHERIT=false/SET=true only during exact private ownership transfer; schema CREATE only for that transfer; preserve bootstrap-provider ADMIN-only grant; remove introduced grant and exact CREATE before commit",
+    "stop": "Same introduced SET-only membership, SET LOCAL exact narrow owner solely for private service EXECUTE revoke; return to installer and remove introduced edge; no schema privilege"
+  },
+  "engine_scope": "Disposable PGlite0.5.8 PostgreSQL18.3/WASM; Node22/24 are JS runtimes; no native PostgreSQL17/multiconnection/hosted qualification",
+  "externally_preflighted_metadata": {
+    "path": "/workspace/mip-launch-receipts/correction-qik-select-only-metadata-2026-10-02.json",
+    "sha256": "65839cb07a362eeedf39240f25d02982fe14ee122a1e2de54e2e2ad52a2823f0",
+    "observed_at_utc": "2026-10-02 18:41:11.094225+00",
+    "server_version": "17.6",
+    "installer": {
+      "name": "postgres",
+      "oid": "16388",
+      "superuser": false,
+      "createrole": true,
+      "inherit": true,
+      "bypassrls": true,
+      "createrole_self_grant": ""
+    },
+    "bootstrap": {
+      "name": "supabase_admin",
+      "oid": "10",
+      "superuser": true
+    },
+    "protected_mutations": 0,
+    "installed_catalog": false,
+    "grant_authorization": false
+  },
+  "primary_sources": [
+    "https://www.postgresql.org/docs/17/sql-alterfunction.html",
+    "https://www.postgresql.org/docs/17/role-attributes.html",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/include/catalog/pg_authid.dat",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/backend/commands/user.c"
+  ],
+  "runs": [
+    {
+      "runtime_path": "/workspace/mip-runtime22/node_modules/node/bin/node",
+      "runtime": "v22.23.3",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "passed": 29,
+      "failed": 0,
+      "focused_owner_cases": 14,
+      "existing_api_cases": 15,
+      "owner_receipt": "verifier/legacy-owner-transfer-node22-2026-10-02.json",
+      "api_receipt": "verifier/legacy-owner-api-node22-2026-10-02.json",
+      "raw_output": "verifier/legacy-owner-transfer-node22-2026-10-02.txt"
+    },
+    {
+      "runtime_path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "runtime": "v24.19.0",
+      "engine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version": "18.3",
+      "passed": 29,
+      "failed": 0,
+      "focused_owner_cases": 14,
+      "existing_api_cases": 15,
+      "owner_receipt": "verifier/legacy-owner-transfer-node24-2026-10-02.json",
+      "api_receipt": "verifier/legacy-owner-api-node24-2026-10-02.json",
+      "raw_output": "verifier/legacy-owner-transfer-node24-2026-10-02.txt"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "bytes": 31554,
+      "sha256": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/catalog.sql",
+      "bytes": 4934,
+      "sha256": "84b0b12dd8bba715a8d04599f700dfd1ccd11bec9a810aedf894841dcfd5e112"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/installed-catalog.sql",
+      "bytes": 5321,
+      "sha256": "d83c582b58487dd0855f854acba49b0cbd47dfc0eb9376a8151e7376d2aaefb9"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+      "bytes": 8969,
+      "sha256": "1a7d2f604d98620461ffab3549abca3f7a4f8d8772316b04f519b2af4b09fd90"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/run-preflight.sql",
+      "bytes": 3911,
+      "sha256": "2b0e2b5f5081ec77930f7ab25d8cd61143b9fa9b0233e2a98a16c11f8c86cab1"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/install.psql",
+      "bytes": 365,
+      "sha256": "5c8d2e1a3023c3eaf2fe6cc319e594878bdd3507da744f225ce926327caa93c1"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.psql",
+      "bytes": 252,
+      "sha256": "e50bbacca8e2350d4a809e02e7bf1108a42abaef6e50b61720099363d5f9761d"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/OWNER-TRANSFER.md",
+      "bytes": 1849,
+      "sha256": "eea24b23286abdfdd8ecd7d6f4ee9b6f033bb49f7aa1c455628e342fcc38c6f8"
+    },
+    {
+      "path": "scripts/legacyAtomicCompletionPackage.mjs",
+      "bytes": 1318,
+      "sha256": "c6652e41325a163575e2ad52b0170ebeec673705bac032f4f3e9b6c8b97d68ce"
+    },
+    {
+      "path": "scripts/launchInstallationSequence.mjs",
+      "bytes": 11230,
+      "sha256": "82eaa4910201b05e6ea7d4b1b130eee96bf348ae66104a555ff3a3f47dc3bba4"
+    },
+    {
+      "path": "scripts/mipConsolidationRestore.mjs",
+      "bytes": 13211,
+      "sha256": "289397633829f6890a65d8a9ed1471c100d04d4aaea3178678e2ac7ce4e4e9c7"
+    },
+    {
+      "path": "tests/legacyOwnerTransferFixture.mjs",
+      "bytes": 6563,
+      "sha256": "182837b649e4c8de2de395da484c8d8d3cf6e1380d0d603573573a7dd5109ecd"
+    },
+    {
+      "path": "tests/legacyOwnerTransfer.test.mjs",
+      "bytes": 20083,
+      "sha256": "45c9c3eb21db81e810e60e949cdd86d2b4ebe738c529f96f1ebb15a117f1f228"
+    },
+    {
+      "path": "tests/legacyAtomicCompletionFixture.mjs",
+      "bytes": 6423,
+      "sha256": "2cec9ece782e9ee645f3a3e7ffc1c56d9edb76f02d797c5d4b66af987da74047"
+    },
+    {
+      "path": "tests/legacyAtomicCompletion.test.mjs",
+      "bytes": 20124,
+      "sha256": "e4343febd29bfc846460871fd65a15eb12797dee8cb3ad7da2d970541c6b605d"
+    },
+    {
+      "path": "docs/MIP_LEGACY_OWNER_TRANSFER_CORRECTION_2026-10-02.md",
+      "bytes": 8543,
+      "sha256": "fe5c7c568e498670ada40346b0e995d73c030407daee32b31a31a0977611d605"
+    },
+    {
+      "path": "verifier/legacy-owner-frozen-reproduction-2026-10-02.json",
+      "bytes": 1149,
+      "sha256": "6ab737203d84ac754a9f0782ccae8f53aa96959c722d1fc6daa716195bb71024"
+    },
+    {
+      "path": "verifier/legacy-owner-transfer-node22-2026-10-02.json",
+      "bytes": 17369,
+      "sha256": "a16560e39c5f0f04ab2b096c057b465d0bd1316b4d89053386ba04fb3a29f264"
+    },
+    {
+      "path": "verifier/legacy-owner-api-node22-2026-10-02.json",
+      "bytes": 44478,
+      "sha256": "e6f894e3d835e060d09a201d8f711b7cb9ee32553e780845ac6834409360bcb6"
+    },
+    {
+      "path": "verifier/legacy-owner-transfer-node22-2026-10-02.txt",
+      "bytes": 8126,
+      "sha256": "ca35c5f6ca3ce09d9f496f217a1ea18f5525e86e5a1645121baea25b7ef47b5a"
+    },
+    {
+      "path": "verifier/legacy-owner-transfer-node24-2026-10-02.json",
+      "bytes": 17369,
+      "sha256": "18aa871ff40616b6900ad3fb41d853478382db608337678e7340067f3cab8b8a"
+    },
+    {
+      "path": "verifier/legacy-owner-api-node24-2026-10-02.json",
+      "bytes": 44478,
+      "sha256": "0ccfd0574f0240872b431b431123be0c7a62b3df3afb70aae8bd6f356d0d1a9c"
+    },
+    {
+      "path": "verifier/legacy-owner-transfer-node24-2026-10-02.txt",
+      "bytes": 3648,
+      "sha256": "569c76051ae4906adceeea7bbff5a0bc647607e64d806e3beeb80a99df79be41"
+    }
+  ],
+  "remaining_gates": [
+    "Independent bounded source QA and coherent parent successor qualification",
+    "Fresh post-dependency protected catalog; native PostgreSQL17/multiconnection B rollback-only qualification remains external",
+    "Separate exact D installation/stop window authorization",
+    "Reviewed population and frontend/gateway/worker activation remain separate; no restart/release approval"
+  ]
+}

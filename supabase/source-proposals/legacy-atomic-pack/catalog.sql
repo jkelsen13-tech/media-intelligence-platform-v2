@@ -17,8 +17,11 @@ select jsonb_build_object(
   'mip_private.require_reviewed_public_article_version(uuid,uuid,text)'::regprocedure,'mip_private.public_article_version_is_visible(uuid)'::regprocedure,
   'mip_private.public_article_evidence_is_visible(uuid,uuid)'::regprocedure,'evidence_pipeline.canonical_url(text)'::regprocedure,
   'evidence_pipeline.reject_history_mutation()'::regprocedure,'evidence_pipeline.capture_evidence_change()'::regprocedure,'evidence_pipeline.dispatch_evidence_change()'::regprocedure])),
- 'roles',(select jsonb_agg(jsonb_build_object('name',r.rolname,'login',r.rolcanlogin,'inherit',r.rolinherit,'superuser',r.rolsuper,'bypass_rls',r.rolbypassrls,
-  'memberships',(select coalesce(jsonb_agg(p.rolname order by p.rolname),'[]') from pg_roles p where p.oid<>r.oid and pg_has_role(r.oid,p.oid,'MEMBER'))) order by r.rolname) from pg_roles r where r.rolname in ('anon','authenticated','service_role','qik_ingest_fn_owner','mip_legacy_completion_owner')),
+ 'installer_context',jsonb_build_object('current_user',current_user,'session_user',session_user,'current_user_oid',(select oid::text from pg_roles where rolname=current_user),'session_user_oid',(select oid::text from pg_roles where rolname=session_user),'createrole_self_grant',current_setting('createrole_self_grant')),
+ 'roles',(select jsonb_agg(jsonb_build_object('oid',r.oid::text,'name',r.rolname,'login',r.rolcanlogin,'inherit',r.rolinherit,'superuser',r.rolsuper,'bypass_rls',r.rolbypassrls,
+  'create_role',r.rolcreaterole,'create_db',r.rolcreatedb,'replication',r.rolreplication,'configuration',r.rolconfig,
+  'memberships',(select coalesce(jsonb_agg(jsonb_build_object('membership_oid',m.oid::text,'role_oid',m.roleid::text,'member_oid',m.member::text,'grantor_oid',m.grantor::text,'role',pg_get_userbyid(m.roleid),'grantor',pg_get_userbyid(m.grantor),
+   'admin',m.admin_option,'inherit',m.inherit_option,'set',m.set_option) order by m.roleid,m.grantor),'[]') from pg_auth_members m where m.member=r.oid)) order by r.rolname) from pg_roles r),
  'new_relations',(select coalesce(jsonb_agg(c.oid::regclass::text order by c.oid::regclass::text),'[]') from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='mip_private' and c.relname in ('legacy_extraction_completions','legacy_reviewed_completions')),
  'new_signatures',jsonb_build_array(to_regprocedure('public.mip_legacy_extraction_v1(text,jsonb)')::text,to_regprocedure('mip_private.legacy_extraction_apply_v1(text,jsonb)')::text,
   to_regprocedure('public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)')::text,to_regprocedure('mip_private.legacy_source_snapshot_v1(public.articles)')::text)

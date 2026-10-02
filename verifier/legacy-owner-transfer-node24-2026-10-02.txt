@@ -1,0 +1,37 @@
+✔ actual SDK handler retains one raw native capture and private receipt, leaves source and shared derived rows unchanged (5640.852751ms)
+✔ actual handler denies admission race before completion without capture, source or derived mutation (2904.714156ms)
+✔ actual handler denies selected source byte revision and retains the newer bytes (2873.807353ms)
+✔ actual handler refuses missing atomic RPC and has no table-write fallback (2673.889098ms)
+✔ whole private transaction rolls back newly retained job/capture/change dispatch when final receipt insert fails (2547.564327ms)
+✔ private completion exact version/hash CAS and idempotency reject tampering (2109.225726ms)
+✔ metadata sentinel retains no inferred relations and neither deletes nor publishes existing shared rows (2094.177959ms)
+✔ private selection preserves active/eligible denial, withdrawn eligibility and exact run scope; source updates reconsider completed work (2259.452694ms)
+✔ only publication owner applies explicit exact admitted evidence links, with no canonical entity or source writes (2525.582569ms)
+✔ reviewed completion denies wrong capture/hash, unrelated evidence and stale newer public version before any mutation (2411.933719ms)
+✔ reviewed completion rolls back preceding deletes and inserts when final receipt fails (2759.214607ms)
+✔ new narrow owner has no service membership, browser execution or shared canonical mutation privilege (2500.793536ms)
+✔ catalog drift rejects install atomically and exact additions preserve unrelated overload owner/ACL (3375.180343ms)
+✔ pending native job collision fails closed without stealing native leases or creating a second capture engine (2762.328411ms)
+✔ exact guarded rollback stops service RPC while retaining every receipt/capture and unrelated overload (3366.445401ms)
+✔ frozen source reproduces ownership failure under a distinct non-superuser creator; full rollback restores the catalog (5114.583846ms)
+✔ successor preserves provider/B1 membership, ACLs, policies and overload while installed private read/capture APIs work (3239.562253ms)
+✔ bootstrap role name can differ from postgres; automatic grantor identity and exact restoration remain valid (2904.503598ms)
+✔ superuser installer introduces no role-membership edge and removes temporary schema CREATE (3285.593891ms)
+✔ observed temporary SET window preserves provider edge and exact raw schema ACL after restoration (2493.824777ms)
+✔ failure after granting both temporary privileges rolls back ownership, ACLs and every membership (3072.146291ms)
+✔ nonempty creator self-grant is refused even with a freshly pinned matching catalog (2846.819118ms)
+✔ pinned provider membership option and installer-context drift fail before package authority changes (2809.181387ms)
+✔ malformed automatic creator edge is refused without replacing or broadening provider authority (2742.498523ms)
+✔ a catalog approved in another session identity cannot be replayed under the same article-owner role (2967.777161ms)
+✔ revoke-only stop pins installed membership and preserves all roles, provider grants and retained ledgers (3168.039705ms)
+✔ failure after private stop revoke restores exact installed ACLs, memberships, histories and installer session (3823.146885ms)
+✔ stop with renamed bootstrap under non-super session restores context; installed membership drift refuses stop (4582.019317ms)
+✔ superuser stop preserves memberships and schemas without a role switch or membership grant (2951.378066ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46176.022784

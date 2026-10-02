@@ -1,0 +1,9 @@
+# Prospective install/stop ownership window
+
+This source package requires separate protected authorization. Read the concrete authority, externally observed provider metadata, sequence, restoration checks and fixture limits in [the dated correction](../../../docs/MIP_LEGACY_OWNER_TRANSFER_CORRECTION_2026-10-02.md).
+
+Capture a fresh catalog **after dependencies** as the actual existing article owner, with current/session identities and empty `createrole_self_grant`. The catalog pins every role and direct membership identity/grantor/option. The installer may create only its own transient membership in the new narrow owner: ADMIN=false, INHERIT=false, SET=true, explicit installer grantor. The automatic bootstrap-grantor ADMIN=true/INHERIT=false/SET=false membership remains unchanged. Bootstrap OID10's actual name must be independently read; no provider role name is assumed.
+
+Install additionally grants schema CREATE only for the exact private-function ownership transfer, removes it, and requires raw ACL and membership restoration before commit. Stop introduces no schema privilege: it briefly assumes the exact narrow owner only to revoke private-function service EXECUTE, returns to the original installer and removes its own exact membership. The wrapper revoke remains installer-owned. Failure rolls back revokes/ownership and both temporary authority windows atomically.
+
+After an authorized install, separately pin `installed-catalog.sql` and inspect `run-preflight.sql`; after dependencies change, old catalogs are invalid. Stop requires its own fresh installed catalog and exact D window approval through `rollback.psql`. It preserves all history/roles/policies/schema ACLs and disables only the exact service execution signatures. No destructive uninstall, activation, admission, provider request or restart is authorized here.
