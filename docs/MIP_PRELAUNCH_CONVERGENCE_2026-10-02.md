@@ -38,6 +38,8 @@ Current reconciliation: October 2, 2026, 10:30 UTC. The integration branch is `c
 
 The bounded source lanes above are integrated or frozen at their exact separate gates. Combined qualification and independent review are next. Remaining domain identity/policy, protected installation, source rights/bytes, physical-device, provider/global billing, legacy writer authority and release boundaries are concrete gates; unavailable external data has not prevented the independent repairs.
 
+Later exact 814cb qualification/review and the bounded completion of its three known residuals are recorded chronologically in `MIP_PRELAUNCH_CONVERGENCE_SOURCE_REGISTER_2026-10-02.md` and `MIP_REVIEW_CORRECTIONS_2026-10-02.md`. The table above retains its October 2, 10:30 UTC checkpoint; later source receipts do not imply installation or release.
+
 ## Preserved initial inventory
 
 The table below records the starting `b8ac166` inventory. Its “under repair” wording is historical; the measured matrix above is current.
