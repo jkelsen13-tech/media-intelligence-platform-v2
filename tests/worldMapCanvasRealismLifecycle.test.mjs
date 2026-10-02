@@ -5,6 +5,7 @@ import {mkdir} from 'node:fs/promises'
 import React from 'react'
 import TestRenderer,{act} from 'react-test-renderer'
 import {WORLD_VIEW_REALISM_RIGHTS} from '../src/lib/worldViewRealismAdmission.js'
+import {FALLBACK_MAP_STACK_ID} from '../src/lib/worldViewMapStack.js'
 const output=new URL('./.compiled/world-map-realism-lifecycle.mjs',import.meta.url)
 await mkdir(new URL('./.compiled/',import.meta.url),{recursive:true})
 await build({entryPoints:[new URL('../src/views/WorldMapCanvas.jsx',import.meta.url).pathname],outfile:output.pathname,bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external',plugins:[{name:'renderer-double',setup(b){
@@ -125,4 +126,29 @@ test('reservation clock failure from a mounted service falls back without transp
   assert.equal(loads,0);assert.deepEqual(rejections,[]);assert.equal(statuses.at(-1).localSourceResource.status,'fallback');assert.equal(statuses.at(-1).localSourceResource.activeSourceId,null)
   await act(async()=>mounted.unmount());assert.equal(e.hostListeners.size,0);assert.equal(e.listeners.size,0);assert.equal(e.timers.size,0)
  }finally{process.off('unhandledRejection',onRejected);e.restore()}
+})
+
+test('real Atlas fallback removes native handlers from detached renderer host without replacing source session',async()=>{
+ const e=environment();let mounted,adapterOptions,requestChanges=0,subscriptions=0,unsubscribed=0,loads=0
+ const viewListeners=new Map()
+ e.view.addEventListener=(name,callback)=>viewListeners.set(name,callback)
+ e.view.removeEventListener=(name,callback)=>{if(viewListeners.get(name)===callback)viewListeners.delete(name)}
+ globalThis.__WORLD_MAP_RENDERER_DOUBLE__=options=>{adapterOptions=options;return {mount:async()=>{},destroy(){},setFeatures:async()=>{},setActivityState(){},setRelationships(){},setCameraState(){return true},getCameraState:()=>'{"fixtureCamera":true}',getVisualFidelityCapabilities:()=>({})}}
+ const services={sources:[source],budgetOptions:{now:()=>0},estimateBytes:()=>100,getRequest:()=>{requestChanges++;return request},subscribeRequestChanges:()=>{subscriptions++;return()=>unsubscribed++},transport:{load:async()=>{loads++;return {dispose(){},observedBytes:80}}},renderer:{attach:async()=>({dispose(){}})}}
+ try{
+  await act(async()=>{mounted=TestRenderer.create(React.createElement(WorldMapCanvas,props(row('a'),services)),{createNodeMock:()=>e.host})})
+  assert.equal(e.hostListeners.size,5);assert.equal(loads,1)
+  const before=e.view.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.localBudget
+  await act(async()=>adapterOptions.onStackIdChange(FALLBACK_MAP_STACK_ID))
+  assert.equal(mounted.root.findAll(node=>node.props.className==='wv-map-host').length,0,'Atlas removes the native renderer host')
+  assert.equal(e.hostListeners.size,0,'detached renderer host releases all five native input subscriptions')
+  assert.equal(subscriptions,1);assert.equal(unsubscribed,0,'changing stack does not recreate the source-service subscription')
+  assert.equal(loads,1)
+  const after=e.view.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.localBudget
+  assert.deepEqual(after,before,'host rebinding does not replace or reset source local accounting')
+  const calls=requestChanges
+  for(const name of ['pointerdown','pointerup','keydown','keyup','wheel'])e.hostListeners.get(name)?.()
+  assert.equal(requestChanges,calls)
+  await act(async()=>mounted.unmount());assert.equal(unsubscribed,1);assert.equal(e.listeners.size,0);assert.equal(e.timers.size,0);assert.equal(viewListeners.size,0)
+ }finally{e.restore()}
 })

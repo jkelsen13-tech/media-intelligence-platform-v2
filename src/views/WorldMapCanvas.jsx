@@ -398,10 +398,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     const visibility = () => owner.transition(doc?.hidden ? 'hidden' : realismExploreRef.current ? 'visible-active' : 'visible-idle')
     visibility()
     doc?.addEventListener?.('visibilitychange', visibility)
-    const host = hostRef.current
-    const beginInteraction = () => interaction()
     const refreshRequest = () => realismRequestRef.current?.(false)
-    const wheelInteraction = () => { interaction(); refreshRequest() }
     let unsubscribe
     if (!setupFailure) {
       try { unsubscribe = realismServices?.subscribeRequestChanges?.(refreshRequest) }
@@ -410,25 +407,37 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         controller.dispose(); create()
       }
     }
-    host?.addEventListener?.('pointerdown', beginInteraction)
-    host?.addEventListener?.('keydown', beginInteraction)
-    host?.addEventListener?.('pointerup', refreshRequest)
-    host?.addEventListener?.('keyup', refreshRequest)
-    host?.addEventListener?.('wheel', wheelInteraction, {passive: true})
     startPolling()
     return () => {
       alive = false; stopPolling()
       doc?.removeEventListener?.('visibilitychange', visibility)
-      host?.removeEventListener?.('pointerdown', beginInteraction)
-      host?.removeEventListener?.('keydown', beginInteraction)
-      host?.removeEventListener?.('pointerup', refreshRequest)
-      host?.removeEventListener?.('keyup', refreshRequest)
-      host?.removeEventListener?.('wheel', wheelInteraction)
       if (typeof unsubscribe === 'function') { try { unsubscribe() } catch { /* baseline cleanup still owns disposal */ } }
       controller.dispose()
       if (realismRef.current === owner) realismRef.current = null
     }
   }, [realismServices])
+
+  // Native input belongs to the current renderer host. Atlas removes that
+  // subtree; rebinding must not reset the source session or its local accounting.
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host || stackId === FALLBACK_MAP_STACK_ID) return undefined
+    const beginInteraction = () => realismRef.current?.interact()
+    const refreshRequest = () => realismRequestRef.current?.(false)
+    const wheelInteraction = () => { beginInteraction(); refreshRequest() }
+    host.addEventListener?.('pointerdown', beginInteraction)
+    host.addEventListener?.('keydown', beginInteraction)
+    host.addEventListener?.('pointerup', refreshRequest)
+    host.addEventListener?.('keyup', refreshRequest)
+    host.addEventListener?.('wheel', wheelInteraction, {passive: true})
+    return () => {
+      host.removeEventListener?.('pointerdown', beginInteraction)
+      host.removeEventListener?.('keydown', beginInteraction)
+      host.removeEventListener?.('pointerup', refreshRequest)
+      host.removeEventListener?.('keyup', refreshRequest)
+      host.removeEventListener?.('wheel', wheelInteraction)
+    }
+  }, [stackId, realismServices])
 
   useEffect(() => {
     if (stackId === FALLBACK_MAP_STACK_ID) return undefined
