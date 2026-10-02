@@ -8,8 +8,16 @@ const schemas = {
   unsubscribe: [['investigation_id', 'event_id', 'previous_event_id'], []],
 }
 export function createInvestigationFollowingClient({ call } = {}) {
-  return Object.fromEntries(Object.keys(schemas).map(action => [action, async (input = {}) => {
+  return Object.fromEntries(Object.keys(schemas).map(action => [action, async (input = {}, context = {}) => {
     if (typeof call !== 'function') return { data: null, error: { code: 'following_unbound' } }
+    let expectedUserId
+    try {
+      if (!context || typeof context !== 'object' || Object.getPrototypeOf(context) !== Object.prototype) throw new Error()
+      const descriptors = Object.getOwnPropertyDescriptors(context)
+      if (Reflect.ownKeys(descriptors).some(k => k !== 'expectedUserId' || !Object.hasOwn(descriptors[k], 'value'))) throw new Error()
+      expectedUserId = descriptors.expectedUserId?.value
+      if (expectedUserId !== undefined && !uuid(expectedUserId)) throw new Error()
+    } catch { return { data: null, error: { code: 'invalid_request' } } }
     const [required, optional] = schemas[action]
     const original = input
     try {
@@ -27,12 +35,13 @@ export function createInvestigationFollowingClient({ call } = {}) {
     }
     try {
       // Snapshot validated primitives before crossing the injected asynchronous boundary.
-      const result = await call(action, { ...input })
+      const result = await call(action, { ...input }, { expectedUserId })
       if (result?.error) {
         const allowed = ['access_denied', 'authentication_required', 'version_conflict', 'invalid_request']
         return { data: null, error: { code: allowed.includes(result.error.code) ? result.error.code : 'service_unavailable' } }
       }
       const data = result?.data
+      if (expectedUserId !== undefined && data?.authenticated_user_id !== expectedUserId) return { data: null, error: { code: 'identity_mismatch' } }
       if (!data || data.publicly_eligible !== false
         || (['list', 'read'].includes(action) && (data.contract_version !== 'private-investigation-following-1' || data.scope !== 'private_investigation'))
         || (action !== 'list' && data.investigation_id !== input.investigation_id)) {

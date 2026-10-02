@@ -1,3 +1,4 @@
+import InvestigationFollowingControls from './InvestigationFollowingControls.jsx'
 import AssessmentEvidenceTrail, { RetainedInputRecord, RetainedInputDates } from './InvestigationAssessmentTrail.jsx'
 import InvestigationSourceHistory from './InvestigationSourceHistory.jsx'
 import { mipBackend } from '../lib/mipBackend.js'
@@ -1680,6 +1681,7 @@ export function PrivateInvestigationInspector({ workspace, onOpenPublicGraphNode
 
 export default function PrivateInvestigationWorkspace({
   workspace,
+  followingClient = mipBackend.investigations.following,
   inputImpactClient = defaultInputImpactClient,
   sourceSpansClient = defaultSourceSpansClient,
   onSignIn,
@@ -1839,6 +1841,7 @@ export default function PrivateInvestigationWorkspace({
               </button>
             ))}
           </nav>
+          <InvestigationFollowingControls workspace={workspace} client={followingClient} />
           <OverviewSection
             panels={panels}
             bundle={bundle}

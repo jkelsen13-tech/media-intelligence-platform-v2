@@ -46,7 +46,7 @@ export function createFollowingHandler({ authenticate, rpc, allowedOrigins = [] 
   return async request => {
     const origin = request.headers.get('origin')
     const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Origin',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info' }
+      'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, x-mip-expected-user' }
     if (origin && origins.has(origin)) headers['Access-Control-Allow-Origin'] = origin
     const reply = (status, body) => new Response(JSON.stringify(body), { status, headers })
     if (origin && !origins.has(origin)) return reply(403, { error: { code: 'origin_denied' } })
@@ -62,6 +62,9 @@ export function createFollowingHandler({ authenticate, rpc, allowedOrigins = [] 
     try {
       const user = await authenticate(authorization)
       if (!user || !uuid(user.id) || user.is_anonymous === true) return reply(401, { error: { code: 'authentication_required' } })
+      const expectedUser = request.headers.get('x-mip-expected-user')
+      // A conditional expectation may only refuse a stale screen. Auth alone supplies identity.
+      if (expectedUser !== null && (!uuid(expectedUser) || expectedUser !== user.id)) return reply(401, { error: { code: 'authentication_required' } })
       // Explicit input allowlist above forbids user_id, roles and administrative actions.
       const result = await rpc(body.action, { ...(body.input ?? {}), user_id: user.id })
       if (result.error) {
@@ -71,7 +74,7 @@ export function createFollowingHandler({ authenticate, rpc, allowedOrigins = [] 
         if (['22023', '22P02', '22007', '22008'].includes(code)) return reply(400, { error: { code: 'invalid_request' } })
         return reply(503, { error: { code: 'service_unavailable' } })
       }
-      return reply(200, { data: result.data })
+      return reply(200, { data: { ...result.data, authenticated_user_id: user.id } })
     } catch { return reply(503, { error: { code: 'service_unavailable' } }) }
   }
 }

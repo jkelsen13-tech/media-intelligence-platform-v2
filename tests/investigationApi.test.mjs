@@ -25,9 +25,9 @@ function fixture(overrides = {}) {
   return { handler, calls }
 }
 
-test('unified release manifest matches the exact gateway and preserved domain source files', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../verifier/investigation-api-input-identity-2026-09-08.json', import.meta.url), 'utf8'))
-  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 9)
+test('current private source candidate manifest matches the exact gateway and preserved domain source files', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../verifier/investigation-api-private-following-2026-10-02.json', import.meta.url), 'utf8'))
+  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 10)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
     assert.equal(createHash('sha256').update(content).digest('hex'), entry.sha256, entry.path)
@@ -160,4 +160,45 @@ test('legacy server JWT transport remains unchanged for all unified private RPCs
     assert.equal(init.headers.apikey, serviceKey)
     assert.equal(init.headers.Authorization, 'Bearer ' + serviceKey)
   }
+})
+
+
+test('private following route reuses verified Auth and refuses trusted-only commands and identity injection', async () => {
+  const calls = [], { handler } = fixture({ followingRpc: async (action, input) => { calls.push({ action, input }); return { data: { private: true } } } })
+  const body = { action: 'read', input: { investigation_id: bundle.investigation_id } }
+  assert.equal((await handler(request('following', body))).status, 200)
+  assert.equal(calls[0].input.user_id, FIXTURE_USER.id)
+  for (const invalid of [{ ...body, input: { ...body.input, user_id: FIXTURE_USER.id } }, { action: 'revoke', input: {} }, { action: 'register_material_change', input: {} }]) assert.equal((await handler(request('following', invalid))).status, 400)
+  assert.equal(calls.length, 1)
+  assert.equal((await fixture().handler(request('following', body))).status, 503)
+})
+
+test('following server call stays on the existing validated origin and opaque-key credential boundary', async () => {
+  const calls = [], transport = createInvestigationApiTransport({ url: 'https://qikvmopbtijoebdqosyq.supabase.co', anonKey: 'sb_publishable_fixture', serviceKey: 'sb_secret_fixture', fetchImpl: async (url, init) => { calls.push({ url, init }); return Response.json({ saved: true }) } })
+  await transport.followingRpc('read', { investigation_id: bundle.investigation_id, user_id: FIXTURE_USER.id })
+  assert.equal(calls[0].url, 'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_following_v1')
+  assert.equal(calls[0].init.headers.apikey, 'sb_secret_fixture')
+  assert.equal(new Headers(calls[0].init.headers).has('authorization'), false)
+  assert.equal(calls[0].init.redirect, 'error'); assert.ok(calls[0].init.signal instanceof AbortSignal)
+})
+
+test('Following actor expectation only refuses stale sessions and Auth stamps success before a client can accept it', async () => {
+  const calls = [], { handler } = fixture({ followingRpc: async (action, input) => {
+    calls.push({ action, input }); return { data: { publicly_eligible: false, authenticated_user_id: '00000000-0000-0000-0000-000000000001' } }
+  } })
+  const body = { action: 'read', input: { investigation_id: bundle.investigation_id } }
+  const success = await handler(request('following', body, { headers: { 'X-MIP-Expected-User': FIXTURE_USER.id } }))
+  assert.equal(success.status, 200)
+  assert.equal((await success.json()).data.authenticated_user_id, FIXTURE_USER.id)
+  assert.equal(calls[0].input.user_id, FIXTURE_USER.id)
+  for (const value of ['00000000-0000-0000-0000-000000000001', 'malformed']) {
+    const refused = await handler(request('following', body, { headers: { 'X-MIP-Expected-User': value } }))
+    assert.equal(refused.status, 401); assert.deepEqual(await refused.json(), { error: { code: 'authentication_required' } })
+  }
+  assert.equal((await handler(request('following', { ...body, input: { ...body.input, authenticated_user_id: FIXTURE_USER.id } }))).status, 400)
+  assert.equal(calls.length, 1)
+  const preflight = await handler(request('following', null, { method: 'OPTIONS' }))
+  assert.match(preflight.headers.get('access-control-allow-headers'), /x-mip-expected-user/)
+  assert.equal((await handler(request('following', body))).status, 200)
+  assert.equal(calls.length, 2) // Header-free API callers retain current authenticated actor semantics.
 })
