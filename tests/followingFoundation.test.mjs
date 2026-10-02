@@ -18,6 +18,10 @@ test('private Following binds retained identities, declared differences and auth
     const matches = files.filter(f => f.endsWith(`_${suffix}.sql`)); assert.equal(matches.length, 1)
     await db.exec(await read('../supabase/migrations/' + matches[0]))
   }
+  // Qualify the integrated proposal order over the real retained owners. The
+  // relevance proposal changes the existing snapshot/diff functions, which
+  // Following consumes; separate passing fixtures would miss this seam.
+  await db.exec(await read('../supabase/source-proposals/assessment_relevant_inputs_v1.sql'))
   await db.exec(await read('../supabase/source-proposals/investigation_following_v1.sql'))
   const rpc = name => (action, input = {}) => db.query(`select public.${name}($1,$2::jsonb) r`, [action, JSON.stringify(input)]).then(r => r.rows[0].r)
   const intake = rpc('mip_pipeline_v1'), obs = rpc('mip_investigation_briefings_v1'), ws = rpc('mip_investigation_workspace_v1'), follow = rpc('mip_investigation_following_v1')
@@ -172,6 +176,26 @@ test('private Following binds retained identities, declared differences and auth
     const otherId = randomUUID(), a = await put(null, state, fresh, otherId), b = await put(a, state, expanded, otherId)
     await ws('set_access', { investigation_id: otherId, user_id: uid, access_role: 'reviewer', reason: 'Synthetic assignment.' })
     await assert.rejects(follow('register_material_change', { user_id: uid, investigation_id: otherId, change_id: randomUUID(), before_version_id: a.id, after_version_id: b.id, materiality_reason: 'Same subject cannot hide a changed collection scope.' }), e => e.code === '22023' && /scope mismatch/.test(e.message))
+  })
+  await t.test('Following material declarations consume the integrated exact relevance diff without inventing a source arrival', async () => {
+    const combinedId = randomUUID()
+    const baseline = await obs('observe', { observation_id: randomUUID(), candidate_ids: [candidate] })
+    const original = await put(null, state, baseline, combinedId)
+    await ws('set_access', { investigation_id: combinedId, user_id: uid, access_role: 'reviewer', reason: 'Synthetic combined-source qualification.' })
+    await ws('set_access', { investigation_id: combinedId, user_id: viewer, access_role: 'viewer', reason: 'Synthetic combined-source qualification.' })
+    await follow('subscribe', { user_id: viewer, investigation_id: combinedId, event_id: randomUUID(), previous_event_id: null, version_id: original.id, subject_id: subject })
+    const position = (await db.query('select position::text from evidence_pipeline.evidence_changes where capture_id=$1', [capture.capture_id])).rows[0].position
+    await rpc('mip_assessments_v1')('declare_relevance', { candidate_id: candidate, position, selection_method: 'explicit_synthetic_reviewer', selection_ref: 'controlled-combined-proposals', rationale: 'Declare relevance of an already retained input; not evidence of truth.' })
+    const observed = await obs('observe', { observation_id: randomUUID(), previous_observation_id: baseline.id, candidate_ids: [candidate] })
+    assert.deepEqual(observed.snapshot.inputs, baseline.snapshot.inputs)
+    const revised = await put(original, state, observed, combinedId)
+    const declared = await follow('register_material_change', { user_id: uid, investigation_id: combinedId, change_id: randomUUID(), before_version_id: original.id, after_version_id: revised.id, materiality_reason: 'Explicit private reviewer declaration over the new retained relevance record.' })
+    assert.deepEqual(declared.changes.evidence_changes.map(item => item.kind), ['relevant_input_declared'])
+    assert.equal(declared.changes.evidence_changes[0].position, position)
+    const readback = await follow('read', { user_id: viewer, investigation_id: combinedId })
+    assert.equal(readback.changes.length, 1)
+    assert.equal(readback.publicly_eligible, false)
+    assert.equal(readback.coverage, 'registered_material_changes_only')
   })
   await t.test('browser roles lack RPC/table access; immutable receipts and declarations reject rewriting', async () => {
     await db.exec('reset role')

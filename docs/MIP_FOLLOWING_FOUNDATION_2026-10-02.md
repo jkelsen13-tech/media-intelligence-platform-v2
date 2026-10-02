@@ -1,8 +1,8 @@
 # Private investigation Following: nondeployed source candidate
 
-This candidate supplies a durable private subscription and acknowledgment cursor. It is not the proposed public Story Following product, an installed schema, a gateway route, an in-app notification delivery service or an automatic materiality classifier. Architecture review must settle declaration ownership/materiality before integration. No live install, real account, credentials, provider purchase or notification dispatch was used.
+This candidate supplies a private subscription and acknowledgment cursor as an unapplied source proposal. It is not the proposed public Story Following product, an installed schema, a gateway route, an in-app notification delivery service or an automatic materiality classifier. Declaration ownership/materiality remains provisional and requires architecture approval before installation or product activation. No live install, real account, credentials, provider purchase or notification dispatch was used.
 
-Frozen parent: `0d378f58ea732bbde2d3e8a1d5c66b70cf6a75a5`. Historical migrations, gateway/SDK registration, App and public readers are unchanged. The proposal depends on existing retained investigation, observation, assessment and workspace foundations; it does not depend on applying another source proposal.
+Frozen lane parent: `0d378f58ea732bbde2d3e8a1d5c66b70cf6a75a5`. The Following delta changes no historical migration, gateway/SDK registration, App or public reader. It depends on existing retained investigation, observation, assessment and workspace foundations and can operate without another proposal. October 2 combined source retains it provisionally as an unapplied proposal; other independently qualified lanes change App. Combined qualification additionally applies the relevance proposal first and exercises Following against that actual shared snapshot/diff owner.
 
 ## Requirement and existing owner
 
