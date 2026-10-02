@@ -75,7 +75,7 @@
     },
     {
       "path": "scripts/verifyLaunchInstallationSequence.mjs",
-      "sha256": "2817c12f4e2591a82c52b2b6a586c545f8f948413d76146bed3c6cb51b79cb16"
+      "sha256": "ca2c9078a9df498599e7570e898083feed2bc41e6bed0649174c9aa68e3c4427"
     },
     {
       "path": "src/App.jsx",
@@ -394,6 +394,26 @@
       "sha256": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7"
     },
     {
+      "path": "tests/fixtures/frozenLaunchGate/README-2026-10-02.md",
+      "sha256": "5920ea0ccd1e51dd8a7b77bae47ba45297fc24f13e38b55053882a673b36cb13"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/legacy-atomic-completion-v1.provenance.json",
+      "sha256": "2f0cac5b9acac2c499d0788a6fabdef60916b58bd55a15dd0be5e9d2ba2ffb06"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/legacy-atomic-completion-v1.sql",
+      "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/story_following_v1.provenance.json",
+      "sha256": "176db3f1f50b36fe8bbb8bcd70685a272720675d97dfb5749f11d28f61ef98de"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/story_following_v1.sql",
+      "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e"
+    },
+    {
       "path": "tests/fixtures/storyArticleVersionJourney.mjs",
       "sha256": "d5e3d23f9a9af7ed7cdc314963f0342c906266859d3e8f05df57d95fb8786642"
     },
@@ -415,7 +435,7 @@
     },
     {
       "path": "tests/legacyOwnerTransferFixture.mjs",
-      "sha256": "182837b649e4c8de2de395da484c8d8d3cf6e1380d0d603573573a7dd5109ecd"
+      "sha256": "3a71deaf9b9970562f34ab42531f3f9e84938b1dead8f42262b5e3489afe61a0"
     },
     {
       "path": "tests/storyArticleExactVersionBrowser.mjs",
@@ -427,7 +447,7 @@
     },
     {
       "path": "tests/storyMaterialHistory.test.mjs",
-      "sha256": "c6edf95c1ab903e9265e962d734e8cbdf02e6bd5580dec5eefc5091bad2cc980"
+      "sha256": "46676bb873d400e0474f89ed48ef0adfec97c5e884eec7c679a8a9b3d4476208"
     },
     {
       "path": "tests/storyMaterialHistoryFixture.mjs",
