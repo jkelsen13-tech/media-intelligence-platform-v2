@@ -1,0 +1,467 @@
+{
+  "version": 1,
+  "generatedAtUtc": "2026-10-02T17:15:21.101936+00:00",
+  "qualification": "controlled synthetic full-App browser; no live reader/provider/source admission or physical-device/FPS qualification",
+  "qualifiedSourceCommit": "7b5cf5479069a56da1d6fdd6e1fe81c7eeac9c65",
+  "qualifiedSourceTree": "5709a7c09dac5ebbca78a52e6943542b7c7d0683",
+  "source": {
+    "path": "/workspace/mip-launch-landscape-touch/src/styles/world-view-explore.css",
+    "bytes": 13776,
+    "sha256": "10284bb092c7a6ab0ce23269739475fdee730fcc6f07e6ebfe236ea0521991c3"
+  },
+  "harness": {
+    "path": "/workspace/mip-launch-gates/verifier/runWorldViewIntegrationSyntheticBrowser.mjs",
+    "bytes": 22223,
+    "sha256": "4b975022259666d3707e9377acb8097490545c5e5e39c320d65cca686a441572"
+  },
+  "execution": {
+    "baseUrl": "http://127.0.0.1:4180/media-intelligence-platform-v2/",
+    "headless": true,
+    "browser": "Chromium 151.0.7922.173 on Debian 13",
+    "launchArgument": "--enable-unsafe-swiftshader",
+    "browserPackage": "/opt/codex/cua_node/lib/node_modules",
+    "publicHostConfiguration": "V2 allowlisted hostname with noncredential sb_publishable_fixture value; requests intercepted before network"
+  },
+  "runtimes": [
+    {
+      "node": "22.23.3",
+      "focusedChecks": 31,
+      "failed": 0,
+      "build": "PASS"
+    },
+    {
+      "node": "24.19.0",
+      "focusedChecks": 31,
+      "failed": 0,
+      "build": "PASS"
+    }
+  ],
+  "focusedTests": [
+    "tests/worldViewExploreShell.test.mjs",
+    "tests/worldViewPlaqueKeyboard.test.mjs",
+    "tests/worldViewBillboardIntegration.test.mjs",
+    "tests/worldViewExploreState.test.mjs"
+  ],
+  "city": {
+    "status": "PASS",
+    "candidate": "7b5cf5479069a56da1d6fdd6e1fe81c7eeac9c65",
+    "harnessSha256": "4b975022259666d3707e9377acb8097490545c5e5e39c320d65cca686a441572",
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "renderer": "ellipsoid-globe",
+        "pageErrors": [],
+        "nonlocalGETs": 215,
+        "mockedHEADs": [
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          }
+        ],
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "journeys": [
+          "Map/Graph/Split",
+          "native group inspect/member Space choice",
+          "selected modules/tether/explicit inspector camera retention",
+          "bound time/same-endpoint relationship inspection",
+          "Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector",
+          "Graph\u2192native Map remount camera/context retention"
+        ]
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "renderer": "ellipsoid-globe",
+        "pageErrors": [],
+        "nonlocalGETs": 160,
+        "mockedHEADs": [
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          }
+        ],
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "journeys": [
+          "Map/Graph/Split",
+          "native group inspect/member Space choice",
+          "selected modules/tether/explicit inspector camera retention",
+          "bound time/same-endpoint relationship inspection",
+          "Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector",
+          "Graph\u2192native Map remount camera/context retention"
+        ]
+      },
+      {
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "renderer": "ellipsoid-globe",
+        "pageErrors": [],
+        "nonlocalGETs": 162,
+        "mockedHEADs": [
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          }
+        ],
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "journeys": [
+          "Map/Graph/Split",
+          "native group inspect/member Space choice",
+          "selected modules/tether/explicit inspector camera retention",
+          "bound time/same-endpoint relationship inspection",
+          "Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector",
+          "Graph\u2192native Map remount camera/context retention"
+        ]
+      },
+      {
+        "viewport": {
+          "width": 640,
+          "height": 360
+        },
+        "renderer": "ellipsoid-globe",
+        "pageErrors": [],
+        "nonlocalGETs": 158,
+        "mockedHEADs": [
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          }
+        ],
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "journeys": [
+          "Map/Graph/Split",
+          "native group inspect/member Space choice",
+          "selected modules/tether/explicit inspector camera retention",
+          "bound time/same-endpoint relationship inspection",
+          "Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector",
+          "Graph\u2192native Map remount camera/context retention"
+        ]
+      }
+    ]
+  },
+  "atlas": {
+    "status": "PASS",
+    "candidate": "7b5cf5479069a56da1d6fdd6e1fe81c7eeac9c65",
+    "harnessSha256": "4b975022259666d3707e9377acb8097490545c5e5e39c320d65cca686a441572",
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "renderer": "atlas-fallback",
+        "pageErrors": [],
+        "nonlocalGETs": 45,
+        "mockedHEADs": [
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          },
+          {
+            "method": "HEAD",
+            "path": "/rest/v1/news_reviewed_articles_public"
+          }
+        ],
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "journeys": [
+          "Map/Graph/Split forced native failure\u2192Atlas",
+          "Atlas group inspect/member Space choice",
+          "bound time/same-endpoint relationship inspection",
+          "Explore positive viewport/attribution floor",
+          "Atlas remount context/no unsupported camera"
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "city": [
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/build-node22.log",
+        "bytes": 7437,
+        "sha256": "2ff3c411a399c3019a757d0de210f0aac185753124a99b9fdbdee416f7166536"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/build-node24.log",
+        "bytes": 7437,
+        "sha256": "74ebc6f7f4a7563920f16d537e061a6cf34dd374252b0282b0d21cdb35fc6847"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/compact-glyph-city-1280x900.png",
+        "bytes": 37266,
+        "sha256": "01889932e5bf9ef93374ae26254b1bdaa18df5c2b80b0603c1ea12061c9ba50f"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/compact-glyph-city-390x844.png",
+        "bytes": 31591,
+        "sha256": "d0e23254a86edf657794360c4a39c86b53954ef2bce7197f5d9214229a40cd13"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/compact-glyph-city-640x360.png",
+        "bytes": 21943,
+        "sha256": "b835c0f2d75d609983a449e940c5c2ffcd50e3dc4ea2ae2c4ffe59781569fd9e"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/compact-glyph-city-844x390.png",
+        "bytes": 22388,
+        "sha256": "1ad860ee99ae566757eedcf0441448254229b860d5af682ab582c22ae657bbcd"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/full-app-city-synthetic-1280x900.png",
+        "bytes": 155425,
+        "sha256": "b4ac4ba87a62767efc3605c338b6a6a737737855adceab5afe1c9eed788c1bfc"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/full-app-city-synthetic-390x844.png",
+        "bytes": 63473,
+        "sha256": "3a29ffb0bc2bb125ae552849cb8c80680c1749ef40c06623ffd6cc3781dfb017"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/full-app-city-synthetic-640x360.png",
+        "bytes": 37285,
+        "sha256": "61c828aa02e9a1f6838c5d4830162b999fbf46910f64959aa3b9f0c26f8b01ce"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/full-app-city-synthetic-844x390.png",
+        "bytes": 66664,
+        "sha256": "bf1ad2ca5453af8f6189cf0167c1d204e7411ad097a41c39ebea2a24a995efb4"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/full-app-city-synthetic.json",
+        "bytes": 16744,
+        "sha256": "3172a64bcddb1f6203ee2cd750832fa62cd87be86baa38d5d40e724c3258c3e3"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/run.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/selected-reader-city-1280x900.png",
+        "bytes": 62349,
+        "sha256": "08f7141866991133db673e1be3ef8c782c1ffc80ea94b402bc7778f349e26196"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/selected-reader-city-390x844.png",
+        "bytes": 51691,
+        "sha256": "a6e96ecce1d387b8adffb3dc563286415ea81b3c83956922e528c295a672ffbd"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/selected-reader-city-640x360.png",
+        "bytes": 38920,
+        "sha256": "fa1a5c6b9b6076fbe767f3a72605a40f53cc83d2134b11e81e4cde27400db60b"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/selected-reader-city-844x390.png",
+        "bytes": 42329,
+        "sha256": "86fddd1dfd1acca79540517c8bc6e2d5f6776ffed980140c242310f781a94d18"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/tests-node22.log",
+        "bytes": 7960,
+        "sha256": "a95b97367574d33431464774a4179f38ebe0f985871cb78f6480dcccd602e3a9"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch/tests-node24.log",
+        "bytes": 3487,
+        "sha256": "f9363f6d1839bf18420367769dfa385cefe29f4d0ec36b35cf720cc1c5c621a8"
+      }
+    ],
+    "atlas": [
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch-atlas/full-app-atlas-synthetic-1280x900.png",
+        "bytes": 166974,
+        "sha256": "fe752ab603994011cd58ffca0b93e5504de59d6309660a8fbcee09b097933662"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch-atlas/full-app-atlas-synthetic.json",
+        "bytes": 2485,
+        "sha256": "e206865959418aca59aa5484bc7d1f75b7e9fc42546bb5e9b8b3c207069707fc"
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/browser-landscape-touch-atlas/run.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "boundedFailureEvidence": [
+    {
+      "description": "Original integrated 844x390 center was blocked by collapsed Evidence & context banner",
+      "artifacts": [
+        {
+          "path": "/workspace/mip-launch-receipts/browser-city-final/failure.png",
+          "bytes": 55459,
+          "sha256": "227f343aba6c0c4cd4fe3bf23cd7f2ce33810a28ff7d34d7ada68083a38caba7"
+        },
+        {
+          "path": "/workspace/mip-launch-receipts/browser-city-final/failure-state.json",
+          "bytes": 12815,
+          "sha256": "b1b58460643668d394bee7b88204a4f5aa13c8b2a2fc84edc32c8777be52aa0d"
+        }
+      ]
+    },
+    {
+      "description": "Banner-only candidate passed first three viewports; 640x360 center toggled collapsed Spatial groups summary",
+      "artifacts": [
+        {
+          "path": "/workspace/mip-launch-receipts/browser-landscape-touch-banner-only/full-app-city-synthetic-partial.json",
+          "bytes": 12821,
+          "sha256": "f1ab041274104bafa8842d8b1ec76dac502934dec2570cbbcf5477792fbc044d"
+        },
+        {
+          "path": "/workspace/mip-launch-receipts/browser-landscape-touch-banner-only/failure.png",
+          "bytes": 53761,
+          "sha256": "c56b23f8fdd6686dfb7cf02e3ac46671412bc3cad758853d44dd3c06e26e0e26"
+        },
+        {
+          "path": "/workspace/mip-launch-receipts/browser-landscape-touch-banner-only/failure-state.json",
+          "bytes": 13119,
+          "sha256": "128c1cdbddb69dbdd3b0cf98d67c1c7db5e80c3bbac8876a3123f59ccfda967a"
+        }
+      ]
+    },
+    {
+      "description": "First worker run lacked synthetic Vite client configuration and never loaded rows; preserved separately, not a product qualification failure",
+      "artifacts": [
+        {
+          "path": "/workspace/mip-launch-receipts/browser-landscape-touch-config-failure/full-app-city-synthetic-partial.json",
+          "bytes": 270,
+          "sha256": "602e606b74cb540c7b1436c66fe6a7330bbaed426570d4351fa5b5746387d9df"
+        }
+      ]
+    }
+  ],
+  "remainingGates": [
+    "Physical devices and physical mobile/FPS not qualified",
+    "Live reader/auth/source/provider admission not qualified",
+    "Optional injected source-fault journey not rerun for this CSS-only lane"
+  ],
+  "postQualificationDocumentationOnly": true
+}
