@@ -89,9 +89,19 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
   const summary=exploreChooser.locator('summary');await summary.focus();await summary.press('Space')
  }
  assert.equal(await exploreChooser.evaluate(details=>details.open),false,'original chooser summary remains keyboard closable')
+ const controls=page.getByRole('navigation',{name:'Explore controls',exact:true})
+ for(const name of ['Interact','Options']){
+  const button=controls.getByRole('button',{name,exact:true})
+  assert.ok(await button.evaluate(node=>{const r=node.getBoundingClientRect();return node.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}),'collapsed chooser must not intercept '+name)
+  await button.click()
+  if(name==='Interact')await controls.getByRole('button',{name:'Done — scroll',exact:true}).click()
+  else {assert.equal(await button.getAttribute('aria-expanded'),'true');await button.click()}
+ }
+
  if(scenario!=='atlas'){
   const tabs=page.getByRole('tablist',{name:'Selected record modules',exact:true})
   for(const tab of ['Context','Sources','Evidence'])await tabs.getByRole('tab',{name:tab,exact:true}).click()
+  await page.locator('.wv-explore-map').screenshot({path:`/workspace/mip-oct02/evidence/lane1-2/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
   await page.getByRole('button',{name:'Open inspector',exact:true}).click()
   assert.ok(await page.locator('.wv-explore-context-body:not([hidden])').count(),'explicit inspector remains reachable after chooser collapse')
   const nativeHeight=await page.locator('.cesium-widget canvas').evaluate(canvas=>canvas.clientHeight)

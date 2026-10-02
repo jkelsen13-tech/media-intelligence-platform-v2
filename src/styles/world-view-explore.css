@@ -134,11 +134,11 @@
 .wv-explore-open .wv-explore-map .wv-map-panel { position: relative; }
 .wv-explore-open .wv-explore-map .wv-map-panel > .wv-spatial-groups {
   position: absolute;
-  z-index: 6;
+  z-index: 2;
   left: 10px;
-  top: 8px;
+  top: 84px;
   width: min(320px, calc(100% - 56px));
-  max-height: calc(100% - 52px);
+  max-height: calc(100% - 128px);
   min-height: 0;
   box-sizing: border-box;
   overflow: auto;
