@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const newsView = readFileSync(new URL('../src/views/NewsView.jsx', import.meta.url), 'utf8')
 const readPath = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
+const versionPath = readFileSync(new URL('../src/lib/reviewedPublicVersion.js', import.meta.url), 'utf8')
 const auditabilityMigration = readFileSync(
   new URL('../supabase/migrations/20260820_v2_claim_auditability_and_deterministic_promotion.sql', import.meta.url),
   'utf8',
@@ -21,11 +22,12 @@ test('News visibly distinguishes verified retained-source claims from unverified
   assert.match(newsView, /Verified against retained/)
   assert.match(newsView, /Unverified against retained source/)
   assert.match(newsView, /news-claim-auditability/)
-  assert.match(readPath, /auditability_state: row\.auditability_state/)
-  assert.match(readPath, /evidence_source_field: row\.evidence_source_field/)
+  assert.match(versionPath, /auditability_state: 'verified_retained_source'/)
+  assert.match(versionPath, /evidence_source_field: e\.source_field/)
   // The later nested-publication contract admits only retained-source surfaces.
   // Raw article extraction JSON has no corresponding publication authority.
-  assert.match(readPath, /from\('news_detail_public'\)/)
+  assert.match(readPath, /from\('news_reviewed_articles_public'\)/)
+  assert.match(versionPath, /version\.evidence\.map/)
   assert.doesNotMatch(readPath, /\.\.\.storedClaims|artRes\.data\.claims/)
 })
 

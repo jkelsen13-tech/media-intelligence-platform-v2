@@ -37,9 +37,11 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
         <p>Source version <code>{member.capture_id}</code> · Public source version <code>{member.public_version_id}</code></p>
         <p>Exact capture digest: <code>{member.capture_hash}</code></p>
         <p>Source review reference: {member.review_ref} · Policy: {member.policy_version}</p>
+        {member.superseded_by_public_version_id && <p>Superseding source version: <code>{member.superseded_by_public_version_id}</code></p>}
         {member.predecessor_public_version_id && <p>Previous source version: <code>{member.predecessor_public_version_id}</code></p>}
       </details>
       <p>Remaining uncertainty: {member.remaining_uncertainty}</p>
+      {!member.is_current_source_version && <p>A newer source version has superseded this retained evidence. This is the selected historical version; it does not establish a current Breaking state.</p>}
       {member.pending_revision && <p>A newer retained source revision is pending review; this displayed version retains its original approval.</p>}
       {member.correction_reason && <p>Correction: {member.correction_reason}</p>}
       <SourceLink url={member.source_url} outlet={member.source_outlet} />
@@ -50,6 +52,8 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
       <p className="news-source-report-verification">{report.verification_label}</p>
       <h3>{report.title}</h3>
       <p>{report.source_outlet} reports: {report.summary ?? 'No permitted source summary is available.'}</p>
+      {!report.is_current_source_version && <p>A newer source version has superseded this retained report. This is the selected historical version.</p>}
+      {report.pending_revision && <p>A newer retained source revision is pending review. This report retains its original approval.</p>}
       <p>Remaining uncertainty: {report.review_uncertainty}</p>
       <p>This is an attributed report. The reported proposition has not been independently established by MIP.</p>
       <Clock label="Source report time" value={report.report_time} />
@@ -60,6 +64,7 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
         <p>Source <code>{report.source_id}</code> · Source version <code>{report.source_version_id}</code> · Public report version <code>{report.public_version_id}</code></p>
         <p>Exact capture digest: <code>{report.capture_hash}</code></p>
         <p>Report review reference: {report.review_ref}. State policy: {report.policy_version}.</p>
+        {report.superseded_by_public_version_id && <p>Superseding source version: <code>{report.superseded_by_public_version_id}</code></p>}
         {report.predecessor_public_version_id && <p>Previous report version: <code>{report.predecessor_public_version_id}</code></p>}
       </details>
       {report.correction_reason && <p>Source-report correction: {report.correction_reason}</p>}
@@ -78,7 +83,7 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
           <p>Evidence versions: {state.evidence_refs.join(', ')}. Review references: {state.review_refs.join(', ')}.</p>
         </details>
         <p>{state.coverage_note}</p>
-      </> : <p>No qualifying admitted material-change declaration is available for this selected version. Coverage remains unknown.</p>}
+      </> : <p>{state.reason_code === 'supporting_source_version_superseded' ? 'Supporting evidence has been superseded. This selected story version remains readable; its current state awaits reviewed reconciliation.' : state.reason_code === 'latest_material_change_is_attributed_report_pending_verification' ? 'The latest material development is an attributed report pending verification / reconciliation.' : state.reason_code === 'incomplete_material_change_history' ? 'The available material-change history is incomplete. Coverage remains unknown.' : 'No qualifying admitted material-change declaration is available for this selected version. Coverage remains unknown.'}</p>}
     </section>
     {history.length > 0 && <details className="news-story-history"><summary>Material-state transition history</summary>
       <p>Deterministic reconstruction from retained declarations for the selected version. These records do not establish what a reader saw at the time.</p>

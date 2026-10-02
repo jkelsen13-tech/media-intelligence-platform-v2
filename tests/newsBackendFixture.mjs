@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createNewsBackend } from '../src/lib/newsBackend.js'
 
 // Synthetic HTTP fixture for the installed SDK. It is never a production seed.
-export function newsBackendFixture({ tables = {}, errors = {}, url = 'https://news-backend.example.invalid' } = {}) {
+export function newsBackendFixture({ tables = {}, errors = {}, rpcResponses = {}, url = 'https://news-backend.example.invalid' } = {}) {
   const calls = []
   let token = 'news-session-one'
   const client = createClient(url, 'fixture-browser-key', {
@@ -15,6 +15,13 @@ export function newsBackendFixture({ tables = {}, errors = {}, url = 'https://ne
       const headers = { 'content-type': 'application/json' }
       const error = typeof errors[table] === 'function' ? errors[table](params) : errors[table]
       if (error) return new Response(JSON.stringify(error), { status: 403, headers })
+      if (url.pathname.includes('/rpc/')) {
+        const args = await request.json()
+        const supplied = rpcResponses[table]
+        if (supplied === undefined) return new Response(JSON.stringify({code:'PGRST202',message:'No explicit RPC fixture grant'}), {status:404,headers})
+        const data = typeof supplied === 'function' ? supplied(args) : supplied
+        return new Response(JSON.stringify(data), {headers})
+      }
       let rows = [...(tables[table] ?? [])]
       for (const [key, value] of params) {
         const valuePart = value.slice(value.indexOf('.') + 1)
@@ -69,10 +76,11 @@ export function reviewedNewsArticleFixture(article, { authorName = article.autho
     title: article.title, summary: article.summary ?? null, published_at: article.published_at ?? null, fetched_at: capturedAt,
     fetched_at_semantics: 'article_original_fetch', captured_at: capturedAt,
     remaining_uncertainty: 'Synthetic qualification only.', pending_revision: false, evidence,
+    is_current_source_version: true, superseded_by_public_version_id: null,
     display_metadata: { feed: article.feed ?? null, monoculture: article.monoculture ?? null, unattributed: article.unattributed ?? null,
       arc_id: article.arc_id ?? null, author_name: authorName },
   }
-  return { id: article.id, reader_state: 'eligible', source_status: 'active', published_at: version.published_at, fetched_at: version.fetched_at, public_version_id: publicId,
-    public_version: version, title: version.title, summary: version.summary, outlet: version.source_outlet, feed: article.feed ?? null,
+  return { id: article.id, admission: 'proposition', reader_state: 'eligible', source_status: 'active', published_at: version.published_at, fetched_at: version.fetched_at, public_version_id: publicId,
+    public_version: version, title: version.title, url: version.source_url, summary: version.summary, outlet: version.source_outlet, feed: article.feed ?? null,
     monoculture: article.monoculture ?? null, unattributed: article.unattributed ?? null, arc_id: article.arc_id ?? null }
 }

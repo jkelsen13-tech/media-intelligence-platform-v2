@@ -81,7 +81,7 @@ export function groupArticlesByEvent(articles, eventByArticleId) {
   const entries = [] // ordered: group stubs and flat articles interleaved
   const groupEntryByEventId = new Map()
   for (const a of articles ?? []) {
-    const ev = eventByArticleId?.get(a.id)
+    const ev = a.source_report || a.public_version?.admission_kind === 'source_report' ? null : eventByArticleId?.get(a.id)
     if (!ev) {
       entries.push({ kind: 'article', article: a })
       continue

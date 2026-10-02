@@ -123,3 +123,14 @@ test('readThenAdvanceLastVisit: returns previous marker, then stores now', () =>
   const broken = { getItem() { throw new Error('denied') }, setItem() { throw new Error('denied') } }
   assert.equal(readThenAdvanceLastVisit(broken, 3000), null)
 })
+
+
+test('source reports keep their attributed article titles even with older event grouping', () => {
+  const report = { id: 'report', title: 'Publisher attributes a claim', public_version: { admission_kind: 'source_report' } }
+  const articles = [report, { id: 'proposition-a' }, { id: 'proposition-b' }]
+  const map = new Map(articles.map(article => [article.id, { eventId: 'older-event', title: 'Established event label' }]))
+  const entries = groupArticlesByEvent(articles, map)
+  assert.equal(entries[0].kind, 'article')
+  assert.equal(entries[0].article, report)
+  assert.deepEqual(entries[1].articles.map(article => article.id), ['proposition-a', 'proposition-b'])
+})

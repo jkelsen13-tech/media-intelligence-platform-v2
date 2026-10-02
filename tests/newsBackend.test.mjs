@@ -79,7 +79,7 @@ test('News pagination and source metrics retain filter contracts beyond the firs
 })
 
 test('article joins and location feature flag stay on the supplied client', async () => {
-  const tables = { articles: [article], citations: [{ id: 'c', article_id: id, resolved_node_id: 'node', cited_type: 'court_doc' }], nodes: [{ id: 'node', label: 'Recorded event', type: 'event', slug: 'art-10000000' }],
+  const tables = { articles: [article], news_reviewed_articles_public: [reviewedNewsArticleFixture(article)], citations: [{ id: 'c', article_id: id, resolved_node_id: 'node', cited_type: 'court_doc' }], nodes: [{ id: 'node', label: 'Recorded event', type: 'event', slug: 'art-10000000' }],
     events: [{ id: 'event', canonical_title: 'Event' }], event_articles: [{ article_id: id, event_id: 'event' }],
     comparison_public: [{ event_key: 'event-key', canonical_title: 'Compared event', articles: [{ article_url: article.url }] }],
     pipeline_config: [{ key: 'location_corroboration', value: true }], sky_verifications: [{ article_id: id, id: 'location', captured_at: '2026-08-03' }],
@@ -108,4 +108,22 @@ test('unavailable article access fails closed while unrelated optional joins rem
   assert.match(view, /backend = mipBackend.publicData.news/)
   assert.doesNotMatch(view, /from '\.\.\/lib\/supabase'/)
   for (const method of Object.keys(createNewsBackend())) assert.ok(view.includes(`backend.${method}(`), method)
+})
+
+
+test('bounded admitted-text search uses explicit RPC results and the same reviewed projection/session', async () => {
+  const row = reviewedNewsArticleFixture(article, { admittedClaims: [{ text: 'Reviewed claim', excerpt: 'AdmittedBodyOnlyToken' }] })
+  const f = newsBackendFixture({ tables: { articles: [{ ...article, body_text: 'PRIVATE_BODY_ONLY_TOKEN' }], news_reviewed_articles_public: [row] },
+    rpcResponses: { search_reviewed_public_article_ids_v1: ({p_query,p_limit}) => ({ contract: 'mip-reviewed-public-article-search-v1', query: p_query, limit: p_limit,
+      article_ids: p_query === 'AdmittedBodyOnlyToken' ? [id] : [], complete: true }) } })
+  const found = await f.backend.loadArticles({ q: 'AdmittedBodyOnlyToken' })
+  assert.deepEqual(found.articles.map(a => a.id), [id])
+  assert.equal((await f.backend.loadArticles({ q: 'PRIVATE_BODY_ONLY_TOKEN' })).total, 0)
+  assert.ok(f.calls.every(call => call.request.headers.get('authorization') === 'Bearer news-session-one'))
+  assert.equal(f.calls.some(call => call.table === 'articles'), false)
+  const searchCall = f.calls.find(call => call.table === 'search_reviewed_public_article_ids_v1')
+  assert.equal(searchCall.request.method, 'POST')
+  const bounded = newsBackendFixture({ rpcResponses: { search_reviewed_public_article_ids_v1: ({p_query,p_limit}) => ({contract:'mip-reviewed-public-article-search-v1',query:p_query,limit:p_limit,article_ids:[],complete:false}) } })
+  assert.equal((await bounded.backend.loadArticles({q:'over budget'})).articlesUnavailable, 'search_scope_exceeded')
+  assert.equal(bounded.calls.some(call => call.table === 'news_reviewed_articles_public'), false)
 })

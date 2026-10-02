@@ -5,23 +5,26 @@ import { writeFile, unlink } from 'node:fs/promises'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { createChronologyBackend } from '../src/lib/chronologyBackend.js'
-import { newsBackendFixture } from './newsBackendFixture.mjs'
+import { newsBackendFixture, reviewedNewsArticleFixture } from './newsBackendFixture.mjs'
+import { fixtureUuid } from './fixtures/newsStoryFixtures.mjs'
 import { useArcArticleInventory } from '../src/lib/useArcArticleInventory.js'
 
 test('source inventory distinguishes missing client, denied/later-page reads, empty and recovery', async () => {
   assert.deepEqual(await createChronologyBackend(null).loadArcArticleInventory('a'), {state:'unavailable',articles:[]})
-  const tables = {articles:Array.from({length:1002},(_,i)=>({id:String(i).padStart(5,'0'),arc_id:'a',title:'A source',published_at:'2024-04-08'}))}
+  const arcId = fixtureUuid(2000), otherArcId = fixtureUuid(2001)
+  const sources = Array.from({length:1002},(_,i)=>({id:fixtureUuid(i + 1),arc_id:arcId,title:'A source',outlet:'Synthetic publisher',url:'https://example.invalid/source',published_at:'2024-04-08T12:00:00Z'}))
+  const tables = {articles:sources, news_reviewed_articles_public:sources.map(a=>reviewedNewsArticleFixture(a))}
   let denied = true
-  const f = newsBackendFixture({tables,errors:{articles:p=>denied && p.has('id') ? {code:'42501',message:'denied'} : null}})
+  const f = newsBackendFixture({tables,errors:{news_reviewed_articles_public:p=>denied && p.has('id') ? {code:'42501',message:'denied'} : null}})
   const backend = createChronologyBackend(f.client)
-  assert.deepEqual(await backend.loadArcArticleInventory('a'),{state:'unavailable',articles:[]})
+  assert.deepEqual(await backend.loadArcArticleInventory(arcId),{state:'unavailable',articles:[]})
   denied = false
-  const ready = await backend.loadArcArticleInventory('a')
+  const ready = await backend.loadArcArticleInventory(arcId)
   assert.equal(ready.state,'ready'); assert.equal(ready.articles.length,1002)
-  assert.ok(ready.articles.every(a=>a.arc_id==='a'))
-  assert.deepEqual(await backend.loadArcArticleInventory('b'),{state:'ready',articles:[]})
+  assert.ok(ready.articles.every(a=>a.arc_id===arcId))
+  assert.deepEqual(await backend.loadArcArticleInventory(otherArcId),{state:'ready',articles:[]})
   assert.deepEqual(await backend.loadArcArticleInventory(null),{state:'unavailable',articles:[]})
-  assert.ok(f.calls.every(c=>c.table==='articles' && c.request.method==='GET'))
+  assert.ok(f.calls.every(c=>c.table==='news_reviewed_articles_public' && c.request.method==='GET' && c.params.get('admission')==='eq.proposition'))
 })
 
 test('selection, retries, client changes and late responses never retain another source inventory', async () => {

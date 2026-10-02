@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 import { normalizeReviewedPublicVersion } from '../lib/reviewedPublicVersion.js'
@@ -133,6 +133,7 @@ function ArticleFetchedTime({ article }) {
 }
 
 function articleSourceReport(article) {
+  if (!article) return null
   const version = normalizeReviewedPublicVersion(article?.public_version)
   return version?.article_id === article.id && version.public_version_id === article.public_version_id ? version.source_report ?? null : null
 }
@@ -143,6 +144,7 @@ function ArticleSourceReport({ article, compact = false }) {
     <strong>SOURCE REPORT</strong>
     <p className="news-source-report-verification">Pending MIP verification / reconciliation</p>
     <p>This attributed report has not been independently established by MIP.</p>
+    {!report.is_current_source_version && <p>A newer source version has superseded this retained report. This is the selected historical version.</p>}
     {!compact && <>
       <p>Remaining uncertainty: {report.review_uncertainty}</p>
       <p>Source report time: {report.report_time ?? 'unavailable'}</p>
@@ -153,6 +155,7 @@ function ArticleSourceReport({ article, compact = false }) {
         <p>Source {report.source_id} · Source version {report.source_version_id} · Public report version {report.public_version_id}</p>
         <p>Exact capture digest: {report.capture_hash}</p>
         <p>Review reference: {report.review_ref}</p>
+        {report.superseded_by_public_version_id && <p>Superseding source version: {report.superseded_by_public_version_id}</p>}
         {report.predecessor_public_version_id && <p>Previous report version: {report.predecessor_public_version_id}</p>}
       </details>
     </>}
@@ -188,11 +191,13 @@ function PublisherSourceRecord({ article, region }) {
       <ArticleSourceReport article={article} />
       {version?.admission_kind === 'reviewed_proposition' && <>
         <p className="news-source-record-copy">Remaining uncertainty: {version.remaining_uncertainty}</p>
+        {!version.is_current_source_version && <p>A newer source version has superseded this retained evidence. This is the selected historical version.</p>}
         {version.pending_revision && <p className="news-source-record-copy">A newer retained source revision is pending review. This displayed version keeps its original approval.</p>}
         {version.correction_reason && <p className="news-source-record-copy">Correction: {version.correction_reason}</p>}
         <details className="news-version-details"><summary>Source and evidence details</summary>
           <p>Source version {version.capture_id} · Public source version {version.public_version_id}</p>
           <p>Exact capture digest: {version.capture_hash}</p>
+          {version.superseded_by_public_version_id && <p>Superseding source version: {version.superseded_by_public_version_id}</p>}
           <p>Capture retained time: {version.captured_at} · Review reference: {version.review_ref}</p>
           {version.predecessor_public_version_id && <p>Previous source version: {version.predecessor_public_version_id}</p>}
         </details>
@@ -246,6 +251,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const [articleStory, setArticleStory] = useState(null)
   const [storyResponse, setStoryResponse] = useState(null)
   const [storyLoading, setStoryLoading] = useState(false)
+  const [storyReadEpoch, setStoryReadEpoch] = useState(0)
+  const [feedReadEpoch, setFeedReadEpoch] = useState(0)
   const [storyClock, setStoryClock] = useState(() => clockNow ?? Date.now())
   const [graphLinks, setGraphLinks] = useState([])
   const [detailError, setDetailError] = useState(null)
@@ -304,7 +311,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       .catch(() => { if (!cancelled) setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null }) })
       .finally(() => { if (!cancelled) setStoryLoading(false) })
     return () => { cancelled = true }
-  }, [focusStoryId, publicVersionId, backend])
+  }, [focusStoryId, publicVersionId, backend, storyReadEpoch])
 
   useEffect(() => {
     let cancelled = false
@@ -334,6 +341,19 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   }, [readerMode, isDrawer, focusStoryId, backend])
 
   const storyContext = storyResponse?.storyId === focusStoryId && storyResponse?.versionId === publicVersionId ? storyResponse.data : null
+  const onStoryAccessFailure = useCallback(code => {
+    if (code !== 'access_denied') return
+    // A verified private read has refused this Story's access. Withhold the
+    // stale public snapshot immediately; only an explicit public-owner retry
+    // can restore it. Session expiry alone does not revoke public evidence.
+    setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
+    setStoryLoading(false)
+    detailRequestRef.current += 1; requestRef.current += 1
+    setExpanded(null); setDetail(null); setArticleStory(null); setGraphLinks([])
+    setSky(null); setTimelineKey(null); setComparisonEvents([])
+    setArticles([]); setTotal(0); setSourceMetricRows([]); setCitationMap(new Map()); setEventMap(new Map())
+    setFeedReadEpoch(value => value + 1)
+  }, [focusStoryId, publicVersionId])
   const evaluationNow = clockNow ?? storyClock
   const storyState = useMemo(() => evaluateNewsStoryState(storyContext, evaluationNow), [storyContext, evaluationNow])
   const storyHistory = useMemo(() => reconstructNewsStateHistory(storyContext, evaluationNow), [storyContext, evaluationNow])
@@ -461,7 +481,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
         if (seq !== requestRef.current) return
         setLoading(false)
       })
-  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds])
+  }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds, feedReadEpoch])
 
   const expandArticle = (id) => {
     const seq = ++detailRequestRef.current
@@ -483,6 +503,27 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
         setArticleStory(story?.members?.some(member => member.article_id === id) ? { articleId: id, story } : null)
       }).catch(() => {})
     }
+    const loadAnalyticalLinks = () => {
+      backend.loadArticleGraphLinks(id)
+        .then((value) => { if (isCurrent()) setGraphLinks(value) })
+        .catch(() => {})
+      backend.loadSkyVerification(id)
+        .then((value) => { if (isCurrent()) setSky(value) })
+        .catch(() => {})
+      // Doc 05 pair 3: art- slug suffix ↔ article id prefix join, resolved at
+      // read time. No matching timeline event node → no chip.
+      if (onOpenTimeline) {
+        backend.loadArticleTimelineKey(id)
+          .then((value) => { if (isCurrent()) setTimelineKey(value) })
+          .catch(() => {})
+      }
+      // Doc 05 pair 5: event_articles + current article_claims FKs.
+      if (onOpenComparison) {
+        backend.loadArticleComparisonEvents(id)
+          .then((value) => { if (isCurrent()) setComparisonEvents(value) })
+          .catch(() => {})
+      }
+    }
     backend.loadArticleDetail(id)
       .then((d) => {
         if (!isCurrent()) return
@@ -497,27 +538,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           return
         }
         setDetail(d)
+        if (!articleSourceReport(d)) loadAnalyticalLinks()
       })
       .catch((err) => { if (isCurrent()) setDetailError(err.message) })
-    backend.loadArticleGraphLinks(id)
-      .then((value) => { if (isCurrent()) setGraphLinks(value) })
-      .catch(() => {})
-    backend.loadSkyVerification(id)
-      .then((value) => { if (isCurrent()) setSky(value) })
-      .catch(() => {})
-    // Doc 05 pair 3: art- slug suffix ↔ article id prefix join, resolved at
-    // read time. No matching timeline event node → no chip.
-    if (onOpenTimeline) {
-      backend.loadArticleTimelineKey(id)
-        .then((value) => { if (isCurrent()) setTimelineKey(value) })
-        .catch(() => {})
-    }
-    // Doc 05 pair 5: event_articles + current article_claims FKs.
-    if (onOpenComparison) {
-      backend.loadArticleComparisonEvents(id)
-        .then((value) => { if (isCurrent()) setComparisonEvents(value) })
-        .catch(() => {})
-    }
+
   }
 
   // Cross-view entry: another view asked us to open a specific article.
@@ -619,13 +643,14 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   // not the global corpus. Arc unknown (focused-miss detail) → arcId null
   // → the contract's declared global fallback applies.
   const expandedArcId = articles.find((a) => a.id === expanded)?.arc_id ?? null
+  const isReportDetail = articleSourceReport(detail) !== null
   const currentArticleStory = articleStory?.articleId === expanded ? articleStory.story : null
-  const crossWindowChips = (timelineKey || comparisonEvents.length > 0 || currentArticleStory) && (
+  const crossWindowChips = ((!isReportDetail && (timelineKey || comparisonEvents.length > 0)) || currentArticleStory) && (
     <div className="news-graph-links">
       <span className="ap-label">Other views</span>
       <div className="news-filter-row">
         {currentArticleStory && onOpenStory && <button type="button" className="news-chip graph-link" onClick={() => onOpenStory({ storyId: currentArticleStory.story_id, publicVersionId: currentArticleStory.public_version_id })}>Read story →</button>}
-        {timelineKey && onOpenTimeline && (
+        {!isReportDetail && timelineKey && onOpenTimeline && (
           <button
             className="news-chip graph-link"
             title="Open this article's event in the Causal Timeline"
@@ -634,7 +659,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
             ◈ Causal Timeline →
           </button>
         )}
-        {onOpenComparison &&
+        {!isReportDetail && onOpenComparison &&
           comparisonEvents.map((ev) => (
             <button
               key={ev.eventId}
@@ -665,6 +690,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   // underlying live destination is present. The card body is a separate button
   // so controls never become invalid nested interactive elements.
   const cardChips = (a) => {
+    if (articleSourceReport(a)) return null
     const cit = citationMap.get(a.id)
     const hasArc = Boolean(a.arc_id && a.arc_title)
     const hasGraph = Boolean(cit?.hasGraphLink && cit.firstNodeId)
@@ -739,7 +765,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       {!detail && !detailError && !detailUnavailable && !detailMissing && <div className="news-detail-loading">Loading detail…</div>}
       {detail && (
         <>
-          {graphLinks.length > 0 && (
+          {!isReportDetail && graphLinks.length > 0 && (
             <div className="news-graph-links">
               <span className="ap-label">Knowledge graph connections</span>
               <div className="news-filter-row">
@@ -761,7 +787,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
           {/* Location corroboration (formerly Sky verification; 02A
               Amendment B): renders only when a corroboration exists. */}
-          <SkyBadge verification={sky} />
+          <SkyBadge verification={isReportDetail ? null : sky} />
           {!sky && detail.image_url && (
             <p className="sky-companion-hint">
               Location corroboration available in the MIP companion app
@@ -1000,7 +1026,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           className="news-search"
           type="search"
           aria-label={EXPLORE_A11Y.searchLabel}
-          placeholder="Search headlines, summaries, article text…"
+          placeholder="Search headlines, summaries, reviewed source excerpts…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           data-explore-search={isDrawer ? 'true' : undefined}
@@ -1096,8 +1122,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
 
       {focusStoryId && (storyContext ? <NewsStoryReader context={storyContext} state={storyState} history={storyHistory} reports={sourceReports}
         onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={expandArticle}
-        followingControls={<StoryFollowingControls story={storyContext.story} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} />} />
-        : <section className="news-story-reader" aria-label="Story reader"><p>{storyLoading ? 'Loading reviewed story…' : 'This exact story version is unavailable. No latest-version or private-source fallback is displayed.'}</p>{onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}</section>)}
+        followingControls={<StoryFollowingControls story={storyContext.story} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} onAccessFailure={onStoryAccessFailure} />} />
+        : <section className="news-story-reader" aria-label="Story reader"><p>{storyLoading ? 'Loading reviewed story…' : 'This exact story version is unavailable. No latest-version or private-source fallback is displayed.'}</p>{!storyLoading && <button type="button" className="news-chip" onClick={() => setStoryReadEpoch(value => value + 1)}>Reload reviewed story</button>}{onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}</section>)}
 
       {articlesUnavailable && articleUnavailableNotice(articlesUnavailable)}
       {error && <div className="notice error">Failed to load articles: {error}</div>}
@@ -1156,8 +1182,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
               <h3 className="news-focus-title">{detail.title}</h3>
               <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
               {crossWindowChips}
-              <SkyBadge verification={sky} />
-              {graphLinks.length > 0 && (
+              <SkyBadge verification={isReportDetail ? null : sky} />
+              {!isReportDetail && graphLinks.length > 0 && (
                 <div className="news-graph-links">
                   <span className="ap-label">Knowledge graph connections</span>
                   <div className="news-filter-row">

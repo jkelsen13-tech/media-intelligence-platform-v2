@@ -5,6 +5,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { reviewedNewsArticleFixture } from './newsBackendFixture.mjs'
 
 import {
   isPostgrestSchemaGap,
@@ -22,6 +23,7 @@ import {
 } from '../src/lib/supabase.js'
 
 const SRC = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8')
+const VERSION_SRC = readFileSync(new URL('../src/lib/reviewedPublicVersion.js', import.meta.url), 'utf8')
 const APP = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const NEWS = readFileSync(new URL('../src/views/NewsView.jsx', import.meta.url), 'utf8')
 const GROUPED = readFileSync(new URL('../src/lib/arcGroupedTimeline.js', import.meta.url), 'utf8')
@@ -288,17 +290,18 @@ test('loadArticles: story_arcs.title is not selected; pending_review stays empty
   assert.equal(total, 0)
   assert.equal(articlesUnavailable, null)
   assert.doesNotMatch(JSON.stringify({ articles, total }), /NASA Where|pending_review|e5a84674/)
-  const articleSelect = selects.find((s) => s.table === 'articles')
-  assert.ok(articleSelect, 'articles select ran')
+  const articleSelect = selects.find((s) => s.table === 'news_reviewed_articles_public')
+  assert.ok(articleSelect, 'reviewed public projection select ran')
   assert.doesNotMatch(articleSelect.cols, /story_arcs/)
   assert.doesNotMatch(articleSelect.cols, /\btitle\b.*story_arcs|story_arcs!/)
   assert.equal(articles.every((a) => a.arc_title == null), true)
 })
 
 test('loadArticleDetail: does not join story_arcs; arc_title stays null', async () => {
-  const eligible = { ...NASA_PENDING, reader_state: 'eligible', source_status: 'active' }
+  const eligible = { ...NASA_PENDING, reader_state: 'eligible', source_status: 'active', outlet: 'Synthetic NASA publication', fetched_at: '2026-08-03T12:00:00Z' }
   const client = fakeClient({
     articles: [eligible],
+    news_reviewed_articles_public: [reviewedNewsArticleFixture(eligible)],
     citations: [],
     news_detail_public: [],
   })
@@ -310,7 +313,7 @@ test('loadArticleDetail: does not join story_arcs; arc_title stays null', async 
 test('loadArticles: 42501 permission denied fail-closes to empty + permission_denied', async () => {
   const client = fakeClient(
     { articles: [NASA_PENDING] },
-    { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+    { errors: { news_reviewed_articles_public: ARTICLES_PERMISSION_DENIED } },
   )
   const result = await loadArticles({ supabaseClient: client })
   assert.deepEqual(result.articles, [])
@@ -322,7 +325,7 @@ test('loadArticles: 42501 permission denied fail-closes to empty + permission_de
 test('loadArticles: PGRST301 and permission-denied message fail-close the same way', async () => {
   for (const err of [ARTICLES_PGRST301, ARTICLES_INSUFFICIENT]) {
     const result = await loadArticles({
-      supabaseClient: fakeClient({ articles: [NASA_PENDING] }, { errors: { articles: err } }),
+      supabaseClient: fakeClient({ articles: [NASA_PENDING] }, { errors: { news_reviewed_articles_public: err } }),
     })
     assert.deepEqual(result.articles, [])
     assert.equal(result.total, 0)
@@ -333,7 +336,7 @@ test('loadArticles: PGRST301 and permission-denied message fail-close the same w
 test('loadArticles: unrelated 500 still throws', async () => {
   await assert.rejects(
     () => loadArticles({
-      supabaseClient: fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } }),
+      supabaseClient: fakeClient({ articles: [] }, { errors: { news_reviewed_articles_public: ARTICLES_500 } }),
     }),
     (err) => err === ARTICLES_500,
   )
@@ -344,7 +347,7 @@ test('loadArticleDetail: permission denied fail-closes; does not invent a row', 
   const detail = await loadArticleDetail(eligible.id, {
     supabaseClient: fakeClient(
       { articles: [eligible], citations: [], news_detail_public: [] },
-      { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+      { errors: { news_reviewed_articles_public: ARTICLES_PERMISSION_DENIED } },
     ),
   })
   assert.equal(detail.articlesUnavailable, 'permission_denied')
@@ -355,12 +358,12 @@ test('loadArticleDetail: permission denied fail-closes; does not invent a row', 
 test('loadFilteredSourceMetricRows / loadCorpusMeta: permission denied is empty, 500 throws', async () => {
   const denied = fakeClient(
     { articles: [NASA_PENDING] },
-    { errors: { articles: ARTICLES_PERMISSION_DENIED } },
+    { errors: { news_reviewed_articles_public: ARTICLES_PERMISSION_DENIED } },
   )
   assert.deepEqual(await loadFilteredSourceMetricRows({}, { supabaseClient: denied }), [])
   assert.deepEqual(await loadCorpusMeta({ supabaseClient: denied }), { count: null, latestFetchedAt: null })
 
-  const boom = fakeClient({ articles: [] }, { errors: { articles: ARTICLES_500 } })
+  const boom = fakeClient({ articles: [] }, { errors: { news_reviewed_articles_public: ARTICLES_500 } })
   await assert.rejects(() => loadFilteredSourceMetricRows({}, { supabaseClient: boom }), (err) => err === ARTICLES_500)
   await assert.rejects(() => loadCorpusMeta({ supabaseClient: boom }), (err) => err === ARTICLES_500)
 })
@@ -369,8 +372,8 @@ test('loadCorpusMeta / loadNewSinceCount: empty HEAD error + 42501 row probe fai
   const client = fakeClient(
     { articles: [NASA_PENDING] },
     {
-      headErrors: { articles: { message: '' } },
-      errors: { articles: ARTICLES_PERMISSION_DENIED },
+      headErrors: { news_reviewed_articles_public: { message: '' } },
+      errors: { news_reviewed_articles_public: ARTICLES_PERMISSION_DENIED },
     },
   )
   assert.deepEqual(await loadCorpusMeta({ supabaseClient: client }), { count: null, latestFetchedAt: null })
@@ -381,8 +384,8 @@ test('loadCorpusMeta: empty HEAD error + 500 row probe still throws', async () =
   const client = fakeClient(
     { articles: [] },
     {
-      headErrors: { articles: { message: '' } },
-      errors: { articles: ARTICLES_500 },
+      headErrors: { news_reviewed_articles_public: { message: '' } },
+      errors: { news_reviewed_articles_public: ARTICLES_500 },
     },
   )
   await assert.rejects(() => loadCorpusMeta({ supabaseClient: client }), (err) => err === ARTICLES_500)
@@ -392,7 +395,7 @@ test('browser selects never ask story_arcs.title and never join the title embed'
   assert.doesNotMatch(SRC, /story_arcs!articles_arc_id_fkey/)
   assert.doesNotMatch(SRC, /keysetAll\([^)]*'story_arcs',\s*'[^']*title/)
   assert.doesNotMatch(GROUPED, /keysetAll\([^)]*'story_arcs',\s*'[^']*title/)
-  assert.match(SRC, /arc_title: null/)
+  assert.match(VERSION_SRC, /arc_title: null/)
   assert.match(SRC, /STORY_ARCS_DISPLAY_COLS/)
   assert.doesNotMatch(STORY_ARCS_DISPLAY_FROM_SRC(), /\btitle\b/)
 })
@@ -403,8 +406,8 @@ function STORY_ARCS_DISPLAY_FROM_SRC() {
   return match[1]
 }
 
-test('News empty while pending_review is honest: eligibility gate is unchanged', () => {
-  assert.match(SRC, /query = query\.eq\('reader_state', 'eligible'\)/)
+test('News empty while pending_review is honest: no publication is created from eligibility', () => {
+  assert.match(SRC, /from\('news_reviewed_articles_public'\)/)
   assert.doesNotMatch(SRC, /\.update\([\s\S]*reader_state/)
   assert.doesNotMatch(SRC, /reader_state:\s*'eligible'/)
   assert.match(NEWS, /No eligible articles to display/)

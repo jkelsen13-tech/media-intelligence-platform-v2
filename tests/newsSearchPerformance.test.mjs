@@ -6,11 +6,19 @@ const root = new URL('..', import.meta.url)
 const source = await readFile(new URL('./src/lib/supabase.js', root), 'utf8')
 const migration = await readFile(new URL('./supabase/migrations/20260820_v2_accelerate_public_news_search.sql', root), 'utf8')
 
-test('News search keeps title, summary, and article-text matching semantics', () => {
-  assert.match(
-    source,
-    /title\.ilike\.\%\$\{term\}\%\s*,summary\.ilike\.\%\$\{term\}\%\s*,body_text\.ilike\.\%\$\{term\}\%/,
-  )
+const proposal = await readFile(new URL('./supabase/source-proposals/public-reviewed-versions-v1.sql', root), 'utf8')
+
+test('News search delegates to bounded exact public fields and explicitly reviewed source excerpts', () => {
+  assert.match(source, /loadArticleSearchIds\(term\)/)
+  assert.match(source, /query = query\.in\('id', searchIds\)/)
+  const search = proposal.slice(proposal.indexOf('create function public.search_reviewed_public_article_ids_v1'), proposal.indexOf('-- Close the predecessor API path'))
+  assert.match(search, /public\.news_reviewed_articles_public/)
+  assert.match(search, /coalesce\(a\.title,' '\)|coalesce\(a\.title,''\)/)
+  assert.match(search, /coalesce\(a\.summary,''\)/)
+  assert.match(search, /public_reviewed_article_evidence e/)
+  assert.match(search, /e\.public_version_id=a\.public_version_id/)
+  assert.match(search, /lower\(e\.excerpt\)/)
+  assert.doesNotMatch(search, /body_text|article_captures|public\.articles/)
 })
 
 test('News search migration indexes every public substring-search field without changing access rules', () => {

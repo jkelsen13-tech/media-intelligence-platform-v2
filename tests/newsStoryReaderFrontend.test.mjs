@@ -155,7 +155,7 @@ test('source-report admission stays visibly attributed and pending in ordinary f
   const article = { id: fixtureUuid(1), title: 'Source-only development', outlet: 'Synthetic publisher', url: 'https://example.invalid/source-only',
     summary: 'Publisher reports a development.', published_at: '2026-10-01T00:00:00Z', fetched_at: '2026-10-01T01:00:00Z' }
   const row = reviewedNewsArticleFixture(article)
-  row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []
+  row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []; row.admission = 'source_report'
   for (const focused of [false, true]) {
     const f = newsBackendFixture({ tables: { news_reviewed_articles_public: [row] } })
     const backend = focused ? { ...f.backend, loadArticles: async () => ({ articles: [], total: 0 }) } : f.backend
@@ -192,4 +192,66 @@ test('Story browsing does not reopen a prior investigation article and keeps raw
     while (parent && parent.type !== 'details') parent = parent.parent
     assert.ok(parent)
   } finally { await act(async () => renderer.unmount()) }
+})
+
+
+test('source reports request no analytical destinations and remain flat despite older derived joins', async () => {
+  const { newsBackendFixture, reviewedNewsArticleFixture } = await import('./newsBackendFixture.mjs')
+  const sources = [1, 2].map(n => ({ id: fixtureUuid(n), title: `Publisher report ${n}`, outlet: 'Synthetic publisher', url: 'https://example.invalid/report',
+    published_at: '2026-10-01T00:00:00Z', fetched_at: '2026-10-01T01:00:00Z' }))
+  const rows = sources.map(source => { const row = reviewedNewsArticleFixture(source); row.admission = 'source_report';
+    row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []; return row })
+  const f = newsBackendFixture({ tables: { news_reviewed_articles_public: rows } }), requested = []
+  const backend = { ...f.backend, loadEventGrouping: async () => new Map(sources.map(source => [source.id, { eventId: 'older-event', title: 'UNSUPPORTED_EVENT_TITLE' }])),
+    loadCitationCounts: async () => new Map(sources.map(source => [source.id, { hasGraphLink: true, firstNodeId: 'older-node' }])) }
+  for (const method of ['loadArticleGraphLinks', 'loadSkyVerification', 'loadArticleTimelineKey', 'loadArticleComparisonEvents']) {
+    backend[method] = async () => { requested.push(method); throw Error('A source report cannot request this destination') }
+  }
+  const renderer = await mount({ backend, onOpenNode() {}, onOpenTimeline() {}, onOpenComparison() {} })
+  try {
+    assert.doesNotMatch(serialized(renderer), /UNSUPPORTED_EVENT_TITLE|Open graph|Open arc/)
+    assert.match(serialized(renderer), /Publisher report 1|Publisher report 2/)
+    const title = renderer.root.findAllByType('h3').find(node => node.children.includes('Publisher report 1')); let button = title
+    while (button.type !== 'button') button = button.parent
+    await act(async () => button.props.onClick())
+    assert.deepEqual(requested, [])
+    assert.match(serialized(renderer), /Pending MIP verification/)
+    assert.doesNotMatch(serialized(renderer), /Causal Timeline|Compare coverage|Open graph|Sky verification/)
+  } finally { await act(async () => renderer.unmount()) }
+})
+
+
+test('selected superseded Story sources stay readable with an explicit notice and no current urgency', async () => {
+  for (const report of [false, true]) {
+    const raw = ownerNewsContext([{at:0}], {report})
+    for (const member of [...raw.story.members, ...raw.evidence_versions]) {
+      member.is_current_source_version = false; member.superseded_by_public_version_id = fixtureUuid(999)
+    }
+    const renderer = await mount({backend:fixture(raw).backend, focusStoryId:raw.story.story_id, publicVersionId:raw.story.public_version_id})
+    try {
+      assert.match(serialized(renderer), /superseded this retained|selected historical version/)
+      assert.match(serialized(renderer), /Retained source headline/)
+      assert.doesNotMatch(serialized(renderer), /BREAKING • SOURCE REPORT/)
+      if (!report) assert.match(serialized(renderer), /current state awaits reviewed reconciliation/)
+    } finally { await act(async()=>renderer.unmount()) }
+  }
+})
+
+test('verified Following access denial withholds the public snapshot; authentication expiry preserves public evidence', async () => {
+  for (const code of ['access_denied', 'authentication_required']) {
+    const c = context(), reads = []
+    const backend = { ...createNewsBackend(null), loadStoryStateContext: async () => {reads.push('public');return {data:c,error:null}} }
+    const followingBackend = { read: async () => ({data:null,error:{code}}) }
+    const renderer = await mount({ backend, followingBackend, focusStoryId:c.story.story_id, publicVersionId:c.story.public_version_id,
+      readerActorId:fixtureUuid(90), sessionReady:true })
+    try {
+      assert.equal(reads.length, 1)
+      if (code === 'authentication_required') {
+        assert.match(serialized(renderer), /Retained source headline|Your account session has ended/)
+      } else {
+        assert.match(serialized(renderer), /exact story version is unavailable|Reload reviewed story/)
+        assert.doesNotMatch(serialized(renderer), /Retained source headline|Retained source summary|Reviewed exact claim/)
+      }
+    } finally { await act(async()=>renderer.unmount()) }
+  }
 })

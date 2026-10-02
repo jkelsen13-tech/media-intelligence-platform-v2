@@ -7,6 +7,7 @@ export function newsContext(specs = [{ at: 0 }], { report = false } = {}) {
       public_version_id: `source-version-${index + 1}`, article_id: 'article-1', capture_id: `capture-${index + 1}`, capture_hash: 'a'.repeat(64),
       contract: 'mip-reviewed-public-version-v1', review_state: 'reviewed', visibility_state: 'public',
       admission_kind: report ? 'source_report' : 'reviewed_proposition',
+      is_current_source_version: true, superseded_by_public_version_id: null,
       source_outlet: 'Synthetic publisher', source_url: 'https://example.invalid/report', title: 'Retained source headline', summary: 'Retained source summary',
       published_at: time(spec.reportAt ?? spec.at), fetched_at: time(-24), captured_at: time(spec.declaredAt ?? spec.at),
       reviewed_at: time(spec.declaredAt ?? spec.at), review_ref: 'synthetic-owner-review', policy_version: 'synthetic-publication-v1',

@@ -41,11 +41,16 @@ test('switching articles discards all late detail and destination responses', as
   const f = fixture(); let renderer
   await act(async () => { renderer = TestRenderer.create(React.createElement(NewsView, props(f.backend))) })
   try {
-    await act(async () => { clickArticle(renderer, 'A'); clickArticle(renderer, 'B') })
-    assert.equal(f.requests.length, 10)
-    await act(async () => { for (const r of f.requests.filter(r => r.id === 'B')) r.resolve(response(r.method, 'B')) })
+    await act(async () => clickArticle(renderer, 'A'))
+    assert.equal(f.requests.length, 1, 'destinations wait for the admitted detail')
+    await act(async () => f.requests[0].resolve(response('loadArticleDetail', 'A')))
+    assert.equal(f.requests.length, 5)
+    const oldDestinations = f.requests.filter(r => r.id === 'A' && r.method !== 'loadArticleDetail')
+    await act(async () => clickArticle(renderer, 'B'))
+    await act(async () => f.requests.find(r => r.id === 'B').resolve(response('loadArticleDetail', 'B')))
+    await act(async () => { for (const r of f.requests.filter(r => r.id === 'B' && r.method !== 'loadArticleDetail')) r.resolve(response(r.method, 'B')) })
     assert.match(text(renderer), /Claim belonging to B/)
-    await act(async () => { for (const r of f.requests.filter(r => r.id === 'A')) r.resolve(response(r.method, 'A')) })
+    await act(async () => { for (const r of oldDestinations) r.resolve(response(r.method, 'A')) })
     assert.match(text(renderer), /Claim belonging to B/)
     assert.match(text(renderer), /Graph for B/); assert.match(text(renderer), /Comparison for B/)
     assert.doesNotMatch(text(renderer), /Claim belonging to A|Graph for A|Comparison for A|timeline-A/)
@@ -59,13 +64,13 @@ test('late failure cannot overwrite the current article or survive close and reo
     await act(async () => clickArticle(renderer, 'A'))
     await act(async () => clickArticle(renderer, 'A')) // close while loading
     await act(async () => clickArticle(renderer, 'A')) // a new request for the same id
-    const old = f.requests.slice(0, 5), current = f.requests.slice(5)
+    const old = f.requests.slice(0, 1), current = f.requests.slice(1)
     await act(async () => { for (const r of current) r.resolve(response(r.method, 'A')) })
     await act(async () => { for (const r of old) r.reject(new Error('stale request failure')) })
     assert.match(text(renderer), /Claim belonging to A/)
     assert.doesNotMatch(text(renderer), /stale request failure/)
     await act(async () => clickArticle(renderer, 'B'))
-    await act(async () => { f.requests.at(-5).reject(new Error('current detail failure')) })
+    await act(async () => { f.requests.find(r => r.id === 'B' && r.method === 'loadArticleDetail').reject(new Error('current detail failure')) })
     assert.match(text(renderer), /current detail failure/)
   } finally { await act(async () => renderer.unmount()) }
 })

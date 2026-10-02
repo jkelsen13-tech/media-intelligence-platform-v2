@@ -34,9 +34,9 @@ test('excluded relationship rows disclose failures without publishing their grou
   }
 })
 
-test('node and edge backing articles obey eligible plus active at the bound read seam', async () => {
+test('node and edge backing articles require an explicit reviewed proposition at the bound read seam', async () => {
   const tables = evidenceTables()
-  tables.articles[0] = { ...tables.articles[0], reader_state: 'eligible', source_status: 'active' }
+  tables.articles = [{ ...tables.news_reviewed_articles_public[0] }]
   for (const [id, reader_state, source_status] of [['pending', 'pending_review', 'active'], ['withdrawn', 'eligible', 'withdrawn'], ['corrected', 'eligible', 'corrected'], ['unknown', undefined, undefined]]) {
     tables.articles.push({ ...tables.articles[0], id, title: `EXCLUDED_${id}`, reader_state, source_status })
     tables.citations.push({ id: `citation-${id}`, resolved_node_id: 'node-one', article_id: id })
@@ -47,23 +47,25 @@ test('node and edge backing articles obey eligible plus active at the bound read
   assert.equal(sources[0].kind, 'article')
   assert.ok(sources.slice(1).every(s => s.kind === 'unresolved'))
   assert.doesNotMatch(JSON.stringify(sources), /EXCLUDED_/)
-  for (const call of f.calls.filter(c => c.table === 'articles')) {
-    assert.equal(call.params.get('reader_state'), 'eq.eligible')
-    assert.equal(call.params.get('source_status'), 'eq.active')
+  assert.equal(f.calls.some(c => c.table === 'articles'), false)
+  for (const call of f.calls.filter(c => c.table === 'news_reviewed_articles_public')) {
+    assert.equal(call.params.get('admission'), 'eq.proposition')
   }
 })
 
 
 test('News detail never promotes raw article claim JSON past the reviewed projection', async () => {
-  const tables = evidenceTables()
-  tables.articles[0] = { ...tables.articles[0], reader_state: 'eligible', source_status: 'active', claims: [{ kind: 'substantive', text: 'UNADMITTED_RAW_CLAIM' }, { kind: 'framing', text: 'UNADMITTED_RAW_FRAMING' }] }
-  tables.news_detail_public = [{ article_id: 'article-one', reviewed_claims: [{ surface_text: 'ADMITTED_PUBLIC_CLAIM', auditability_state: 'verified_retained_source', evidence_excerpt: 'Exact retained words' }] }]
-  const f = evidenceBackendFixture({ tables })
-  const { createNewsBackend } = await import('../src/lib/newsBackend.js')
-  const detail = await createNewsBackend(f.client).loadArticleDetail('article-one')
+  const { newsBackendFixture, reviewedNewsArticleFixture } = await import('./newsBackendFixture.mjs')
+  const article = { id: '00000000-0000-4000-8000-000000000001', reader_state: 'eligible', source_status: 'active', title: 'Explicit reviewed source',
+    url: 'https://example.invalid/article', outlet: 'Recorded publisher', fetched_at: '2026-08-03T12:00:00Z',
+    claims: [{ kind: 'substantive', text: 'UNADMITTED_RAW_CLAIM' }, { kind: 'framing', text: 'UNADMITTED_RAW_FRAMING' }] }
+  const tables = { articles: [article], news_reviewed_articles_public: [reviewedNewsArticleFixture(article,
+    { admittedClaims: [{ text: 'ADMITTED_PUBLIC_CLAIM', excerpt: 'Exact retained words' }] })] }
+  const f = newsBackendFixture({ tables })
+  const detail = await f.backend.loadArticleDetail(article.id)
   assert.deepEqual(detail.claims.map(c => c.text), ['ADMITTED_PUBLIC_CLAIM'])
   assert.doesNotMatch(JSON.stringify(detail), /UNADMITTED_/)
-  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => !c.params.get('select').split(',').includes('claims')))
+  assert.ok(f.calls.every(c => c.table === 'news_reviewed_articles_public' && !c.params.get('select').split(',').includes('claims')))
 })
 
 test('comparison partial explanation payloads cannot publish unreviewed grounding', async () => {
@@ -91,15 +93,20 @@ test('public graph cannot publish relationships whose endpoints are outside its 
 })
 
 test('News source changes withhold detail, corpus, outlets, and metrics consistently', async () => {
-  const { newsBackendFixture } = await import('./newsBackendFixture.mjs')
-  const tables = { articles: ['active', 'corrected', 'withdrawn'].map((source_status, n) => ({ id: String(n), reader_state: 'eligible', source_status, title: source_status, outlet: source_status, fetched_at: '2026-08-03T12:00:00Z', published_at: '2026-08-03T12:00:00Z' })) }
+  const { newsBackendFixture, reviewedNewsArticleFixture } = await import('./newsBackendFixture.mjs')
+  const { fixtureUuid } = await import('./fixtures/newsStoryFixtures.mjs')
+  const articles = ['active', 'corrected', 'withdrawn'].map((source_status, n) => ({ id: fixtureUuid(n + 1), reader_state: 'eligible', source_status,
+    title: source_status, outlet: source_status, url: 'https://example.invalid/article', fetched_at: '2026-08-03T12:00:00Z', published_at: '2026-08-03T12:00:00Z' }))
+  // Only the first retained source has an explicit current publication grant.
+  const tables = { articles, news_reviewed_articles_public: [reviewedNewsArticleFixture(articles[0])] }
   const f = newsBackendFixture({ tables })
-  assert.deepEqual((await f.backend.loadArticles()).articles.map(a => a.id), ['0'])
+  assert.deepEqual((await f.backend.loadArticles()).articles.map(a => a.id), [articles[0].id])
   assert.equal((await f.backend.loadCorpusMeta()).count, 1)
   assert.equal(await f.backend.loadNewSinceCount('2026-08-01T00:00:00Z'), 1)
   assert.deepEqual((await f.backend.loadOutletDirectory()).map(o => o.name), ['active'])
-  assert.deepEqual((await f.backend.loadFilteredSourceMetricRows()).map(a => a.id), ['0'])
-  assert.equal((await f.backend.loadArticleDetail('1')).articleMissing, true)
-  assert.equal((await f.backend.loadArticleDetail('2')).articleMissing, true)
-  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => c.params.get('source_status') === 'eq.active'))
+  assert.deepEqual((await f.backend.loadFilteredSourceMetricRows()).map(a => a.id), [articles[0].id])
+  assert.equal((await f.backend.loadArticleDetail(articles[1].id)).articleMissing, true)
+  assert.equal((await f.backend.loadArticleDetail(articles[2].id)).articleMissing, true)
+  assert.ok(f.calls.every(c => ['news_reviewed_articles_public', 'outlets'].includes(c.table)))
+  assert.equal(f.calls.some(c => c.table === 'articles'), false)
 })

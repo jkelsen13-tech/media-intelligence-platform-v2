@@ -146,3 +146,22 @@ test('successive exact report versions cannot reset the maximum story reporting 
   const c = newsContext(Array.from({ length: 10 }, (_, at) => ({ at })), { report: true })
   assert.equal(newsSourceReports(c, at(9.5))[0].label, 'SOURCE REPORT')
 })
+
+
+test('a superseded supporting capture never becomes a current state or report urgency from its old approval', () => {
+  const c = newsContext()
+  c.story.members[0].is_current_source_version = false
+  c.story.members[0].superseded_by_public_version_id = 'newly-approved-source-report'
+  const state = evaluateNewsStoryState(c, at(1))
+  assert.equal(state.available, false)
+  assert.equal(state.reason_code, 'supporting_source_version_superseded')
+  assert.deepEqual(reconstructNewsStateHistory(c, at(1)), [])
+  const report = newsContext([{at:0}], {report:true})
+  report.story.members[0].is_current_source_version = false
+  report.story.members[0].superseded_by_public_version_id = null // the successor itself need not be public
+  const view = newsSourceReports(report, at(1))[0]
+  assert.equal(view.label, 'SOURCE REPORT')
+  assert.equal(view.is_current_source_version, false)
+  assert.equal(view.superseded_by_public_version_id, null)
+  assert.equal(view.verification_label, 'Pending MIP verification / reconciliation')
+})

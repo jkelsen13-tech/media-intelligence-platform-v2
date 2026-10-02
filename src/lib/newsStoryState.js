@@ -46,7 +46,7 @@ function qualifiedContextUnsafe(context, now) {
     // this selected story version. The owner supplies those in evidence_versions.
     const evidenceVersions = new Map([...(context.evidence_versions ?? []), ...story.members].map(member => [member.public_version_id, member]))
     const evidence = change.evidence_refs.map(id => evidenceVersions.get(id))
-    if (evidence.some(member => !member || member.review_state !== 'reviewed' || member.visibility_state !== 'public')) return null
+    if (evidence.some(member => !member || member.review_state !== 'reviewed' || member.visibility_state !== 'public' || typeof member.is_current_source_version !== 'boolean' || !(member.superseded_by_public_version_id === null || text(member.superseded_by_public_version_id)) || (member.is_current_source_version && member.superseded_by_public_version_id !== null))) return null
     changes.push({ ...change, evidence, effectiveMs: ceilInstant(change.effective_at), declaredMs: ceilInstant(change.declared_at), effectiveNs: inspectionInstantNanoseconds(change.effective_at), declaredNs: inspectionInstantNanoseconds(change.declared_at) })
   }
   changes.sort((a, b) => BigInt(a.sequence) < BigInt(b.sequence) ? -1 : BigInt(a.sequence) > BigInt(b.sequence) ? 1 : a.material_change_id.localeCompare(b.material_change_id))
@@ -98,6 +98,7 @@ function evaluateQualified(qualified, now, policy, coverage) {
   const decision = decide(propositionChanges, now, policy)
   if (!decision) return unavailable('no_declared_reviewed_proposition_material_change')
   const last = propositionChanges.at(-1)
+  if (last.evidence.some(member => member.is_current_source_version !== true)) return unavailable('supporting_source_version_superseded')
   const boundaryTimes = propositionChanges.flatMap(change => [change.effectiveMs + policy.breakingFreshMs, change.effectiveMs + policy.breakingMaxMs, change.effectiveMs + policy.velocityWindowMs, change.effectiveMs + policy.developingQuietMs, change.effectiveMs + policy.updatedQuietMs, change.kind === 'correction' ? change.declaredMs + policy.updatedQuietMs : 0]).filter(time => time > now)
   return {
     available: true, ...decision, label: NEWS_STATE_LABELS[decision.state],
@@ -159,7 +160,7 @@ export function newsSourceReports(context, now, policy = NEWS_STATE_POLICY) {
       || report.article_original_fetched_at !== member.fetched_at || report.capture_retained_at !== member.captured_at
       || (report.fetch_time !== null && instant(report.fetch_time) === null)) return []
     const changes = qualified.changes.filter(change => change.evidence_refs.includes(member.public_version_id))
-    const decision = qualified.truncated ? null : decide(changes, now, policy, qualified.changes)
+    const decision = qualified.truncated || member.is_current_source_version !== true ? null : decide(changes, now, policy, qualified.changes)
     const reportNs = inspectionInstantNanoseconds(report.report_time)
     const breaking = decision?.state === 'Breaking' && reportNs !== null && nsDuration(now) - reportNs < nsDuration(policy.breakingFreshMs)
     return [{
@@ -172,7 +173,8 @@ export function newsSourceReports(context, now, policy = NEWS_STATE_POLICY) {
       review_uncertainty: report.review_uncertainty,
       report_time: report.report_time, fetch_time: report.fetch_time,
       article_original_fetched_at: report.article_original_fetched_at, capture_retained_at: report.capture_retained_at,
-      review_ref: member.review_ref, reviewed_at: member.reviewed_at,
+      review_ref: member.review_ref, reviewed_at: member.reviewed_at, pending_revision: member.pending_revision === true,
+      is_current_source_version: member.is_current_source_version, superseded_by_public_version_id: member.superseded_by_public_version_id,
       correction_reason: member.correction_reason ?? null,
       predecessor_public_version_id: member.predecessor_public_version_id ?? null,
       material_change_id: changes.at(-1)?.material_change_id ?? null,

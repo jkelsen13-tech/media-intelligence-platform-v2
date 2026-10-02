@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { applyFoundation, PUBLIC_SURFACE_TRANSFER_CHUNKS } from '../scripts/mipConsolidationRestore.mjs'
 import { createPipelineRpc, enqueueManifest, runWorker, PIPELINE_TARGET } from '../scripts/evidencePipeline.mjs'
 import { candidateFromExactSource, sliceCodePoints } from '../scripts/algorithmEvidenceAdapter.mjs'
+import { installReviewedPublicVersionFixture } from '../scripts/reviewedPublicVersionPackage.mjs'
 import { createPublicDataBackend } from '../src/lib/publicDataBackend.js'
 
 // A source-shaped fictional publisher record. Never a source register or live seed.
@@ -106,6 +107,7 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
   const check = async (name, work) => { const detail = await work(); checks.push({ name, status: 'PASS', detail: detail ?? null }) }
   try {
     await applyFoundation(db)
+    await installReviewedPublicVersionFixture(db)
     const transport = isolatedTransport(db, executed, requests)
     const admin = async (sql, params = []) => transport.transaction('postgres', () => transport.query('postgres', sql, params))
     const scalar = async (sql, params = []) => Object.values((await admin(sql, params)).rows[0])[0]
@@ -115,7 +117,9 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
     })]))
     const readers = Object.fromEntries(Object.entries(clients).map(([role, client]) => [role, createPublicDataBackend(client)]))
     const forReaders = async work => { for (const [role, backend] of Object.entries(readers)) await work(backend, role) }
-    let firstJob, firstFinish, firstCapture, event, counterpart, publicClaim, originalPublicDetail
+    let firstJob, firstFinish, firstCapture, event, counterpart, publicClaim, originalPublicDetail, firstSourceReportVersion, firstPropositionVersion
+    const bindVersion = (source, kind, review, claims = [], predecessor = null, reason = null) => scalar('select mip_private.bind_reviewed_public_article_version($1,$2,$3,$4,$5,$6,$7,$8::uuid[],$9,$10)',
+      [source.article_id, source.capture_id, source.capture_hash, kind, review, 'synthetic-intake-reader-policy-v1', 'Synthetic source report; independent truth, source rights and collection coverage remain unqualified.', claims, predecessor, reason])
 
     await check('dry-run and malformed manifests produce no durable intake', async () => {
       assert.equal((await enqueueManifest(rpc, { run_id: 'dry', articles: [SOURCE] })).validated, 1)
@@ -174,18 +178,23 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
       await forReaders(async backend => assert.equal((await backend.news.loadArticles()).total, 0))
       return { candidate_id: id, capture_id: candidate.capture_id, state: 'pending', span: [candidate.span_start, candidate.span_end], canonical_claim_created: false }
     })
-    await check('explicit synthetic fixture eligibility exposes source identity but no raw extraction claims', async () => {
+    await check('eligibility alone remains private; explicit exact source-report permission exposes no raw claims', async () => {
       // Fixture administrator, not an automatic policy or proposed live approval.
       await admin("update articles set reader_state='eligible',claims=$2::jsonb where id=$1", [firstFinish.article_id, JSON.stringify([{ kind: 'substantive', text: 'UNADMITTED_RAW_EXTRACTION' }])])
+      await forReaders(async backend => { assert.equal((await backend.news.loadArticles()).total, 0); assert.equal((await backend.news.loadArticleDetail(firstFinish.article_id)).articleMissing, true) })
+      firstSourceReportVersion = await bindVersion({ ...firstFinish, capture_hash: firstCapture.content_hash }, 'source_report', 'synthetic-intake-source-report-v1')
       await forReaders(async backend => {
         const page = await backend.news.loadArticles(), detail = await backend.news.loadArticleDetail(firstFinish.article_id)
+        assert.equal(detail.public_version_id, firstSourceReportVersion)
+        assert.equal(detail.public_version.capture_id, firstCapture.id); assert.equal(detail.public_version.admission_kind, 'source_report')
+        assert.equal(detail.source_report.fetch_time, null)
         assert.equal(page.total, 1); assert.equal(page.articles[0].id, firstFinish.article_id)
         assert.equal(detail.url, canonicalUrl); assert.equal(detail.summary, SOURCE.summary); assert.deepEqual(detail.claims, [])
         assert.doesNotMatch(JSON.stringify(detail), /UNADMITTED_RAW_EXTRACTION/)
       })
-      return { fixture_admin_review: true, article_id: firstFinish.article_id, reader_state: 'eligible', claims: 0 }
+      return { fixture_admin_review: true, article_id: firstFinish.article_id, public_version_id: firstSourceReportVersion, exact_capture_id: firstCapture.id, reader_state: 'eligible', admission: 'attributed_source_report_only', claims: 0, eligibility_alone_did_not_publish: true }
     })
-    await check('retention clocks remain distinct from publication and absent public revision fields remain explicit gaps', async () => {
+    await check('retention clocks and exact public versions remain distinct from event and material clocks', async () => {
       const article = (await admin('select published_at,fetched_at from articles where id=$1', [firstFinish.article_id])).rows[0]
       assert.equal(new Date(article.published_at).getTime(), new Date(SOURCE.published_at).getTime())
       assert.ok(new Date(firstCapture.captured_at).getTime() >= new Date(article.fetched_at).getTime())
@@ -195,11 +204,13 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
         assert.equal(new Date(detail.fetched_at).getTime(), new Date(article.fetched_at).getTime())
         assert.equal(page.articles[0].fetched_at, detail.fetched_at)
         assert.equal(new Date(detail.published_at).getTime(), new Date(SOURCE.published_at).getTime())
-        assert.equal(detail.capture_id, undefined)
+        assert.equal(detail.public_version.capture_id, firstCapture.id); assert.equal(detail.public_version.capture_hash, firstCapture.content_hash)
+        assert.equal(detail.public_version_id, firstSourceReportVersion)
+        assert.equal(detail.source_report.report_time, detail.published_at); assert.equal(detail.source_report.fetch_time, null)
         assert.equal(detail.breaking, undefined)
         assert.equal(detail.material_change_at, undefined)
       })
-      return { source_publication_time: article.published_at, article_fetched_time: article.fetched_at, capture_retained_time: firstCapture.captured_at, inferred_event_time: null, inferred_breaking_status: null, open_reader_contract_fields: ['capture/revision identity', 'projection version', 'material-change/update envelope'] }
+      return { source_publication_time: article.published_at, article_fetched_time: article.fetched_at, capture_retained_time: firstCapture.captured_at, inferred_event_time: null, inferred_breaking_status: null, public_source_version_id: firstSourceReportVersion, capture_id: firstCapture.id, capture_hash: firstCapture.content_hash, exact_capture_fetch_time: null, open_reader_contract_fields: ['material-change/update envelope and story linkage not exercised in this intake fixture'] }
     })
     await check('actual reviewed projection admits exact claim while pending surfaces remain private', async () => {
       const second = { ...SOURCE, url: 'https://second.example.invalid/harbor-report', outlet: 'Synthetic Secondary Publisher' }
@@ -209,14 +220,19 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
       const comparisonEvent = await scalar("insert into events(canonical_title,status,comparison_validation_state) values('Explicitly reviewed synthetic comparison','active','approved') returning id")
       await admin("insert into event_articles(event_id,article_id,membership_method) values($1,$2,'synthetic_admin_review'),($1,$3,'synthetic_admin_review')", [comparisonEvent, firstFinish.article_id, counterpart.article_id])
       publicClaim = await scalar("insert into claims(event_id,canonical_text,rule_version) values($1,'Synthetic authority recorded vessel arrival','sc-v2-event-projection') returning id", [comparisonEvent])
-      await admin("insert into article_claims(claim_id,article_id,surface_text,auditability_state,evidence_source_field,evidence_excerpt) values($1,$2,$3,'verified_retained_source','summary',$3),($1,$4,'UNVERIFIED_SURFACE','unverified_against_retained_source','summary','UNVERIFIED_SURFACE')", [publicClaim, firstFinish.article_id, 'A 🚢 arrived in Cleveland.', counterpart.article_id])
+      await admin("insert into article_claims(claim_id,article_id,surface_text,auditability_state,evidence_source_field,evidence_excerpt,char_start,char_end) values($1,$2,$3,'verified_retained_source','summary',$3,0,$5),($1,$4,'UNVERIFIED_SURFACE','unverified_against_retained_source','summary','UNVERIFIED_SURFACE',0,18)", [publicClaim, firstFinish.article_id, 'A 🚢 arrived in Cleveland.', counterpart.article_id, Array.from('A 🚢 arrived in Cleveland.').length])
       await admin('insert into claim_evidence_links(claim_id,evidence_url,linked_from_article_id) values($1,$2,$3)', [publicClaim, canonicalUrl, firstFinish.article_id])
+      const admittedSurface = await scalar('select id from article_claims where article_id=$1 and claim_id=$2', [firstFinish.article_id, publicClaim])
+      firstPropositionVersion = await bindVersion({ ...firstFinish, capture_hash: firstCapture.content_hash }, 'reviewed_proposition', 'synthetic-intake-proposition-v2', [admittedSurface], firstSourceReportVersion, 'Explicit synthetic reconciliation admits an exact retained-source proposition.')
+      const counterpartHash = await scalar('select content_hash from evidence_pipeline.article_captures where id=$1', [counterpart.capture_id])
+      await bindVersion({ ...counterpart, capture_hash: counterpartHash }, 'source_report', 'synthetic-intake-counterpart-report-v1')
       await forReaders(async backend => {
         const detail = await backend.news.loadArticleDetail(firstFinish.article_id)
+        assert.equal(detail.public_version_id, firstPropositionVersion); assert.equal(detail.public_version.admission_kind, 'reviewed_proposition')
         assert.deepEqual(detail.claims.map(c => c.text), ['A 🚢 arrived in Cleveland.'])
         assert.equal(detail.claims[0].auditability_state, 'verified_retained_source')
         assert.equal(detail.claims[0].evidence_excerpt, 'A 🚢 arrived in Cleveland.')
-        assert.equal(detail.evidenceRecords[0].evidence_url, canonicalUrl)
+        assert.deepEqual(detail.evidenceRecords, []); assert.equal(detail.claims[0].capture_id, firstCapture.id); assert.equal(detail.claims[0].capture_hash, firstCapture.content_hash)
         assert.deepEqual((await backend.news.loadArticleDetail(counterpart.article_id)).claims, [])
         assert.doesNotMatch(JSON.stringify(await backend.loadSourceComparisonView()), /UNVERIFIED_SURFACE|UNADMITTED_RAW_EXTRACTION/)
       })
@@ -236,9 +252,11 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
         const page = await backend.news.loadArticles()
         assert.equal(detail.summary, originalPublicDetail.summary); assert.equal(detail.title, SOURCE.title)
         assert.equal(detail.fetched_at, originalPublicDetail.fetched_at)
+        assert.equal(detail.public_version_id, firstPropositionVersion); assert.equal(detail.public_version.capture_id, firstCapture.id)
+        assert.equal(detail.public_version.pending_revision, true)
         assert.equal(page.articles.find(article => article.id === firstFinish.article_id).fetched_at, originalPublicDetail.fetched_at)
       })
-      return { article_id: revision.article_id, previous_version: { capture_id: firstCapture.id, content_hash: firstCapture.content_hash, captured_at: firstCapture.captured_at }, new_version: { capture_id: revision.capture_id, content_hash: captures[1].content_hash, captured_at: captures[1].captured_at }, new_state: 'pending', outcome: revision.outcome, reader_remains_previous_approved_version: true, reader_update_envelope_available: false }
+      return { article_id: revision.article_id, previous_version: { capture_id: firstCapture.id, content_hash: firstCapture.content_hash, captured_at: firstCapture.captured_at }, new_version: { capture_id: revision.capture_id, content_hash: captures[1].content_hash, captured_at: captures[1].captured_at }, new_state: 'pending', outcome: revision.outcome, reader_remains_previous_approved_version: true, reader_public_version_binding_available: true, pending_revision_notice_available: true, material_change_story_envelope_exercised: false }
     })
     await check('withdrawal removes article, nested source claims and comparison visibility without deleting captures', async () => {
       await admin("update articles set source_status='withdrawn' where id=$1", [firstFinish.article_id])
@@ -283,11 +301,11 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
     })
     const artifacts = []
     const migrationFiles = ['20260905082406_evidence_pipeline_reliability.sql', '20260905151626_mip_consolidation_delta.sql', '20260905160001_event_scoped_public_article_counts.sql', ...PUBLIC_SURFACE_TRANSFER_CHUNKS, '20260905180142_mip_public_surface_publication_gates.sql', '20260905181254_mip_public_surface_authenticated_review_revoke.sql', '20260905182355_mip_nested_claim_publication_gates.sql', '20260905203600_mip_legacy_graph_private_staging.sql', '20260909153133_comparison_explanation_event_binding.sql']
-    for (const path of ['scripts/evidencePipeline.mjs', 'scripts/algorithmEvidenceAdapter.mjs', 'scripts/mipConsolidationRestore.mjs', 'src/lib/publicDataBackend.js', 'src/lib/newsBackend.js', 'src/lib/supabase.js', 'src/lib/supabaseOrigin.js', ...migrationFiles.map(name => 'supabase/migrations/' + name)]) {
+    for (const path of ['scripts/evidencePipeline.mjs', 'scripts/algorithmEvidenceAdapter.mjs', 'scripts/mipConsolidationRestore.mjs', 'src/lib/publicDataBackend.js', 'src/lib/newsBackend.js', 'src/lib/supabase.js', 'src/lib/supabaseOrigin.js', 'scripts/reviewedPublicVersionPackage.mjs', 'src/lib/reviewedPublicVersion.js', 'supabase/source-proposals/public-reviewed-versions-v1.sql', ...migrationFiles.map(name => 'supabase/migrations/' + name)]) {
       const bytes = await readFile(new URL('../' + path, import.meta.url)); artifacts.push({ path, bytes: bytes.length, sha256: digest(bytes) })
     }
-    const receipt = { qualification: 'canonical-intake-reader-isolated', status: 'PASS', synthetic_fixture: true, live_operations: 0, external_network_requests: 0, intercepted_http_requests: requests.length, foundation: 'existing restored SQL/RLS and real adapters; no new publication policy', checks, source: SOURCE, artifacts, requests, executed_sql: executed,
-      limits: ['Synthetic administrator eligibility/admission setup is not production review or live authority.', 'Mock HTTP exercises installed SDK and native SQL/RLS but not deployed PostgREST, TLS, collector acquisition, rights or production concurrency.', 'A pending publisher correction remains separate; current public DTOs do not include capture/version digest or material-change/update envelope, and this qualification does not add that contract.', 'Independent projection reads are not an atomic shared snapshot.', 'No persistent story/coverage-group or accelerated source-only visibility policy is introduced.'] }
+    const receipt = { qualification: 'canonical-intake-reader-isolated', status: 'PASS', synthetic_fixture: true, live_operations: 0, external_network_requests: 0, intercepted_http_requests: requests.length, foundation: 'existing restored SQL/RLS and real adapters plus the unapplied reviewed-public-version owner installed only in isolated PGlite', checks, source: SOURCE, artifacts, requests, executed_sql: executed,
+      limits: ['Synthetic administrator eligibility/admission setup is not production review or live authority.', 'Mock HTTP exercises installed SDK and native SQL/RLS but not deployed PostgREST, TLS, collector acquisition, rights or production concurrency.', 'A pending correction retains the exact prior reviewed public source version with a pending notice; Story/material-change ownership is qualified separately and not exercised in this intake fixture.', 'Independent projection reads are not an atomic shared snapshot.', 'Only explicit fixture owner grants authorize source reports and exact propositions; eligibility alone grants no version. No automatic accelerated visibility or Story classification is introduced.'] }
     if (receiptPath) { await mkdir(dirname(receiptPath), { recursive: true }); await writeFile(receiptPath, JSON.stringify(receipt, null, 2) + '\n') }
     return receipt
   } finally { await db.close() }
