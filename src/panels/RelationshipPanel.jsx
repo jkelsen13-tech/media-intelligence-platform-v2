@@ -2,6 +2,7 @@ import { mipBackend } from '../lib/mipBackend.js'
 import { useEffect, useMemo, useState } from 'react'
 import { buildRelationshipPanelView } from '../lib/relationshipProvenance.js'
 import './relationship-panel.css'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 
 // Track B Step 2 item 5 (2026-08-17) — docked relationship panel.
 //
@@ -108,8 +109,8 @@ export default function RelationshipPanel({ edge, sourceLabel, targetLabel, onCl
                   ) : (
                     <li key={s.id ?? i} className="ap-source">
                       <span className="ap-source-outlet">{s.name}</span>
-                      {s.url ? (
-                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="ap-source-headline">
+                      {safeExternalHttpUrl(s.url) ? (
+                        <a href={safeExternalHttpUrl(s.url)} target="_blank" rel="noopener noreferrer" className="ap-source-headline">
                           {s.title}
                         </a>
                       ) : (

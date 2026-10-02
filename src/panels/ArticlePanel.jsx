@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { NODE_TYPES, EDGE_TYPES, CATEGORY_TYPES, edgePlainLabel } from '../graph/theme'
 import { buildNodeEvidenceAxes } from '../lib/nodeEvidence'
 import SkyBadge from './SkyBadge'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 
 // Article panel (spec §4.4): title + category tag, confidence score on a
 // red→green gradient, 3–5 sentence synthesis, source list with outbound
@@ -242,6 +243,10 @@ export default function ArticlePanel({
     dragRef.current = null
     const frac = dragFrac ?? sheetFrac
     setDragFrac(null)
+    if (Math.abs(frac - drag.baseFrac) < 0.02) {
+      setSheetFrac(drag.baseFrac === SHEET_FULL ? SHEET_DEFAULT : SHEET_FULL)
+      return
+    }
     if (frac < SHEET_DISMISS) {
       onClose()
       return
@@ -270,18 +275,26 @@ export default function ArticlePanel({
       aria-label={`Article panel: ${node.label}`}
     >
       {isMobile && (
-        <div
+        <button
+          type="button"
           className="ap-sheet-handle"
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Drag to resize panel"
+          aria-label={sheetFrac === SHEET_FULL ? 'Reduce panel height' : 'Expand panel height'}
+          aria-expanded={sheetFrac === SHEET_FULL}
+          onClick={(event) => {
+            // Native keyboard/assistive activation has detail 0. Pointer
+            // resizing is handled by the existing drag snap points.
+            if (event.detail === 0) setSheetFrac((frac) => frac === SHEET_FULL ? SHEET_DEFAULT : SHEET_FULL)
+          }}
           onPointerDown={onHandlePointerDown}
           onPointerMove={onHandlePointerMove}
           onPointerUp={onHandlePointerUp}
-          onPointerCancel={onHandlePointerUp}
+          onPointerCancel={() => {
+            dragRef.current = null
+            setDragFrac(null)
+          }}
         >
           <span className="ap-sheet-grip" />
-        </div>
+        </button>
       )}
       <header className="ap-header">
         <div className="ap-title-row">
@@ -375,9 +388,9 @@ export default function ArticlePanel({
             {backing.map((a) => (
               <li key={a.id} className="ap-source">
                 <span className="ap-source-outlet">{a.outlet}</span>
-                {a.url ? (
+                {safeExternalHttpUrl(a.url) ? (
                   <a
-                    href={a.url}
+                    href={safeExternalHttpUrl(a.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ap-source-headline"
@@ -426,8 +439,8 @@ export default function ArticlePanel({
             {displaySources.map((s) => (
               <li key={s.id} className="ap-source">
                 <span className="ap-source-outlet">{s.outlet}</span>
-                {s.url ? (
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="ap-source-headline">
+                {safeExternalHttpUrl(s.url) ? (
+                  <a href={safeExternalHttpUrl(s.url)} target="_blank" rel="noopener noreferrer" className="ap-source-headline">
                     {s.headline}
                   </a>
                 ) : (

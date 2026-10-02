@@ -1652,6 +1652,10 @@ a.ap-source-headline:hover {
     justify-content: center;
     align-items: center;
     min-height: 44px;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
     cursor: grab;
     touch-action: none;
   }

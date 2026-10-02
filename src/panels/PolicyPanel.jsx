@@ -1,6 +1,7 @@
 import { mipBackend } from '../lib/mipBackend.js'
 import { useEffect, useMemo, useState } from 'react'
 import { INFERRED_CLAIMED_BY } from '../graph/theme'
+import { safeExternalHttpUrl } from '../lib/externalUrls.js'
 
 // Step 10 (§7.4): Policy Consequence view. Two-directional layout —
 // UPSTREAM (←) the policies that enabled / are amended by / constrain this
@@ -302,16 +303,16 @@ export default function PolicyPanel({ node, nodes, edges, onNavigate, onClose, i
         </dl>
         {(policy?.source_url || policy?.full_text_url) && (
           <p className="pp-links">
-            {policy.source_url && (
-              <a href={policy.source_url} target="_blank" rel="noopener noreferrer">
+            {policy.source_url && (safeExternalHttpUrl(policy.source_url) ? (
+              <a href={safeExternalHttpUrl(policy.source_url)} target="_blank" rel="noopener noreferrer">
                 Source ↗
               </a>
-            )}
-            {policy.full_text_url && (
-              <a href={policy.full_text_url} target="_blank" rel="noopener noreferrer">
+            ) : <span>Source link unavailable</span>)}
+            {policy.full_text_url && (safeExternalHttpUrl(policy.full_text_url) ? (
+              <a href={safeExternalHttpUrl(policy.full_text_url)} target="_blank" rel="noopener noreferrer">
                 Full text ↗
               </a>
-            )}
+            ) : <span>Full text link unavailable</span>)}
           </p>
         )}
         {!policy && detail && (

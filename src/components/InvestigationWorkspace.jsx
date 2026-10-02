@@ -282,13 +282,12 @@ export default function InvestigationWorkspace({
           {view !== 'investigations' && view !== 'world' && <EvidenceDimensionGrid dimensions={header?.dimensions} />}
         </section>
 
-        <div className="ws-tabs" role="tablist" aria-label="Evidence views">
+        <nav className="ws-tabs" aria-label="Evidence views">
           {WORKSPACE_TAB_VIEWS.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              role="tab"
-              aria-selected={view === tab.key}
+              aria-current={view === tab.key ? 'page' : undefined}
               className={`ws-tab${view === tab.key ? ' active' : ''}`}
               onClick={() => onChangeView(tab.key)}
             >
@@ -296,7 +295,7 @@ export default function InvestigationWorkspace({
               {tab.label}
             </button>
           ))}
-        </div>
+        </nav>
       </div>
 
       <div className={`workspace-body ws-body${sharedInspectorHidden ? ' has-native-inspector' : ''}`}>
@@ -421,9 +420,15 @@ export function WorkspaceSearch({
         type="search"
         placeholder="Search headlines and article text..."
         aria-label="Search headlines and article text"
-        title="Enter a search, then choose Explore"
+        title="Press Enter or choose Explore to search"
         value={query}
         onChange={(event) => onQueryChange?.(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.nativeEvent?.isComposing) {
+            event.preventDefault()
+            onOpenExplore?.()
+          }
+        }}
       />
       <button
         type="button"

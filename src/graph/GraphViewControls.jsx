@@ -63,6 +63,7 @@ export default function GraphViewControls({ cyRef, onReset, dimmed = false }) {
         type="button"
         className="graph-view-btn"
         aria-label="Zoom in"
+        disabled={dimmed}
         onClick={() => zoomBy(ZOOM_IN)}
       >
         +
@@ -71,14 +72,15 @@ export default function GraphViewControls({ cyRef, onReset, dimmed = false }) {
         type="button"
         className="graph-view-btn"
         aria-label="Zoom out"
+        disabled={dimmed}
         onClick={() => zoomBy(ZOOM_OUT)}
       >
         −
       </button>
-      <button type="button" className="graph-view-btn" onClick={fit}>
+      <button type="button" className="graph-view-btn" disabled={dimmed} onClick={fit}>
         Fit
       </button>
-      <button type="button" className="graph-view-btn" onClick={reset}>
+      <button type="button" className="graph-view-btn" disabled={dimmed} onClick={reset}>
         Reset
       </button>
     </div>
