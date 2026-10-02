@@ -9,7 +9,7 @@ const output=new URL('./.compiled/world-map-realism-lifecycle.mjs',import.meta.u
 await mkdir(new URL('./.compiled/',import.meta.url),{recursive:true})
 await build({entryPoints:[new URL('../src/views/WorldMapCanvas.jsx',import.meta.url).pathname],outfile:output.pathname,bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external',plugins:[{name:'renderer-double',setup(b){
  b.onResolve({filter:/^\.\.\/lib\/worldViewRendererAdapter$/},()=>({path:'renderer',namespace:'double'}))
- b.onLoad({filter:/.*/,namespace:'double'},()=>({contents:`export const projectionMarkerRecords=(rows,keys)=>rows.map(row=>({row,positions:[row.display_geometry.coordinates],selected:keys.has(row.mip_object_id)}));export const createWorldViewRendererAdapter=()=>globalThis.__WORLD_MAP_RENDERER_DOUBLE__();`,loader:'js'}))
+ b.onLoad({filter:/.*/,namespace:'double'},()=>({contents:`export const projectionMarkerRecords=(rows,keys)=>rows.map(row=>({row,positions:[row.display_geometry.coordinates],selected:keys.has(row.mip_object_id)}));export const createWorldViewRendererAdapter=args=>globalThis.__WORLD_MAP_RENDERER_DOUBLE__(args);`,loader:'js'}))
  b.onResolve({filter:/^world-atlas\/countries-110m.json$/},()=>({path:'atlas',namespace:'atlas'}))
  b.onLoad({filter:/.*/,namespace:'atlas'},()=>({contents:'{"objects":{}}',loader:'json'}))
 }}]})
@@ -85,4 +85,44 @@ test('malformed service setup or throwing subscription keeps baseline fallback a
    await act(async()=>mounted.unmount());assert.equal(e.timers.size,0);assert.equal(e.listeners.size,0);assert.equal(e.hostListeners.size,0)
   }finally{e.restore()}
  }
+})
+
+test('Explore during a pending request admits once; camera completion, controls and wheel use current viewport and clean listeners',async()=>{
+ const e=environment();let mounted,resolve,loads=0,level=10,adapterOptions,estimates=0
+ const pending=new Promise(r=>resolve=r)
+ globalThis.__WORLD_MAP_RENDERER_DOUBLE__=options=>{adapterOptions=options;return {mount:async()=>{},destroy(){},setFeatures:async()=>{},setActivityState(){},setRelationships(){},setCameraState(){return true},getCameraState:()=>'{"fixtureCamera":true}',getVisualFidelityCapabilities:()=>({})}}
+ const services={sources:[source],estimateBytes:()=>{estimates++;return 100},getRequest:()=>({...request,level}),transport:{load:async()=>{loads++;return loads===1?pending:{dispose(){},observedBytes:80}}},renderer:{attach:async()=>({dispose(){}})}}
+ try{
+  await act(async()=>{mounted=TestRenderer.create(React.createElement(WorldMapCanvas,props(row('a'),services)),{createNodeMock:()=>e.host})})
+  await act(async()=>mounted.update(React.createElement(WorldMapCanvas,props(row('a'),services,{explorationActive:true}))))
+  assert.equal(loads,1);assert.equal(estimates,1,'Explore does not reserve the same pending descriptor twice')
+  await act(async()=>resolve({dispose(){},observedBytes:80}))
+  level=11;await act(async()=>adapterOptions.onCameraChange());assert.equal(loads,2)
+  level=12;await act(async()=>e.hostListeners.get('wheel')?.());assert.equal(loads,3)
+  level=13;await act(async()=>mounted.root.findAllByType('button').find(b=>b.props.children==='North America overview').props.onClick());assert.equal(loads,4)
+  await act(async()=>mounted.unmount());assert.equal(e.hostListeners.size,0);assert.equal(e.listeners.size,0);assert.equal(e.timers.size,0)
+ }finally{e.restore()}
+})
+test('throwing estimate at the mounted fire-and-forget boundary produces fallback without rejection or source transport',async()=>{
+ const e=environment();let mounted,loads=0;const statuses=[],rejections=[];const onRejected=error=>rejections.push(error)
+ process.on('unhandledRejection',onRejected)
+ const services={sources:[source],estimateBytes(){throw Error('fixture estimate unavailable')},getRequest:()=>request,transport:{load:async()=>{loads++;return {dispose(){}}}},renderer:{attach:async()=>({dispose(){}})}}
+ try{
+  await act(async()=>{mounted=TestRenderer.create(React.createElement(WorldMapCanvas,props(row('a'),services,{explorationActive:true,onSourceStatus:s=>statuses.push(s)})),{createNodeMock:()=>e.host})})
+  await new Promise(resolve=>setImmediate(resolve))
+  assert.equal(loads,0);assert.deepEqual(rejections,[]);assert.equal(statuses.at(-1).localSourceResource.activeSourceId,null);assert.equal(statuses.at(-1).localSourceResource.status,'fallback')
+  await act(async()=>mounted.unmount());assert.equal(e.hostListeners.size,0);assert.equal(e.listeners.size,0);assert.equal(e.timers.size,0)
+ }finally{process.off('unhandledRejection',onRejected);e.restore()}
+})
+
+test('reservation clock failure from a mounted service falls back without transport or rejection',async()=>{
+ const e=environment();let mounted,loads=0,failReservation=false;const rejections=[],statuses=[];const onRejected=error=>rejections.push(error)
+ process.on('unhandledRejection',onRejected)
+ const services={sources:[source],budgetOptions:{now:()=>{if(failReservation){failReservation=false;throw Error('fixture reserve clock unavailable')}return 0}},estimateBytes:()=>{failReservation=true;return 100},getRequest:()=>request,transport:{load:async()=>{loads++;return {dispose(){}}}},renderer:{attach:async()=>({dispose(){}})}}
+ try{
+  await act(async()=>{mounted=TestRenderer.create(React.createElement(WorldMapCanvas,props(row('a'),services,{explorationActive:true,onSourceStatus:s=>statuses.push(s)})),{createNodeMock:()=>e.host})})
+  await new Promise(resolve=>setImmediate(resolve))
+  assert.equal(loads,0);assert.deepEqual(rejections,[]);assert.equal(statuses.at(-1).localSourceResource.status,'fallback');assert.equal(statuses.at(-1).localSourceResource.activeSourceId,null)
+  await act(async()=>mounted.unmount());assert.equal(e.hostListeners.size,0);assert.equal(e.listeners.size,0);assert.equal(e.timers.size,0)
+ }finally{process.off('unhandledRejection',onRejected);e.restore()}
 })

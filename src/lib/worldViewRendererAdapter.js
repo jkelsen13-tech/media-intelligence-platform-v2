@@ -590,6 +590,7 @@ function createMapLibreWorldViewRendererAdapter({
   onStackIdChange,
   onSourceStatusChange,
   onSelectedAnchorChange,
+  onCameraChange,
   shouldFlyTo,
   markFlew,
   initialFeatures,
@@ -788,7 +789,7 @@ function createMapLibreWorldViewRendererAdapter({
         lastAnchor = next; onSelectedAnchorChange?.(next)
       }
     }
-    for (const [event, listener] of [['error', handleError], ['load', handleLoad], ['render', handleRender]]) {
+    for (const [event, listener] of [['error', handleError], ['load', handleLoad], ['render', handleRender], ['moveend', () => { if (!cancelledNow()) onCameraChange?.() }]]) {
       map.on(event, listener)
       lifecycleListeners.push([event, listener])
     }

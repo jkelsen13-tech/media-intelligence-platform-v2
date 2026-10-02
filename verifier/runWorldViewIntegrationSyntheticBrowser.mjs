@@ -3,14 +3,18 @@ import {cameraStatesEqual} from '../src/lib/worldViewCameraState.js'
 // Synthetic full-App execution only. No live reader/auth or source qualification.
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
-import {writeFile} from 'node:fs/promises'
+import {mkdir,writeFile} from 'node:fs/promises'
 import {PROJECTION_FIXTURE_COLUMNS,makeClusteringContractRows,clusteringGraphContractRows} from './worldViewProjectionFixture.mjs'
-const require=createRequire('/tmp/mip-browser/package.json'),{chromium}=require('playwright')
+const require=createRequire((process.env.MIP_BROWSER_PACKAGE ?? '/tmp/mip-browser')+'/package.json'),{chromium}=require('playwright')
+const output=process.env.MIP_INTEGRATION_EVIDENCE ?? '/workspace/mip-oct02/evidence/lane1-2'
+await mkdir(output,{recursive:true})
+const base=process.env.MIP_INTEGRATION_BASE ?? 'http://127.0.0.1:4178/media-intelligence-platform-v2/'
 const candidate=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
 const scenario=process.env.MIP_INTEGRATION_SCENARIO ?? 'city'
 const template={...Object.fromEntries(PROJECTION_FIXTURE_COLUMNS.map(k=>[k,null])),projection_contract_version:'v1',mip_object_id:'synthetic',subject_graph_node_id:'synthetic',revision_id:'synthetic',revision_ordinal:1,revision_known_at_utc:'2025-12-01T00:00:00Z',review_effective_at_utc:'2026-01-01T12:00:00Z',release_effective_at_utc:'2025-12-01T00:00:00Z',precision_class:scenario==='facility'?'facility':'city',object_type:'event',spatial_role:'event',geometry_status:'coarsened_to_precision_class',release_state:'released',review_state:'reviewed',valid_from_utc:'2026-01-01T00:00:00Z',valid_to_utc:'2026-01-02T00:00:00Z',display_geometry:{type:'Point',coordinates:[-81.7,41.4]},evidence_refs:[]}
+const faultJourney=process.env.MIP_SOURCE_FAULTS==='1'
 const rows=makeClusteringContractRows(template,'US-local',{count:12}),graph=clusteringGraphContractRows(rows)
-const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--enable-unsafe-swiftshader']})
+const browser=await chromium.launch({headless:true,executablePath:process.env.MIP_BROWSER_EXECUTABLE ?? '/usr/bin/chromium',args:['--enable-unsafe-swiftshader']})
 const receipts=[]
 try{
 for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,height:844},{width:844,height:390}]:[{width:1280,height:900}]){
@@ -18,7 +22,17 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  page.on('pageerror',e=>errors.push(e.message))
  if(scenario==='atlas')await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return /webgl/i.test(kind)?null:original.call(this,kind,...args)}})
  await page.route('**/*',async route=>{
-  const req=route.request(),u=new URL(req.url());if(u.hostname==='127.0.0.1')return route.continue()
+  const req=route.request(),u=new URL(req.url());if(u.hostname==='127.0.0.1'){
+   if(faultJourney&&u.pathname.endsWith('/src/views/WorldView.jsx')){
+    const response=await route.fetch(),body=await response.text();assert.ok(body.includes('cameraMemory: cameraMemoryRef.current,'));
+    return route.fulfill({response,body:body.replace('cameraMemory: cameraMemoryRef.current,','realismServices: window.__MIP_TEST_BRIDGE__.services, cameraMemory: cameraMemoryRef.current,')})
+   }
+   if(faultJourney&&u.pathname.endsWith('/src/views/WorldMapCanvas.jsx')){
+    const response=await route.fetch(),body=await response.text();const needle='localBudget: createWorldViewLocalResourceBudget(realismServices?.budgetOptions)';assert.ok(body.includes(needle));
+    return route.fulfill({response,body:body.replace(needle,'localBudget: window.__MIP_TEST_BRIDGE__.wrapBudget(createWorldViewLocalResourceBudget(realismServices?.budgetOptions))')})
+   }
+   return route.continue()
+  }
   requests.push({method:req.method(),path:u.pathname})
   if(req.method()==='HEAD' && u.hostname.endsWith('supabase.co'))return route.fulfill({status:200,headers:{'content-range':'*/0','access-control-allow-origin':'*'}})
   if(req.method()!=='GET')return route.abort()
@@ -28,7 +42,12 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
   }
   return route.abort()
  })
- await page.goto('http://127.0.0.1:4178/media-intelligence-platform-v2/?worldViewPrototype=1')
+ if(faultJourney)await page.addInitScript(()=>{
+  let mode='ok',callback=null,loads=0,disposals=0,estimates=0,reserves=0,reserveFaults=0,deferred=[],scope={kind:'imagery',bounds:[-81.8,41.1,-81.2,41.8],level:10};
+  const source={id:'TEST',kind:'imagery',contentKind:'cartographic',costTier:'cheap',admission:{approved:true,reference:'TEST only'},rights:{reference:'TEST only',commercial:true,publicWeb:true,cache:true,redistribution:true,derivatives:true,analyticalUse:true,attribution:true},attribution:[{text:'TEST only'}],qualification:{bytesVerified:true,sha256:'a'.repeat(64),reference:'TEST only',assetCrs:'TEST',assetCrsVerified:true,decodedVerified:true,pixelsVerified:true,coverageVerified:true},coverage:{crs:'EPSG:4326',bounds:[-82,41,-81,42]},resolutionMeters:1,lod:{min:1,max:15}};
+  window.__MIP_TEST_BRIDGE__={services:{sources:[source],estimateBytes:()=>{estimates++;if(mode==='estimate')throw Error('TEST estimator');return 100},getRequest:()=>scope,subscribeRequestChanges:cb=>{callback=cb;return()=>{callback=null}},transport:{load:async()=>{loads++;if(mode==='defer')await new Promise(resolve=>deferred.push(resolve));return{observedBytes:10,dispose(){disposals++}}}},renderer:{attach:async(l,d)=>({observation:{sourceId:d.sourceId,status:'active',rendered:true,successes:1,attributionVisible:true,bounds:d.bounds,level:d.level,ancestry:'direct'},dispose(){}})}},wrapBudget:budget=>({...budget,reserve:value=>{reserves++;if(mode==='reserve'){reserveFaults++;throw Error('TEST reserve')}return budget.reserve(value)}}),mode:v=>{mode=v},scope:v=>{scope=v;callback?.()},refresh:()=>callback?.(),settle:()=>deferred.splice(0).forEach(fn=>fn()),stats:()=>({loads,disposals,estimates,reserves,reserveFaults})}
+ })
+ await page.goto(base+'?worldViewPrototype=1')
  await page.getByRole('tablist',{name:'Evidence views',exact:true}).getByRole('tab',{name:'World View',exact:true}).click()
  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()?.layout?.stats?.inputCount===12,{},{timeout:60000})
  const state=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getState())
@@ -105,8 +124,9 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  if(scenario!=='atlas'){
   const tabs=page.getByRole('tablist',{name:'Selected record modules',exact:true})
   for(const tab of ['Context','Sources','Evidence'])await tabs.getByRole('tab',{name:tab,exact:true}).click()
-  await page.locator('.wv-explore-map').screenshot({path:`/workspace/mip-oct02/evidence/lane1-2/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
+  await page.locator('.wv-explore-map').screenshot({path:`${output}/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
   await page.getByRole('button',{name:'Open inspector',exact:true}).click()
+  await page.locator('.wv-explore-context-body:not([hidden])').waitFor({state:'visible'})
   assert.ok(await page.locator('.wv-explore-context-body:not([hidden])').count(),'explicit inspector remains reachable after chooser collapse')
   const nativeHeight=await page.locator('.cesium-widget canvas').evaluate(canvas=>canvas.clientHeight)
   assert.ok(nativeHeight>=80,'native map remains usable beside explicit Explore inspector')
@@ -114,6 +134,35 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
 
  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
  assert.deepEqual(await context(),bound,'Explore entry/exit preserves canonical/time context')
+ if(faultJourney){
+  const local=()=>page.evaluate(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource)
+  // Canonical member selection above supplies the production selection to the injected viewport bridge.
+  await page.getByRole('button',{name:'Explore World View',exact:true}).click()
+  await page.getByRole('navigation',{name:'Explore controls',exact:true}).getByRole('button',{name:'Interact',exact:true}).click()
+  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.activeSourceId==='TEST')
+  const initial=await local();assert.equal(initial.status,'active');assert.equal(initial.observedLayer.status,'ACTIVE')
+  for(const mode of ['estimate','reserve']){
+   const beforeFault=await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.stats())
+   await page.evaluate(mode=>{window.__MIP_TEST_BRIDGE__.mode(mode);window.__MIP_TEST_BRIDGE__.scope({kind:'imagery',bounds:mode==='estimate'?[-81.7,41.2,-81.3,41.7]:[-81.65,41.25,-81.35,41.65],level:10})},mode)
+   await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.reason==='local-admission-failed')
+   const afterFault=await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.stats());assert.equal(afterFault.estimates,beforeFault.estimates+1);if(mode==='reserve')assert.equal(afterFault.reserveFaults,beforeFault.reserveFaults+1)
+   assert.equal((await local()).activeSourceId,'TEST','covering old handle survives '+mode+' failure')
+  }
+  await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.scope({kind:'imagery',bounds:[-81.1,41.1,-81.01,41.8],level:10}))
+  assert.equal((await local()).activeSourceId,null,'full App stale loaded coverage detached before failed reservation')
+  await page.evaluate(()=>{window.__MIP_TEST_BRIDGE__.mode('defer');window.__MIP_TEST_BRIDGE__.refresh()})
+  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.status==='loading')
+  const pending=await local(),beforeLoads=await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.stats().loads)
+  await page.evaluate(()=>{window.__MIP_TEST_BRIDGE__.refresh();window.__MIP_TEST_BRIDGE__.refresh()})
+  assert.equal(await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.stats().loads),beforeLoads)
+  assert.equal((await local()).localBudget.requests,pending.localBudget.requests)
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.__MIP_TEST_BRIDGE__.settle()})
+  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.localBudget.pendingRequests===0)
+  assert.equal((await local()).activeSourceId,null)
+  await page.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'))})
+  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
+  receipts.push({qualification:'synthetic-full-App-with-test-only-intercepted-module-and-bridge',sourceAdmissionQualified:false,initialRequests:initial.localBudget.requests,throwingEstimator:true,throwingReserve:true,coveringHandlePreserved:true,staleCoverageDetached:true,duplicateLoadingNoReservation:true,hiddenLateSettlement:true,pageErrors:errors})
+ }
  const beforeRemount=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
  for(const mode of ['Graph','Map']){await modes.getByRole('tab',{name:mode,exact:true}).click();await page.waitForTimeout(300)}
  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()?.layout?.stats?.inputCount===1)
@@ -124,10 +173,10 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
 
  assert.deepEqual(errors,[])
  // Existing read-only HEAD count queries are mocked; other non-GETs are aborted.
- const screenshot=`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
+ const screenshot=`${output}/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
  await page.screenshot({path:screenshot,fullPage:true})
  receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
  await page.close()
 }
-await writeFile(`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
+await writeFile(`${output}/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
 }finally{await browser.close()}

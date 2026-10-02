@@ -382,7 +382,16 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       snapshot: () => ({...controller.snapshot(), bridgeFailure: setupFailure}),
       transition(state) { const actual = doc?.hidden ? 'hidden' : state; controller.transition(actual); if (actual === 'hidden') stopPolling(); else startPolling() },
       select(input, meaningful) { if (meaningful) interaction(); return controller.select(input) },
-      interact() { interaction(); realismRequestRef.current?.(false) },
+      interact() { interaction() },
+      failRequest() {
+        setupFailure = 'source-request-unavailable'
+        stopPolling()
+        try { controller.dispose() } catch { /* supplied service cleanup can also fail */ }
+        let observed = null
+        try { observed = controller.snapshot() } catch { /* unavailable state stays unconfirmed */ }
+        if (alive) setLocalSourceResource({...observed, status: 'fallback', activeSourceId: null,
+          activeDescriptor: null, observedLayer: null, bridgeFailure: setupFailure})
+      },
     }
     create(); realismRef.current = owner
     realismSelectionRef.current = null
@@ -392,6 +401,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     const host = hostRef.current
     const beginInteraction = () => interaction()
     const refreshRequest = () => realismRequestRef.current?.(false)
+    const wheelInteraction = () => { interaction(); refreshRequest() }
     let unsubscribe
     if (!setupFailure) {
       try { unsubscribe = realismServices?.subscribeRequestChanges?.(refreshRequest) }
@@ -404,6 +414,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     host?.addEventListener?.('keydown', beginInteraction)
     host?.addEventListener?.('pointerup', refreshRequest)
     host?.addEventListener?.('keyup', refreshRequest)
+    host?.addEventListener?.('wheel', wheelInteraction, {passive: true})
     startPolling()
     return () => {
       alive = false; stopPolling()
@@ -412,6 +423,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       host?.removeEventListener?.('keydown', beginInteraction)
       host?.removeEventListener?.('pointerup', refreshRequest)
       host?.removeEventListener?.('keyup', refreshRequest)
+      host?.removeEventListener?.('wheel', wheelInteraction)
       if (typeof unsubscribe === 'function') { try { unsubscribe() } catch { /* baseline cleanup still owns disposal */ } }
       controller.dispose()
       if (realismRef.current === owner) realismRef.current = null
@@ -451,6 +463,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       },
       onSourceStatusChange: next => { if (!cancelled) setImageryStatus(next) },
       onSelectedAnchorChange: next => { if (!cancelled) setContextAnchor(next) },
+      onCameraChange: () => { if (!cancelled) realismRequestRef.current?.(false) },
       initialFeatures: features,
       recordedTimeInstant,
       isCancelled: () => cancelled,
@@ -490,7 +503,12 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     if (!cameraControlsRef) return undefined
     const controls = {
       getCameraState: () => adapterRef.current?.getCameraState?.() ?? null,
-      setCameraState: value => adapterRef.current?.setCameraState?.(value) ?? false,
+      setCameraState: value => {
+        realismRef.current?.interact()
+        const changed = adapterRef.current?.setCameraState?.(value) ?? false
+        realismRequestRef.current?.(false)
+        return changed
+      },
       cancelCameraFlight: () => adapterRef.current?.cancelCameraFlight?.() ?? false,
     }
     cameraControlsRef.current = controls
@@ -530,14 +548,23 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         cameraState: adapterRef.current?.getCameraState?.() ?? null, recordedTimeInstant, rendererReady}) ?? null }
       catch { request = null }
     }
-    void owner.select(request, meaningful)
+    // Keep the fire-and-forget UI boundary contained even if a supplied service
+    // violates its contract. The controller owns ordinary admission failures.
+    try {
+      void Promise.resolve(owner.select(request, meaningful)).catch(() => {
+        if (realismRef.current !== owner) return
+        owner.failRequest()
+      })
+    } catch {
+      owner.failRequest()
+    }
   }
   useEffect(() => {
     const key = first ? projectionRowDisplayKey(first.row) : null
     const meaningful = Boolean(key && realismSelectionRef.current !== key)
     realismSelectionRef.current = key
     realismRequestRef.current?.(meaningful)
-  }, [first, stackId, rendererReady, recordedTimeInstant, realismServices])
+  }, [first, stackId, rendererReady, recordedTimeInstant, realismServices, explorationActive])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -705,7 +732,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     <div className="wv-map-panel">
       <div className="wv-camera-controls" role="group" aria-label="Map navigation">
         <button type="button" disabled={!rendererReady}
-          onClick={() => adapterRef.current?.setCameraState?.(northAmericaCameraState())}>
+          onClick={() => { realismRef.current?.interact(); adapterRef.current?.setCameraState?.(northAmericaCameraState()); realismRequestRef.current?.(false) }}>
           North America overview
         </button>
         <details className="wv-pilot-bookmarks">
@@ -713,8 +740,9 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
           <div role="group" aria-label="Pilot camera bookmarks">
             {pilotBookmarks.map(bookmark => <button type="button" key={bookmark.id} disabled={!rendererReady}
               onClick={() => {
+                realismRef.current?.interact()
                 if (adapterRef.current?.setCameraState?.(bookmark.cameraState)) {
-                  usageRef.current.explore(); setBookmarkDisclosure(bookmark.disclosure)
+                  usageRef.current.explore(); setBookmarkDisclosure(bookmark.disclosure); realismRequestRef.current?.(false)
                 }
               }}>{bookmark.label}</button>)}
           </div>
@@ -727,7 +755,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
         <button
           type="button"
           disabled={!first || !rendererReady}
-          onClick={() => framingRef.current.apply(adapterRef.current, { force: true })}
+          onClick={() => { realismRef.current?.interact(); framingRef.current.apply(adapterRef.current, { force: true }); realismRequestRef.current?.(false) }}
         >
           Return to selected location
         </button>

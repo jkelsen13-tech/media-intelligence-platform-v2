@@ -658,7 +658,7 @@ export default function WorldView({
               {sourceStatus && <>
                 {[sourceStatus.imagery, sourceStatus.elevation, sourceStatus.buildings].map((source, index) =>
                   <p key={index} data-source-classification={source.status}><strong>{source.label}</strong> · {source.status}. {source.detail}</p>)}
-                <p>Qualified photographic source: {sourceStatus.qualifiedRealism?.status ?? 'UNKNOWN'}. No photographic asset admission is confirmed.</p>
+                <p>Qualified imagery source: {sourceStatus.qualifiedRealism?.status ?? 'UNKNOWN'}. {sourceStatus.qualifiedRealism?.activeSource ? `Admitted content: ${sourceStatus.qualifiedRealism.activeSource.contentKind}.` : 'No qualified imagery asset is confirmed active.'}</p>
                 <p>{sourceStatus.sourceCapture.detail} {sourceStatus.background.detail}</p>
               </>}
             </details>

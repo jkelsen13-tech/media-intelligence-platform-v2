@@ -321,6 +321,7 @@ export function createCesiumEllipsoidRendererAdapter({
   onTerrainStatusChange,
   onSourceStatusChange,
   onSelectedAnchorChange,
+  onCameraChange,
   initialActivityState = 'visible-idle',
   shouldFlyTo,
   markFlew,
@@ -542,6 +543,9 @@ export function createCesiumEllipsoidRendererAdapter({
     // Request-only rendering governance: only redraw on camera/props changes.
     viewer.scene.requestRenderMode = true
     setActivityState(activityState)
+    if (onCameraChange) removeLayoutListeners.push(viewer.camera.moveEnd.addEventListener(() => {
+      if (!cancelledNow()) onCameraChange()
+    }))
     removeLayoutListeners.push(viewer.scene.postRender.addEventListener(() => {
       renderedFrames += 1
       if (!viewer || cancelledNow()) return
