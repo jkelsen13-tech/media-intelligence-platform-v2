@@ -22,7 +22,7 @@
     {
       "name": "public-story-following exact empty checkpoint restore",
       "status": "PASS",
-      "rollbackHash": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+      "rollbackHash": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d"
     },
     {
       "name": "selective-execution exact empty checkpoint restore",
@@ -131,11 +131,11 @@
     {
       "id": "public-story-following",
       "proposal": "supabase/source-proposals/story_following_v1.sql",
-      "sourceHash": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
-      "compiledHash": "d87b4bc21f763e858fe30d3d3a3d5f81e8314337e0fa2d2e46c8267762f04752",
+      "sourceHash": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7",
+      "compiledHash": "7b95f6a3c19179ef2862c684f7d7c511b2133cacceb620a8b9ea5d7dda0f68fc",
       "transactionId": "791",
       "originalCatalogHash": "abb59b9a04ee3cf883b959d30b0edb35b3ecbba608d417722ed29f9909667dd6",
-      "installedCatalogHash": "2e8e2ef8a1906539a96d976e80bddf8c179a7a2c422021451513cbfe57d2eb03",
+      "installedCatalogHash": "eb7ee34ef181f1f10b99dea9d282ea4e0c9b9e45d6ceb44b10cc91e6558f945e",
       "delta": {
         "schemas": {
           "added": [],
@@ -159,6 +159,7 @@
           "added": [
             "mip_private.declare_public_story_material_change_v1(jsonb)",
             "mip_private.public_story_follow_payload(mip_private.public_story_follows)",
+            "mip_private.public_story_material_history_is_complete(uuid,uuid)",
             "mip_private.public_story_material_payload(mip_private.public_story_material_changes)",
             "mip_private.read_public_story_follow(uuid,uuid,integer)",
             "mip_private.reject_public_story_material_mutation()",
@@ -181,19 +182,19 @@
           "changed": []
         }
       },
-      "rehearsalHash": "d97f56f451e00be0d090bb14c98fc1cd33f0d13327cb8425b7251c4b211b2b11",
+      "rehearsalHash": "9714eb1ddf7217128466083c55387a78d7a9e2b358d46353456f1e262834f151",
       "artifacts": [
         {
           "path": "supabase/source-proposals/story_following_v1.sql",
-          "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e"
+          "sha256": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7"
         },
         {
           "path": "supabase/source-proposals/story_following_v1.rollback.sql",
-          "sha256": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+          "sha256": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d"
         },
         {
           "path": "supabase/source-proposals/story_following_v1.catalog.sql",
-          "sha256": "70913bb10c3f583156c96ecd46dd2cbffad61e0213043cf0962875b63ac03948"
+          "sha256": "3ad363d53155444b07d674068057cd3dfbcedddd802799b5a6b2a92eebcd8115"
         }
       ]
     },
@@ -201,10 +202,10 @@
       "id": "private-relevant-inputs",
       "proposal": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
       "sourceHash": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19",
-      "compiledHash": "7f3ff1fbc3ab7466b5ff862f4c42d0556cb1c89e226d08301c7a2cb92580f1dc",
+      "compiledHash": "b24a91da898fa0486e418865ee0e002bd80a5ebfbb1db2888f880d2f59b1e849",
       "transactionId": "795",
-      "originalCatalogHash": "2e8e2ef8a1906539a96d976e80bddf8c179a7a2c422021451513cbfe57d2eb03",
-      "installedCatalogHash": "51d374634993664b51a2bc2838e5f19b60ac54792addc53d0005934ea1a69d9a",
+      "originalCatalogHash": "eb7ee34ef181f1f10b99dea9d282ea4e0c9b9e45d6ceb44b10cc91e6558f945e",
+      "installedCatalogHash": "e5299dd584ce8d7ca9ec507b27715a4f0ed1ffe478a0af59863dd1fec396da7b",
       "delta": {
         "schemas": {
           "added": [],
@@ -245,7 +246,7 @@
           "changed": []
         }
       },
-      "rehearsalHash": "c9ceafa1f33b1c0aa45ac3e726304c6a8543bf388280b3fed798781c2635aa83",
+      "rehearsalHash": "1e30ea696d33de983029976d8398b0e3d294677b9be84117f1ba79a400791281",
       "artifacts": [
         {
           "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
@@ -257,10 +258,10 @@
       "id": "private-postcapture-receipts",
       "proposal": "supabase/source-proposals/investigation_selective_intake_v1.sql",
       "sourceHash": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703",
-      "compiledHash": "79ba7aeff49f149004681ce4f5ba72b9028fcb86fff80051a78fbd70743bca68",
+      "compiledHash": "e134da0df876ac04aa112ce3ed976ec6b5a7f3f2b3b0229e6776e41b7d7d8bb5",
       "transactionId": "799",
-      "originalCatalogHash": "51d374634993664b51a2bc2838e5f19b60ac54792addc53d0005934ea1a69d9a",
-      "installedCatalogHash": "0db3f8e2831ccdc093bb748d0dbfbaa7d6e433b82357e28abfb26601643f917a",
+      "originalCatalogHash": "e5299dd584ce8d7ca9ec507b27715a4f0ed1ffe478a0af59863dd1fec396da7b",
+      "installedCatalogHash": "262d1577f0d2cb4f3a334d96c37741132d24bfebf34f497a55f53848a81d8537",
       "delta": {
         "schemas": {
           "added": [],
@@ -295,7 +296,7 @@
           "changed": []
         }
       },
-      "rehearsalHash": "8bc5a15f0058e2dd7002194254bb6dcc8b478ca1dfa02a19bd99c93ff6fcac3d",
+      "rehearsalHash": "996187aaee05e1c9599f0c2ad30f064583c1893f6b5d2688f994450e6b60b464",
       "artifacts": [
         {
           "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
@@ -307,10 +308,10 @@
       "id": "selective-execution",
       "proposal": "supabase/source-proposals/selective_intake_execution_v1.sql",
       "sourceHash": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471",
-      "compiledHash": "4915c79325b40296b1f5f55cfdf8576dde601ce19011e07de17e3cb5dc7ec9f7",
+      "compiledHash": "9a76235236c2f4d5fbb8386f115a8ba0e0e64a3fa3b8d0cf00c83d5c32879314",
       "transactionId": "805",
-      "originalCatalogHash": "0db3f8e2831ccdc093bb748d0dbfbaa7d6e433b82357e28abfb26601643f917a",
-      "installedCatalogHash": "91d9837631e74187c9b443adaaa5220b8eebeea9e22b89f68001f08ae8fd41d3",
+      "originalCatalogHash": "262d1577f0d2cb4f3a334d96c37741132d24bfebf34f497a55f53848a81d8537",
+      "installedCatalogHash": "edb8979c7964cf06496a6f26f0c21a974ed2b17736d8146ee5b4047a589a7d87",
       "delta": {
         "schemas": {
           "added": [],
@@ -350,7 +351,7 @@
           "changed": []
         }
       },
-      "rehearsalHash": "1140b727ada943ab8bad0109f3501843b58a2b0fc94be4b29a66e95f77ae9bd0",
+      "rehearsalHash": "ff7148945bf3aa68996dd3237525b42a1b08cd540202a00d3146e3ccd553723e",
       "artifacts": [
         {
           "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
@@ -369,11 +370,11 @@
     {
       "id": "legacy-atomic-completion",
       "proposal": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
-      "sourceHash": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
-      "compiledHash": "dc02b043e699ff9958ff2965bc539a4e3791fd3bfe195b9861d040a91691b4f1",
+      "sourceHash": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161",
+      "compiledHash": "f46a011df5cdc9d8535dcc10df7352aa51279e6a12bdc82aeec98de17570970e",
       "transactionId": "809",
-      "originalCatalogHash": "91d9837631e74187c9b443adaaa5220b8eebeea9e22b89f68001f08ae8fd41d3",
-      "installedCatalogHash": "b1813e363406c34a0a5c760df9ceb0a1d3faaa34a1f767bdb004ecdc1bfa8568",
+      "originalCatalogHash": "edb8979c7964cf06496a6f26f0c21a974ed2b17736d8146ee5b4047a589a7d87",
+      "installedCatalogHash": "897d1e9398e1972b538e2f0a56970930068affb89242581c27eb03e4515f9b72",
       "delta": {
         "schemas": {
           "added": [],
@@ -428,15 +429,15 @@
           "changed": []
         }
       },
-      "rehearsalHash": "08cb57dea886eea0524f253ea5eac6d966a4343ce851134e8c33b7e43bda8bf8",
+      "rehearsalHash": "4aaf11ccb196f2b844f5fb302bba7168ca9ff043d67038929700b8916ae872df",
       "artifacts": [
         {
           "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
-          "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066"
+          "sha256": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161"
         },
         {
           "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
-          "sha256": "bae96d0483e818826bfee191bafa702c7baec0e5a08a342297c811db7ffebe5c"
+          "sha256": "1a7d2f604d98620461ffab3549abca3f7a4f8d8772316b04f519b2af4b09fd90"
         }
       ]
     },
@@ -444,10 +445,10 @@
       "id": "markets-directory",
       "proposal": "supabase/source-proposals/markets-directory-v2.sql",
       "sourceHash": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b",
-      "compiledHash": "8c712fbebe2fd8761e84ed542ef56ecef8102bd6013904261db645f9474b0d46",
+      "compiledHash": "93e17ef55bfcf54311c83431ef5925466f9a7cba2172232c52dd7b4256aab553",
       "transactionId": "815",
-      "originalCatalogHash": "b1813e363406c34a0a5c760df9ceb0a1d3faaa34a1f767bdb004ecdc1bfa8568",
-      "installedCatalogHash": "3270a5cc498faebb6c034523a5bfce1281f625c375f7d6903866d55e2129da15",
+      "originalCatalogHash": "897d1e9398e1972b538e2f0a56970930068affb89242581c27eb03e4515f9b72",
+      "installedCatalogHash": "5e0b05acd8668b284a64e52055b214b680a307bb5712f321729aa015f5c6321a",
       "delta": {
         "schemas": {
           "added": [],
@@ -489,7 +490,7 @@
           "changed": []
         }
       },
-      "rehearsalHash": "5151eb29b5e97802b9d537d3941b1124ddc51f67fe6a896e0e7cb1a28da0c710",
+      "rehearsalHash": "65f477fedb754cb468fc752c3c199c5fae29508cf9e7ae86e232f322a01414e0",
       "artifacts": [
         {
           "path": "supabase/source-proposals/markets-directory-v2.sql",
@@ -505,10 +506,10 @@
       "id": "reviewed-comparison",
       "proposal": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
       "sourceHash": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7",
-      "compiledHash": "88a9d1fe1b96b1c65b52db96bdf4d78ff9c1f249f44c6a80eaa4e5401bdabae0",
+      "compiledHash": "11171efd951516548acbe8881ee91e4949716ebd518defeafcbd2cd5add7e4df",
       "transactionId": "821",
-      "originalCatalogHash": "3270a5cc498faebb6c034523a5bfce1281f625c375f7d6903866d55e2129da15",
-      "installedCatalogHash": "8c3f2034350f2cde29a2d9dc829d6cb82075f4dbc27d88a519226606f7da9539",
+      "originalCatalogHash": "5e0b05acd8668b284a64e52055b214b680a307bb5712f321729aa015f5c6321a",
+      "installedCatalogHash": "ee3d417794a502d841662a959199adc6b086e516a55d3128dd88d77826626780",
       "delta": {
         "schemas": {
           "added": [],
@@ -550,7 +551,7 @@
           "changed": []
         }
       },
-      "rehearsalHash": "2034d57d1f5032745a2ce0d059473be7984b1800f2e33092a694d8f9854f7854",
+      "rehearsalHash": "5d0583fcccec56c7743b5db27d117acd6090b23d1f0546d14e2fd18c405b487f",
       "artifacts": [
         {
           "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",

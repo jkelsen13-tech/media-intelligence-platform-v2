@@ -9,19 +9,30 @@ const date='2026-10-02'
 const runtimes=[{id:'NODE24',executable:process.execPath},{id:'NODE22',executable:'/workspace/mip-runtime22/node_modules/node/bin/node'}]
 const fixtureFiles=['scripts/launchInstallationSequence.mjs','scripts/launchInstallSequenceCatalog.sql','scripts/compileLaunchInstallationStage.mjs',
   'scripts/verifyLaunchInstallationSequence.mjs','tests/launchInstallationSequence.test.mjs','tests/launchInstallationSequenceFixture.mjs',
+  'tests/storyMaterialHistory.test.mjs','tests/storyMaterialHistoryPackage.test.mjs','tests/storyMaterialHistoryFixture.mjs',
+  'tests/legacyOwnerTransfer.test.mjs','tests/legacyOwnerTransferFixture.mjs',
+  'tests/worldViewSelectedCardAllocation.test.mjs','tests/worldViewSelectedCardScroll.browser.mjs',
+  'verifier/runWorldViewSelectedCardScrollSyntheticBrowser.mjs',
+  'tests/storyArticleExactVersionJourney.test.mjs','tests/fixtures/storyArticleVersionJourney.mjs',
+  'tests/storyArticleExactVersionBrowser.mjs',
+  'scripts/launchReviewCorrectionManifest.mjs','tests/investigationApi.test.mjs',
+  'verifier/investigation-api-review-corrections-2026-10-02.json',
   'scripts/mipConsolidationRestore.mjs','scripts/reviewedPublicVersionPackage.mjs','scripts/storyFollowingPackage.mjs','scripts/marketsDirectoryPackage.mjs',
   'scripts/legacyAtomicCompletionPackage.mjs','scripts/comparisonReviewedVersionPackage.mjs','scripts/selectiveExecutionPackage.mjs',
-  'docs/MIP_WHOLE_INSTALL_SEQUENCE_2026-10-02.md','package-lock.json',
+  'docs/MIP_WHOLE_INSTALL_SEQUENCE_2026-10-02.md','docs/MIP_LEGACY_OWNER_TRANSFER_CORRECTION_2026-10-02.md',
+  'docs/story-material-history-corrections-2026-10-02.md','package-lock.json',
   ...[...NATIVE_PRIVATE_PREREQUISITES,...PUBLIC_SURFACE_TRANSFER_CHUNKS,PUBLIC_SURFACE_PUBLICATION_GATES,PUBLIC_SURFACE_AUTHENTICATED_REVIEW_REVOKE,
     '20260905082406_evidence_pipeline_reliability.sql','20260905151626_mip_consolidation_delta.sql','20260905160001_event_scoped_public_article_counts.sql',
     '20260905182355_mip_nested_claim_publication_gates.sql','20260905203600_mip_legacy_graph_private_staging.sql','20260909153133_comparison_explanation_event_binding.sql'].map(f=>'supabase/migrations/'+f)]
-const readerArtifacts=['src/lib/reviewedPublicVersion.js','src/lib/reviewedPublicVersionBackend.js','src/lib/supabase.js','src/lib/newsBackend.js',
+const readerArtifacts=['src/App.jsx','src/lib/reviewedPublicVersion.js','src/lib/reviewedPublicVersionBackend.js','src/lib/supabase.js','src/lib/newsBackend.js',
   'src/lib/newsStatePolicy.js','src/lib/newsStoryState.js','src/views/NewsView.jsx','src/views/NewsStoryReader.jsx','src/lib/storyFollowingClient.js',
   'src/components/StoryFollowingControls.jsx','src/components/StoryFollowingPanel.jsx','src/lib/investigationBackend.js','src/lib/marketsBackend.js',
   'src/lib/sourceComparisonReadPath.js','src/lib/publicDataBackend.js','supabase/functions/investigation-api/index.ts',
   'supabase/functions/backfill-legacy/index.ts','supabase/functions/investigation-api/handler.mjs',
   'supabase/source-proposals/storyFollowingHandler.mjs','supabase/source-proposals/investigationSelectiveIntakeHandler.mjs',
-  'scripts/selectiveIntakeExecution.mjs','scripts/selectiveIntakeDeclaration.mjs']
+  'scripts/selectiveIntakeExecution.mjs','scripts/selectiveIntakeDeclaration.mjs',
+  'src/lib/worldViewSelectedCardViewport.js','src/lib/worldViewBillboardLayout.js','src/lib/worldViewBillboardPresentation.js',
+  'src/lib/worldViewCesiumEllipsoidRendererAdapter.js','src/styles/world-view-billboard-prototype.css']
 // This verifier creates only disposable local engine instances through node:test.
 // Runtime paths are explicit; there is no backend URL, key, provider or psql call.
 const receiptFiles=[]
@@ -53,9 +64,10 @@ const approval=`# Whole launch installation D review cover — ${date}\n\n`+
   main.stages.map((s,i)=>`| ${i+1} | ${s.id} | \`${s.sourceHash}\` |`).join('\n')+`\n\n`+
   `The [complete source/artifact inventory](MIP_WHOLE_INSTALL_SEQUENCE_SOURCE_${date}.json) binds install/catalog/helper/recovery/reader/route bytes and actual new-object/signature/changed-owner scopes. The [operator sequence](MIP_WHOLE_INSTALL_SEQUENCE_${date}.md) supplies target/role preflight, dependency verification, fresh own-transaction baseline capture, local compiler, reader/data readback and restart checks. The native deployed private migrations are disposable fixture foundation only: never replay them on the protected target. Relevance and postcapture are independently hashed absent-owner prerequisite stages; installed mismatches HOLD.\n\n`+
   `Legacy's supplied stage explicitly creates \`mip_legacy_completion_owner\` NOLOGIN/NOINHERIT/NOBYPASSRLS with fixed narrow privileges and no service membership. Approve those exact role/policy/grant bytes separately; no extra role is proposed by the new sequence scripts. Comparison is deliberately denied after stage1 and restored only by stage8's exact binding successor; reader availability grants no source/proposition admission. Empty directories and empty criteria/rights registries authorize no collection.\n\n`+
+  `Legacy managed-role authority windows are separate exact D: installation introduces an installer-grantor SET-only membership and temporary narrow-owner schema CREATE solely for the private function ownership transfer, then restores both. Its revoke-only stop introduces the same SET-only edge solely to revoke the exact private function EXECUTE as its narrow owner, then restores operator context and removes only that introduced edge. Both retain the bootstrap/provider ADMIN-only creator edge and its original grantor/options; neither leaves persistent installer SET/INHERIT or service membership. The managed-role success and injected transaction-failure receipts supplement this combined sequence and do not authorize protected installation.\n\n`+
   `Recovery: Comparison and Markets empty rollbacks restore their exact predecessor catalogs; Legacy and Selective use supplied exact revoke-only stops, retaining roles, policies, native/private/public histories and receipt heads. Following/public exact empty restoration is proven at their own checkpoints. Whole reverse recovery does **not** erase retained owners or restore one global pre-install catalog. Populated destructive rollback refuses; preserve rows and approve exact containment/restart instead.\n\n`+
   `Availability/cutover: missing immutable ledger/RPC means unavailable with no mutable fallback. Installing empty reviewed ledgers intentionally withholds previously readable eligible sources without deleting them. Owner-reviewed version population and frontend/gateway activation are separate approvals. Empty public-version/article-privilege rollback restores predecessor raw-column exposure: hold all affected readers before that restoration; it is not a safe automatic modern-reader recovery. Any nonempty admitted/binding/private history refuses the supplied destructive rollback; a new explicit destructive proposal/authorization would be separate and is not included.\n\n`+
-  `Evidence: [Node24](MIP_WHOLE_INSTALL_SEQUENCE_NODE24_${date}.json) and [Node22](MIP_WHOLE_INSTALL_SEQUENCE_NODE22_${date}.json), 13/13 combined cases each. Actual disposable SQL proves all8 stages coexist; wrong/global/drifted baseline refusal; each separate no-COMMIT rollback-only rehearsal; exact supplied empty checkpoint restoration; retained whole reverse containment; populated guards and byte-identical history preservation; reader/service/role boundaries; and existing-data cutover through installed SDK→actual SQL with no mutable fallback. Single-session PGlite is not hosted PostgreSQL, JWT/PostgREST, independent lock concurrency, provider rights, genuine reviewer/policy/corpus, device/appearance or release evidence. Historical receipts remain unchanged. External push/email stays post-launch.\n`
+  `Evidence: [Node24](MIP_WHOLE_INSTALL_SEQUENCE_NODE24_${date}.json) and [Node22](MIP_WHOLE_INSTALL_SEQUENCE_NODE22_${date}.json), 13/13 combined cases each. Actual disposable SQL proves all8 stages coexist; wrong/global/drifted baseline refusal; each separate no-COMMIT rollback-only rehearsal; exact supplied empty checkpoint restoration; retained whole reverse containment; populated guards and byte-identical history preservation; reader/service/role boundaries; and existing-data cutover through installed SDK→actual SQL with no mutable fallback. Single-session PGlite PostgreSQL18.3/WASM is not target PostgreSQL17.6, hosted JWT/PostgREST, native independent-connection lock concurrency, provider rights, genuine reviewer/policy/corpus, device/appearance or release evidence. Historical receipts remain unchanged. External push/email stays post-launch.\n`
 await writeFile(path(approvalFile),approval)
 files.push(approvalFile)
 const manifest={contract:'mip-launch-install-sequence-source-v1',date,status:'SOURCE_SYNTHETIC_QUALIFIED_UNAPPLIED',live_operations:0,

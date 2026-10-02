@@ -958,7 +958,7 @@ export default function App({
     if (!serializeStoryReaderRoute(route) || route.storyId !== storyReaderRoute.storyId
       || (storyReaderRoute.publicVersionId && route.publicVersionId !== storyReaderRoute.publicVersionId)) return
     // A head route resolves once. Evidence selection pins the displayed Story
-    // decision so graph/tab return cannot substitute a newer collection header.
+    // decision and retains its exact collection header across graph/tab return.
     setStoryReaderRoute(route)
     setStoryArticleSelection(selection)
   }, [storyReaderRoute])

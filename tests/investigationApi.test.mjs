@@ -29,7 +29,7 @@ function fixture(overrides = {}) {
 
 test('current launch source candidate manifest matches the exact gateway and preserved domain source files', async () => {
   const root = new URL('../', import.meta.url)
-  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-launch-gates-2026-10-02.json', root), 'utf8'))
+  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-review-corrections-2026-10-02.json', root), 'utf8'))
   assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 16)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
