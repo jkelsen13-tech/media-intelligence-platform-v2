@@ -1,0 +1,100 @@
+{
+  "contract": "mip-native-deno-gateway-closure-v1",
+  "status": "OFFLINE_CHECK_AND_BUNDLE_PASS",
+  "deno_version": "2.9.6",
+  "entrypoint_executed": false,
+  "deployed": false,
+  "credentials_loaded": false,
+  "remote_or_npm_resolution": false,
+  "source_scope_head": "ba817d96b2ef9b05dba6db48f4c185eb150b9764",
+  "local_modules": [
+    {
+      "path": "scripts/selectiveIntakeDeclaration.mjs",
+      "bytes": 12747,
+      "sha256": "3f49a5b80d9c7a4fe66d7ef1f315f90f78d6872286486cca6ad553565250488c"
+    },
+    {
+      "path": "src/lib/inspectionTime.js",
+      "bytes": 2065,
+      "sha256": "cd60bd88dc78d8e7916ccf53b10f67df4ee00e01d057fd337957ea4e578d373a"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "bytes": 9455,
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "bytes": 13713,
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "bytes": 7183,
+      "sha256": "c847594714aac59b053f38b613de7ed8eb788c2b66f0e59878c04998afa080da"
+    },
+    {
+      "path": "supabase/functions/investigation-api/index.ts",
+      "bytes": 344,
+      "sha256": "2a7b879c9547ef1f44254b6b697fd24ec4f160de992e5ea97ce5a3fed7f70e51"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-checks/handler.mjs",
+      "bytes": 5653,
+      "sha256": "14c8d7d39d09b59498a76712086d26ac5a4c2086db7bd3f67c3d20ec1b26be10"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-reviews/handler.mjs",
+      "bytes": 6659,
+      "sha256": "4dfde82551e33e4d23f894f2ae1876c0e7ba5e39a17243e212efa3497cb8af17"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/handler.mjs",
+      "bytes": 4556,
+      "sha256": "88a96549f50262df502842abaac0a8407560e3cbc8b53de06cad6dce999ce0fb"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/impact.mjs",
+      "bytes": 2805,
+      "sha256": "0deac9fb60c5afd5ce7366b16ce08d4382b47085ef80116faaad4c4145c844b0"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/handler.mjs",
+      "bytes": 640,
+      "sha256": "ccc93b3d85309a74fe777f9ceb34b9ad0c169dd83c495948cf750e7b47b2bf54"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/spans.mjs",
+      "bytes": 2425,
+      "sha256": "45b519ce29fc98e40dfd0d61168969d3c225dbb13630556734df743872e96448"
+    },
+    {
+      "path": "supabase/functions/investigation-workspace/handler.mjs",
+      "bytes": 5886,
+      "sha256": "6d3c5e311476fe850498c64c2c534464db2a0c600e4a84eca0dda8a48b6748cd"
+    },
+    {
+      "path": "supabase/source-proposals/investigationFollowingHandler.mjs",
+      "bytes": 5300,
+      "sha256": "89217d579867deca0bc4c31899887117107cb255f0e0cfbcf643531e128b6696"
+    },
+    {
+      "path": "supabase/source-proposals/investigationSelectiveIntakeHandler.mjs",
+      "bytes": 7170,
+      "sha256": "ef83522c4a8bbe2f373c0ffa68d8ee47bbe5a30b80d2b0fd5eff91785ecce51e"
+    },
+    {
+      "path": "supabase/source-proposals/storyFollowingHandler.mjs",
+      "bytes": 4203,
+      "sha256": "0219abcdbf4ff71152282c432627bd9745f6807de39c74ddc878b3870b47b8b0"
+    }
+  ],
+  "external_builtin": "node:crypto",
+  "bundle": {
+    "bytes": 70917,
+    "sha256": "7ae368ec1d9e191ae85be0f59bda57cd443e531d1b8f55f28010e8f6166a16db"
+  },
+  "qualification": "Offline no-config/no-lock/no-remote/no-npm deno check and bundle; no live Edge/runtime/Auth deployment evidence",
+  "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "bundle_log_sha256": "50a33c32f661632372ed474c095cd898a42c5927af4be00f2c1aafbdc4af038c"
+}

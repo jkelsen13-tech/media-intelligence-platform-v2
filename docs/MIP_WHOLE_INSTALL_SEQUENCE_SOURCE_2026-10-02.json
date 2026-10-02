@@ -83,7 +83,7 @@
     },
     {
       "path": "src/lib/newsBackend.js",
-      "sha256": "8eba70bf090314d7a12eec0cca51e5ff1b81aa9785bf41edf83a020400e50705"
+      "sha256": "583acf2311efa73e970ce5214e7cf8fc862f6e313ea407861f36eae031d67efe"
     },
     {
       "path": "src/lib/newsStatePolicy.js",
@@ -115,7 +115,7 @@
     },
     {
       "path": "src/lib/supabase.js",
-      "sha256": "0bef71ee06c4ca7969bc10e64965ba15aba4baaab1be30c0d796b0efa5935840"
+      "sha256": "505b4976029f250a8b3a0beb91b8d53121a230baf30030ddda9ad432274fa955"
     },
     {
       "path": "src/views/NewsStoryReader.jsx",
@@ -123,7 +123,7 @@
     },
     {
       "path": "src/views/NewsView.jsx",
-      "sha256": "55e5acd766cfd8430c0666bfd208029585f343707a54e53b887d6a6a263ddc4d"
+      "sha256": "9f6502a0003ada354c8ddd48f311af5202254cfa98efe33204aa25cd90138c65"
     },
     {
       "path": "supabase/functions/backfill-legacy/index.ts",

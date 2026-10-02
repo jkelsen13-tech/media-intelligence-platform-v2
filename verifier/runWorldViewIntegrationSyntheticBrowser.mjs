@@ -16,6 +16,15 @@ const harnessSha256=createHash('sha256').update(await readFile(new URL(import.me
 const scenario=process.env.MIP_INTEGRATION_SCENARIO ?? 'city'
 const template={...Object.fromEntries(PROJECTION_FIXTURE_COLUMNS.map(k=>[k,null])),projection_contract_version:'v1',mip_object_id:'synthetic',subject_graph_node_id:'synthetic',revision_id:'synthetic',revision_ordinal:1,revision_known_at_utc:'2025-12-01T00:00:00Z',review_effective_at_utc:'2026-01-01T12:00:00Z',release_effective_at_utc:'2025-12-01T00:00:00Z',precision_class:scenario==='facility'?'facility':'city',object_type:'event',spatial_role:'event',geometry_status:'coarsened_to_precision_class',release_state:'released',review_state:'reviewed',valid_from_utc:'2026-01-01T00:00:00Z',valid_to_utc:'2026-01-02T00:00:00Z',display_geometry:{type:'Point',coordinates:[-81.7,41.4]},evidence_refs:[]}
 const faultJourney=process.env.MIP_SOURCE_FAULTS==='1'
+const unadmittedPath=process.env.MIP_UNADMITTED_REAL_SOURCE
+const unadmittedReceipt=unadmittedPath ? JSON.parse(await readFile(unadmittedPath,'utf8')) : null
+if(unadmittedReceipt){
+ assert.equal(unadmittedReceipt.applicationAdmitted,false)
+ assert.equal(unadmittedReceipt.source.admission.approved,false)
+ assert.equal(unadmittedReceipt.source.qualification.bytesVerified,true)
+ assert.equal(unadmittedReceipt.source.qualification.pixelsVerified,true)
+ assert.equal(faultJourney,false,'failure fixtures and actual unadmitted manifest use separate journeys')
+}
 const rows=makeClusteringContractRows(template,'US-local',{count:12}),graph=clusteringGraphContractRows(rows)
 const browser=await chromium.launch({headless:true,executablePath:process.env.MIP_BROWSER_EXECUTABLE ?? '/usr/bin/chromium',args:['--enable-unsafe-swiftshader']})
 const receipts=[]
@@ -30,7 +39,7 @@ for(const viewport of viewports){
  if(scenario==='atlas')await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return /webgl/i.test(kind)?null:original.call(this,kind,...args)}})
  await page.route('**/*',async route=>{
   const req=route.request(),u=new URL(req.url());if(u.hostname==='127.0.0.1'){
-   if(faultJourney&&u.pathname.endsWith('/src/views/WorldView.jsx')){
+   if((faultJourney||unadmittedReceipt)&&u.pathname.endsWith('/src/views/WorldView.jsx')){
     const response=await route.fetch(),body=await response.text();assert.ok(body.includes('cameraMemory: cameraMemoryRef.current,'));
     return route.fulfill({response,body:body.replace('cameraMemory: cameraMemoryRef.current,','realismServices: window.__MIP_TEST_BRIDGE__.services, cameraMemory: cameraMemoryRef.current,')})
    }
@@ -49,6 +58,15 @@ for(const viewport of viewports){
   }
   return route.abort()
  })
+ if(unadmittedReceipt)await page.addInitScript(source=>{
+  let estimates=0,loads=0,attachments=0
+  window.__MIP_TEST_BRIDGE__={services:{sources:[source],
+   getRequest:()=>({kind:'imagery',bounds:source.coverage.bounds,level:0}),
+   estimateBytes:()=>{estimates++;throw Error('Unadmitted manifest reached resource reservation')},
+   transport:{load:async()=>{loads++;throw Error('Unadmitted manifest reached transport')}},
+   renderer:{attach:async()=>{attachments++;throw Error('Unadmitted manifest reached renderer')}}},
+   stats:()=>({estimates,loads,attachments})}
+ },unadmittedReceipt.source)
  if(faultJourney)await page.addInitScript(()=>{
   let mode='ok',callback=null,loads=0,disposals=0,estimates=0,reserves=0,reserveFaults=0,deferred=[],scope={kind:'imagery',bounds:[-81.8,41.1,-81.2,41.8],level:10};
   const source={id:'TEST',kind:'imagery',contentKind:'cartographic',costTier:'cheap',admission:{approved:true,reference:'TEST only'},rights:{reference:'TEST only',commercial:true,publicWeb:true,cache:true,redistribution:true,derivatives:true,analyticalUse:true,attribution:true},attribution:[{text:'TEST only'}],qualification:{bytesVerified:true,sha256:'a'.repeat(64),reference:'TEST only',assetCrs:'TEST',assetCrsVerified:true,decodedVerified:true,pixelsVerified:true,coverageVerified:true},coverage:{crs:'EPSG:4326',bounds:[-82,41,-81,42]},resolutionMeters:1,lod:{min:1,max:15}};
@@ -168,6 +186,20 @@ for(const viewport of viewports){
 
  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
  assert.deepEqual(await context(),bound,'Explore entry/exit preserves canonical/time context')
+ if(unadmittedReceipt){
+  await page.getByRole('button',{name:'Explore World View',exact:true}).click()
+  await page.getByRole('navigation',{name:'Explore controls',exact:true}).getByRole('button',{name:'Interact',exact:true}).click()
+  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource.rejected.some(r=>r.reason==='source-not-admitted'))
+  const source=await page.evaluate(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource)
+  assert.equal(source.activeSourceId,null)
+  assert.equal(source.status,'fallback')
+  assert.deepEqual(await page.evaluate(()=>window.__MIP_TEST_BRIDGE__.stats()),{estimates:0,loads:0,attachments:0})
+  receipts.push({qualification:'actual received derivative manifest / synthetic full-App controlled journey',sourceAdmissionQualified:false,
+   sourceId:unadmittedReceipt.source.id,assetSha256:unadmittedReceipt.source.qualification.sha256,
+   deniedBeforeResourceTransportRenderer:true,actualSourceState:source,canonicalContext:await context()})
+  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
+  assert.deepEqual(await context(),bound)
+ }
  if(faultJourney){
   const local=()=>page.evaluate(()=>window.__MIP_WORLD_VIEW_USAGE_PROBE__.snapshot().localSourceResource)
   // Canonical member selection above supplies the production selection to the injected viewport bridge.

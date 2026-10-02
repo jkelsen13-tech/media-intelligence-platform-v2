@@ -1,0 +1,519 @@
+{
+  "status": "final source inventory for SELECT-only collision/current-definition checks; not installation or live qualification",
+  "source_scope_head": "ba817d96b2ef9b05dba6db48f4c185eb150b9764",
+  "source_inventory": {
+    "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_SOURCE_2026-10-02.json",
+    "sha256": "0ba9b81ec330fc2bf42ed4477f1f7c9a5fde2302cee815caa7c1f4b8e9bafa1a"
+  },
+  "new_roles": [
+    {
+      "name": "mip_legacy_completion_owner",
+      "attributes": [
+        "NOLOGIN",
+        "NOINHERIT",
+        "NOSUPERUSER",
+        "NOBYPASSRLS",
+        "NOCREATEROLE",
+        "NOCREATEDB",
+        "NOREPLICATION"
+      ],
+      "service_membership": "none",
+      "status": "source proposal, uncreated"
+    }
+  ],
+  "stages": [
+    {
+      "id": "reviewed-public-versions",
+      "source_sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.public_reviewed_article_evidence",
+            "mip_private.public_reviewed_article_versions",
+            "mip_private.reviewed_public_article_evidence",
+            "mip_private.reviewed_public_article_versions",
+            "mip_private.reviewed_public_stories",
+            "mip_private.reviewed_public_story_members",
+            "mip_private.reviewed_public_story_versions",
+            "public.news_reviewed_articles_public"
+          ],
+          "removed": [],
+          "changed": [
+            "public.articles",
+            "public.comparison_public",
+            "public.news_detail_public"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text)",
+            "mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text)",
+            "mip_private.public_article_evidence_is_visible(uuid,uuid)",
+            "mip_private.public_article_version_is_visible(uuid)",
+            "mip_private.public_story_version_is_visible(uuid)",
+            "mip_private.require_reviewed_public_article_version(uuid,uuid,text)",
+            "mip_private.reviewed_public_article_payload(uuid)",
+            "mip_private.reviewed_public_story_payload(uuid)",
+            "public.read_reviewed_public_article_v1(uuid,uuid)",
+            "public.read_reviewed_public_stories_for_article_v1(uuid)",
+            "public.read_reviewed_public_story_directory_v1(uuid,integer)",
+            "public.read_reviewed_public_story_for_article_v1(uuid)",
+            "public.read_reviewed_public_story_v1(uuid,uuid)",
+            "public.search_reviewed_public_article_ids_v1(text,integer)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "public-story-following",
+      "source_sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.public_story_follow_events",
+            "mip_private.public_story_follows",
+            "mip_private.public_story_material_changes"
+          ],
+          "removed": [],
+          "changed": [
+            "public.articles",
+            "public.mip_profiles",
+            "public.nodes"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.declare_public_story_material_change_v1(jsonb)",
+            "mip_private.public_story_follow_payload(mip_private.public_story_follows)",
+            "mip_private.public_story_material_payload(mip_private.public_story_material_changes)",
+            "mip_private.read_public_story_follow(uuid,uuid,integer)",
+            "mip_private.reject_public_story_material_mutation()",
+            "mip_private.revoke_ineligible_story_follows()",
+            "mip_private.revoke_public_story_follow(uuid,uuid)",
+            "public.mip_public_story_following_v1(text,jsonb)",
+            "public.read_reviewed_public_story_context_v1(uuid,uuid)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "private-relevant-inputs",
+      "source_sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.candidate_input_relevance"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.assessment_relevance_keys(uuid,uuid[])",
+            "evidence_pipeline.declare_candidate_input_relevance(jsonb)",
+            "evidence_pipeline.diff_relevance_declarations(jsonb,jsonb)"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.assessment_causes(uuid)",
+            "evidence_pipeline.assessment_context(uuid,uuid[],bigint[])",
+            "evidence_pipeline.collect_investigation_snapshot(uuid[])",
+            "evidence_pipeline.diff_investigation_snapshots(jsonb,jsonb)",
+            "evidence_pipeline.process_dependency_job(uuid,uuid,integer)",
+            "public.mip_assessments_v1(text,jsonb)"
+          ]
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "private-postcapture-receipts",
+      "source_sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.investigation_selective_intake_receipts",
+            "evidence_pipeline.investigation_selective_intake_receipts_ordinal_seq"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.selective_intake_payload(evidence_pipeline.investigation_selective_intake_receipts)",
+            "evidence_pipeline.selective_intake_subject(jsonb)",
+            "public.mip_investigation_selective_intake_v1(text,jsonb)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "selective-execution",
+      "source_sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.selective_authorization_revocations",
+            "evidence_pipeline.selective_criteria_versions",
+            "evidence_pipeline.selective_discovery_receipts",
+            "evidence_pipeline.selective_discovery_receipts_ordinal_seq",
+            "evidence_pipeline.selective_execution_receipts",
+            "evidence_pipeline.selective_execution_receipts_ordinal_seq",
+            "evidence_pipeline.selective_fetch_permits",
+            "evidence_pipeline.selective_source_authorizations"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.selective_metadata_decision(jsonb,jsonb)",
+            "public.mip_selective_execution_v1(text,jsonb)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "legacy-atomic-completion",
+      "source_sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline",
+            "mip_private",
+            "public"
+          ]
+        },
+        "relations": {
+          "added": [
+            "mip_private.legacy_extraction_completions",
+            "mip_private.legacy_reviewed_completions"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.article_captures",
+            "evidence_pipeline.change_jobs",
+            "evidence_pipeline.evidence_changes",
+            "evidence_pipeline.evidence_changes_position_seq",
+            "evidence_pipeline.import_jobs",
+            "evidence_pipeline.import_receipts",
+            "evidence_pipeline.job_events",
+            "evidence_pipeline.job_events_id_seq",
+            "evidence_pipeline.record_versions",
+            "public.articles"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.legacy_extraction_apply_v1(text,jsonb)",
+            "mip_private.legacy_source_snapshot_v1(public.articles)",
+            "public.mip_legacy_extraction_v1(text,jsonb)",
+            "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.canonical_url(text)"
+          ]
+        },
+        "roles": {
+          "added": [
+            "mip_legacy_completion_owner"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "markets-directory",
+      "source_sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.market_revision_qualifications",
+            "mip_private.market_revision_revocations",
+            "mip_private.market_revision_sources",
+            "mip_private.public_market_revisions",
+            "mip_private.public_market_source_bindings"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.record_versions"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.append_market_revision(text,uuid,jsonb,text,text,jsonb)",
+            "mip_private.market_identity_json(evidence_pipeline.record_versions,jsonb,text,text)",
+            "mip_private.market_instant_ns(text)",
+            "mip_private.market_path_is_supported(uuid,uuid,numeric,jsonb,jsonb)",
+            "public.read_markets_source_directory_v1(text)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    },
+    {
+      "id": "reviewed-comparison",
+      "source_sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.comparison_bound_members",
+            "mip_private.comparison_bound_surfaces",
+            "mip_private.comparison_install_snapshot",
+            "mip_private.comparison_reviewed_members",
+            "mip_private.comparison_reviewed_surfaces"
+          ],
+          "removed": [],
+          "changed": [
+            "public.comparison_public"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.bind_comparison_member(uuid,uuid,text)",
+            "mip_private.bind_comparison_surface(uuid,uuid,text,uuid,uuid[],uuid[])",
+            "mip_private.comparison_member_is_visible(uuid,uuid)",
+            "mip_private.comparison_surface_is_visible(uuid,uuid)",
+            "public.read_reviewed_comparison_v1()"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      }
+    }
+  ],
+  "relations_to_inspect": [
+    "evidence_pipeline.article_captures",
+    "evidence_pipeline.candidate_input_relevance",
+    "evidence_pipeline.change_jobs",
+    "evidence_pipeline.evidence_changes",
+    "evidence_pipeline.evidence_changes_position_seq",
+    "evidence_pipeline.import_jobs",
+    "evidence_pipeline.import_receipts",
+    "evidence_pipeline.investigation_selective_intake_receipts",
+    "evidence_pipeline.investigation_selective_intake_receipts_ordinal_seq",
+    "evidence_pipeline.job_events",
+    "evidence_pipeline.job_events_id_seq",
+    "evidence_pipeline.record_versions",
+    "evidence_pipeline.selective_authorization_revocations",
+    "evidence_pipeline.selective_criteria_versions",
+    "evidence_pipeline.selective_discovery_receipts",
+    "evidence_pipeline.selective_discovery_receipts_ordinal_seq",
+    "evidence_pipeline.selective_execution_receipts",
+    "evidence_pipeline.selective_execution_receipts_ordinal_seq",
+    "evidence_pipeline.selective_fetch_permits",
+    "evidence_pipeline.selective_source_authorizations",
+    "mip_private.comparison_bound_members",
+    "mip_private.comparison_bound_surfaces",
+    "mip_private.comparison_install_snapshot",
+    "mip_private.comparison_reviewed_members",
+    "mip_private.comparison_reviewed_surfaces",
+    "mip_private.legacy_extraction_completions",
+    "mip_private.legacy_reviewed_completions",
+    "mip_private.market_revision_qualifications",
+    "mip_private.market_revision_revocations",
+    "mip_private.market_revision_sources",
+    "mip_private.public_market_revisions",
+    "mip_private.public_market_source_bindings",
+    "mip_private.public_reviewed_article_evidence",
+    "mip_private.public_reviewed_article_versions",
+    "mip_private.public_story_follow_events",
+    "mip_private.public_story_follows",
+    "mip_private.public_story_material_changes",
+    "mip_private.reviewed_public_article_evidence",
+    "mip_private.reviewed_public_article_versions",
+    "mip_private.reviewed_public_stories",
+    "mip_private.reviewed_public_story_members",
+    "mip_private.reviewed_public_story_versions",
+    "public.articles",
+    "public.comparison_public",
+    "public.mip_profiles",
+    "public.news_detail_public",
+    "public.news_reviewed_articles_public",
+    "public.nodes"
+  ],
+  "function_exact_signatures_to_inspect": [
+    "evidence_pipeline.assessment_causes(uuid)",
+    "evidence_pipeline.assessment_context(uuid,uuid[],bigint[])",
+    "evidence_pipeline.assessment_relevance_keys(uuid,uuid[])",
+    "evidence_pipeline.canonical_url(text)",
+    "evidence_pipeline.collect_investigation_snapshot(uuid[])",
+    "evidence_pipeline.declare_candidate_input_relevance(jsonb)",
+    "evidence_pipeline.diff_investigation_snapshots(jsonb,jsonb)",
+    "evidence_pipeline.diff_relevance_declarations(jsonb,jsonb)",
+    "evidence_pipeline.process_dependency_job(uuid,uuid,integer)",
+    "evidence_pipeline.selective_intake_payload(evidence_pipeline.investigation_selective_intake_receipts)",
+    "evidence_pipeline.selective_intake_subject(jsonb)",
+    "evidence_pipeline.selective_metadata_decision(jsonb,jsonb)",
+    "mip_private.append_market_revision(text,uuid,jsonb,text,text,jsonb)",
+    "mip_private.bind_comparison_member(uuid,uuid,text)",
+    "mip_private.bind_comparison_surface(uuid,uuid,text,uuid,uuid[],uuid[])",
+    "mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text)",
+    "mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text)",
+    "mip_private.comparison_member_is_visible(uuid,uuid)",
+    "mip_private.comparison_surface_is_visible(uuid,uuid)",
+    "mip_private.declare_public_story_material_change_v1(jsonb)",
+    "mip_private.legacy_extraction_apply_v1(text,jsonb)",
+    "mip_private.legacy_source_snapshot_v1(public.articles)",
+    "mip_private.market_identity_json(evidence_pipeline.record_versions,jsonb,text,text)",
+    "mip_private.market_instant_ns(text)",
+    "mip_private.market_path_is_supported(uuid,uuid,numeric,jsonb,jsonb)",
+    "mip_private.public_article_evidence_is_visible(uuid,uuid)",
+    "mip_private.public_article_version_is_visible(uuid)",
+    "mip_private.public_story_follow_payload(mip_private.public_story_follows)",
+    "mip_private.public_story_material_payload(mip_private.public_story_material_changes)",
+    "mip_private.public_story_version_is_visible(uuid)",
+    "mip_private.read_public_story_follow(uuid,uuid,integer)",
+    "mip_private.reject_public_story_material_mutation()",
+    "mip_private.require_reviewed_public_article_version(uuid,uuid,text)",
+    "mip_private.reviewed_public_article_payload(uuid)",
+    "mip_private.reviewed_public_story_payload(uuid)",
+    "mip_private.revoke_ineligible_story_follows()",
+    "mip_private.revoke_public_story_follow(uuid,uuid)",
+    "public.mip_assessments_v1(text,jsonb)",
+    "public.mip_investigation_selective_intake_v1(text,jsonb)",
+    "public.mip_legacy_extraction_v1(text,jsonb)",
+    "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)",
+    "public.mip_public_story_following_v1(text,jsonb)",
+    "public.mip_selective_execution_v1(text,jsonb)",
+    "public.read_markets_source_directory_v1(text)",
+    "public.read_reviewed_comparison_v1()",
+    "public.read_reviewed_public_article_v1(uuid,uuid)",
+    "public.read_reviewed_public_stories_for_article_v1(uuid)",
+    "public.read_reviewed_public_story_context_v1(uuid,uuid)",
+    "public.read_reviewed_public_story_directory_v1(uuid,integer)",
+    "public.read_reviewed_public_story_for_article_v1(uuid)",
+    "public.read_reviewed_public_story_v1(uuid,uuid)",
+    "public.search_reviewed_public_article_ids_v1(text,integer)"
+  ],
+  "same_name_overloads": "Read all schema+name overloads; do not mutate privileges by proname alone",
+  "limitations": [
+    "Disposable installed-stack deltas; production existence/owners/ACL/RLS require fresh SELECT-only target receipts",
+    "Native private foundation must be compared, not replayed",
+    "Each package receives its own reviewed post-dependency expected catalog and separately hashed transaction",
+    "Source-only DROP artifacts are not populated safe recovery; preserve and revoke where specified"
+  ],
+  "preserved_provisional_inventory": "docs/MIP_LAUNCH_GATE_OBJECT_PREFLIGHT_2026-10-02.json"
+}

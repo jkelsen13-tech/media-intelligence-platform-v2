@@ -116,12 +116,12 @@
     },
     {
       "path": "supabase/source-proposals/story_following_v1.sql",
-      "sha256": "a9711252fb6429637c05774ca1eb76722a46aecec5d5ab1019e5e68856aa7404",
+      "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
       "status": "not_applied"
     },
     {
       "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
-      "sha256": "edb2987cd091ec592249366dacfeb243295700ed2b4243663e5608dd035fa73f",
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471",
       "status": "not_applied"
     },
     {
