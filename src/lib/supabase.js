@@ -748,6 +748,11 @@ export async function loadArticleTimelineKey(articleId, { supabaseClient } = {})
   if (!client || !articleId) return null
   const prefix = String(articleId).slice(0, 8)
   try {
+    const { data: article, error: articleError } = await client
+      .from('news_reviewed_articles_public')
+      .select('id, arc_id').eq('admission', 'proposition')
+      .eq('id', articleId).maybeSingle()
+    if (articleError || !article) return null
     const { data: eventRows, error: eventError } = await client
       .from('nodes')
       .select('id, slug')
@@ -759,12 +764,7 @@ export async function loadArticleTimelineKey(articleId, { supabaseClient } = {})
     // If no graph event mirror exists but the article already belongs to an
     // arc, return the explicit article-record key instead of withholding the
     // Timeline destination. This creates no event assertion.
-    const { data: article, error: articleError } = await client
-      .from('news_reviewed_articles_public')
-      .select('id, arc_id').eq('admission', 'proposition')
-      .eq('id', articleId)
-      .maybeSingle()
-    if (articleError || !article?.arc_id) return null
+    if (!article.arc_id) return null
     return `article-${article.id}`
   } catch {
     return null
@@ -1240,6 +1240,14 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
 export async function loadArticleGraphLinks(articleId, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
+  const { data: article, error: articleError } = await client
+    .from('news_reviewed_articles_public').select('id')
+    .eq('admission', 'proposition').eq('id', articleId).maybeSingle()
+  if (articleError) {
+    if (isPostgrestPermissionDenied(articleError) || isPostgrestSchemaGap(articleError)) return []
+    throw articleError
+  }
+  if (!article) return []
   const { data: cits, error } = await client
     .from('citations')
     .select('cited_entity, cited_type, resolved_node_id')
