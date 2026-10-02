@@ -1,0 +1,135 @@
+{
+  "status": "passed",
+  "kind": "genuine local Library byte qualification; no acquisition or publication",
+  "library": {
+    "fileId": "libfile_1910aada38288191858b01715183bbc0",
+    "version": 0,
+    "parentReportedArchiveSha256": "d542e39070bd062e80240310b43db917ebcf9bc4f693e2bdc1898a1be6fa9e1e",
+    "archiveVerification": "parent verified ZIP CRC and 33 members; this verifier pins materialized manifest and its 28 listed files"
+  },
+  "manifest": {
+    "bytes": 19523,
+    "sha256": "18224394cd125137317142f1f699d40e2239ff032374a845e9e04cd594e068c2"
+  },
+  "verifiedListedMembers": 28,
+  "inputs": {
+    "cleveland-qualified-subset.json": {
+      "bytes": 53689,
+      "sha256": "4a32a5fc4283ca9c4f8f28f52ee2ca271e6ac0c0f19bbb5df686b32aea5f2129"
+    },
+    "cleveland-day-from-range.psv": {
+      "bytes": 77806,
+      "sha256": "6e402ab7504c6fa4646743c85461447c4f2a86a80cb2bb6b47005c39e441798b"
+    },
+    "GHCNh_USW00014820_2025.range.psv": {
+      "bytes": 131072,
+      "sha256": "b1da491eff9b53b7b184049224b2a8e733b9bf99671cac6ba3c7e667b1078ce1"
+    },
+    "ghcnh_DOCUMENTATION.pdf": {
+      "bytes": 423879,
+      "sha256": "df5694efdc2d498f006a343165bae65701d14809174b9bed660149bd4fe591b7"
+    }
+  },
+  "sources": {
+    "api": "https://www.ncei.noaa.gov/access/services/data/v1?dataset=global-historical-climatology-network-hourly&stations=USW00014820&startDate=2025-01-01T00%3A00%3A00Z&endDate=2025-01-01T23%3A59%3A59Z&dataTypes=STATION%2CStation_name%2CDATE%2CLATITUDE%2CLONGITUDE%2CELEVATION%2Ctemperature%2Ctemperature_Measurement_Code%2Ctemperature_Quality_Code%2Ctemperature_Report_Type%2Ctemperature_Source_Code%2Ctemperature_Source_Station_ID%2Cprecipitation%2Cprecipitation_Measurement_Code%2Cprecipitation_Quality_Code%2Cprecipitation_Report_Type%2Cprecipitation_Source_Code%2Cprecipitation_Source_Station_ID%2Cwind_speed%2Cwind_speed_Measurement_Code%2Cwind_speed_Quality_Code%2Cwind_speed_Report_Type%2Cwind_speed_Source_Code%2Cwind_speed_Source_Station_ID%2Cwind_direction%2Cwind_direction_Measurement_Code%2Cwind_direction_Quality_Code%2Cwind_direction_Report_Type%2Cwind_direction_Source_Code%2Cwind_direction_Source_Station_ID&format=json",
+    "nativeRange": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2025/psv/GHCNh_USW00014820_2025.psv",
+    "formatDocumentation": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf",
+    "sourcePolicyCatalog": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-source-list.pdf"
+  },
+  "format": {
+    "version": "1.1.0",
+    "dateBasis": "UTC",
+    "section": "III(A)",
+    "documentationUrl": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf",
+    "documentationSha256": "df5694efdc2d498f006a343165bae65701d14809174b9bed660149bd4fe591b7"
+  },
+  "policy": "ghcnh-343-qualification-v1",
+  "statistics": {
+    "rawRecords": 69,
+    "qualifiedRecordCandidates": 58,
+    "temperature": {
+      "available343": 43,
+      "qc7Rejected": 15,
+      "source223Excluded": 11
+    },
+    "windSpeed": {
+      "available343": 58,
+      "source223Excluded": 11
+    },
+    "windDirection": {
+      "available343": 58,
+      "source223Excluded": 11
+    },
+    "precipitation": {
+      "available343": 24,
+      "positive": 13,
+      "dryZero": 5,
+      "trace": 6,
+      "missing": 45
+    }
+  },
+  "apiNativeCoreFieldComparisons": 2070,
+  "apiNativeSemanticMismatches": 0,
+  "range": {
+    "completeRows": 125,
+    "discardedPartialRows": 1,
+    "fullAnnualHashKnown": false,
+    "exactDerivedDayHashMatched": true
+  },
+  "observedWindow": {
+    "start": "2025-01-01T00:00:00Z",
+    "end": "2025-01-01T23:51:00Z"
+  },
+  "traceTimes": [
+    "2025-01-01T17:51:00Z",
+    "2025-01-01T19:51:00Z",
+    "2025-01-01T20:51:00Z",
+    "2025-01-01T21:51:00Z",
+    "2025-01-01T22:51:00Z",
+    "2025-01-01T23:51:00Z"
+  ],
+  "station": {
+    "id": "USW00014820",
+    "name": "CLEVELAND",
+    "latitude": 41.4133,
+    "longitude": -81.86,
+    "positionValid": true,
+    "positionMeaning": "approximate station point; not a citywide or neighborhood measurement",
+    "horizontalDatum": "unverified",
+    "elevation": {
+      "value": 262.1,
+      "nativeValue": "262.1",
+      "unit": "m",
+      "datum": "unverified",
+      "meaning": "station metadata elevation; not ellipsoid or terrain height",
+      "missing": false
+    }
+  },
+  "timeReceipt": {
+    "exactRetrievedAt": null,
+    "serverResponseDate": "Fri, 02 Oct 2026 15:22:22 GMT",
+    "evidenceRecordedAt": "2026-10-02T15:31:03.325705+00:00"
+  },
+  "publicationAdmitted": false,
+  "currentWeatherAcquired": false,
+  "forecastAcquired": false,
+  "pending": [
+    "source-rights/admission review",
+    "actual subject station relevance and explicit distance/time limits or station-only scope",
+    "exact event-time and row-validity binding",
+    "current observation/forecast acquisition",
+    "genuine calm/variable/sentinel/accumulated-period branch examples"
+  ],
+  "qualifiedRuntimes": [
+    "v22.23.3",
+    "v24.19.0"
+  ],
+  "validation": {
+    "focusedChecksPerRuntime": 43,
+    "newSyntheticChecks": 21,
+    "failures": 0,
+    "skips": 0,
+    "cancellations": 0,
+    "sameByteLengthTamperingRejected": true
+  }
+}
