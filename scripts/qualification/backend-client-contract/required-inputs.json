@@ -1,0 +1,30 @@
+{
+  "contractVersion": "audit-route-client-source-1",
+  "mode": "synthetic-unbound",
+  "networkMode": "none",
+  "frozenPredecessor": "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+  "sourceHashes": {
+    "guardedOperation": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46",
+    "preSubmitDeadlines": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d"
+  },
+  "clientDeadlinesMs": {
+    "command": 250,
+    "operation": 7500,
+    "rollback": 250,
+    "verification": 250,
+    "cancelDrain": 250
+  },
+  "liveRequiredInputs": {
+    "trustedEvidenceAuthorityBinding": null,
+    "freshManagedIdentityAndAllGrantorBaseline": null,
+    "exactSourceValueAndUnrelatedRowsPrivateBaseline": null,
+    "preciseProviderSetAndMissingColumnUpdatePermission": null,
+    "caPathDigestReadability": null,
+    "certificateChainHostnameAndDistinctAuditorTls": null,
+    "dblinkDetailAndServerLogSecrecyEvidence": null,
+    "secureCaptureAndExecutorClientWindow": null,
+    "boundedRollbackOnlyOwnerAuthorization": null,
+    "independentPostRollbackVerifier": null,
+    "exactReviewedSourceClientAndManifestHashes": null
+  }
+}
