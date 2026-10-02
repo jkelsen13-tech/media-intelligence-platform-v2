@@ -1,0 +1,273 @@
+{
+  "status": "provisional source object inventory for SELECT-only collision checks; not installation authority",
+  "observed_date": "2026-10-02",
+  "new_roles": [],
+  "existing_roles_to_preserve": [
+    "postgres",
+    "anon",
+    "authenticated",
+    "service_role",
+    "qik_ingest_fn_owner",
+    "qik_ingest_runtime"
+  ],
+  "packages": {
+    "reviewed_public_versions": {
+      "source_path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "objects": [
+        {
+          "kind": "table",
+          "name": "mip_private.reviewed_public_article_versions"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.reviewed_public_article_evidence"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.reviewed_public_stories"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.reviewed_public_story_versions"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.reviewed_public_story_members"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.public_article_evidence_is_visible",
+          "regprocedure": "mip_private.public_article_evidence_is_visible(uuid,uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.public_article_version_is_visible",
+          "regprocedure": "mip_private.public_article_version_is_visible(uuid)"
+        },
+        {
+          "kind": "view",
+          "name": "mip_private.public_reviewed_article_versions"
+        },
+        {
+          "kind": "view",
+          "name": "mip_private.public_reviewed_article_evidence"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.bind_reviewed_public_article_version",
+          "regprocedure": "mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.require_reviewed_public_article_version",
+          "regprocedure": "mip_private.require_reviewed_public_article_version(uuid,uuid,text)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.public_story_version_is_visible",
+          "regprocedure": "mip_private.public_story_version_is_visible(uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.bind_reviewed_public_story_version",
+          "regprocedure": "mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.reviewed_public_article_payload",
+          "regprocedure": "mip_private.reviewed_public_article_payload(uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.reviewed_public_story_payload",
+          "regprocedure": "mip_private.reviewed_public_story_payload(uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_article_v1",
+          "regprocedure": "public.read_reviewed_public_article_v1(uuid,uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_story_v1",
+          "regprocedure": "public.read_reviewed_public_story_v1(uuid,uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_story_for_article_v1",
+          "regprocedure": "public.read_reviewed_public_story_for_article_v1(uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_stories_for_article_v1",
+          "regprocedure": "public.read_reviewed_public_stories_for_article_v1(uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_story_directory_v1",
+          "regprocedure": "public.read_reviewed_public_story_directory_v1(uuid,integer)"
+        },
+        {
+          "kind": "view",
+          "name": "public.news_reviewed_articles_public"
+        },
+        {
+          "kind": "view",
+          "name": "public.news_detail_public"
+        }
+      ]
+    },
+    "public_story_following": {
+      "source_path": "supabase/source-proposals/story_following_v1.sql",
+      "objects": [
+        {
+          "kind": "table",
+          "name": "mip_private.public_story_material_changes"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.public_story_follows"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.public_story_follow_events"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.public_story_material_payload",
+          "regprocedure": "mip_private.public_story_material_payload(mip_private.public_story_material_changes)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.declare_public_story_material_change_v1",
+          "regprocedure": "mip_private.declare_public_story_material_change_v1(jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.public_story_follow_payload",
+          "regprocedure": "mip_private.public_story_follow_payload(mip_private.public_story_follows)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.revoke_public_story_follow",
+          "regprocedure": "mip_private.revoke_public_story_follow(uuid,uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.read_public_story_follow",
+          "regprocedure": "mip_private.read_public_story_follow(uuid,uuid,integer)"
+        },
+        {
+          "kind": "function",
+          "name": "public.mip_public_story_following_v1",
+          "regprocedure": "public.mip_public_story_following_v1(text,jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_reviewed_public_story_context_v1",
+          "regprocedure": "public.read_reviewed_public_story_context_v1(uuid,uuid)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.reject_public_story_material_mutation",
+          "regprocedure": "mip_private.reject_public_story_material_mutation()"
+        }
+      ]
+    },
+    "selective_execution": {
+      "source_path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "objects": [
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_criteria_versions"
+        },
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_source_authorizations"
+        },
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_authorization_revocations"
+        },
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_discovery_receipts"
+        },
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_fetch_permits"
+        },
+        {
+          "kind": "table",
+          "name": "evidence_pipeline.selective_execution_receipts"
+        },
+        {
+          "kind": "function",
+          "name": "evidence_pipeline.selective_metadata_decision",
+          "regprocedure": "evidence_pipeline.selective_metadata_decision(jsonb,jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "public.mip_selective_execution_v1",
+          "regprocedure": "public.mip_selective_execution_v1(text,jsonb)"
+        }
+      ]
+    },
+    "markets_directory": {
+      "source_path": "supabase/source-proposals/markets-directory-v2.sql",
+      "objects": [
+        {
+          "kind": "table",
+          "name": "mip_private.market_revision_qualifications"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.market_revision_revocations"
+        },
+        {
+          "kind": "table",
+          "name": "mip_private.market_revision_sources"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.append_market_revision",
+          "regprocedure": "mip_private.append_market_revision(text,uuid,jsonb,text,text,jsonb)"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.market_instant_ns",
+          "regprocedure": "mip_private.market_instant_ns(text)"
+        },
+        {
+          "kind": "view",
+          "name": "mip_private.public_market_source_bindings"
+        },
+        {
+          "kind": "view",
+          "name": "mip_private.public_market_revisions"
+        },
+        {
+          "kind": "function",
+          "name": "mip_private.market_identity_json",
+          "regprocedure": "mip_private.market_identity_json(evidence_pipeline.record_versions,jsonb,text,text)"
+        },
+        {
+          "kind": "function",
+          "name": "public.read_markets_source_directory_v1",
+          "regprocedure": "public.read_markets_source_directory_v1(text)"
+        }
+      ]
+    }
+  },
+  "cleveland_empirical_sample": {
+    "coordinate_lon_lat": [
+      -81.7,
+      41.4
+    ],
+    "paths": [
+      "verifier/worldViewProjectionFixture.mjs",
+      "verifier/worldViewRealismHarness.jsx"
+    ],
+    "meaning": "synthetic regression framing point, not an accepted acquisition boundary or new evidence anchor"
+  }
+}

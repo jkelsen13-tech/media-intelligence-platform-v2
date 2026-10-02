@@ -1675,6 +1675,7 @@ export default function App({
             onCloseStory={closePublicStory}
             readerActorId={auth.user?.id ?? null}
             sessionReady={auth.loading !== true}
+            followingBackend={mipBackend.investigations.storyFollowing}
             onOpenTimeline={openEventInTimeline}
             // Pair 5 degrades honestly when the destination tab is gated off.
             onOpenComparison={sourceComparisonBeta ? openComparisonEvent : undefined}
