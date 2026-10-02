@@ -9,7 +9,7 @@ import {
 } from '../data/demoData.js'
 import { canonicalizeTimelineEvents, remapTimelineEdges } from './timelineDedup.js'
 import { isSafeSupabaseBrowserKey, resolveV2SupabaseUrl } from './supabaseOrigin.js'
-import { normalizeReviewedPublicVersion, reviewedVersionToNewsArticle } from './reviewedPublicVersion.js'
+import { normalizeReviewedPublicVersion, reviewedVersionToNewsArticle, publicVersionUuid } from './reviewedPublicVersion.js'
 import { createReviewedPublicVersionBackend } from './reviewedPublicVersionBackend.js'
 
 // Sandbox safety: V2 only connects to the explicit environment target. When
@@ -783,16 +783,49 @@ export function isDirectNewsArticleId(value) {
 }
 
 /**
- * Comparison → News: resolve an Open-in-News target to an eligible public
- * articles.id. The comparison card keeps its opaque article_key. The already
- * public member URL is the join, matching loadArticleComparisonEvents in
- * reverse. Pending-review and withheld rows stay hidden. Private tables are
- * not queried.
+ * Comparison → News verifies explicit source references through the canonical
+ * reviewed-version owner. Legacy URL targets join the narrow reviewed article
+ * projection; opaque presentation keys remain separate from native IDs.
+ * Unavailable explicit references never select a newer decision.
  */
+function exactArticleSourceReference(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+    || !publicVersionUuid(value.articleId) || !publicVersionUuid(value.publicVersionId)
+    || !publicVersionUuid(value.captureId) || !publicVersionUuid(value.articleClaimId)
+    || !/^[0-9a-f]{64}$/.test(value.captureHash ?? '') || !/^[0-9a-f]{64}$/.test(value.excerptHash ?? '')
+    || !['title','summary','body_text'].includes(value.sourceField)
+    || !Number.isSafeInteger(value.spanStart) || value.spanStart < 0
+    || !Number.isSafeInteger(value.spanEnd) || value.spanEnd <= value.spanStart) return null
+  return Object.freeze({ articleId: value.articleId, publicVersionId: value.publicVersionId,
+    captureId: value.captureId, captureHash: value.captureHash, articleClaimId: value.articleClaimId,
+    sourceField: value.sourceField, spanStart: value.spanStart, spanEnd: value.spanEnd, excerptHash: value.excerptHash })
+}
+function articleVersionMatchesSource(version, source) {
+  return version?.article_id === source.articleId && version.public_version_id === source.publicVersionId
+    && version.capture_id === source.captureId && version.capture_hash === source.captureHash
+    && version.admission_kind === 'reviewed_proposition' && version.evidence.some(e =>
+      e.article_claim_id === source.articleClaimId && e.capture_id === source.captureId && e.capture_hash === source.captureHash
+      && e.source_field === source.sourceField && e.span_start === source.spanStart && e.span_end === source.spanEnd
+      && e.excerpt_hash === source.excerptHash)
+}
 export async function resolveEligibleArticleForNews(target, { supabaseClient } = {}) {
   if (target == null) return null
   if (typeof target === 'string') {
     return isDirectNewsArticleId(target) ? target : null
+  }
+
+  // An explicit comparison binding is authoritative only after the canonical
+  // owner read verifies every supplied reference. Invalid bindings never take
+  // the legacy URL/current-head path, even when that URL is publicly readable.
+  if (typeof target === 'object' && Object.hasOwn(target, 'sourceVersion')) {
+    const source = exactArticleSourceReference(target.sourceVersion)
+    const url = target.url ?? target.article_url ?? null, namedId = target.articleId ?? target.id ?? null
+    if (!source || (namedId !== null && namedId !== source.articleId)) return null
+    const client = supabaseClient === undefined ? supabase : supabaseClient
+    const response = await createReviewedPublicVersionBackend(client).loadArticleVersion(source.articleId, { publicVersionId: source.publicVersionId })
+    if (response.status !== 'available' || !articleVersionMatchesSource(response.version, source)
+      || (url !== null && url !== response.version.source_url)) return null
+    return Object.freeze({ articleId: source.articleId, publicVersionId: source.publicVersionId, sourceVersion: source })
   }
 
   const url = target.url ?? target.article_url ?? null
@@ -1242,8 +1275,20 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
 }
 
 // Full detail for one article: claims + provenance citations.
-export async function loadArticleDetail(id, { supabaseClient } = {}) {
+export async function loadArticleDetail(id, { supabaseClient, publicVersionId = null, sourceVersion } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
+  if (publicVersionId !== null || sourceVersion !== undefined) {
+    const source = sourceVersion === undefined ? null : exactArticleSourceReference(sourceVersion)
+    if (!publicVersionUuid(id) || !publicVersionUuid(publicVersionId)
+      || (sourceVersion !== undefined && (!source || source.articleId !== id || source.publicVersionId !== publicVersionId))) {
+      return { articlesUnavailable: 'reviewed_version_invalid' }
+    }
+    const response = await createReviewedPublicVersionBackend(client).loadArticleVersion(id, { publicVersionId })
+    if (response.status !== 'available' || (source && !articleVersionMatchesSource(response.version, source))) {
+      return { articlesUnavailable: 'reviewed_version_unavailable' }
+    }
+    return reviewedVersionToNewsArticle(response.version)
+  }
   if (!client) return null
   const { data, error } = await client.from('news_reviewed_articles_public')
     .select('id, public_version_id, public_version').eq('id', id).single()

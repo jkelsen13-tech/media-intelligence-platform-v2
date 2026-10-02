@@ -163,6 +163,17 @@ function ArticleSourceReport({ article, compact = false }) {
   </section>
 }
 
+function SelectedSourceVersionNotice({ article }) {
+  const version = normalizeReviewedPublicVersion(article?.public_version)
+  if (!version) return null
+  return <section className="notice" aria-label="Selected reviewed source version">
+    <strong>Reviewed source version {version.sequence}</strong>
+    <p>{version.is_current_source_version ? 'This is the selected current reviewed decision.' : 'This earlier reviewed decision remains authorized. A newer reviewed decision is available.'}</p>
+    {version.pending_revision && <p>A newer retained source capture is pending review. The selected reviewed version stays displayed.</p>}
+    <p>Analytical links for this exact source version are unavailable.</p>
+  </section>
+}
+
 function OriginalSourceLocator({ article }) {
   const href = safeExternalHttpUrl(article.url)
   if (href) {
@@ -229,7 +240,7 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusStoryId, publicVersionId = null, onOpenStory, onCloseStory, readerActorId = null, sessionReady = false, followingBackend, clockNow, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusArticleVersionId = null, focusArticleSourceVersion = null, focusStoryId, publicVersionId = null, onOpenStory, onCloseStory, readerActorId = null, sessionReady = false, followingBackend, clockNow, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
   const isDrawer = variant === 'drawer'
   const [readerMode, setReaderMode] = useState('home')
   const [homeResponse, setHomeResponse] = useState(null)
@@ -248,7 +259,15 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const [error, setError] = useState(null)
   const [articlesUnavailable, setArticlesUnavailable] = useState(null)
   const [expanded, setExpanded] = useState(null) // article id
-  const [detail, setDetail] = useState(null)
+  const [detailValue, setDetail] = useState(null)
+  const [detailBinding, setDetailBinding] = useState(null)
+  const focusReadKey = [focusArticleId,focusArticleVersionId,focusArticleSourceVersion?.articleId,
+    focusArticleSourceVersion?.captureId,focusArticleSourceVersion?.captureHash,focusArticleSourceVersion?.articleClaimId,
+    focusArticleSourceVersion?.sourceField,focusArticleSourceVersion?.spanStart,focusArticleSourceVersion?.spanEnd,
+    focusArticleSourceVersion?.excerptHash].map(value => String(value ?? '')).join(':')
+  const detail = detailBinding?.backend === backend && detailBinding.actorId === readerActorId
+    && detailBinding.sessionReady === sessionReady && detailBinding.focusReadKey === focusReadKey ? detailValue : null
+  const exactFocusedSource = focusArticleVersionId !== null || focusArticleSourceVersion !== null
   const [articleStory, setArticleStory] = useState(null)
   const [storyResponse, setStoryResponse] = useState(null)
   const [storyLoading, setStoryLoading] = useState(false)
@@ -499,10 +518,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       })
   }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds, feedReadEpoch])
 
-  const expandArticle = (id) => {
+  const expandArticle = (id, versionOptions) => {
     const seq = ++detailRequestRef.current
     const isCurrent = () => seq === detailRequestRef.current
+    const exact = versionOptions !== undefined
     setExpanded(id)
+    setDetailBinding({ backend, actorId: readerActorId, sessionReady, focusReadKey, exact })
     setDetail(null)
     setArticleStory(null)
     setGraphLinks([])
@@ -512,7 +533,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
-    if (onOpenStory && typeof backend.loadArticleStory === 'function') {
+    if (exact && !sessionReady) return
+    if (!exact && onOpenStory && typeof backend.loadArticleStory === 'function') {
       backend.loadArticleStory(id).then(result => {
         if (!isCurrent()) return
         const story = result?.status === 'available' ? result.version : null
@@ -540,7 +562,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           .catch(() => {})
       }
     }
-    backend.loadArticleDetail(id)
+    backend.loadArticleDetail(id, versionOptions)
       .then((d) => {
         if (!isCurrent()) return
         if (d?.articlesUnavailable) {
@@ -553,8 +575,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           setDetailMissing(true)
           return
         }
+        if (exact && (d.id !== id || d.public_version_id !== versionOptions.publicVersionId)) {
+          setDetail(null); setDetailUnavailable('reviewed_version_invalid'); return
+        }
         setDetail(d)
-        if (!articleSourceReport(d)) loadAnalyticalLinks()
+        if (!exact && !articleSourceReport(d)) loadAnalyticalLinks()
       })
       .catch((err) => { if (isCurrent()) setDetailError(err.message) })
 
@@ -565,9 +590,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
     if (!focusArticleId || focusStoryId) return
     setQ('')
     setDiscovery(emptyDiscoveryFilters())
-    expandArticle(focusArticleId)
+    expandArticle(focusArticleId, exactFocusedSource ? { publicVersionId: focusArticleVersionId,
+      ...(focusArticleSourceVersion !== null ? { sourceVersion: focusArticleSourceVersion } : {}) } : undefined)
+    return () => { detailRequestRef.current += 1 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusArticleId, focusStoryId])
+  }, [focusArticleId, focusArticleVersionId, focusArticleSourceVersion, focusStoryId, backend, readerActorId, sessionReady])
 
   // Investigation Context restore after a tab switch (not a JUMP).
   // Article subjects expand only when the id is already on IC. Event / arc
@@ -579,7 +606,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
     if (!id) return
     expandArticle(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusArticleId, focusStoryId, isDrawer, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id])
+  }, [focusArticleId, focusStoryId, isDrawer, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id, backend, readerActorId, sessionReady])
 
   const loadMore = () => {
     // Tier 5: captured under the CURRENT token — if the user starts a new
@@ -644,13 +671,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   // Step 4 event grouping: multi-article events collapse into one group
   // card; singles and eventless articles stay flat, feed order preserved.
   const feedEntries = useMemo(
-    () => groupArticlesByEvent(articles, eventMap),
-    [articles, eventMap],
+    () => groupArticlesByEvent(exactFocusedSource ? articles.filter(a => a.id !== focusArticleId) : articles, eventMap),
+    [articles, eventMap, exactFocusedSource, focusArticleId],
   )
 
   // If a focused article isn't in the current page, still render its detail.
   const focusedMissing =
-    expanded && !articles.some((a) => a.id === expanded) ? expanded : null
+    expanded && ((exactFocusedSource && expanded === focusArticleId) || !articles.some((a) => a.id === expanded)) ? expanded : null
 
   // Doc 05 pairs 3 & 5: cross-window chips. Each renders only when its join
   // resolved — never a broken link, never a fabricated destination.
@@ -765,7 +792,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
   const articleUnavailableNotice = (reason) =>
     reason ? (
       <div className="notice">
-        public.articles is unavailable ({reason === 'permission_denied' ? 'permission denied' : reason}). 0 articles; no rows are invented.
+        {reason === 'reviewed_version_unavailable' || (exactFocusedSource && reason === 'reviewed_version_invalid')
+          ? 'The selected reviewed source version is unavailable. No newer source decision is substituted.'
+          : <>public.articles is unavailable ({reason === 'permission_denied' ? 'permission denied' : reason}). 0 articles; no rows are invented.</>}
       </div>
     ) : null
 
@@ -781,6 +810,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
       {!detail && !detailError && !detailUnavailable && !detailMissing && <div className="news-detail-loading">Loading detail…</div>}
       {detail && (
         <>
+          {detailBinding?.exact && <SelectedSourceVersionNotice article={detail} />}
           {!isReportDetail && graphLinks.length > 0 && (
             <div className="news-graph-links">
               <span className="ap-label">Knowledge graph connections</span>
@@ -1183,7 +1213,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
         )}
       </ol>
 
-      {focusedMissing && (
+      {focusedMissing && (exactFocusedSource && expanded === focusArticleId ? (
+        <section className="news-focused-reviewed-version" aria-label="Selected reviewed source">
+          {detail && <h3 className="news-focus-title">{detail.title}</h3>}
+          {expandedDetail}
+        </section>
+      ) : (
         <div className="news-detail">
           {detailUnavailable && articleUnavailableNotice(detailUnavailable)}
           {detailMissing && (
@@ -1221,7 +1256,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
             </>
           )}
         </div>
-      )}
+      ))}
 
       {articles.length < total && !loading && (
         <button className="news-load-more" onClick={loadMore}>

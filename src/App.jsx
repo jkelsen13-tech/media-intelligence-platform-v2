@@ -373,6 +373,11 @@ export default function App({
   // the target in its own view.
   const [focusArc, setFocusArc] = useState(null)
   const [focusArticle, setFocusArticle] = useState(null)
+  const [focusArticleVersion, setFocusArticleVersion] = useState(null)
+  const [focusArticleSource, setFocusArticleSource] = useState(null)
+  const articleReaderAccessRef = useRef(null)
+  articleReaderAccessRef.current = `${auth.user?.id ?? ''}:${auth.loading === true}`
+  useEffect(() => { navigationIntentRef.current += 1 }, [auth.user?.id, auth.loading])
   // Doc 05: timeline focus key (8-hex group suffix) and comparison event id.
   // Package 1 item 2: focusTimelineArc carries the ORIGINATING arc of a
   // News → Timeline jump (return-to-origin; see lib/navigationContract.js).
@@ -455,6 +460,8 @@ export default function App({
     setSelectionFallbacks([])
     setFocusArc(null)
     setFocusArticle(null)
+    setFocusArticleVersion(null)
+    setFocusArticleSource(null)
     setFocusTimelineEvent(null)
     setFocusTimelineArc(null)
     setFocusComparisonEvent(null)
@@ -903,20 +910,23 @@ export default function App({
 
   const openArticleInNews = useCallback((target) => {
     const intent = ++navigationIntentRef.current
-    const applyResolvedArticle = (articleId) => {
-      if (!articleId || intent !== navigationIntentRef.current) return
+    const access = articleReaderAccessRef.current
+    const applyResolvedArticle = (resolved) => {
+      const articleId = typeof resolved === 'string' ? resolved : resolved?.articleId
+      if (!articleId || intent !== navigationIntentRef.current || access !== articleReaderAccessRef.current) return
       resetJumpContext()
       clearInvalidNewSubjectSubSelections()
       setFocusArticle(articleId)
+      setFocusArticleVersion(typeof resolved === 'object' ? resolved.publicVersionId ?? null : null)
+      setFocusArticleSource(typeof resolved === 'object' ? resolved.sourceVersion ?? null : null)
       setStoryReaderRoute({ storyId: null, publicVersionId: null })
       setView('news')
       setInvestigationContext((ic) =>
         commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
       )
     }
-    // Direct News / Timeline / Arc ids pass through. Comparison cards pass
-    // an opaque article_key plus the public member URL; resolve that through
-    // an eligible articles row before loadArticleDetail runs.
+    // Comparison references are verified by the canonical exact-version RPC.
+    // Direct IDs and older URL targets retain their existing navigation seam.
     void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle).catch(() => {})
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
@@ -926,6 +936,8 @@ export default function App({
     navigationIntentRef.current += 1
     setStoryReaderRoute(parseStoryReaderRoute(hash))
     setFocusArticle(null)
+    setFocusArticleVersion(null)
+    setFocusArticleSource(null)
     setExploreOpen(false)
     setView('news')
     setInvestigationContext(ic => setInvestigationActiveView(ic, 'news'))
@@ -1216,6 +1228,8 @@ export default function App({
       if (story.storyId) {
         setStoryReaderRoute(story)
         setFocusArticle(null)
+        setFocusArticleVersion(null)
+        setFocusArticleSource(null)
         setView('news')
         setInvestigationContext(ic => setInvestigationActiveView(ic, 'news'))
         return
@@ -1669,6 +1683,8 @@ export default function App({
             onOpenArc={openArcInView}
             onOpenNode={openNodeInGraph}
             focusArticleId={focusArticle}
+            focusArticleVersionId={focusArticleVersion}
+            focusArticleSourceVersion={focusArticleSource}
             focusStoryId={storyReaderRoute.storyId}
             publicVersionId={storyReaderRoute.publicVersionId}
             onOpenStory={openPublicStory}
