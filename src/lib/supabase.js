@@ -1191,7 +1191,7 @@ export async function loadArticles({ q, outlet, outlets, status, feeds, topicTer
   let query = client
     .from('articles')
     .select(
-      'id, title, url, summary, published_at, outlet, monoculture, unattributed, arc_id, author_id',
+      'id, title, url, summary, published_at, fetched_at, outlet, monoculture, unattributed, arc_id, author_id',
       { count: 'exact' },
     )
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -1227,7 +1227,7 @@ export async function loadArticleDetail(id, { supabaseClient } = {}) {
   const [artRes, citRes, newsDetailRes] = await Promise.all([
     client
       .from('articles')
-      .select('id, title, url, summary, published_at, outlet, monoculture, unattributed, author_id')
+      .select('id, title, url, summary, published_at, fetched_at, outlet, monoculture, unattributed, author_id')
       .eq('id', id)
       .eq('reader_state', 'eligible').eq('source_status', 'active')
       .single(),

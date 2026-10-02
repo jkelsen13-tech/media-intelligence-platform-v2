@@ -191,12 +191,15 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
       assert.ok(new Date(firstCapture.captured_at).getTime() >= new Date(article.fetched_at).getTime())
       await forReaders(async backend => {
         const detail = await backend.news.loadArticleDetail(firstFinish.article_id)
+        const page = await backend.news.loadArticles()
+        assert.equal(new Date(detail.fetched_at).getTime(), new Date(article.fetched_at).getTime())
+        assert.equal(page.articles[0].fetched_at, detail.fetched_at)
         assert.equal(new Date(detail.published_at).getTime(), new Date(SOURCE.published_at).getTime())
         assert.equal(detail.capture_id, undefined)
         assert.equal(detail.breaking, undefined)
         assert.equal(detail.material_change_at, undefined)
       })
-      return { source_publication_time: article.published_at, first_observed_time: article.fetched_at, capture_retained_time: firstCapture.captured_at, inferred_event_time: null, inferred_breaking_status: null, open_reader_contract_fields: ['capture/revision identity', 'per-article observed/fetched clock', 'projection version', 'material-change/update envelope'] }
+      return { source_publication_time: article.published_at, article_fetched_time: article.fetched_at, capture_retained_time: firstCapture.captured_at, inferred_event_time: null, inferred_breaking_status: null, open_reader_contract_fields: ['capture/revision identity', 'projection version', 'material-change/update envelope'] }
     })
     await check('actual reviewed projection admits exact claim while pending surfaces remain private', async () => {
       const second = { ...SOURCE, url: 'https://second.example.invalid/harbor-report', outlet: 'Synthetic Secondary Publisher' }
@@ -228,7 +231,13 @@ export async function runCanonicalIntakeReaderJourney({ receiptPath } = {}) {
       const captures = (await admin('select * from evidence_pipeline.article_captures where article_id=$1 order by captured_at,id', [firstFinish.article_id])).rows
       assert.equal(captures.length, 2); assert.equal(captures[0].content_hash, firstCapture.content_hash); assert.equal(captures[0].payload.summary, SOURCE.summary)
       assert.equal(captures[1].review_state, 'pending'); assert.equal(captures[1].payload.summary, corrected.summary); assert.notEqual(captures[1].content_hash, firstCapture.content_hash)
-      await forReaders(async backend => { const detail = await backend.news.loadArticleDetail(firstFinish.article_id); assert.equal(detail.summary, originalPublicDetail.summary); assert.equal(detail.title, SOURCE.title) })
+      await forReaders(async backend => {
+        const detail = await backend.news.loadArticleDetail(firstFinish.article_id)
+        const page = await backend.news.loadArticles()
+        assert.equal(detail.summary, originalPublicDetail.summary); assert.equal(detail.title, SOURCE.title)
+        assert.equal(detail.fetched_at, originalPublicDetail.fetched_at)
+        assert.equal(page.articles.find(article => article.id === firstFinish.article_id).fetched_at, originalPublicDetail.fetched_at)
+      })
       return { article_id: revision.article_id, previous_version: { capture_id: firstCapture.id, content_hash: firstCapture.content_hash, captured_at: firstCapture.captured_at }, new_version: { capture_id: revision.capture_id, content_hash: captures[1].content_hash, captured_at: captures[1].captured_at }, new_state: 'pending', outcome: revision.outcome, reader_remains_previous_approved_version: true, reader_update_envelope_available: false }
     })
     await check('withdrawal removes article, nested source claims and comparison visibility without deleting captures', async () => {

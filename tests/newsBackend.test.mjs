@@ -44,9 +44,13 @@ test('feed and detail use the bound browser session, public bylines and reviewed
   const page = await f.backend.loadArticles({ limit: 1, offset: 0, supabaseClient: { from() { throw Error('override') } } })
   assert.equal(page.total, 1); assert.equal(page.articles[0].author_name, 'Recorded byline')
   assert.equal(page.articles[0].author_id, undefined)
+  assert.equal(page.articles[0].fetched_at, article.fetched_at)
   f.setToken('news-session-two'); const before = f.calls.length
   const detail = await f.backend.loadArticleDetail(id)
   assert.equal(detail.id, id); assert.equal(detail.claims[0].text, 'Reviewed claim')
+  assert.equal(detail.fetched_at, article.fetched_at)
+  assert.notEqual(detail.fetched_at, detail.published_at)
+  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => c.params.get('select').split(',').includes('fetched_at')))
   assert.equal(detail.claims[0].evidence_excerpt, 'Exact retained words')
   assert.equal(detail.citations[0].cited_entity, 'Filed record'); assert.equal(detail.evidenceRecords[0].evidence_url, 'https://example.invalid/evidence')
   assert.ok(f.calls.slice(before).every(c => c.request.headers.get('authorization') === 'Bearer news-session-two'))

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import { safeExternalHttpUrl } from '../lib/externalUrls.js'
+import { inspectionInstantMilliseconds } from '../lib/inspectionTime.js'
 import {
   PROVENANCE_LABELS,
   groupArticlesByEvent,
@@ -113,6 +114,16 @@ function strengthBadge(strength, citedType, citedEntity) {
   )
 }
 
+function ArticleFetchedTime({ article }) {
+  const fetchedAt = article?.fetched_at
+  const milliseconds = inspectionInstantMilliseconds(fetchedAt)
+  return (
+    <p className="news-source-record-copy">
+      Article fetched time: {milliseconds !== null ? <time dateTime={fetchedAt}>{fmtDate(new Date(milliseconds).toISOString())}</time> : 'unavailable'}
+    </p>
+  )
+}
+
 function PublisherSourceRecord({ article, region }) {
   if (!article) return null
   const outlet = article.outlet ?? 'Publisher record'
@@ -120,6 +131,7 @@ function PublisherSourceRecord({ article, region }) {
     <section className="news-source-record" aria-label="Publisher source record">
       <span className="ap-label">Publisher source record</span>
       <SourceAttributionLine outlet={outlet} region={region ?? null} badge={null} />
+      <ArticleFetchedTime article={article} />
       <p className="news-source-record-copy">
         {article.url
           ? 'An original publisher URL is recorded for this article.'
@@ -956,6 +968,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
           {detail && (
             <>
               <h3 className="news-focus-title">{detail.title}</h3>
+              <ArticleFetchedTime article={detail} />
               {crossWindowChips}
               <SkyBadge verification={sky} />
               {graphLinks.length > 0 && (

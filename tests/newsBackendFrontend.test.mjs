@@ -98,3 +98,24 @@ test('mounted News grouping identifies loaded-page counts without claiming persi
     assert.match(group.children.join(''), /2 outlets on this page/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('article fetched clock preserves the recorded instant and rejects unknown or ambiguous times', async () => {
+  for (const fetchedAt of ['2026-08-03T14:15:30.123456+02:00', '2026-08-03 12:15:30.123456+00', null, '2026-08-03', '2026-08-03T12:15:30', '2026-02-30T12:15:30Z', 'invalid']) {
+    const valid = typeof fetchedAt === 'string' && fetchedAt.startsWith('2026-08-03') && /(?:\+02:00|\+00)$/.test(fetchedAt)
+    for (const focused of [false, true]) {
+      const article = { ...articles[0], fetched_at: fetchedAt, claims: [], citations: [], evidenceRecords: [] }
+      const backend = { ...createNewsBackend(null), loadArticles: async () => ({ articles: focused ? [] : [article], total: focused ? 0 : 1 }), loadArticleDetail: async () => article }
+      let renderer
+      await act(async () => { renderer = TestRenderer.create(React.createElement(NewsView, { ...props(backend), focusArticleId: focused ? article.id : undefined })) })
+      try {
+        if (!focused) await act(async () => clickArticle(renderer, 'A'))
+        assert.match(text(renderer), /Article fetched time:/)
+        const times = renderer.root.findAllByType('time')
+        assert.equal(times.length, valid ? 1 : 0)
+        if (valid) assert.equal(times[0].props.dateTime, fetchedAt)
+        else assert.match(text(renderer), /unavailable/)
+        assert.doesNotMatch(text(renderer), /Invalid Date|Latest capture|Current revision/)
+      } finally { await act(async () => renderer.unmount()) }
+    }
+  }
+})
