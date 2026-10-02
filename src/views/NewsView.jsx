@@ -124,6 +124,23 @@ function ArticleFetchedTime({ article }) {
   )
 }
 
+function OriginalSourceLocator({ article }) {
+  const href = safeExternalHttpUrl(article.url)
+  if (href) {
+    return (
+      <a className="news-read-link" href={href} target="_blank" rel="noreferrer">
+        Read original at {article.outlet ?? 'source'} →
+      </a>
+    )
+  }
+  if (!article.url) return null
+  return (
+    <p className="news-source-record-copy">
+      Recorded source locator (not a link): <span>{article.url}</span>
+    </p>
+  )
+}
+
 function PublisherSourceRecord({ article, region }) {
   if (!article) return null
   const outlet = article.outlet ?? 'Publisher record'
@@ -695,11 +712,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
               ))}
             </ul>
           )}
-          {safeExternalHttpUrl(detail.url) && (
-            <a className="news-read-link" href={safeExternalHttpUrl(detail.url)} target="_blank" rel="noreferrer">
-              Read original at {detail.outlet ?? 'source'} →
-            </a>
-          )}
+          <OriginalSourceLocator article={detail} />
         </>
       )}
     </div>
@@ -988,11 +1001,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, onOpen
                   </div>
                 </div>
               )}
-              {safeExternalHttpUrl(detail.url) && (
-                <a className="news-read-link" href={safeExternalHttpUrl(detail.url)} target="_blank" rel="noreferrer">
-                  Read original at {detail.outlet ?? 'source'} →
-                </a>
-              )}
+              <OriginalSourceLocator article={detail} />
             </>
           )}
         </div>
