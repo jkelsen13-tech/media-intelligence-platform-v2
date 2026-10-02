@@ -1,0 +1,599 @@
+{
+  "contract": "mip-native-responsive-successor-source-v1",
+  "date": "2026-10-02",
+  "status": "CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT",
+  "live_operations": 0,
+  "qualified_ancestor": {
+    "head": "19700658c54de69e2540b2e97bda743158f9d0dc",
+    "tree": "8bab9ff302015a90edfc659c7268dca141fd20cc"
+  },
+  "previous_manifests": [
+    {
+      "path": "verifier/investigation-api-review-corrections-2026-10-02.json",
+      "sha256": "453c9c5f7808532fc55995a389cb4499cb63ae90200f5f804bf50bab42e50c25"
+    },
+    {
+      "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_SOURCE_2026-10-02.json",
+      "sha256": "f5629441a6ab7a8b24e50cf63944cb0906812d894e05010d5dcc7eaac5bb102c"
+    }
+  ],
+  "sources": [
+    {
+      "path": "docs/MIP_LEGACY_OWNER_TRANSFER_CORRECTION_2026-10-02.md",
+      "sha256": "fe5c7c568e498670ada40346b0e995d73c030407daee32b31a31a0977611d605"
+    },
+    {
+      "path": "docs/MIP_WHOLE_INSTALL_APPROVAL_2026-10-02.md",
+      "sha256": "bc6e78e6a708b6cd2783e5679ee7ecd7bb81e8797b2b1ec7baf6769f4ca4c7c8"
+    },
+    {
+      "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_2026-10-02.md",
+      "sha256": "8a70bd908466a68120022fe02c858403c8193fc3ef1fb5aad23c7a569f038faa"
+    },
+    {
+      "path": "docs/story-material-history-corrections-2026-10-02.md",
+      "sha256": "b221c960bce29f56378866396bbbd213c6e370151b3a90a723e3b70a244b0221"
+    },
+    {
+      "path": "docs/world-view-native-rgb-attachment-2026-10-02.md",
+      "sha256": "773512560ebef67e90e8d0853ddc17078692f8a11a251b96e19b56c745a0c4e2"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
+    },
+    {
+      "path": "scripts/comparisonReviewedVersionPackage.mjs",
+      "sha256": "da280f84c74c718fe8fa2928a24100bb60605400617e90febb7f161b607667da"
+    },
+    {
+      "path": "scripts/compileLaunchInstallationStage.mjs",
+      "sha256": "311b85d6aae1aed81249290e0f1cc77ab2a98bb7257a4602e66d02d0db9d5523"
+    },
+    {
+      "path": "scripts/launchInstallSequenceCatalog.sql",
+      "sha256": "e8e0a026981faddc82ab053dcb21d1fc56a70374b3d58519119b2e7fc33ed5cc"
+    },
+    {
+      "path": "scripts/launchInstallationSequence.mjs",
+      "sha256": "82eaa4910201b05e6ea7d4b1b130eee96bf348ae66104a555ff3a3f47dc3bba4"
+    },
+    {
+      "path": "scripts/launchReviewCorrectionManifest.mjs",
+      "sha256": "2e2a8bbf1763516040d53df4b785e79c422f6b4a700f0bde0f3cc96aaeff838e"
+    },
+    {
+      "path": "scripts/legacyAtomicCompletionPackage.mjs",
+      "sha256": "c6652e41325a163575e2ad52b0170ebeec673705bac032f4f3e9b6c8b97d68ce"
+    },
+    {
+      "path": "scripts/marketsDirectoryPackage.mjs",
+      "sha256": "1de8f15bff7224e06f63ce2264fc94b5e2e956fe01e2a61821847370b98e5e61"
+    },
+    {
+      "path": "scripts/mipConsolidationRestore.mjs",
+      "sha256": "289397633829f6890a65d8a9ed1471c100d04d4aaea3178678e2ac7ce4e4e9c7"
+    },
+    {
+      "path": "scripts/nativeResponsiveSuccessorManifest.mjs",
+      "sha256": "a514e570d7b437cd31b7a7b229ca3057001d48567ee8835aad48ae782272a02b"
+    },
+    {
+      "path": "scripts/reviewedPublicVersionPackage.mjs",
+      "sha256": "0ab7d66295cc8b8381c754194355adb00281cb4032d2361d9d50dfecd63661d9"
+    },
+    {
+      "path": "scripts/selectiveExecutionPackage.mjs",
+      "sha256": "b69d39973336e9aec05ed4a095b1d9acfe0aaa7dac958b30ea03f01d72fb93e0"
+    },
+    {
+      "path": "scripts/selectiveIntakeDeclaration.mjs",
+      "sha256": "3f49a5b80d9c7a4fe66d7ef1f315f90f78d6872286486cca6ad553565250488c"
+    },
+    {
+      "path": "scripts/selectiveIntakeExecution.mjs",
+      "sha256": "5467a54113e6a2106c1eb7c303cb7e57a2b06269dade0ceee4fa1a8e71348404"
+    },
+    {
+      "path": "scripts/storyFollowingPackage.mjs",
+      "sha256": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00"
+    },
+    {
+      "path": "scripts/verifyLaunchInstallationSequence.mjs",
+      "sha256": "ca2c9078a9df498599e7570e898083feed2bc41e6bed0649174c9aa68e3c4427"
+    },
+    {
+      "path": "src/App.jsx",
+      "sha256": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00"
+    },
+    {
+      "path": "src/components/StoryFollowingControls.jsx",
+      "sha256": "f80f91ca0bdf4cc2b9b7c4ef1216a4f6b5eefc7c3e3ac54d57aee20cccd8b527"
+    },
+    {
+      "path": "src/components/StoryFollowingPanel.jsx",
+      "sha256": "4b5f6ffcb82df87ab42fb275f949a4462cd3f111aea9fb62b02455887ce14ac5"
+    },
+    {
+      "path": "src/components/WorldViewExploreShell.jsx",
+      "sha256": "827612ec9c95e98e8893bcbc1cfe778312c3d0423be0dede6ef3d74fb19409df"
+    },
+    {
+      "path": "src/lib/investigationBackend.js",
+      "sha256": "fae09604e2640e71f69024dcd29719311214fae6cd3ece3c5752f65e20668c18"
+    },
+    {
+      "path": "src/lib/marketsBackend.js",
+      "sha256": "8657c70fe19157d4bf0f1f527f03d1c85c722dc8f07fa237b7bfee129e299728"
+    },
+    {
+      "path": "src/lib/newsBackend.js",
+      "sha256": "583acf2311efa73e970ce5214e7cf8fc862f6e313ea407861f36eae031d67efe"
+    },
+    {
+      "path": "src/lib/newsStatePolicy.js",
+      "sha256": "042eb3e98917454a9465ad5ba702109bf1bdc19a5bd883ad5008c955466f3aa5"
+    },
+    {
+      "path": "src/lib/newsStoryState.js",
+      "sha256": "1d1357f226cef21a2dfda6b991b6d25497a7b4a0f66b4438ff5535ca4a5105ed"
+    },
+    {
+      "path": "src/lib/publicDataBackend.js",
+      "sha256": "6c32122ac183c2460e7d6276705eb047739d71fc992b5f2f83fc7df81406cd9f"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersionBackend.js",
+      "sha256": "edfe9abe08728af16a41c6b207fc90ba3fb75f4b8f8910767182cfb6ac78b937"
+    },
+    {
+      "path": "src/lib/sourceComparisonReadPath.js",
+      "sha256": "5a4b8bb220f707516060eea6e0c5fb8de04d377612a22621e3c8666524bd5e07"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "src/lib/supabase.js",
+      "sha256": "505b4976029f250a8b3a0beb91b8d53121a230baf30030ddda9ad432274fa955"
+    },
+    {
+      "path": "src/lib/worldViewBillboardLayout.js",
+      "sha256": "f320cedd800c18ba85833f91378fedc79fdebacdcfba3b595be255abca2cf281"
+    },
+    {
+      "path": "src/lib/worldViewBillboardPresentation.js",
+      "sha256": "32a7e91b9f7408c7181f85e12f079188bb87b2ae73b387c6a5af07f0e5356e3b"
+    },
+    {
+      "path": "src/lib/worldViewBoundedRgbImagery.js",
+      "sha256": "a8551ab46c2e113a855537eacc0d85f92aa7a795a729ff333227fff4084aeed5"
+    },
+    {
+      "path": "src/lib/worldViewCesiumEllipsoidRendererAdapter.js",
+      "sha256": "c6432c5e5711ddd3f38615e734cd80b0ce576d165069329de97d7a0bbe8aa56e"
+    },
+    {
+      "path": "src/lib/worldViewRealismController.js",
+      "sha256": "170e8d5f73f80d05dda8a5824b3f4aed90da678f4f465a0a370f0414203b0eb9"
+    },
+    {
+      "path": "src/lib/worldViewRendererAdapter.js",
+      "sha256": "a47862c7988e7a1833512c57d1ae78c8ec4336c2939c616172ad644032dfef1a"
+    },
+    {
+      "path": "src/lib/worldViewSelectedCardViewport.js",
+      "sha256": "54149d89c1604547848321ccd22436d2cf4b716d25cd4553cc75355f3c74382d"
+    },
+    {
+      "path": "src/lib/worldViewSourceStatus.js",
+      "sha256": "e21466146ef6a5631f41f0e081ed4a77ccb560cce936b728fa6da5b447c723ac"
+    },
+    {
+      "path": "src/styles/world-view-billboard-prototype.css",
+      "sha256": "3cc911484ab10e49110459e698cce83e56381887176a25ca407391c6aaf9b5ff"
+    },
+    {
+      "path": "src/styles/world-view-explore.css",
+      "sha256": "872909aefbbb903ea0251163d3e1948521ebd6d50312338cd92036924a88c9bc"
+    },
+    {
+      "path": "src/views/NewsStoryReader.jsx",
+      "sha256": "5702ffa893db68f0168b98fe1c4a0a1b2618eda837e30ca41cbb2a23a4b3916a"
+    },
+    {
+      "path": "src/views/NewsView.jsx",
+      "sha256": "55b1e953b3edeb99c7b74f89bd38294b24fc249f580f070772082b2c56a50ab4"
+    },
+    {
+      "path": "src/views/WorldMapCanvas.jsx",
+      "sha256": "7076ac698d51d9ec06be0293352abcba709106dfc20ed9774f3af6e6caf9f79a"
+    },
+    {
+      "path": "src/views/WorldView.jsx",
+      "sha256": "373831db0c422c2923c9a2c83bf385daa0a659c872dbd7f98e62e23be59d7f27"
+    },
+    {
+      "path": "supabase/functions/backfill-legacy/index.ts",
+      "sha256": "0241a6bbb91f5df4782378ba085ea97058f080dbd453b12b1bd24f9015204c4f"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "c847594714aac59b053f38b613de7ed8eb788c2b66f0e59878c04998afa080da"
+    },
+    {
+      "path": "supabase/functions/investigation-api/index.ts",
+      "sha256": "2a7b879c9547ef1f44254b6b697fd24ec4f160de992e5ea97ce5a3fed7f70e51"
+    },
+    {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "sha256": "e4c5a47f57788b1ff73daf05d62f060eb1adeebdcba391f4384f72c0e70bdedd"
+    },
+    {
+      "path": "supabase/migrations/20260905151626_mip_consolidation_delta.sql",
+      "sha256": "e1b8b974dacae9a268c075876d2762e97a2d8f24ec9000400d08fefbb8be2fdd"
+    },
+    {
+      "path": "supabase/migrations/20260905160001_event_scoped_public_article_counts.sql",
+      "sha256": "a6c91a2b2c9b8443c574c18283c5f5a0acaaae67c11e06a3ee7e4a8792b5f760"
+    },
+    {
+      "path": "supabase/migrations/20260905172453_mip_public_surface_transfer.sql",
+      "sha256": "07f27e7e1b412c5dd316c0108b1720981b3ecf2dcfabf5dd4e2a0bafba0c15ae"
+    },
+    {
+      "path": "supabase/migrations/20260905172517_mip_public_surface_stub_reconcile.sql",
+      "sha256": "ffc55079ceb21cadfd24cb4385c1f7bfe844ab377eb8fc3efecdc28be64213a3"
+    },
+    {
+      "path": "supabase/migrations/20260905172527_mip_public_surface_predicates.sql",
+      "sha256": "f56d51aa657f953a40c416d3b2823d1ef7c52190b31155f67c41e5eb424af342"
+    },
+    {
+      "path": "supabase/migrations/20260905172543_mip_public_surface_tables.sql",
+      "sha256": "4f8731393e8a44712a1fa245698a9839f2e06879d787e34b0aa1ca85417afc3b"
+    },
+    {
+      "path": "supabase/migrations/20260905172558_mip_public_surface_topics_rls.sql",
+      "sha256": "770386a3bb750cc52b520e5908c4bb21d51e99e56ae986bcfc504f657aee8b8d"
+    },
+    {
+      "path": "supabase/migrations/20260905172611_mip_public_surface_views.sql",
+      "sha256": "7454529f7fd2e0e5c03d0f528703b954f310438bdee0fdf4a4cea60eab583283"
+    },
+    {
+      "path": "supabase/migrations/20260905180142_mip_public_surface_publication_gates.sql",
+      "sha256": "b5ffe8ca92d72df2322d94d78b65fce254810bef4b5e4c00f7e644aa582efa50"
+    },
+    {
+      "path": "supabase/migrations/20260905181254_mip_public_surface_authenticated_review_revoke.sql",
+      "sha256": "f69fc9a8bd2fde1c4651f5f34ed17bd8e0bcb9269992049aad92a728b9cf32d3"
+    },
+    {
+      "path": "supabase/migrations/20260905182355_mip_nested_claim_publication_gates.sql",
+      "sha256": "7badb32b29c01f4688801086ba750b3ceccc89504b83169a089d23d5b9b214d5"
+    },
+    {
+      "path": "supabase/migrations/20260905203600_mip_legacy_graph_private_staging.sql",
+      "sha256": "ca851c6c4f7f94fecb1675b8d23bf8a9af18dc8768d2696b6821e70f54dcb945"
+    },
+    {
+      "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "sha256": "a08557df7c5e3d37ce87d37ba4146688c21431e1a0825c25915a77b8ce6892d9"
+    },
+    {
+      "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "sha256": "ca8af3095c18b5a7e33bef2b959f54a3aadeaa4274ea0ad28185d3b40941e450"
+    },
+    {
+      "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "sha256": "48c000a8fe8b8a777a2e0d9c01281de8a88e928ac269d0c08476acd098589931"
+    },
+    {
+      "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+      "sha256": "2ccf5dbf106ecef8fb589f4c9d824056dde130bc1b5ffc3a3ab6d0b154986647"
+    },
+    {
+      "path": "supabase/migrations/20260909153133_comparison_explanation_event_binding.sql",
+      "sha256": "6bc4147f7c67a8673bd6b9a3256f721678fa8ca5d456770202f24a3169f87c0d"
+    },
+    {
+      "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.catalog.sql",
+      "sha256": "5c18519bcef5945939068a8990e68b2b13ac9f16bf4196807e1708b629d8fa7a"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.rollback.sql",
+      "sha256": "327d0f853b31639b8d3307279eff13e0063ecce86c971a8f0acc41def8abf301"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+      "sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7"
+    },
+    {
+      "path": "supabase/source-proposals/investigationSelectiveIntakeHandler.mjs",
+      "sha256": "ef83522c4a8bbe2f373c0ffa68d8ee47bbe5a30b80d2b0fd5eff91785ecce51e"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sha256": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/OWNER-TRANSFER.md",
+      "sha256": "eea24b23286abdfdd8ecd7d6f4ee9b6f033bb49f7aa1c455628e342fcc38c6f8"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/catalog.sql",
+      "sha256": "84b0b12dd8bba715a8d04599f700dfd1ccd11bec9a810aedf894841dcfd5e112"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/install.psql",
+      "sha256": "5c8d2e1a3023c3eaf2fe6cc319e594878bdd3507da744f225ce926327caa93c1"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/installed-catalog.sql",
+      "sha256": "d83c582b58487dd0855f854acba49b0cbd47dfc0eb9376a8151e7376d2aaefb9"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.psql",
+      "sha256": "e50bbacca8e2350d4a809e02e7bf1108a42abaef6e50b61720099363d5f9761d"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+      "sha256": "1a7d2f604d98620461ffab3549abca3f7a4f8d8772316b04f519b2af4b09fd90"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/run-preflight.sql",
+      "sha256": "2b0e2b5f5081ec77930f7ab25d8cd61143b9fa9b0233e2a98a16c11f8c86cab1"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2-rollback.sql",
+      "sha256": "56753ce12cf31d6c5768748d6ff54370f018b0b7d48c6ac46232ddbc5f596550"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2.sql",
+      "sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.catalog.sql",
+      "sha256": "45468179dd9c16fdd49d41b7ae09455584296a972f9f33760647a5276ec55ec0"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.installed-catalog.sql",
+      "sha256": "caa50bacf71d2b6f0b3a9bf55f47bd40611de8b909c3416f8a2003176789b614"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.manifest.json",
+      "sha256": "a9194cc1189f123b9e645625d6c652dcbec3b63b3c0e0552642d7ca5aa042ca5"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.rollback.sql",
+      "sha256": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/catalog.sql",
+      "sha256": "5dcd5b56f0d56a87c419d363731263fbe3cbf553fc46752b98f1c7842eec8828"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/criteria-registration.json",
+      "sha256": "069e2c64fa33179fd1de26fcdef83bac6a2cd7a8d3343e47c2b01ae768372806"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/install.psql",
+      "sha256": "d6abe51178a32ac7f8bf01c6a9ea1aeb99055eb17aeda2aef6cee111aa37c2fc"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/installed-catalog.sql",
+      "sha256": "fb15c6cb72bd4ec5c57bb654ba0a33bd1de08870f38b87c3fec38c31749cccc4"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/preflight-install.sql",
+      "sha256": "8767c9b598258cb285317f5d45af5d25ea5effaa4d85057fd8581860c4987da7"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/preflight.sql",
+      "sha256": "010a350d86490b93ba9d0396e2fa3b736b948bc9dd9b78bf1d550cb767cd618f"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/register.psql",
+      "sha256": "be3919b6b8e79c95e5ca129eb4082db2feca0eba298c3f5e7bcb3455ced9a35c"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+      "sha256": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+      "sha256": "9c361f339a22ca974cd3ef4e05bcde9931beb36c39dc3f6d9e9890b0e1e06f97"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/run-preflight.psql",
+      "sha256": "c87770e6e083774a0691158a54e89700c75dec385904ff57fa72d50b065f2b18"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/source-authorization.json",
+      "sha256": "7829e4736bbcf5d985f9862423400f508a6c03e2be66959435ff1e5b44e24e2d"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+    },
+    {
+      "path": "supabase/source-proposals/storyFollowingHandler.mjs",
+      "sha256": "0219abcdbf4ff71152282c432627bd9745f6807de39c74ddc878b3870b47b8b0"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+      "sha256": "3ad363d53155444b07d674068057cd3dfbcedddd802799b5a6b2a92eebcd8115"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+      "sha256": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/README-2026-10-02.md",
+      "sha256": "5920ea0ccd1e51dd8a7b77bae47ba45297fc24f13e38b55053882a673b36cb13"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/legacy-atomic-completion-v1.provenance.json",
+      "sha256": "2f0cac5b9acac2c499d0788a6fabdef60916b58bd55a15dd0be5e9d2ba2ffb06"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/legacy-atomic-completion-v1.sql",
+      "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/story_following_v1.provenance.json",
+      "sha256": "176db3f1f50b36fe8bbb8bcd70685a272720675d97dfb5749f11d28f61ef98de"
+    },
+    {
+      "path": "tests/fixtures/frozenLaunchGate/story_following_v1.sql",
+      "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e"
+    },
+    {
+      "path": "tests/fixtures/storyArticleVersionJourney.mjs",
+      "sha256": "d5e3d23f9a9af7ed7cdc314963f0342c906266859d3e8f05df57d95fb8786642"
+    },
+    {
+      "path": "tests/helpers/worldViewNativeRgbFixture.mjs",
+      "sha256": "8803c45d334f1c359b36e7f547dc130eef5e357372dfa14266c28c8280bf1519"
+    },
+    {
+      "path": "tests/helpers/worldViewNativeRgbMountedSessionFixture.mjs",
+      "sha256": "112e102de6c44042bf8e40bca0ec8a6e40e47883383988ad069c9cb2b31da614"
+    },
+    {
+      "path": "tests/investigationApi.test.mjs",
+      "sha256": "cd6bd4a8c40d17563180e354b2842f4fe972ab6c573f88b7c003e894062b9141"
+    },
+    {
+      "path": "tests/launchInstallationSequence.test.mjs",
+      "sha256": "102edeb2ab172b5af52d2f6284bdca3330a8a34325016423339379c3bc27e98e"
+    },
+    {
+      "path": "tests/launchInstallationSequenceFixture.mjs",
+      "sha256": "9549705bb22b0f5d3daa0a1f23f24640288db51f59e5fbf38b596267547e0b17"
+    },
+    {
+      "path": "tests/legacyOwnerTransfer.test.mjs",
+      "sha256": "45c9c3eb21db81e810e60e949cdd86d2b4ebe738c529f96f1ebb15a117f1f228"
+    },
+    {
+      "path": "tests/legacyOwnerTransferFixture.mjs",
+      "sha256": "3a71deaf9b9970562f34ab42531f3f9e84938b1dead8f42262b5e3489afe61a0"
+    },
+    {
+      "path": "tests/storyArticleExactVersionBrowser.mjs",
+      "sha256": "e265200c53d33e12431f36de5ec2351f469cff23805a5fa674ac86fa6a6e9889"
+    },
+    {
+      "path": "tests/storyArticleExactVersionJourney.test.mjs",
+      "sha256": "4fc64686fb781e2d49145c8491dd077e21d9debcc520706aaacba92338f0d60e"
+    },
+    {
+      "path": "tests/storyMaterialHistory.test.mjs",
+      "sha256": "46676bb873d400e0474f89ed48ef0adfec97c5e884eec7c679a8a9b3d4476208"
+    },
+    {
+      "path": "tests/storyMaterialHistoryFixture.mjs",
+      "sha256": "06f8c43c765c1cc669808aa07dd4168c468875085707151db3f91fe4bad3f01f"
+    },
+    {
+      "path": "tests/storyMaterialHistoryPackage.test.mjs",
+      "sha256": "fda20ae6b9ea955b34219bc294d488afa644b60ec56f8945bb411e5a31d1e2ed"
+    },
+    {
+      "path": "tests/worldMapCanvasRealismLifecycle.test.mjs",
+      "sha256": "1c780394ccd0c18f03021fa410ee4319296980c56719fa702b182d3807bf02ac"
+    },
+    {
+      "path": "tests/worldView500Responsive.browser.mjs",
+      "sha256": "f3679a27ee6378e072ba13df6d19c1b2a649f42273e7adcbb40c57551c48462c"
+    },
+    {
+      "path": "tests/worldView500SourceAccess.test.mjs",
+      "sha256": "8329ab8ab9abbe2da4779afbd3a6b954fcfb0d1bb39963b1589a0f2f82172066"
+    },
+    {
+      "path": "tests/worldViewBoundedRgbImagery.test.mjs",
+      "sha256": "1723bda24b38bfae0654278b78f32b79c029ec8da831e1ea9e3011582374e946"
+    },
+    {
+      "path": "tests/worldViewNativeRgbAttachment.test.mjs",
+      "sha256": "ef62838e325dbc003727acab45d8287da2a3d2e2df5ef2c1945807f1fe026850"
+    },
+    {
+      "path": "tests/worldViewNativeRgbMountedSession.test.mjs",
+      "sha256": "f630e8bf6249e17ae9af6c33e761ccd2a48c7a1e9c4a6672c65dd390077b16c1"
+    },
+    {
+      "path": "tests/worldViewNativeRgbSession.test.mjs",
+      "sha256": "cf12f180c85e4ff2d57d7d2c8d04241da0ff8301ae7e9087db11cc0e21066813"
+    },
+    {
+      "path": "tests/worldViewSelectedCardAllocation.test.mjs",
+      "sha256": "8485aad3d02545ef35a51f8decdffa02836b6397ba8e64627cc86885745a5a85"
+    },
+    {
+      "path": "tests/worldViewSelectedCardScroll.browser.mjs",
+      "sha256": "bf19dedfd026f5e36f04bb9d57768fa8063614338c725dcabbfc650e5606b501"
+    },
+    {
+      "path": "verifier/investigation-api-native-responsive-2026-10-02.json",
+      "sha256": "5aaa25efd1d77374427d59cb96d13d1969e559d4c7d15c4c6bbd07f6a8ad503d"
+    },
+    {
+      "path": "verifier/investigation-api-review-corrections-2026-10-02.json",
+      "sha256": "453c9c5f7808532fc55995a389cb4499cb63ae90200f5f804bf50bab42e50c25"
+    },
+    {
+      "path": "verifier/qualifyWorldViewNativeRgbPixels.py",
+      "sha256": "273e792c1fe6dc7ebf8d10fe2d992747513d54998c3666786913d54e4e3fc68c"
+    },
+    {
+      "path": "verifier/runWorldView500ResponsiveSyntheticBrowser.mjs",
+      "sha256": "7ff0a24011babca7dfef3aeda26d6fec79f188ac4a789921e00fe2becd711e35"
+    },
+    {
+      "path": "verifier/runWorldViewNativeRgbAppBrowser.mjs",
+      "sha256": "76de96b1e2b26d9b6ff3a5fe22a6fc6d68bcce05ba53ee56cc5f99e623fd1e6d"
+    },
+    {
+      "path": "verifier/runWorldViewSelectedCardScrollSyntheticBrowser.mjs",
+      "sha256": "451d9b60578265949a11c79789b48502931535d9b5c150f74de13f62a839902e"
+    }
+  ],
+  "unchanged_installation_qualification": [
+    {
+      "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_NODE24_2026-10-02.json",
+      "sha256": "4b8aa6d0ba9fa8a86254a56a972de0fc1918dc1c717605ffbbbe8a0e82e5f48e"
+    },
+    {
+      "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_NODE22_2026-10-02.json",
+      "sha256": "791341659907cf8d42b22f7d2fb665491d26df6d12426fbca9d7ea795daa9572"
+    }
+  ],
+  "inherited_installation_scope": "SQL proposals are unchanged. Historical disposable SQL receipts remain bound to their original source and are not new target or successor qualification.",
+  "changed_scope": "Retained App native RGB attachment, account/context/native lifetime fencing, local resource accounting, 480–589 landscape reader/control/source scroll allocation.",
+  "authority": "Transport packet grants no permission. Actual-App received RGB proof uses simulated test admission; genuine source remains UNAPPROVED. No protected installation, source activation, provider billing, merge or deployment."
+}

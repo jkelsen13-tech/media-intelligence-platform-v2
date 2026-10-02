@@ -29,7 +29,7 @@ function fixture(overrides = {}) {
 
 test('current launch source candidate manifest matches the exact gateway and preserved domain source files', async () => {
   const root = new URL('../', import.meta.url)
-  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-review-corrections-2026-10-02.json', root), 'utf8'))
+  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-native-responsive-2026-10-02.json', root), 'utf8'))
   assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 16)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
@@ -57,6 +57,11 @@ test('current launch source candidate manifest matches the exact gateway and pre
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
   for (const entry of manifest.previous_manifests) {
+    assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
+  }
+  const source = JSON.parse(await readFile(new URL('docs/MIP_NATIVE_RESPONSIVE_SOURCE_2026-10-02.json',root),'utf8'))
+  assert.equal(source.status,'CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT')
+  for (const entry of [...source.sources,...source.previous_manifests,...source.unchanged_installation_qualification]) {
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
 })
