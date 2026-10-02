@@ -73,6 +73,17 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  await page.waitForTimeout(150)
  assert.deepEqual(await context(),bound,'same-endpoint App relationship inspection retains bound recorded instant and range')
  await page.getByRole('button',{name:'Explore World View',exact:true}).click()
+ const exploreGeometry=await page.locator('.wv-explore-map').evaluate(surface=>{
+  const viewport=surface.querySelector('.wv-map-gl') ?? surface.querySelector('.wv-map')
+  const host=surface.querySelector('.wv-map-host') ?? surface.querySelector('.wv-map-svg')
+  const native=surface.querySelector('.cesium-widget canvas')
+  const chooser=surface.querySelector('.wv-spatial-groups')
+  const rect=node=>{const b=node?.getBoundingClientRect();return b?{width:b.width,height:b.height,top:b.top,bottom:b.bottom}:null}
+  return {surface:rect(surface),viewport:rect(viewport),host:rect(host),native:rect(native),chooser:rect(chooser)}
+ })
+ assert.ok(exploreGeometry.host.height>=80,'opened group chooser must not collapse Explore map viewport')
+ if(scenario!=='atlas')assert.ok(exploreGeometry.native.height>=80,'native Explore canvas remains usable before hidden/resume')
+ assert.ok(exploreGeometry.chooser.bottom<=exploreGeometry.surface.bottom-40,'group chooser retains native attribution floor')
  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
  assert.deepEqual(await context(),bound,'Explore entry/exit preserves canonical/time context')
  const beforeRemount=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
@@ -87,7 +98,7 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  // Existing read-only HEAD count queries are mocked; other non-GETs are aborted.
  const screenshot=`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
  await page.screenshot({path:screenshot,fullPage:true})
- receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,journeys:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore entry/exit','Graph→native Map remount context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
+ receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
  await page.close()
 }
 await writeFile(`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))

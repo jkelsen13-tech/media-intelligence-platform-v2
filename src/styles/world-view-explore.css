@@ -126,3 +126,22 @@
   /* Page occupies the toolbar's free space instead of covering Options. */
   .wv-explore-dock .wv-explore-page-strip { top: 4px; bottom: auto; left: 200px; right: auto; width: auto; min-width: 44px; writing-mode: horizontal-tb; }
 }
+
+/* Group inspection must not consume the native map's flex height in Explore.
+ * Retain the original details/summary/member controls in a bounded scroll
+ * surface; native attribution keeps its bottom44px. Ordinary page flow stays
+ * unchanged, including explicit inspect-then-choose keyboard activation. */
+.wv-explore-open .wv-explore-map .wv-map-panel { position: relative; }
+.wv-explore-open .wv-explore-map .wv-map-panel > .wv-spatial-groups {
+  position: absolute;
+  z-index: 6;
+  left: 10px;
+  top: 8px;
+  width: min(320px, calc(100% - 56px));
+  max-height: calc(100% - 52px);
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
