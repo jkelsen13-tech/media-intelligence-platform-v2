@@ -1,0 +1,107 @@
+TAP version 13
+# Subtest: reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+ok 1 - reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+  ---
+  duration_ms: 4493.65064
+  type: 'test'
+  ...
+# Subtest: withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+ok 2 - withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+  ---
+  duration_ms: 2935.072337
+  type: 'test'
+  ...
+# Subtest: canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+ok 3 - canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+  ---
+  duration_ms: 2776.661176
+  type: 'test'
+  ...
+# Subtest: source-report correction remains attributed instead of admitting a proposition
+ok 4 - source-report correction remains attributed instead of admitting a proposition
+  ---
+  duration_ms: 1910.184262
+  type: 'test'
+  ...
+# Subtest: a follow already revoked before successor admission never resumes through a correction declaration
+ok 5 - a follow already revoked before successor admission never resumes through a correction declaration
+  ---
+  duration_ms: 1983.311321
+  type: 'test'
+  ...
+# Subtest: public Story Following runs actual canonical SQL and keeps personal state private
+    # Subtest: explicit subscribe binds stable reviewed story/subject and exact displayed version
+    ok 1 - explicit subscribe binds stable reviewed story/subject and exact displayed version
+      ---
+      duration_ms: 41.05408
+      type: 'test'
+      ...
+    # Subtest: version advance without material ownership creates no unread material claim
+    ok 2 - version advance without material ownership creates no unread material claim
+      ---
+      duration_ms: 33.267099
+      type: 'test'
+      ...
+    # Subtest: publication owner declares exact admitted evidence difference; service cannot
+    ok 3 - publication owner declares exact admitted evidence difference; service cannot
+      ---
+      duration_ms: 46.038416
+      type: 'test'
+      ...
+    # Subtest: acknowledgement uses displayed older version and leaves later material change unread
+    ok 4 - acknowledgement uses displayed older version and leaves later material change unread
+      ---
+      duration_ms: 31.188957
+      type: 'test'
+      ...
+    # Subtest: CAS, own cursor, immutable event and explicit unsubscribe govern private state
+    ok 5 - CAS, own cursor, immutable event and explicit unsubscribe govern private state
+      ---
+      duration_ms: 39.269934
+      type: 'test'
+      ...
+    # Subtest: latest withdrawn source revokes durable follow; no old-head fallback or auto-resume
+    ok 6 - latest withdrawn source revokes durable follow; no old-head fallback or auto-resume
+      ---
+      duration_ms: 34.858705
+      type: 'test'
+      ...
+    # Subtest: explicit service revocation persists and no receipt replay alters another account
+    ok 7 - explicit service revocation persists and no receipt replay alters another account
+      ---
+      duration_ms: 12.968985
+      type: 'test'
+      ...
+    1..7
+ok 6 - public Story Following runs actual canonical SQL and keeps personal state private
+  ---
+  duration_ms: 2931.337609
+  type: 'test'
+  ...
+# Subtest: exact unapplied Following pack restores dependency catalogue and preserves canonical rows
+ok 7 - exact unapplied Following pack restores dependency catalogue and preserves canonical rows
+  ---
+  duration_ms: 2784.475065
+  type: 'test'
+  ...
+# Subtest: rollback refuses populated history and leaves all preferences intact
+ok 8 - rollback refuses populated history and leaves all preferences intact
+  ---
+  duration_ms: 1798.587327
+  type: 'test'
+  ...
+# Subtest: same-name unrelated overloads retain their owners, ACLs and definitions through install and rollback
+ok 9 - same-name unrelated overloads retain their owners, ACLs and definitions through install and rollback
+  ---
+  duration_ms: 1694.246677
+  type: 'test'
+  ...
+1..9
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23795.116288

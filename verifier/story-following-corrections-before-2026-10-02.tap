@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+not ok 1 - reviewed correction of a superseded claim remains an unread admitted successor without predecessor payload
+  ---
+  duration_ms: 3662.691072
+  type: 'test'
+  location: '/workspace/mip-launch-following-corrections/tests/storyFollowingCorrections.test.mjs:80:1'
+  failureType: 'testCodeFailure'
+  error: 'material declaration requires exact admitted predecessor'
+  code: '22023'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+# Subtest: withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+not ok 2 - withdrawn predecessor source cannot suppress admitted correction or expose predecessor fields
+  ---
+  duration_ms: 1942.107196
+  type: 'test'
+  location: '/workspace/mip-launch-following-corrections/tests/storyFollowingCorrections.test.mjs:106:1'
+  failureType: 'testCodeFailure'
+  error: 'material declaration requires exact admitted predecessor'
+  code: '22023'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+# Subtest: canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+ok 3 - canonical lineage, successor permission, publication owner and account boundaries refuse forged correction
+  ---
+  duration_ms: 2066.988035
+  type: 'test'
+  ...
+# Subtest: source-report correction remains attributed instead of admitting a proposition
+not ok 4 - source-report correction remains attributed instead of admitting a proposition
+  ---
+  duration_ms: 2371.053126
+  type: 'test'
+  location: '/workspace/mip-launch-following-corrections/tests/storyFollowingCorrections.test.mjs:156:1'
+  failureType: 'testCodeFailure'
+  error: 'material declaration requires exact admitted predecessor'
+  code: '22023'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///workspace/mip-launch-gates/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 1
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10380.289022

@@ -1,0 +1,129 @@
+{
+  "qualification": "mip-story-correction-lineage-2026-10-02",
+  "status": "source_qualified_not_installed_or_deployed",
+  "base_revision": "c08e629adb171985a8ceba23d347a3d242d0b202",
+  "reproduction": {
+    "base_sql_sha256": "a9711252fb6429637c05774ca1eb76722a46aecec5d5ab1019e5e68856aa7404",
+    "runtime": "Node 24.19.0",
+    "cases": 4,
+    "failed_correction_cases": 3,
+    "passed_negative_case": 1,
+    "failure": "material declaration requires exact admitted predecessor",
+    "receipt": {
+      "path": "verifier/story-following-corrections-before-2026-10-02.tap",
+      "sha256": "52cac9ff99cbc2e342d7a04b0dd08eb8f980a7dbc2365d9a357b41e9014adee8"
+    }
+  },
+  "change": "Historically admitted immutable same-Story predecessor identity establishes exact adjacent lineage. Current public permission remains mandatory for successor payloads and the latest head. No predecessor nested payload reader is used for declaration, unread or public material-history admission.",
+  "acl_decision": "Use existing private reviewed_public_story_versions admission ledger under existing owner/service authority. No new functions, signatures, grants or canonical public owner changes; ordinary private-ledger reads and declaration execution remain denied.",
+  "covered": [
+    "superseded predecessor claim with current successor correction",
+    "withdrawn predecessor source with independently permitted successor",
+    "public material-history RLS and canonical evidence/current visibility",
+    "unread correction followed by displayed successor acknowledgement",
+    "cross-Story and missing predecessor refusals",
+    "forbidden predecessor evidence refs and private input keys",
+    "anon/authenticated/service declaration refusal and anonymous private-ledger refusal",
+    "expected actor mismatch and second-account isolation",
+    "successor denial clears unread and refuses acknowledgement without fallback",
+    "Source Report attribution never admits proposition or established News state",
+    "already revoked follow never auto-resumes after later correction",
+    "exact recovery catalogue, immutable preferences, unrelated same-name overload owners/ACL/definitions"
+  ],
+  "boundaries": [
+    "Synthetic disposable PGlite foundation, existing canonical publication owner and exact source proposals only. No live install/deploy, Auth account creation, external delivery, paid activation or merge.",
+    "Actual Supabase SDK and fixed production gateway execute with controlled Auth HTTP fixture responses; hosted JWT provider or browser claims are not made.",
+    "Existing nested multi-outlet/source/claim admission gates remain intact; real corpus accuracy and synthetic News policy calibration are not qualified.",
+    "Earlier App/account journey receipt files and their source hashes are preserved unchanged."
+  ],
+  "runs": [
+    {
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-concurrency=1 --test-reporter=tap tests/storyFollowingCorrections.test.mjs tests/storyFollowingPackage.test.mjs tests/storyFollowingFoundation.test.mjs",
+      "tests": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "receipt": {
+        "path": "verifier/story-following-corrections-node22-2026-10-02.tap",
+        "sha256": "f800e0e0b7537578a6813fbf832a0cd47ca6936d23dba6eb5be43196c96e2c51"
+      }
+    },
+    {
+      "runtime": "Node 24.19.0",
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node --test --test-concurrency=1 --test-reporter=tap tests/storyFollowingCorrections.test.mjs tests/storyFollowingPackage.test.mjs tests/storyFollowingFoundation.test.mjs",
+      "tests": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "receipt": {
+        "path": "verifier/story-following-corrections-node24-2026-10-02.tap",
+        "sha256": "928778ef042b31f7202714943afd1451c760ce6df74e66a5b51480d114714185"
+      }
+    }
+  ],
+  "source_files": [
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+      "sha256": "70913bb10c3f583156c96ecd46dd2cbffad61e0213043cf0962875b63ac03948"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+      "sha256": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "c847594714aac59b053f38b613de7ed8eb788c2b66f0e59878c04998afa080da"
+    },
+    {
+      "path": "src/lib/investigationBackend.js",
+      "sha256": "fae09604e2640e71f69024dcd29719311214fae6cd3ece3c5752f65e20668c18"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
+    },
+    {
+      "path": "src/lib/newsStoryState.js",
+      "sha256": "1d1357f226cef21a2dfda6b991b6d25497a7b4a0f66b4438ff5535ca4a5105ed"
+    },
+    {
+      "path": "scripts/storyFollowingPackage.mjs",
+      "sha256": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00"
+    },
+    {
+      "path": "tests/storyFollowingCorrections.test.mjs",
+      "sha256": "1a4b193e2b5bd0c3e4e7eff87b84414586875fd37543c8e28d19176c2e7b3a70"
+    },
+    {
+      "path": "tests/storyFollowingFoundation.test.mjs",
+      "sha256": "3306477b4a453414bd346c1741d259ed6497d7bb694477c1f9ba9ff89e343644"
+    },
+    {
+      "path": "tests/storyFollowingPackage.test.mjs",
+      "sha256": "ea4fd9f0fd286103bfd4b83776438035aa49878b56225bdb4111d0e03ef7d129"
+    },
+    {
+      "path": "tests/reviewedPublicVersionFixture.mjs",
+      "sha256": "33e78ed482ddb5a6307a369d188dd0ce3107c3b140740c8a796d3cfa4c4ffb45"
+    }
+  ],
+  "prior_journey_receipt_preserved": {
+    "path": "verifier/app-story-following-journeys-2026-10-02.json",
+    "sha256": "fb698c94670bf7fc1bd3904921be642fc05ee2fe1a54d21ba5b2aae4740a1b0e"
+  }
+}

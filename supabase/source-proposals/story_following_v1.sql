@@ -131,10 +131,13 @@ begin
   select * into after_v from mip_private.reviewed_public_story_versions where public_version_id=(p_input->>'public_version_id')::uuid;
   select * into before_v from mip_private.reviewed_public_story_versions where public_version_id=(p_input->>'previous_public_version_id')::uuid;
   select * into s from mip_private.reviewed_public_stories where story_id=(p_input->>'story_id')::uuid;
+  -- Append-only owner admission rows establish historical lineage identity.
+  -- A correction may supersede or withdraw the predecessor's public payload;
+  -- that denial must not prevent publication of its separately admitted successor.
+  -- No predecessor source snapshot or nested evidence is read or returned here.
   if s.story_id is null or after_v.story_id is distinct from s.story_id or before_v.story_id is distinct from s.story_id
-    or after_v.predecessor_public_version_id is distinct from before_v.public_version_id or after_v.sequence <> before_v.sequence+1
+    or after_v.predecessor_public_version_id is distinct from before_v.public_version_id or before_v.sequence <> after_v.sequence-1
     or not mip_private.public_story_version_is_visible(after_v.public_version_id)
-    or not mip_private.public_story_version_is_visible(before_v.public_version_id)
     then raise exception using errcode='22023',message='material declaration requires exact admitted predecessor'; end if;
   select array_agg(x::uuid order by x) into refs from jsonb_array_elements_text(p_input->'evidence_refs') x;
   select array_agg(x order by x) into reviews from jsonb_array_elements_text(p_input->'review_refs') x;
@@ -199,17 +202,37 @@ begin
   if f.status='active' and admitted then
     select * into ack from mip_private.reviewed_public_story_versions where public_version_id=f.acknowledged_public_version_id;
     advanced := head.sequence>ack.sequence;
+    -- Recheck exact admitted lineage, then authorize only successor payloads.
+    -- Predecessor IDs are historical references, never permission to display
+    -- the predecessor's claims/source fields after correction or withdrawal.
     select count(*)::integer into n from mip_private.public_story_material_changes c
+      join mip_private.reviewed_public_story_versions successor on successor.public_version_id=c.public_version_id
+        and successor.story_id=c.story_id and successor.sequence=c.sequence
+      join mip_private.reviewed_public_story_versions predecessor on predecessor.public_version_id=c.previous_public_version_id
+        and predecessor.story_id=c.story_id and predecessor.sequence=successor.sequence-1
+        and successor.predecessor_public_version_id=predecessor.public_version_id
       where c.story_id=p_story and c.sequence>ack.sequence and c.sequence<=head.sequence
-      and mip_private.public_story_version_is_visible(c.public_version_id) and mip_private.public_story_version_is_visible(c.previous_public_version_id);
+      and c.subject_type=s.subject_type and c.subject_id=s.subject_id
+      and mip_private.public_story_version_is_visible(successor.public_version_id);
     select coalesce(jsonb_agg(x.doc order by x.sequence),'[]') into changes from (
       select c.sequence,mip_private.public_story_material_payload(c) doc from mip_private.public_story_material_changes c
+      join mip_private.reviewed_public_story_versions successor on successor.public_version_id=c.public_version_id
+        and successor.story_id=c.story_id and successor.sequence=c.sequence
+      join mip_private.reviewed_public_story_versions predecessor on predecessor.public_version_id=c.previous_public_version_id
+        and predecessor.story_id=c.story_id and predecessor.sequence=successor.sequence-1
+        and successor.predecessor_public_version_id=predecessor.public_version_id
       where c.story_id=p_story and c.sequence>ack.sequence and c.sequence<=head.sequence
-      and mip_private.public_story_version_is_visible(c.public_version_id) and mip_private.public_story_version_is_visible(c.previous_public_version_id)
+      and c.subject_type=s.subject_type and c.subject_id=s.subject_id
+      and mip_private.public_story_version_is_visible(successor.public_version_id)
       order by c.sequence limit p_limit) x;
     unclassified := exists(select 1 from mip_private.reviewed_public_story_versions v where v.story_id=p_story and v.sequence>ack.sequence
-      and v.sequence<=head.sequence and not exists(select 1 from mip_private.public_story_material_changes c where c.public_version_id=v.public_version_id
-        and mip_private.public_story_version_is_visible(c.public_version_id) and mip_private.public_story_version_is_visible(c.previous_public_version_id)));
+      and v.sequence<=head.sequence and not exists(select 1 from mip_private.public_story_material_changes c
+        join mip_private.reviewed_public_story_versions predecessor on predecessor.public_version_id=c.previous_public_version_id
+          and predecessor.story_id=c.story_id and predecessor.sequence=c.sequence-1
+        where c.public_version_id=v.public_version_id and c.story_id=v.story_id and c.sequence=v.sequence
+          and v.predecessor_public_version_id=predecessor.public_version_id
+          and c.subject_type=s.subject_type and c.subject_id=s.subject_id
+          and mip_private.public_story_version_is_visible(v.public_version_id)));
   end if;
   return jsonb_build_object('contract','mip-public-story-following-v1','scope','public_story','delivery_channel','in_app',
     'story_id',p_story,'subject_type',s.subject_type,'subject_id',s.subject_id,'story_status',case when admitted then 'public' else 'revoked' end,
@@ -313,9 +336,11 @@ end $$;
 -- through the existing publication projection and current eligibility gate.
 alter table mip_private.public_story_material_changes enable row level security;
 alter table mip_private.public_story_material_changes force row level security;
+-- The publication owner established immutable predecessor identity at declare
+-- time. Public metadata reads authorize successor/current-head payloads only;
+-- reading the predecessor payload would suppress the very correction notice.
 create policy public_story_material_read on mip_private.public_story_material_changes for select to anon,authenticated
   using (public.read_reviewed_public_story_v1(story_id,public_version_id) is not null
-    and public.read_reviewed_public_story_v1(story_id,previous_public_version_id) is not null
     and public.read_reviewed_public_story_v1(story_id,null) is not null);
 create policy public_story_material_service on mip_private.public_story_material_changes for select to service_role using (true);
 do $$ declare owner_name text; begin
