@@ -254,8 +254,25 @@ begin
   if p_before->'scope_candidate_ids' is distinct from p_after->'scope_candidate_ids' then raise exception 'comparison scope mismatch';end if;
   foreach snapshot in array array[p_before,p_after] loop
     rows:=coalesce(snapshot->'relevance_declarations','[]');
-    if jsonb_typeof(snapshot->'scope_candidate_ids') is distinct from 'array' or jsonb_typeof(snapshot->'inputs') is distinct from 'array' then
+    if jsonb_typeof(snapshot->'scope_candidate_ids') is distinct from 'array' or jsonb_typeof(snapshot->'inputs') is distinct from 'array'
+      or jsonb_typeof(snapshot->'candidates') is distinct from 'array' or jsonb_typeof(snapshot->'assessments') is distinct from 'array' then
       raise exception 'invalid retained relevance snapshot';end if;
+    -- The collector retains selected candidates plus assessment-closure candidates.
+    -- Keep that native closure authoritative; a direct-scope-only guard rejects
+    -- legitimate ancestor declarations. Every selected/assessment candidate must
+    -- still be retained, and unrelated fabricated closure entries are refused.
+    if exists(select 1 from jsonb_array_elements(snapshot->'candidates') c
+      where jsonb_typeof(c)<>'object' or jsonb_typeof(c->'id') is distinct from 'string'
+      or (c->>'id') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+      or exists(select 1 from jsonb_array_elements(snapshot->'candidates') c group by c->>'id' having count(*)>1)
+      or exists(select 1 from jsonb_array_elements_text(snapshot->'scope_candidate_ids') cid
+        where not exists(select 1 from jsonb_array_elements(snapshot->'candidates') c where c->>'id'=cid))
+      or exists(select 1 from jsonb_array_elements(snapshot->'assessments') a
+        where not exists(select 1 from jsonb_array_elements(snapshot->'candidates') c where c->>'id'=a->>'candidate_id'))
+      or exists(select 1 from jsonb_array_elements(snapshot->'candidates') c
+        where not(snapshot->'scope_candidate_ids' ? (c->>'id'))
+        and not exists(select 1 from jsonb_array_elements(snapshot->'assessments') a where a->>'candidate_id'=c->>'id')) then
+      raise exception 'invalid retained relevance snapshot candidate closure';end if;
     if jsonb_typeof(rows)<>'array' then raise exception 'invalid retained relevance declarations';end if;
     if exists(select 1 from jsonb_array_elements(rows) x group by x->>'candidate_id',x->>'change_position' having count(*)>1) then
       raise exception 'duplicate retained relevance identity';end if;
@@ -273,7 +290,7 @@ begin
         or length(btrim(row_value->>'rationale')) not between 1 and 4000
         or jsonb_typeof(row_value->'declared_at') is distinct from 'string'
         or (row_value->>'declared_at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$'
-        or not (snapshot->'scope_candidate_ids' ? (row_value->>'candidate_id'))
+        or not exists(select 1 from jsonb_array_elements(snapshot->'candidates') c where c->>'id'=row_value->>'candidate_id')
         or not exists(select 1 from jsonb_array_elements(snapshot->'inputs') x where x->>'position'=row_value->>'change_position') then
         raise exception 'invalid retained relevance declaration tuple';end if;
       -- Range-check without converting the returned decimal string to JSON numeric.
