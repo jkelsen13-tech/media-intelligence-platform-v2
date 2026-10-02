@@ -10,6 +10,14 @@
 .wv-pilot-bookmarks > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .wv-spatial-context-icon { position: absolute; z-index: 3; width: 44px; height: 44px; transform: translate(-50%, -50%); border: 2px solid var(--accent); border-radius: 50%; color: var(--accent); background: var(--bg-panel); font: bold 18px Georgia, serif; cursor: pointer; }
 .wv-explore-shell .wv-spatial-context-icon { border-radius: 50%; padding: 0; color: var(--accent); }
+/* One native glyph owns pointer picking. Its keyboard target paints only a
+   focus ring, stays connected for Close focus restoration, and never drags. */
+.wv-billboard-keyboard-opener, .wv-explore-shell .wv-billboard-keyboard-opener {
+  position: absolute; z-index: 3; width: 44px; height: 44px; min-height: 44px;
+  transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: transparent; pointer-events: none;
+}
+.wv-billboard-keyboard-opener:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .wv-stage [data-world-credits] { pointer-events: auto; }
 .wv-inspector-container { min-width: 0; }
 .wv-inspector-container > .wv-inspector { height: 100%; }

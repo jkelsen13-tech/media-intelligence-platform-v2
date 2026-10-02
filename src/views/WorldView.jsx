@@ -44,6 +44,7 @@ import {
   sourceNativeTimeFields,
   sourceNativeLocationLabel,
   displayCoordinateText,
+  collectPositions,
   inspectorTitle,
   spatialProjectionUnavailableCopy,
 } from '../lib/spatialProjection'
@@ -73,6 +74,7 @@ import WorldViewExploreShell from '../components/WorldViewExploreShell.jsx'
 import WorldViewSpatialContextCard, { WorldViewContextLayerControls } from '../components/WorldViewSpatialContextCard.jsx'
 import { buildWorldViewSpatialContext, DEFAULT_WORLD_VIEW_CONTEXT_LAYERS } from '../lib/worldViewSpatialContext.js'
 import { northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
+import { displayMarkerKey } from '../lib/worldViewDisplayClusters.js'
 
 const MODES = [
   { key: 'map', label: 'Map' },
@@ -431,6 +433,8 @@ export default function WorldView({
     if (!active) setExploreContextRequest(0)
   }, [])
   const [contextOpen, setContextOpen] = useState(false)
+  const keyboardOpenerCurrent = useRef(null)
+  const keyboardContextCurrent = useRef(null)
   const [contextLayers, setContextLayers] = useState(DEFAULT_WORLD_VIEW_CONTEXT_LAYERS)
   const inspectorRef = useRef(null)
   const prototypeEnabled = typeof window !== 'undefined'
@@ -584,6 +588,15 @@ export default function WorldView({
   const activeTitle = inspectorTitle(visibleRow, selectedForMatch)
   const contextModel = useMemo(() => buildWorldViewSpatialContext({ visibleRow, selected: selectedForMatch,
     investigationContext, weather, layerVisibility: contextLayers }), [visibleRow, selectedForMatch, investigationContext, weather, contextLayers])
+  const keyboardPosition = visibleRow && collectPositions(plotDecision(visibleRow).geometry)[0]
+  const keyboardMarkerKey = visibleRow && displayMarkerKey(visibleRow)
+  const keyboardContextScope = JSON.stringify([contextModel.key, recordedTime.atIso, keyboardMarkerKey,
+    visibleRow?.precision_class, keyboardPosition])
+  // Parent context and child renderer publications advance independently. A
+  // same-state React render can skip its child; never clear a current anchor
+  // merely because an Inspector action publishes the same paused state.
+  keyboardContextCurrent.current = prototypeEnabled && showMap && contextModel.indicator.exists && contextModel.indicator.eligible
+    ? keyboardContextScope : null
   const exploreToken = useMemo(() => ({ subjectKey: String(investigationContext?.canonical_subject_id ?? selectedForMatch?.id ?? visibleRow?.subject_graph_node_id ?? ''),
     version: String(visibleRow?.revision_id ?? ''),
     investigationKey: JSON.stringify({ subjectType: investigationContext?.canonical_subject_type ?? null,
@@ -712,8 +725,27 @@ export default function WorldView({
                 onSourceStatus={setSourceStatus}
                 explorationActive={exploring && touchInteraction}
                 billboardEnabled={prototypeEnabled}
-                contextOverlay={anchor => (prototypeEnabled && visibleRow && anchor.billboardSelected || contextModel.indicator.exists && contextModel.indicator.eligible) && <>
-                  {!contextOpen && anchor.visible && (!prototypeEnabled || !anchor.billboardMarkerVisible) && <button type="button" className="wv-spatial-context-icon"
+                contextOverlay={anchor => {
+                  const native = anchor.billboardSelected
+                  const keyboardEligible = prototypeEnabled && contextModel.indicator.exists && contextModel.indicator.eligible
+                    && anchor.visible === true && anchor.billboardMarkerVisible === true
+                    && native?.key === keyboardMarkerKey && native?.precision === visibleRow?.precision_class
+                    && typeof native.occluded === 'boolean' && native.displayOccluded === false
+                    && Number.isFinite(anchor.x) && Number.isFinite(anchor.y)
+                    && Number.isFinite(anchor.width) && Number.isFinite(anchor.height)
+                    && anchor.x >= 0 && anchor.y >= 0 && anchor.x <= anchor.width && anchor.y <= anchor.height
+                    && keyboardPosition && keyboardPosition.length === native.canonicalCoordinates?.length
+                    && keyboardPosition.every((value, index) => value === native.canonicalCoordinates[index])
+                  const keyboardScope = keyboardEligible ? keyboardContextScope : null
+                  keyboardOpenerCurrent.current = keyboardScope
+                  return (prototypeEnabled && visibleRow && native || contextModel.indicator.exists && contextModel.indicator.eligible) && <>
+                  {keyboardEligible && <button type="button" className="wv-billboard-keyboard-opener"
+                    style={{ left: anchor.x, top: anchor.y }} data-native-billboard-key={keyboardMarkerKey}
+                    aria-label={`Open selected record card: ${activeTitle}; ${visibleRow.precision_class} scope, not exact position${native.occluded ? '; canonical anchor occluded' : ''}`}
+                    aria-expanded={contextOpen} tabIndex={contextOpen ? -1 : 0}
+                    onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() }}
+                    onClick={() => { if (keyboardOpenerCurrent.current === keyboardScope && keyboardContextCurrent.current === keyboardScope) setContextOpen(true) }} />}
+                  {!contextOpen && anchor.visible && (!prototypeEnabled || !native && !anchor.billboardMarkerVisible) && <button type="button" className="wv-spatial-context-icon"
                     style={{ left: anchor.x, top: anchor.y }} aria-label="Open selected spatial context"
                     onClick={() => setContextOpen(true)}>i</button>}
                   {contextOpen && prototypeEnabled && anchor.billboardSelected && <WorldViewBillboardOverlay
@@ -727,7 +759,7 @@ export default function WorldView({
                   {contextOpen && (!prototypeEnabled || !anchor.billboardSelected) && <WorldViewSpatialContextCard model={contextModel} anchor={anchor}
                     viewport={{ width: anchor.width ?? 0, height: anchor.height ?? 0 }}
                     onClose={() => setContextOpen(false)} onInspect={inspectContext} />}
-                </>}
+                </>}}
                 rows={mapRows}
                 selectedKeys={selectedKeys}
                 onSelectRow={handleMapSelect}
