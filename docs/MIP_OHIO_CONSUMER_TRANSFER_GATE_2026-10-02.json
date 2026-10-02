@@ -1,0 +1,13 @@
+{
+  "status": "consumer_local_transfer_blocked",
+  "library_file_id": "libfile_46b6f72f95e88191ae48240e4eb3ce13",
+  "file_id": "file_000000008824820cb2c2b03218147d22",
+  "version": 0,
+  "expected_bytes": 93644524,
+  "expected_sha256": "31484438471e3f04ebc46de362757b65d73072b61a800e6ad7f8f2ca6a037f46",
+  "prepared_materialize": "succeeded; authorized signed GET URL supplied",
+  "signed_url_GET": "execution proxy tunnel403Forbidden; no bytesreceived; no retry/bypass",
+  "download_file": "file exceeds executor transfer limit32MiB",
+  "next_supported_transfer": "Library upload/materialization of original archive split into <=32MiB parts with wholearchive/part hashes; or bounded derived evidence packet",
+  "no_source_pixel_qualification_in_consumer": true
+}

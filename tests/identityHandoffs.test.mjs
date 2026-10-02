@@ -2,6 +2,7 @@
 // subject preservation. DISPLAY / client only. No private tables, no
 // publication-policy change, no invented Cleveland subject.
 
+import { reviewedNewsArticleFixture } from './newsBackendFixture.mjs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -222,7 +223,7 @@ test('repro: comparison cards still expose the hashed article_key, not the publi
 
 test('repro: loadArticleDetail still miss-closes when handed the opaque comparison key', async () => {
   const db = fakeClient({
-    articles: [ELIGIBLE],
+    news_reviewed_articles_public: [{ ...reviewedNewsArticleFixture(ELIGIBLE), admission: 'proposition', url: ARTICLE_URL }],
     citations: [],
     news_detail_public: [{ article_id: ELIGIBLE_ID, reviewed_claims: [] }],
   })
@@ -241,6 +242,7 @@ test('comparison-to-news navigation resolves through the eligible public article
   const db = fakeClient({
     comparison_public: [comparisonRow()],
     articles: [ELIGIBLE, PENDING],
+    news_reviewed_articles_public: [{ ...reviewedNewsArticleFixture(ELIGIBLE), admission: 'proposition', url: ARTICLE_URL }],
     citations: [],
     news_detail_public: [{ article_id: ELIGIBLE_ID, reviewed_claims: [] }],
   })
@@ -253,8 +255,8 @@ test('comparison-to-news navigation resolves through the eligible public article
 
   const resolved = await resolveEligibleArticleForNews(nav, { supabaseClient: db })
   assert.equal(resolved, ELIGIBLE_ID)
-  assert.equal(db.calls.some((call) => call.table === 'articles' && call.filters.some((f) => f.column === 'url' && f.value === ARTICLE_URL)), true)
-  assert.equal(db.calls.some((call) => call.table === 'articles' && call.filters.some((f) => f.column === 'reader_state' && f.value === 'eligible')), true)
+  assert.equal(db.calls.some((call) => call.table === 'news_reviewed_articles_public' && call.filters.some((f) => f.column === 'url' && f.value === ARTICLE_URL)), true)
+  assert.equal(db.calls.some((call) => call.table === 'news_reviewed_articles_public' && call.filters.some((f) => f.column === 'reader_state' && f.value === 'eligible')), true)
   assert.equal(db.calls.some((call) => ['event_articles', 'article_claims', 'claims', 'events'].includes(call.table)), false)
 
   const detail = await loadArticleDetail(resolved, { supabaseClient: db })
@@ -264,7 +266,7 @@ test('comparison-to-news navigation resolves through the eligible public article
 
 test('resolver preserves direct News ids and withholds pending-review / hash-only targets', async () => {
   assert.equal(await resolveEligibleArticleForNews(ELIGIBLE_ID, { supabaseClient: null }), ELIGIBLE_ID)
-  const db = fakeClient({ articles: [ELIGIBLE, PENDING] })
+  const db = fakeClient({ articles: [ELIGIBLE, PENDING], news_reviewed_articles_public: [{ ...reviewedNewsArticleFixture(ELIGIBLE), admission: 'proposition', url: ARTICLE_URL }] })
   assert.equal(await resolveEligibleArticleForNews(ELIGIBLE_ID, { supabaseClient: db }), ELIGIBLE_ID)
   assert.equal(await resolveEligibleArticleForNews(ARTICLE_KEY, { supabaseClient: db }), null)
   assert.equal(
@@ -276,17 +278,17 @@ test('resolver preserves direct News ids and withholds pending-review / hash-onl
     ELIGIBLE_ID,
   )
   assert.equal(await resolveEligibleArticleForNews({ articleKey: ARTICLE_KEY }, { supabaseClient: db }), null)
-  assert.deepEqual([...new Set(db.calls.map((call) => call.table))], ['articles'])
+  assert.deepEqual([...new Set(db.calls.map((call) => call.table))], ['news_reviewed_articles_public'])
 })
 
 test('return navigation still joins the eligible article URL back to comparison_public', async () => {
   const db = fakeClient({
-    articles: [ELIGIBLE],
+    news_reviewed_articles_public: [{ ...reviewedNewsArticleFixture(ELIGIBLE), admission: 'proposition', url: ARTICLE_URL }],
     comparison_public: [comparisonRow()],
   })
   const matches = await loadArticleComparisonEvents(ELIGIBLE_ID, { supabaseClient: db })
   assert.deepEqual(matches, [{ eventId: 'event-compare-1', title: 'Comparison event' }])
-  assert.deepEqual(db.calls.map((call) => call.table), ['articles', 'comparison_public'])
+  assert.deepEqual(db.calls.map((call) => call.table), ['news_reviewed_articles_public', 'comparison_public'])
 })
 
 test('Source Comparison and App resolve Open in News instead of passing the hash to loadArticleDetail', () => {

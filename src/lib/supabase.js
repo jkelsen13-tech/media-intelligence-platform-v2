@@ -1155,9 +1155,24 @@ function applyNewsArticleFilters(query, { q, outlet, outlets, status, feeds, top
 export async function loadFilteredSourceMetricRows(filters = {}, { supabaseClient } = {}) {
   const client = supabaseClient === undefined ? supabase : supabaseClient
   if (!client) return []
-  const { outlet: _selectedOutlet, ...contextFilters } = filters
+  const { outlet: _selectedOutlet, q, ...contextFilters } = filters
+  const term = sanitizeSearch(q)
+  let searchIds = null
+  if (term) {
+    const scope = await createReviewedPublicVersionBackend(client).loadArticleSearchIds(term)
+    if (scope.status !== 'available') {
+      const error = new Error('Reviewed source search is unavailable.')
+      error.code = scope.reason
+      throw error
+    }
+    if (scope.articleIds.length === 0) return []
+    searchIds = scope.articleIds
+  }
   const { data, error } = await keysetAll(client, 'news_reviewed_articles_public', 'id, outlet, published_at', {
-    filter: (query) => applyNewsArticleFilters(query, contextFilters, { reviewed: true }),
+    filter: (query) => {
+      const scoped = applyNewsArticleFilters(query, contextFilters, { reviewed: true })
+      return searchIds ? scoped.in('id', searchIds) : scoped
+    },
   })
   if (error) {
     if (isPostgrestPermissionDenied(error)) return []

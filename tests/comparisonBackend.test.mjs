@@ -26,8 +26,8 @@ test('shared comparison read preserves every projected card and current session 
 })
 
 test('comparison provenance, missing extraction, and opaque navigation identities survive the shared root', async () => {
-  const row = comparisonRow(), f = comparisonBackendFixture({ tables: { comparison_public: [row], articles: [
-    { id: 'eligible-news-id', url: row.articles[0].article_url, source_status: 'active', reader_state: 'eligible' },
+  const row = comparisonRow(), f = comparisonBackendFixture({ tables: { comparison_public: [row], news_reviewed_articles_public: [
+    { admission: 'proposition', id: 'eligible-news-id', url: row.articles[0].article_url, source_status: 'active', reader_state: 'eligible' },
   ] } })
   const event = (await f.backend.loadSourceComparisonView()).events[0], claim = event.claims[0]
   assert.equal(event.id, row.event_key)
@@ -39,7 +39,7 @@ test('comparison provenance, missing extraction, and opaque navigation identitie
   const target = newsNavigationFromComparisonSurface(claim.surfaces[0])
   assert.deepEqual(target, { articleKey: row.articles[0].article_key, url: row.articles[0].article_url })
   assert.equal(await f.backend.resolveEligibleArticleForNews(target), 'eligible-news-id')
-  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => c.params.get('reader_state') === 'eq.eligible'))
+  assert.ok(f.calls.filter(c => c.table === 'news_reviewed_articles_public').every(c => c.params.get('reader_state') === 'eq.eligible'))
 })
 
 test('comparison page failure discards partial cards and remains distinct from an empty projection', async () => {

@@ -94,7 +94,7 @@ test('policy and relationship unsafe locators remain non-clickable without hidin
   const tables = evidenceTables()
   tables.policies[0].source_url = 'javascript:alert(1)'
   tables.policies[0].full_text_url = 'data:text/html,unsafe'
-  tables.articles[0].url = 'javascript:alert(2)'
+  tables.news_reviewed_articles_public[0].url = 'javascript:alert(2)'
   tables.policy_documents[0].url = 'https://user:secret@example.com/'
   const {backend} = evidenceBackendFixture({tables})
   for (const [component,props] of [[Policy,{node:{id:'policy-one',type:'policy',label:'Retained policy'},nodes:[],edges:[]}],[Relationship,{edge:evidenceEdge,sourceLabel:'Recorded policy',targetLabel:'Recorded event'}]]) {

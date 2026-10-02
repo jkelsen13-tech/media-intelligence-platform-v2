@@ -13,7 +13,7 @@ function fakePostgrest(events) {
         select(columns) { call.columns = columns; return q },
         eq(column, value) { call.eq = { column, value }; return q },
         maybeSingle() {
-          return Promise.resolve({ data: table === 'articles' ? { url: 'https://publisher.example/match' } : null, error: null })
+          return Promise.resolve({ data: table === 'news_reviewed_articles_public' ? { url: 'https://publisher.example/match' } : null, error: null })
         },
         order(column) { call.order = column; return q },
         range(from, to) {
@@ -36,7 +36,7 @@ test('News comparison links use only comparison_public and paginate beyond one p
   const matches = await loadArticleComparisonEvents('article-1', { supabaseClient: db })
 
   assert.deepEqual(matches, [{ eventId: 'event-100', title: 'Event 100' }])
-  assert.deepEqual(db.calls.map((call) => call.table), ['articles', 'comparison_public', 'comparison_public'])
+  assert.deepEqual(db.calls.map((call) => call.table), ['news_reviewed_articles_public', 'comparison_public', 'comparison_public'])
   assert.deepEqual(db.calls[1].range, [0, 99])
   assert.deepEqual(db.calls[2].range, [100, 199])
 })
