@@ -38,7 +38,7 @@
 .wv-explore-context { grid-area: context; z-index: 4; padding: 10px 12px; background: var(--bg-panel, #17211e); border: 1px solid var(--border-strong, #68716e); border-radius: 12px; min-width: 0; max-height: 45%; display: flex; flex-direction: column; gap: 8px; }
 .wv-explore-preview { min-width: 0; overflow-wrap: anywhere; font-size: 13px; line-height: 1.4; }
 .wv-explore-context-body { min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; }
-.wv-explore-options { position: absolute; z-index: 6; left: 10px; right: 40px; top: 120px; max-height: calc(100% - 180px); overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 10px; background: var(--bg-panel, #17211e); border: 1px solid var(--border-strong, #68716e); border-radius: 12px; box-shadow: 0 12px 28px #0005; }
+.wv-explore-options { position: absolute; z-index: 6; left: 10px; right: 40px; --wv-explore-options-top: 120px; top: var(--wv-explore-options-top); max-height: calc(100% - 180px); overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 10px; background: var(--bg-panel, #17211e); border: 1px solid var(--border-strong, #68716e); border-radius: 12px; box-shadow: 0 12px 28px #0005; }
 .wv-explore-panel-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .wv-explore-source { grid-area: source; z-index: 3; padding: 6px 12px; font-size: 10px; line-height: 1.4; color: var(--text-secondary, #b9c6be); background: var(--bg-panel, #17211e); max-height: 100px; overflow: auto; overflow-wrap: anywhere; touch-action: pan-y; }
 .wv-explore-source p { margin: 0; }
@@ -51,7 +51,7 @@
 .wv-explore-immersive .wv-explore-actions { grid-area: map; align-self: start; position: relative; margin: 10px 40px 0 10px; border-radius: 10px; flex-wrap: wrap; align-items: center; border: 1px solid var(--border-strong, #68716e); }
 .wv-explore-immersive .wv-explore-actions p { flex: 1; min-width: 110px; }
 .wv-explore-immersive .wv-explore-context { grid-area: map; align-self: end; position: relative; margin: 0 40px 42px 10px; max-height: min(45%, 420px); }
-.wv-explore-immersive .wv-explore-options { top: 194px; }
+.wv-explore-immersive .wv-explore-options { --wv-explore-options-top: 194px; }
 
 /* B: a separate narrow gesture/control rail and evidence dock frame the map. */
 .wv-explore-open > .wv-explore-dock {
@@ -73,12 +73,12 @@
   .wv-explore-toolbar > button { grid-column: 3; grid-row: 1; }
   .wv-explore-immersive .wv-explore-actions { justify-self: start; max-width: 470px; }
   .wv-explore-immersive .wv-explore-context { justify-self: center; width: min(620px, calc(100% - 110px)); margin-left: 0; margin-right: 0; }
-  .wv-explore-immersive .wv-explore-options { top: 154px; width: 360px; right: auto; }
+  .wv-explore-immersive .wv-explore-options { --wv-explore-options-top: 154px; width: 360px; right: auto; }
   .wv-explore-open > .wv-explore-dock { grid-template-areas: 'toolbar toolbar toolbar' 'actions map context' 'source source source'; grid-template-columns: 104px minmax(0, 1fr) 260px; grid-template-rows: auto minmax(0, 1fr) auto; }
   .wv-explore-dock .wv-explore-context { grid-template-columns: minmax(0, 1fr); display: flex; max-height: 100%; border-width: 0 0 0 1px; }
   .wv-explore-dock .wv-explore-context-body { max-height: none; }
   .wv-explore-dock .wv-explore-actions { border-left: 0; border-right: 1px solid var(--border-color, #35423b); }
-  .wv-explore-dock .wv-explore-options { top: 82px; left: 110px; right: auto; }
+  .wv-explore-dock .wv-explore-options { --wv-explore-options-top: 82px; left: 110px; right: auto; }
   .wv-explore-dock .wv-explore-page-strip { right: 8px; bottom: 105px; }
   .wv-explore-notice { top: 76px; left: 120px; right: 280px; }
 }
@@ -91,6 +91,11 @@
   .wv-explore-context { max-height: 40%; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
+  /* Preserve each existing panel placement while bounding its own scroll
+     viewport to the remaining Explore surface, including short landscape. */
+  .wv-explore-open .wv-explore-options {
+    max-height: min(calc(100% - 180px), calc(100% - var(--wv-explore-options-top) - 10px));
+  }
   /* Collapsed evidence/group banners can cover the canonical glyph in a
      short viewport. Interact gives that space to the map; Done restores the
      same mounted controls. display:none removes their pointer, focus and
@@ -131,6 +136,59 @@
   .wv-explore-dock:has(> .wv-explore-context > .wv-explore-context-body:not([hidden])) .wv-explore-context-body { flex: 1; max-height: none; }
   /* Page occupies the toolbar's free space instead of covering Options. */
   .wv-explore-dock .wv-explore-page-strip { top: 4px; bottom: auto; left: 200px; right: auto; width: auto; min-width: 44px; writing-mode: horizontal-tb; }
+}
+
+@media (min-width: 480px) and (max-width: 589px) and (orientation: landscape) and (max-height: 479px) {
+  /* The horizontal action row leaves no readable selected-card column here.
+     Reuse the existing 66px control rail before selection, keeping the map
+     mounted and the selected anchor in the renderer's own canvas coordinates.
+     At 480–485px, the same padding and 44px targets fit a 60–65px rail. This
+     retains the existing 400px selected-reader canvas budget after the shell
+     borders/insets; smaller surfaces are unchanged. */
+  .wv-explore-open > .wv-explore-surface { --wv-compact-action-rail: min(66px, calc(100vw - 420px)); }
+  .wv-explore-open > .wv-explore-immersive {
+    grid-template-areas: 'toolbar toolbar' 'map actions' 'source source';
+    grid-template-columns: minmax(0, 1fr) var(--wv-compact-action-rail);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .wv-explore-open > .wv-explore-dock:not(:has(> .wv-explore-context > .wv-explore-context-body:not([hidden]))) {
+    grid-template-columns: minmax(0, 1fr) var(--wv-compact-action-rail);
+  }
+  .wv-explore-open > .wv-explore-immersive .wv-explore-actions {
+    grid-area: actions; align-self: stretch; justify-self: stretch;
+    min-width: 0; max-width: none; margin: 0; padding: 6px;
+    flex-direction: column; flex-wrap: nowrap; align-items: stretch;
+    border-radius: 0; border-width: 0 0 0 1px;
+  }
+  .wv-explore-open > .wv-explore-immersive .wv-explore-actions button {
+    padding: 9px 3px; font-size: 11px; overflow-wrap: anywhere;
+  }
+  .wv-explore-immersive .wv-explore-context:has(> .wv-explore-context-body:not([hidden])) {
+    width: calc(100% - 40px); margin-right: 30px;
+  }
+  .wv-explore-immersive .wv-explore-options {
+    --wv-explore-options-top: 60px; left: auto; right: 72px;
+    width: min(300px, calc(100% - 96px)); max-height: calc(100% - 124px);
+  }
+  /* Page is a sibling of the toolbar. Reserve its real 44px track and derive
+     its placement from the same tracks, rather than overlaying the A button. */
+  .wv-explore-open > .wv-explore-surface {
+    --wv-compact-page-width: 44px;
+    --wv-compact-directions-width: 194px;
+    --wv-compact-close-width: 62px;
+    --wv-compact-toolbar-gap: 8px;
+  }
+  .wv-explore-open .wv-explore-toolbar {
+    grid-template-columns: minmax(0, 1fr) var(--wv-compact-page-width) var(--wv-compact-directions-width) var(--wv-compact-close-width) !important;
+  }
+  .wv-explore-open .wv-explore-directions { grid-column: 3; }
+  .wv-explore-open .wv-explore-toolbar > button { grid-column: 4; }
+  .wv-explore-open .wv-explore-page-strip {
+    top: 4px; bottom: auto; left: auto;
+    right: calc(8px + var(--wv-compact-close-width) + var(--wv-compact-directions-width) + 2 * var(--wv-compact-toolbar-gap));
+    width: var(--wv-compact-page-width); min-width: var(--wv-compact-page-width);
+    writing-mode: horizontal-tb;
+  }
 }
 
 /* Group inspection must not consume the native map's flex height in Explore.
