@@ -118,8 +118,8 @@ test('shared public reads retain pagination, recorded provenance and live sessio
 })
 
 test('corpus and URL joins exclude pending and withheld records; direct IDs remain navigation hints', async () => {
-  const f = fixture({ tables: { articles: [
-    { id: articleId, url: 'https://example.invalid/eligible', source_status: 'active', reader_state: 'eligible', fetched_at: '2026-08-03T10:00:00Z' },
+  const f = fixture({ tables: { news_reviewed_articles_public: [
+    { admission: 'proposition', id: articleId, url: 'https://example.invalid/eligible', source_status: 'active', reader_state: 'eligible', fetched_at: '2026-08-03T10:00:00Z' },
     { id: 'pending', url: 'https://example.invalid/pending', reader_state: 'pending_review', fetched_at: '2026-09-01T10:00:00Z' },
     { id: 'withheld', url: 'https://example.invalid/withheld', reader_state: 'withheld', fetched_at: '2026-09-02T10:00:00Z' },
   ] } })
@@ -145,7 +145,7 @@ test('coverage and investigation projections preserve unknown counts and exact c
 
 test('optional projection errors stay isolated, and a configured empty graph never becomes demo data', async () => {
   const denied = { code: '42501', message: 'permission denied' }
-  const f = fixture({ errors: { graph_coverage_public: denied, node_location_mentions: denied, topics: denied, investigation_surface_public: denied, articles: denied, edges: denied } })
+  const f = fixture({ errors: { graph_coverage_public: denied, node_location_mentions: denied, topics: denied, investigation_surface_public: denied, news_reviewed_articles_public: denied, edges: denied } })
   const [graph, coverage, places, topics, surface, corpus, article] = await Promise.all([
     f.backend.loadGraph(), f.backend.loadGraphCoverage(), f.backend.loadNodeLocations(), f.backend.loadTopics(),
     f.backend.loadInvestigationSurface(eventId), f.backend.loadCorpusMeta(), f.backend.resolveEligibleArticleForNews({ url: 'https://example.invalid/hidden' }),

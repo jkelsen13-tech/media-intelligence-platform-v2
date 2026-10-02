@@ -64,7 +64,7 @@ test('flat and grouped chronology preserve event versus reporting-record identit
   const f = fixture({ tables: {
     story_arcs: [{ id: arcId, slug: 'arc-one', category: 'public_health', started_at: '2026-08-01', summary: 'Recorded arc' }],
     nodes: [{ id: 'event-a', slug: 'evt-11111111', label: 'Event A', type: 'event', arc_id: arcId, occurred_at: '2026-08-01' }, { id: 'event-b', slug: 'evt-22222222', label: 'Event B', type: 'event', arc_id: arcId, occurred_at: '2026-08-02' }],
-    articles: [{ id: 'article-one', arc_id: arcId, title: 'Publisher report', published_at: '2026-08-03', summary: 'Retained summary', outlet: 'Recorded outlet' }],
+    news_reviewed_articles_public: [{ admission: 'proposition', id: 'article-one', arc_id: arcId, title: 'Publisher report', published_at: '2026-08-03', summary: 'Retained summary', outlet: 'Recorded outlet' }],
     edges: [{ id: 'edge', source_id: 'event-a', target_id: 'event-b', type: 'sequence', doc_strength: 3 }],
     pipeline_config: [{ key: 'timeline_grouped_beta', value: true }],
   } })

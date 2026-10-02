@@ -9,7 +9,7 @@ export function evidenceTables() {
     sources: [{ id: 'source-one', node_id: 'node-one', headline: 'Node source headline', outlet: 'Recorded publisher', url: 'https://example.invalid/source', published_at: '2026-08-03' }],
     citations: [{ id: 'citation-one', resolved_node_id: 'node-one', article_id: 'article-one' }],
     story_arcs: [{ id: 'arc-one', root_node_id: 'node-one', category: 'public_health' }],
-    articles: [{ reader_state: 'eligible', source_status: 'active', id: 'article-one', arc_id: 'arc-one', title: 'Backing article title', outlet: 'Recorded publisher', url: 'https://example.invalid/article', published_at: '2026-08-03' }],
+    news_reviewed_articles_public: [{ admission: 'proposition', reader_state: 'eligible', source_status: 'active', id: 'article-one', arc_id: 'arc-one', title: 'Backing article title', outlet: 'Recorded publisher', url: 'https://example.invalid/article', published_at: '2026-08-03' }],
     policies: [{ id: 'policy-one', name: 'Recorded policy name', jurisdiction: 'Recorded jurisdiction', status: 'active', instrument_type: 'statute', source_url: 'https://example.invalid/policy' }],
     policy_actors: [{ policy_id: 'policy-one', actor_id: 'actor-one', role: 'sponsor' }],
     policy_topics: [{ policy_id: 'policy-one', topic_id: 'topic-one' }],

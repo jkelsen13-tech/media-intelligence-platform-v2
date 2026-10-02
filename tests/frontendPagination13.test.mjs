@@ -170,7 +170,7 @@ test('site 5: loadOutlets sees outlets that only exist beyond row 1000', async (
   for (let i = 1; i <= 1500; i++) {
     articles.push({ id: `art-${pad(i)}`, outlet: i === 1500 ? 'DeepOutlet' : `Outlet ${(i % 40) + 1}`, source_status: 'active', reader_state: 'eligible' })
   }
-  const out = await loadOutlets({ supabaseClient: fakePostgrest({ articles }) })
+  const out = await loadOutlets({ supabaseClient: fakePostgrest({ news_reviewed_articles_public: articles }) })
   assert.equal(out.length, 41)
   assert.ok(out.includes('DeepOutlet'), 'outlet that exists only at position 1500 missing')
   assert.deepEqual(out, [...out].sort())
@@ -188,11 +188,11 @@ test('structure: frontend loaders use keyset pagination on every Doc 13 table', 
   assert.match(src, /keysetAll\(client, 'arc_events', 'id, arc_id, occurred_at'\)/)
   assert.match(src, /keysetAll\(client, 'arc_milestones_public', 'id, arc_id, status'\)/)
   // Site 3: timeline reads (event nodes, edges, labels, articles, story_arcs).
-  assert.match(src, /keysetAll\(client, 'articles', 'id, title, summary, published_at, outlet, arc_id'\)/)
+  assert.match(src, /keysetAll\(client, 'news_reviewed_articles_public', 'id, title, summary, published_at, outlet, arc_id'/)
   assert.match(src, /keysetAll\(client, 'story_arcs', STORY_ARCS_ID_ONLY\)/)
   assert.match(src, /readEdgesOrUnavailable\(client, 'id, source_id, target_id, type, weight, label, doc_strength'/)
   // Site 5: outlets read.
-  assert.match(src, /keysetAll\(client, 'articles', 'id, outlet'/)
+  assert.match(src, /keysetAll\(client, 'news_reviewed_articles_public', 'id, outlet'/)
   // No raw unpaginated selects remain on the Doc 13 frontend tables inside
   // these loaders (bounded lookups elsewhere — loadSources, loadArcDetail —
   // are eq-scoped single-node reads, out of Doc 13 scope).

@@ -151,7 +151,7 @@ test('structure: grouped loader keyset-paginates all eight reads', () => {
   assert.match(src, /keysetAll\(supabase, 'nodes', 'id, slug, label'\)/)
   // Expanded metadata supports both outlet counts and explicit, source-backed
   // News-record rows for articles assigned to an arc.
-  assert.match(src, /keysetAll\(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'\)/)
+  assert.match(src, /keysetAll\(supabase, 'news_reviewed_articles_public', 'id, title, summary, published_at, arc_id, outlet'/)
   assert.match(src, /keysetAll\(supabase, 'story_arcs', 'id, category, started_at'\)/)
   assert.doesNotMatch(src, /keysetAll\(supabase, 'story_arcs', 'id, title, category, started_at'\)/)
   assert.match(src, /keysetAll\(supabase, 'arc_events', 'id, arc_id, occurred_at'\)/)

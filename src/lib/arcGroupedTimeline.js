@@ -355,7 +355,7 @@ export async function loadArcGroupedTimeline({ supabaseClient } = {}) {
       // Article rows support both the historical suffix join and explicit
       // News-record entries for every article assigned to an arc. A reporting
       // record retains its publication date and is never promoted to an event.
-      keysetAll(supabase, 'articles', 'id, title, summary, published_at, arc_id, outlet'),
+      keysetAll(supabase, 'news_reviewed_articles_public', 'id, title, summary, published_at, arc_id, outlet', { filter: q => q.eq('admission', 'proposition') }),
       keysetAll(supabase, 'story_arcs', 'id, category, started_at'),
       // End date + status derive from real signals (loadArcs() pattern).
       // id included: the keyset cursor reads it back off the returned rows.
