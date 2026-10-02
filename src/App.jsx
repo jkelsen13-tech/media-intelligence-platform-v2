@@ -420,9 +420,12 @@ export default function App({
     writeRecentInvestigations(unauthenticatedRecentStorage(), recentInvestigations)
   }, [recentInvestigations])
 
-  const deepLinkCatalogForSubject = useCallback((id, subjectType = null, inspectionTime = null) => {
+  const deepLinkCatalogForSubject = useCallback((id, subjectType = undefined, inspectionTime = null) => {
     const current = investigationContextRef.current
-    const kind = subjectType ?? (current?.canonical_subject_id === id ? current.canonical_subject_type : null)
+    // Explicit invalid type metadata cannot borrow the current event's joins.
+    if (subjectType === null) return { entity: [], place: [], claim: [], arc: [], source: [] }
+    const kind = subjectType === undefined
+      ? (current?.canonical_subject_id === id ? current.canonical_subject_type : null) : subjectType
     const asset = ['equity', 'cryptoasset'].includes(kind) ? marketSource.lookup({ id, kind, at: inspectionTime ?? (current?.canonical_subject_id === id
       ? current.as_of_time ?? marketSource.validAt : marketSource.validAt) }) : { status: 'unavailable' }
     if (asset.status === 'ok') {
@@ -1183,6 +1186,9 @@ export default function App({
   useEffect(() => {
     if (typeof window === 'undefined') return
     const onHash = () => {
+      // Every external hash navigation supersedes older asynchronous intent,
+      // including clears and routes that cannot commit an investigation.
+      navigationIntentRef.current += 1
       const hash = window.location.hash
       if (!isInvestigationDeepLink(hash) && parseDeepLink(hash).subjectId == null) {
         return
@@ -1190,7 +1196,8 @@ export default function App({
       const current = investigationContextRef.current
       const parsed = parseDeepLink(hash)
       const hydrated = hydrateDeepLink(hash, { currentIc: current,
-        catalog: deepLinkCatalogForSubject(parsed.subjectId, parsed.subjectType ?? 'event') })
+        catalog: deepLinkCatalogForSubject(parsed.subjectId,
+          Object.hasOwn(parsed, 'subjectType') ? parsed.subjectType : 'event') })
       if (!hydrated.committed) return
       resetJumpContext()
       clearInvalidNewSubjectSubSelections()
