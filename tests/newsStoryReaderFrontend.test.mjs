@@ -149,3 +149,47 @@ test('switching from an already rendered Story withholds its title while the nex
     assert.doesNotMatch(serialized(renderer), /Retained source headline/)
   } finally { await act(async () => renderer.unmount()) }
 })
+
+test('source-report admission stays visibly attributed and pending in ordinary feed and both article detail paths', async () => {
+  const { newsBackendFixture, reviewedNewsArticleFixture } = await import('./newsBackendFixture.mjs')
+  const article = { id: fixtureUuid(1), title: 'Source-only development', outlet: 'Synthetic publisher', url: 'https://example.invalid/source-only',
+    summary: 'Publisher reports a development.', published_at: '2026-10-01T00:00:00Z', fetched_at: '2026-10-01T01:00:00Z' }
+  const row = reviewedNewsArticleFixture(article)
+  row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []
+  for (const focused of [false, true]) {
+    const f = newsBackendFixture({ tables: { news_reviewed_articles_public: [row] } })
+    const backend = focused ? { ...f.backend, loadArticles: async () => ({ articles: [], total: 0 }) } : f.backend
+    const renderer = await mount({ backend, focusArticleId: focused ? article.id : undefined })
+    try {
+      if (!focused) {
+        assert.match(serialized(renderer), /SOURCE REPORT|Pending MIP verification/)
+        const title = renderer.root.findAllByType('h3').find(n => n.children.includes(article.title)); let button = title
+        while (button.type !== 'button') button = button.parent
+        await act(async () => button.props.onClick())
+      }
+      const copy = serialized(renderer)
+      assert.match(copy, /has not been independently established/)
+      assert.match(copy, /Exact source-version fetch time.*unavailable/)
+      assert.match(copy, /Remaining uncertainty.*Synthetic qualification/)
+      assert.doesNotMatch(copy, /Synthetic reviewed fixture claim|BREAKING • SOURCE REPORT/)
+    } finally { await act(async () => renderer.unmount()) }
+  }
+})
+
+test('Story browsing does not reopen a prior investigation article and keeps raw identifiers in collapsed details', async () => {
+  const c = context(), details = []
+  const backend = { ...createNewsBackend(null), loadStoryStateContext: async () => ({ data: c, error: null }),
+    loadArticleDetail: async id => { details.push(id); return null } }
+  const renderer = await mount({ backend, focusStoryId: c.story.story_id, publicVersionId: c.story.public_version_id,
+    focusArticleId: fixtureUuid(999), investigationContext: { canonical_subject_type: 'article', canonical_subject_id: fixtureUuid(998) } })
+  try {
+    assert.deepEqual(details, [])
+    const disclosures = renderer.root.findAllByType('details').filter(item => item.props.className === 'news-version-details')
+    assert.ok(disclosures.length >= 2)
+    assert.ok(disclosures.every(item => item.props.open !== true))
+    const rawIdentifier = renderer.root.findAllByType('code').find(item => item.children.includes(c.story.story_id))
+    let parent = rawIdentifier.parent
+    while (parent && parent.type !== 'details') parent = parent.parent
+    assert.ok(parent)
+  } finally { await act(async () => renderer.unmount()) }
+})

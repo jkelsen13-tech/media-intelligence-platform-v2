@@ -46,3 +46,33 @@ export function newsBackendFixture({ tables = {}, errors = {}, url = 'https://ne
   })
   return { client, backend: createNewsBackend(client), calls, setToken: value => { token = value } }
 }
+
+// An explicit synthetic reviewed-version grant for News DTO tests. Callers must
+// supply this row separately from mutable articles; eligibility alone creates none.
+export function reviewedNewsArticleFixture(article, { authorName = article.author_name ?? null, admittedClaims = [] } = {}) {
+  const suffix = article.id.slice(-12)
+  const publicId = `aaaaaaaa-aaaa-4aaa-8aaa-${suffix}`, captureId = `bbbbbbbb-bbbb-4bbb-8bbb-${suffix}`
+  const capturedAt = article.fetched_at ?? article.published_at ?? '2026-08-03T12:00:00Z'
+  const declarations = admittedClaims.length ? admittedClaims : [{ text: 'Synthetic reviewed fixture claim', excerpt: 'Exact retained words' }]
+  const evidence = declarations.map((claim, index) => {
+    const excerpt = claim.excerpt ?? 'Exact retained words'
+    return { article_claim_id: `cccccccc-cccc-4ccc-8ccc-${String(index + 1).padStart(12, '0')}`,
+      claim_id: `dddddddd-dddd-4ddd-8ddd-${String(index + 1).padStart(12, '0')}`, capture_id: captureId, capture_hash: 'a'.repeat(64),
+      source_field: 'body_text', span_start: 0, span_end: Array.from(excerpt).length, excerpt, excerpt_hash: 'b'.repeat(64),
+      surface_text: claim.text, canonical_text: claim.text }
+  })
+  const version = { contract: 'mip-reviewed-public-version-v1', article_id: article.id, public_version_id: publicId,
+    capture_id: captureId, source_version_id: captureId, capture_hash: 'a'.repeat(64), sequence: '1',
+    predecessor_public_version_id: null, correction_reason: null, review_ref: 'explicit-synthetic-source-review', reviewed_by: 'synthetic-reviewer',
+    reviewed_at: capturedAt, visible_at: capturedAt, policy_version: 'synthetic-publication-v1', review_state: 'reviewed', visibility_state: 'public',
+    admission_kind: 'reviewed_proposition', source_url: article.url, source_outlet: article.outlet,
+    title: article.title, summary: article.summary ?? null, published_at: article.published_at ?? null, fetched_at: capturedAt,
+    fetched_at_semantics: 'article_original_fetch', captured_at: capturedAt,
+    remaining_uncertainty: 'Synthetic qualification only.', pending_revision: false, evidence,
+    display_metadata: { feed: article.feed ?? null, monoculture: article.monoculture ?? null, unattributed: article.unattributed ?? null,
+      arc_id: article.arc_id ?? null, author_name: authorName },
+  }
+  return { id: article.id, reader_state: 'eligible', source_status: 'active', published_at: version.published_at, fetched_at: version.fetched_at, public_version_id: publicId,
+    public_version: version, title: version.title, summary: version.summary, outlet: version.source_outlet, feed: article.feed ?? null,
+    monoculture: article.monoculture ?? null, unattributed: article.unattributed ?? null, arc_id: article.arc_id ?? null }
+}

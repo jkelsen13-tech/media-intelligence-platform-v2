@@ -4,7 +4,7 @@ import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { createNewsBackend } from '../src/lib/newsBackend.js'
-import { newsBackendFixture } from './newsBackendFixture.mjs'
+import { newsBackendFixture, reviewedNewsArticleFixture } from './newsBackendFixture.mjs'
 
 const id = '10000000-0000-4000-8000-000000000001'
 const article = { id, title: 'Published article', url: 'https://example.invalid/one', reader_state: 'eligible', source_status: 'active', author_id: 'byline', outlet: 'Outlet A', published_at: '2026-08-03T10:00:00Z', fetched_at: '2026-08-03T12:00:00Z', claims: [] }
@@ -36,7 +36,7 @@ test('all News capabilities respect explicit null even with a configured global 
 })
 
 test('feed and detail use the bound browser session, public bylines and reviewed provenance', async () => {
-  const f = newsBackendFixture({ tables: { articles: [article, { ...article, id: 'pending', reader_state: 'pending_review', author_id: 'private' }], authors_public: [{ id: 'byline', name: 'Recorded byline' }],
+  const f = newsBackendFixture({ tables: { news_reviewed_articles_public: [reviewedNewsArticleFixture(article, { authorName: 'Recorded byline', admittedClaims: [{ text: 'Reviewed claim', excerpt: 'Exact retained words' }] })], articles: [article, { ...article, id: 'pending', reader_state: 'pending_review', author_id: 'private' }], authors_public: [{ id: 'byline', name: 'Recorded byline' }],
     citations: [{ id: 'citation', article_id: id, cited_entity: 'Filed record', cited_type: 'court_doc', documentation_strength: 2 }],
     news_detail_public: [{ article_id: id, reviewed_claims: [{ surface_text: 'Reviewed claim', auditability_state: 'verified_retained_source', evidence_excerpt: 'Exact retained words', evidence_source_field: 'body_text', evidence_records: [{ evidence_type: 'record', evidence_url: 'https://example.invalid/evidence' }] }] }],
   } })
@@ -50,21 +50,23 @@ test('feed and detail use the bound browser session, public bylines and reviewed
   assert.equal(detail.id, id); assert.equal(detail.claims[0].text, 'Reviewed claim')
   assert.equal(detail.fetched_at, article.fetched_at)
   assert.notEqual(detail.fetched_at, detail.published_at)
-  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => c.params.get('select').split(',').includes('fetched_at')))
+  assert.ok(f.calls.filter(c => c.table === 'news_reviewed_articles_public').every(c => c.params.get('select').includes('public_version')))
   assert.equal(detail.claims[0].evidence_excerpt, 'Exact retained words')
-  assert.equal(detail.citations[0].cited_entity, 'Filed record'); assert.equal(detail.evidenceRecords[0].evidence_url, 'https://example.invalid/evidence')
+  assert.deepEqual(detail.citations, []); assert.deepEqual(detail.evidenceRecords, [])
+  assert.equal(detail.public_version_id, detail.public_version.public_version_id)
   assert.ok(f.calls.slice(before).every(c => c.request.headers.get('authorization') === 'Bearer news-session-two'))
   assert.ok(f.calls.every(c => c.request.headers.get('apikey') === 'fixture-browser-key' && c.request.method === 'GET'))
-  assert.ok(f.calls.filter(c => c.table === 'articles').every(c => c.params.get('reader_state') === 'eq.eligible'))
+  assert.ok(f.calls.some(c => c.table === 'news_reviewed_articles_public'))
+  assert.ok(!f.calls.some(c => ['authors_public', 'news_detail_public'].includes(c.table)))
   assert.ok(!f.calls.some(c => ['authors', 'article_claims', 'claim_evidence'].includes(c.table)))
   assert.equal((await f.backend.loadArticleDetail('pending')).articleMissing, true)
 })
 
 test('News pagination and source metrics retain filter contracts beyond the first page', async () => {
-  const articles = Array.from({ length: 1002 }, (_, n) => ({ ...article, id: String(n).padStart(6, '0'), author_id: null, outlet: n === 1001 ? 'Outlet B' : 'Outlet A' }))
-  const f = newsBackendFixture({ tables: { articles, outlets: [{ id: 'a', name: 'Outlet A', country: 'US' }, { id: 'b', name: 'Outlet B', country: 'CA' }] } })
+  const articles = Array.from({ length: 1002 }, (_, n) => ({ ...article, id: `00000000-0000-4000-8000-${String(1000 + n).padStart(12, '0')}`, author_id: null, outlet: n === 1001 ? 'Outlet B' : 'Outlet A' }))
+  const f = newsBackendFixture({ tables: { articles, news_reviewed_articles_public: articles.map(a => reviewedNewsArticleFixture(a)), outlets: [{ id: 'a', name: 'Outlet A', country: 'US' }, { id: 'b', name: 'Outlet B', country: 'CA' }] } })
   const page = await f.backend.loadArticles({ limit: 30, offset: 30 })
-  assert.equal(page.total, 1002); assert.equal(page.articles[0].id, '000030'); assert.equal(page.articles.at(-1).id, '000059')
+  assert.equal(page.total, 1002); assert.equal(page.articles[0].id, '00000000-0000-4000-8000-000000001030'); assert.equal(page.articles.at(-1).id, '00000000-0000-4000-8000-000000001059')
   const rows = await f.backend.loadFilteredSourceMetricRows({ outlet: 'Outlet A', publishedAfter: '2026-08-01', publishedBefore: '2026-08-31' })
   assert.equal(rows.length, 1002); assert.equal(rows.at(-1).outlet, 'Outlet B')
   const directory = await f.backend.loadOutletDirectory()
@@ -97,7 +99,7 @@ test('article joins and location feature flag stay on the supplied client', asyn
 })
 
 test('unavailable article access fails closed while unrelated optional joins remain separate', async () => {
-  const f = newsBackendFixture({ errors: { articles: { code: '42501', message: 'permission denied' } } })
+  const f = newsBackendFixture({ errors: { news_reviewed_articles_public: { code: '42501', message: 'permission denied' }, articles: { code: '42501', message: 'permission denied' } } })
   assert.equal((await f.backend.loadArticles()).articlesUnavailable, 'permission_denied')
   assert.equal((await f.backend.loadArticleDetail(id)).articlesUnavailable, 'permission_denied')
   assert.deepEqual(await f.backend.loadFilteredSourceMetricRows(), [])

@@ -20,21 +20,12 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
       {onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}
     </div>
     <h2>{propositions[0]?.title ?? 'Attributed source reports'}</h2>
-    <p className="news-story-identity">Story <code>{story.story_id}</code> · Public version <code>{story.public_version_id}</code> · Revision {story.sequence}</p>
     <Clock label="Story published to readers" value={story.visible_at} />
-    <Clock label="Story review time" value={story.reviewed_at} />
-    <section className="news-story-state" aria-label="Story material-change state">
-      <strong>{state.label}</strong>
-      {state.available ? <>
-        <p>{state.reason}</p>
-        <p>State reason: {state.reason_code.replaceAll('_', ' ')}. Event status: {state.event_state}.</p>
-        <Clock label="Material change effective time" value={state.effective_at} />
-        <Clock label="Material declaration time" value={state.declared_at} />
-        <p>Material change <code>{state.material_change_id}</code> · State policy <code>{state.policy_version}</code></p>
-        <p>Evidence versions: {state.evidence_refs.join(', ')}. Review references: {state.review_refs.join(', ')}.</p>
-        <p>{state.coverage_note}</p>
-      </> : <p>No qualifying admitted material-change declaration is available for this selected version. Coverage remains unknown.</p>}
-    </section>
+    <details className="news-version-details"><summary>Version and review details</summary>
+      <p className="news-story-identity">Story <code>{story.story_id}</code> · Public version <code>{story.public_version_id}</code> · Revision {story.sequence}</p>
+      <Clock label="Story review time" value={story.reviewed_at} />
+      <p>Review reference: {story.review_ref} · Publication policy: {story.policy_version}</p>
+    </details>
     {propositions.map(member => <article className="news-story-source" key={member.public_version_id}>
       <h3>{member.title}</h3>
       <p className="ap-label">{member.source_outlet} · Reviewed source version</p>
@@ -42,10 +33,15 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
       <Clock label="Source publication time" value={member.published_at} />
       <Clock label="Article original fetched time" value={member.fetched_at} />
       <Clock label="Exact capture retained time" value={member.captured_at} />
-      <p>Source version <code>{member.capture_id}</code> · Public source version <code>{member.public_version_id}</code></p>
+      <details className="news-version-details"><summary>Source and evidence details</summary>
+        <p>Source version <code>{member.capture_id}</code> · Public source version <code>{member.public_version_id}</code></p>
+        <p>Exact capture digest: <code>{member.capture_hash}</code></p>
+        <p>Source review reference: {member.review_ref} · Policy: {member.policy_version}</p>
+        {member.predecessor_public_version_id && <p>Previous source version: <code>{member.predecessor_public_version_id}</code></p>}
+      </details>
       <p>Remaining uncertainty: {member.remaining_uncertainty}</p>
       {member.pending_revision && <p>A newer retained source revision is pending review; this displayed version retains its original approval.</p>}
-      {member.correction_reason && <p>Correction: {member.correction_reason} · Previous version <code>{member.predecessor_public_version_id}</code></p>}
+      {member.correction_reason && <p>Correction: {member.correction_reason}</p>}
       <SourceLink url={member.source_url} outlet={member.source_outlet} />
       {onOpenArticle && <button type="button" className="news-chip" onClick={() => onOpenArticle(member.article_id)}>Open article evidence</button>}
     </article>)}
@@ -60,12 +56,30 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
       <Clock label="Exact source-version fetch time" value={report.fetch_time} />
       <Clock label="Article original fetched time" value={report.article_original_fetched_at} />
       <Clock label="Capture retained time" value={report.capture_retained_at} />
-      <p>Source <code>{report.source_id}</code> · Source version <code>{report.source_version_id}</code> · Public report version <code>{report.public_version_id}</code></p>
-      <p>Report review reference: {report.review_ref}. State policy: {report.policy_version}.</p>
-      {report.correction_reason && <p>Source-report correction: {report.correction_reason} · Previous report version <code>{report.predecessor_public_version_id}</code></p>}
+      <details className="news-version-details"><summary>Source and evidence details</summary>
+        <p>Source <code>{report.source_id}</code> · Source version <code>{report.source_version_id}</code> · Public report version <code>{report.public_version_id}</code></p>
+        <p>Exact capture digest: <code>{report.capture_hash}</code></p>
+        <p>Report review reference: {report.review_ref}. State policy: {report.policy_version}.</p>
+        {report.predecessor_public_version_id && <p>Previous report version: <code>{report.predecessor_public_version_id}</code></p>}
+      </details>
+      {report.correction_reason && <p>Source-report correction: {report.correction_reason}</p>}
       <SourceLink url={report.source_url} outlet={report.source_outlet} />
     </article>)}
     {story.members.some(member => member.admission_kind === 'source_report') && !reports.length && <p>Attributed report metadata is unavailable for this selected version.</p>}
+    <section className="news-story-state" aria-label="Story material-change state">
+      <strong>{state.label}</strong>
+      {state.available ? <>
+        <p>{state.reason}</p>
+        <p>State reason: {state.reason_code.replaceAll('_', ' ')}. Event status: {state.event_state}.</p>
+        <Clock label="Material change effective time" value={state.effective_at} />
+        <Clock label="Material declaration time" value={state.declared_at} />
+        <details className="news-version-details"><summary>Material change and review details</summary>
+          <p>Material change <code>{state.material_change_id}</code> · State policy <code>{state.policy_version}</code></p>
+          <p>Evidence versions: {state.evidence_refs.join(', ')}. Review references: {state.review_refs.join(', ')}.</p>
+        </details>
+        <p>{state.coverage_note}</p>
+      </> : <p>No qualifying admitted material-change declaration is available for this selected version. Coverage remains unknown.</p>}
+    </section>
     {history.length > 0 && <details className="news-story-history"><summary>Material-state transition history</summary>
       <p>Deterministic reconstruction from retained declarations for the selected version. These records do not establish what a reader saw at the time.</p>
       <ol>{history.map(item => <li key={`${item.evaluated_at}-${item.material_change_id}`}><strong>{item.label}</strong> · <time dateTime={item.evaluated_at}>{new Date(item.evaluated_at).toLocaleString()}</time><p>{item.reason}</p><p>Material change {item.material_change_id} · Material version {item.material_public_version_id} · Policy {item.policy_version}</p></li>)}</ol>

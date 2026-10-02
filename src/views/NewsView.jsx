@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mipBackend } from '../lib/mipBackend.js'
 import { safeExternalHttpUrl } from '../lib/externalUrls.js'
+import { normalizeReviewedPublicVersion } from '../lib/reviewedPublicVersion.js'
 import { normalizePublicStoryContext } from '../lib/storyFollowingClient.js'
 import { inspectionInstantMilliseconds } from '../lib/inspectionTime.js'
 import {
@@ -131,6 +132,33 @@ function ArticleFetchedTime({ article }) {
   )
 }
 
+function articleSourceReport(article) {
+  const version = normalizeReviewedPublicVersion(article?.public_version)
+  return version?.article_id === article.id && version.public_version_id === article.public_version_id ? version.source_report ?? null : null
+}
+function ArticleSourceReport({ article, compact = false }) {
+  const report = articleSourceReport(article)
+  if (!report) return null
+  return <section className="news-source-report" aria-label="Attributed source report">
+    <strong>SOURCE REPORT</strong>
+    <p className="news-source-report-verification">Pending MIP verification / reconciliation</p>
+    <p>This attributed report has not been independently established by MIP.</p>
+    {!compact && <>
+      <p>Remaining uncertainty: {report.review_uncertainty}</p>
+      <p>Source report time: {report.report_time ?? 'unavailable'}</p>
+      <p>Exact source-version fetch time: {report.fetch_time ?? 'unavailable'}</p>
+      <p>Capture retained time: {report.capture_retained_at}</p>
+      {report.correction_reason && <p>Source-report correction: {report.correction_reason}</p>}
+      <details className="news-version-details"><summary>Source and evidence details</summary>
+        <p>Source {report.source_id} · Source version {report.source_version_id} · Public report version {report.public_version_id}</p>
+        <p>Exact capture digest: {report.capture_hash}</p>
+        <p>Review reference: {report.review_ref}</p>
+        {report.predecessor_public_version_id && <p>Previous report version: {report.predecessor_public_version_id}</p>}
+      </details>
+    </>}
+  </section>
+}
+
 function OriginalSourceLocator({ article }) {
   const href = safeExternalHttpUrl(article.url)
   if (href) {
@@ -151,11 +179,24 @@ function OriginalSourceLocator({ article }) {
 function PublisherSourceRecord({ article, region }) {
   if (!article) return null
   const outlet = article.outlet ?? 'Publisher record'
+  const version = normalizeReviewedPublicVersion(article.public_version)
   return (
     <section className="news-source-record" aria-label="Publisher source record">
       <span className="ap-label">Publisher source record</span>
       <SourceAttributionLine outlet={outlet} region={region ?? null} badge={null} />
       <ArticleFetchedTime article={article} />
+      <ArticleSourceReport article={article} />
+      {version?.admission_kind === 'reviewed_proposition' && <>
+        <p className="news-source-record-copy">Remaining uncertainty: {version.remaining_uncertainty}</p>
+        {version.pending_revision && <p className="news-source-record-copy">A newer retained source revision is pending review. This displayed version keeps its original approval.</p>}
+        {version.correction_reason && <p className="news-source-record-copy">Correction: {version.correction_reason}</p>}
+        <details className="news-version-details"><summary>Source and evidence details</summary>
+          <p>Source version {version.capture_id} · Public source version {version.public_version_id}</p>
+          <p>Exact capture digest: {version.capture_hash}</p>
+          <p>Capture retained time: {version.captured_at} · Review reference: {version.review_ref}</p>
+          {version.predecessor_public_version_id && <p>Previous source version: {version.predecessor_public_version_id}</p>}
+        </details>
+      </>}
       <p className="news-source-record-copy">
         {article.url
           ? 'An original publisher URL is recorded for this article.'
@@ -242,6 +283,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
     let cancelled = false
     setStoryResponse(null)
     if (!focusStoryId) { setStoryLoading(false); return }
+    detailRequestRef.current += 1
+    setExpanded(null); setDetail(null); setArticleStory(null); setGraphLinks([])
+    setDetailError(null); setDetailUnavailable(null); setDetailMissing(false)
+    setSky(null); setTimelineKey(null); setComparisonEvents([])
     setStoryLoading(true)
     if (typeof backend.loadStoryStateContext !== 'function') {
       setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
@@ -477,24 +522,24 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
 
   // Cross-view entry: another view asked us to open a specific article.
   useEffect(() => {
-    if (!focusArticleId) return
+    if (!focusArticleId || focusStoryId) return
     setQ('')
     setDiscovery(emptyDiscoveryFilters())
     expandArticle(focusArticleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusArticleId])
+  }, [focusArticleId, focusStoryId])
 
   // Investigation Context restore after a tab switch (not a JUMP).
   // Article subjects expand only when the id is already on IC. Event / arc
   // subjects do not invent an article. Discovery chips stay local.
   useEffect(() => {
-    if (focusArticleId || isDrawer) return
+    if (focusArticleId || isDrawer || focusStoryId) return
     if (investigationContext?.canonical_subject_type !== 'article') return
     const id = investigationContext.canonical_subject_id
     if (!id) return
     expandArticle(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusArticleId, isDrawer, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id])
+  }, [focusArticleId, focusStoryId, isDrawer, investigationContext?.canonical_subject_type, investigationContext?.canonical_subject_id])
 
   const loadMore = () => {
     // Tier 5: captured under the CURRENT token — if the user starts a new
@@ -661,6 +706,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
         <div className="news-card-top">
           <span className="news-date accent">{fmtDate(a.published_at)}</span>
         </div>
+        <ArticleSourceReport article={a} compact />
         <h3>{a.title}</h3>
         <SourceAttributionLine
           outlet={a.outlet}
@@ -1106,8 +1152,9 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusS
           {!detail && !detailError && !detailUnavailable && !detailMissing && <div className="news-detail-loading">Loading detail…</div>}
           {detail && (
             <>
+              <ArticleSourceReport article={detail} compact />
               <h3 className="news-focus-title">{detail.title}</h3>
-              <ArticleFetchedTime article={detail} />
+              <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
               {crossWindowChips}
               <SkyBadge verification={sky} />
               {graphLinks.length > 0 && (

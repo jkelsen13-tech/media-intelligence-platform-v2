@@ -71,9 +71,9 @@ test('late failure cannot overwrite the current article or survive close and reo
 })
 
 test('mounted News reader publishes admitted claims and safe locators only', async () => {
-  const { newsBackendFixture } = await import('./newsBackendFixture.mjs')
-  const article = { ...articles[0], reader_state: 'eligible', source_status: 'active', url: 'javascript:unsafe()', claims: [{ kind: 'substantive', text: 'PRIVATE_RAW_EXTRACTION' }] }
-  const f = newsBackendFixture({ tables: { articles: [article], news_detail_public: [{ article_id: 'A', reviewed_claims: [
+  const { newsBackendFixture, reviewedNewsArticleFixture } = await import('./newsBackendFixture.mjs')
+  const article = { ...articles[0], id: '10000000-0000-4000-8000-000000000001', reader_state: 'eligible', source_status: 'active', url: 'javascript:unsafe()', claims: [{ kind: 'substantive', text: 'PRIVATE_RAW_EXTRACTION' }] }
+  const f = newsBackendFixture({ tables: { news_reviewed_articles_public: [reviewedNewsArticleFixture(article, { admittedClaims: [{ text: 'Published retained-source claim', excerpt: 'Exact retained words' }] })], articles: [article], news_detail_public: [{ article_id: 'A', reviewed_claims: [
     { surface_text: 'Published retained-source claim', auditability_state: 'verified_retained_source', evidence_records: [{ evidence_url: 'data:text/html,unsafe', evidence_type: 'primary' }] },
     { surface_text: 'PRIVATE_UNVERIFIED_PROJECTION', auditability_state: 'unverified_against_retained_source' },
   ] }] } }); let renderer
@@ -82,7 +82,7 @@ test('mounted News reader publishes admitted claims and safe locators only', asy
     await act(async () => clickArticle(renderer, 'A'))
     assert.match(text(renderer), /Published retained-source claim/)
     assert.doesNotMatch(text(renderer), /PRIVATE_RAW_EXTRACTION|PRIVATE_UNVERIFIED_PROJECTION/)
-    assert.match(text(renderer), /data:text\/html,unsafe/)
+    assert.doesNotMatch(text(renderer), /data:text\/html,unsafe/)
     assert.ok(renderer.root.findAllByType('a').every(a => /^https?:\/\//.test(a.props.href ?? '')))
   } finally { await act(async () => renderer.unmount()) }
 })
