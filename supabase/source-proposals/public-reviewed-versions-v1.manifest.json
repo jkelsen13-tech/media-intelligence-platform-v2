@@ -1,0 +1,135 @@
+{
+  "contract": "mip-reviewed-public-version-package-v1",
+  "status": "SOURCE_QUALIFIED_UNAPPLIED",
+  "date": "2026-10-02",
+  "branch": "codex/mip-launch-public-versions-20261002",
+  "base_commit": "78541e522bae4b0db0256c5941f70f2ea6cfbede",
+  "qualified_source_commit": "78b8fab2060754a8c60760ab5c0f5916883ed793",
+  "qualified_source_tree": "2feed8a2837ee442425d25c7f429d47d62015c76",
+  "artifacts": [
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "bytes": 9455,
+      "sha256": "850ffbd8d26d4b565bdbd065e85d8f5914b04bd90b1185689434ba9b20a1f23c"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersionBackend.js",
+      "bytes": 7503,
+      "sha256": "edfe9abe08728af16a41c6b207fc90ba3fb75f4b8f8910767182cfb6ac78b937"
+    },
+    {
+      "path": "src/lib/supabase.js",
+      "bytes": 65011,
+      "sha256": "d7631fe241442f02aa4634527f905bd309ea000916710b15bed4297fa5c10d6c"
+    },
+    {
+      "path": "scripts/reviewedPublicVersionPackage.mjs",
+      "bytes": 1379,
+      "sha256": "0ab7d66295cc8b8381c754194355adb00281cb4032d2361d9d50dfecd63661d9"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "bytes": 44663,
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.catalog.sql",
+      "bytes": 4470,
+      "sha256": "45468179dd9c16fdd49d41b7ae09455584296a972f9f33760647a5276ec55ec0"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.installed-catalog.sql",
+      "bytes": 7097,
+      "sha256": "caa50bacf71d2b6f0b3a9bf55f47bd40611de8b909c3416f8a2003176789b614"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.rollback.sql",
+      "bytes": 13352,
+      "sha256": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+    },
+    {
+      "path": "tests/reviewedPublicVersionFixture.mjs",
+      "bytes": 4395,
+      "sha256": "33e78ed482ddb5a6307a369d188dd0ce3107c3b140740c8a796d3cfa4c4ffb45"
+    },
+    {
+      "path": "tests/reviewedPublicVersionDatabase.test.mjs",
+      "bytes": 11706,
+      "sha256": "81dad5c4721601e93f8b6b102c1756886ee04c8e6e1413e7d2078609073561f0"
+    },
+    {
+      "path": "tests/reviewedPublicVersionSdk.test.mjs",
+      "bytes": 7398,
+      "sha256": "2484242daa503d22521defbdcdf16d1df30d797fc30d1a9887e2c011cbd0c708"
+    },
+    {
+      "path": "tests/reviewedPublicVersionPackage.test.mjs",
+      "bytes": 5064,
+      "sha256": "c9d07320a55b0e6469eb82b8b8b0120b8c1fd575185be27f740674541bbcc2a0"
+    }
+  ],
+  "documentation": {
+    "path": "docs/MIP_REVIEWED_PUBLIC_VERSIONS_2026-10-02.md",
+    "bytes": 14209,
+    "sha256": "e5dd4677426f49cec6d50be1006bb6c2a0c638fcdd8730b9a33cb1269507f452"
+  },
+  "governing_extracts": [
+    {
+      "path": "/workspace/library-files/launch-gate-libfile_720892b4771c8191a3216a89362f7028.txt",
+      "bytes": 5588,
+      "sha256": "ce9cb2489586380f19120f6f8fba1bb3cb72baebf0ad73c5b3cc85b55956f120"
+    },
+    {
+      "path": "/workspace/library-files/launch-gate-libfile_953c9013cec08191be2e9bef847b753f.txt",
+      "bytes": 45152,
+      "sha256": "c4ae0f94bdf049f575e9db23ba557ff6ef29ac603520232252bdf1b0431c57fa"
+    },
+    {
+      "path": "/workspace/library-files/launch-gate-libfile_90ebe4e040b48191ac4838f42b0d99dd.txt",
+      "bytes": 93470,
+      "sha256": "7e9ff9b6233722de2bbf1da0a4da428173a741adde04b262cadbcea60ab88c6a"
+    }
+  ],
+  "qualification": {
+    "node_24": "24.19.0",
+    "node_22": "22.23.3",
+    "tests_each": 15,
+    "failed_each": 0,
+    "production_build": "PASS",
+    "build_seconds": 31.58,
+    "receipts": [
+      {
+        "path": "/tmp/mip-public-version-final24.log",
+        "bytes": 1922,
+        "sha256": "e4efa68d80eddf477991d094f29776f9ca80376441e5021e66050326375ba5af"
+      },
+      {
+        "path": "/tmp/mip-public-version-final22.log",
+        "bytes": 4151,
+        "sha256": "c2f265121ddd2d711079c2903dc906dfbd779cbabd8f936b0616f34272073cd6"
+      },
+      {
+        "path": "/tmp/mip-public-version-build-final.log",
+        "bytes": 7702,
+        "sha256": "24565dc441d549fb56d0fba4e6f4576655f30274844c1e4665d9307459894a7a"
+      }
+    ]
+  },
+  "live_operations": 0,
+  "external_provider_calls": 0,
+  "installation_applied": false,
+  "required_parent_integration": [
+    "bound Source Comparison replacement before restoring predecessor API SELECT",
+    "ancillary reader routing/search-scope reconciliation",
+    "legacy atomic derived-write completion",
+    "full updated reader fixture/regression qualification"
+  ],
+  "reserved_execution": [
+    "fresh actual owner/client catalog and separate live installation authority",
+    "genuine source/review/rights admission",
+    "protected backend rehearsal/COMMIT",
+    "merge/deploy/release",
+    "physical-device/visual acceptance"
+  ],
+  "rollback": "Exact original+installed metadata receipts; empty ledger only; no CASCADE or admitted history deletion."
+}
