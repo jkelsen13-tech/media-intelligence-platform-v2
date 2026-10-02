@@ -1027,6 +1027,13 @@ export function createWorldViewRendererAdapter(args, {
     cancelCameraFlight: () => ready && !cancelled() ? impl?.cancelCameraFlight?.() ?? false : false,
     getCameraState: () => impl?.getCameraState?.() ?? null,
     getSourceStatus: () => impl?.getSourceStatus?.() ?? null,
+    getSourceImageryState: () => ready&&!cancelled()&&rendererKind==='ellipsoid-globe'
+      ? impl?.getSourceImageryState?.() ?? {available:false,status:'unavailable',ownedPhotoLayerCount:0}
+      : {available:false,status:'unavailable',ownedPhotoLayerCount:0},
+    attachSourceImagery: (loaded,descriptor,options) => ready&&!cancelled()&&rendererKind==='ellipsoid-globe'
+      ? impl?.attachSourceImagery?.(loaded,descriptor,options) ?? Promise.reject(Error('native-source-unsupported'))
+      : Promise.reject(Error('native-source-unavailable')),
+    fenceSourceImagery: () => impl?.fenceSourceImagery?.(),
     setActivityState: next => {
       if (cancelled() || !['visible-active', 'visible-idle', 'hidden'].includes(next)) return false
       activityState = next

@@ -61,7 +61,7 @@ export function resolveWorldViewSourceStatus({ stackId, rendererReady = false, t
     !stack ? 'No recognized source configuration.' : ready && overview
       ? 'Static overview geography; no photographic texture or detailed terrain.'
       : !ready ? 'Configured source; renderer readiness and imagery loading are not confirmed.'
-      : observedImagery ? 'At least one cartographic image reported loaded; viewport coverage is not established; no photographic layer is configured.'
+      : observedImagery ? 'At least one cartographic baseline image reported loaded; viewport coverage is not established; no photographic layer is inferred from this baseline observation.'
       : imageryStatus?.status === 'unavailable' ? 'Configured cartographic source unavailable; active imagery is not confirmed.'
       : imageryStatus?.status === 'loading' ? 'Configured cartographic source loading; active imagery is not confirmed.'
       : 'Cartographic source configured; imagery loading has not been observed.',
@@ -97,4 +97,16 @@ export function resolveWorldViewSourceStatus({ stackId, rendererReady = false, t
     background: Object.freeze({ label: 'Background context, not evidence',
       detail: 'Background detail does not change canonical coordinates, object/version, recorded time or evidence precision.' }),
   })
+}
+
+export function resolveWorldViewQualifiedOverlayStatus({layer,nativeState}={}) {
+  const source=layer?.activeSource
+  const active=layer?.status===S.ACTIVE&&source&&nativeState?.status==='active'&&nativeState.nativeFrameObserved===true
+    &&nativeState.visibilityFenced!==true&&nativeState.sourceId===source.id&&nativeState.assetSha256===source.assetSha256
+    &&nativeState.ownedPhotoLayerCount>0&&nativeState.ownedPhotoLayerCount<=4&&nativeState.creditsVisible===true
+  if(!active)return Object.freeze({status:S.UNKNOWN,label:'Photographic overlay unconfirmed',detail:'No current photographic payload is confirmed in this native frame.',capture:null,attribution:[],coverage:null})
+  return Object.freeze({status:S.ACTIVE,label:'Rendered photographic overlay',contentKind:source.contentKind,
+    detail:'Bounded reduced RGB footprint; the cartographic baseline remains outside it. Display background only; no evidence precision, terrain, height or facade is supplied.',
+    capture:source.capture,attribution:source.attribution,coverage:{crs:source.coverage.crs,bounds:[...nativeState.bounds],reduced:true,fullViewportCoverage:false},
+    resolutionMeters:source.resolutionMeters,sourceId:source.id,assetSha256:source.assetSha256})
 }

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { createWorldViewRealismSession } from './lib/worldViewRealismController.js'
 import GraphView from './graph/GraphView'
 import Legend from './graph/Legend'
 import EdgeControls from './graph/EdgeControls'
@@ -233,6 +234,9 @@ export default function App({
   const [graphCoverage, setGraphCoverage] = useState(null)
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(null) // selected node data
+  const sourceSessionRef=useRef(null)
+  if(!sourceSessionRef.current)sourceSessionRef.current=createWorldViewRealismSession()
+  const sourceAccessRef=useRef(null)
   const [pinned, setPinned] = useState(false)
   const [view, setView] = useState(INITIAL_DEEP_LINK.view)
   // A reviewed Story collection has its own reader route. It is not an event
@@ -339,6 +343,15 @@ export default function App({
     }
   }, [privateInvestigationPreview, investigationWorkspaceClient, investigationEvidenceChecksClient, investigationEvidenceReviewsClient, authSessionOverride])
   const auth = authSessionOverride ?? devPreview?.auth ?? liveAuth
+  const sourceAccess={actorId:auth.user?.id??null,sessionReady:auth.loading!==true,
+    subjectType:investigationContext.canonical_subject_type,subjectId:investigationContext.canonical_subject_id,
+    parentEvent:investigationContext.parent_event_id,assessment:investigationContext.temporal_assessment_reference,
+    at:investigationContext.as_of_time,range:investigationContext.selected_time_range}
+  sourceAccessRef.current=sourceAccess
+  sourceSessionRef.current.setCurrentAccessGetter(()=>sourceAccessRef.current)
+  const sourceAccessKey=JSON.stringify(sourceAccess)
+  useLayoutEffect(()=>{sourceSessionRef.current.setAccess(sourceAccessRef.current)},[sourceAccessKey])
+  useEffect(()=>sourceSessionRef.current.retain(),[])
   const marketSourceRead = useMarketSourceSnapshot({
     supplied: marketSourceSnapshot ?? mipBackend.publicData.marketSourceSnapshot ?? null,
     reader: mipBackend.publicData.markets ?? null, active: view === 'markets',
@@ -2149,6 +2162,10 @@ export default function App({
         )}
         {view === 'world' && (
           <WorldView
+            sourceSession={sourceSessionRef.current}
+            readerActorId={auth.user?.id??null}
+            sessionReady={auth.loading!==true}
+            sourceAccessKey={sourceAccessKey}
             graph={graph}
             graphError={error}
             selected={selected}

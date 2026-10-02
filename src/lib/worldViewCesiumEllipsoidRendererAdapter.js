@@ -322,6 +322,7 @@ export function createCesiumEllipsoidRendererAdapter({
   onStackIdChange,
   onTerrainStatusChange,
   onSourceStatusChange,
+  onSourceImageryStateChange,
   onSelectedAnchorChange,
   onCameraChange,
   initialActivityState = 'visible-idle',
@@ -340,6 +341,7 @@ export function createCesiumEllipsoidRendererAdapter({
 
   let cameraSnapshot = null
   let viewer = null
+  let sourceImagery = null
   let failureLifecycle = null
   let ownedHost = null
   let eventHandler = null
@@ -525,6 +527,7 @@ export function createCesiumEllipsoidRendererAdapter({
       isCancelled: cancelledNow,
       onFatalFailure: (kind, error) => {
         localCancelled = true
+        sourceImagery?.fence()
         for (const remove of removeLayoutListeners.splice(0)) remove?.()
         // Native loss is a distinct actual browser failure, not a synthesized
         // Scene.renderError. Report it honestly and transition only once.
@@ -537,6 +540,13 @@ export function createCesiumEllipsoidRendererAdapter({
       },
       destroyResources: destroyRendererResources,
     })
+    sourceImagery=createWorldViewNativeRgbAttachment({Cesium,getViewer:()=>viewer,getHost:()=>ownedHost?.element,
+      isCancelled:cancelledNow,onChange:onSourceImageryStateChange,onTeardownFailure:()=>{
+        // An owned native layer which cannot be removed must never reveal old
+        // pixels. Teardown after the current draw and retain its image lease.
+        queueMicrotask(()=>{if(localCancelled)return;localCancelled=true
+          onStackIdChange?.('openfreemap-positron');failureLifecycle?.destroy()})
+      }})
 
     // The widget otherwise rewrites canAnimate on every data-source tick.
     viewer.allowDataSourcesToSuspendAnimation = false
@@ -987,6 +997,10 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   function destroyRendererResources() {
+    // Native teardown remains guaranteed when a per-layer removal fails. The
+    // image owner releases orphaned leases only after this Viewer is destroyed.
+    try { sourceImagery?.destroy({destroyNative:()=>destroyCesiumResources({eventHandler,viewer})}) }
+    finally { destroyCesiumResources({eventHandler,viewer});sourceImagery = null }
     for (const remove of removeLayoutListeners.splice(0)) remove?.()
     labelMeasurements.clear()
     displayPresentation = null
@@ -1056,6 +1070,9 @@ export function createCesiumEllipsoidRendererAdapter({
     setActivityState,
     getVisualFidelityRenderState: () => ({ cameraGovernance: cameraGovernanceState(), renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
+    attachSourceImagery: (loaded,descriptor,options)=>sourceImagery?.attach(loaded,descriptor,options) ?? Promise.reject(Error('native-source-not-ready')),
+    getSourceImageryState: ()=>sourceImagery?.state() ?? {available:false,status:'unavailable',ownedPhotoLayerCount:0},
+    fenceSourceImagery: ()=>sourceImagery?.fence(),
     destroy,
   }
 }
@@ -1121,4 +1138,148 @@ export function worldViewBillboardNativeTargets(markers,admittedSingles,states,v
     singles.add(marker.id)
   }
   return {singles,states:nativeStates}
+}
+import { validateWorldViewBoundedRgbLoaded } from './worldViewBoundedRgbImagery.js'
+
+let sourceAdapterSerial = 0
+
+// Public Cesium ImageryProvider API over already hash-verified decoded images.
+// No URL provider, second download, private vendor image field or native handle
+// crosses this interface. The render lease outlives safe native teardown.
+export function createWorldViewNativeRgbAttachment({Cesium,getViewer,getHost,isCancelled=()=>false,onChange=()=>{},onTeardownFailure=()=>{},deadlineMs=15000}={}) {
+  const adapterGeneration=++sourceAdapterSerial, entries=new Set()
+  let generation=0, active=null, destroyed=false, frame=0, clearing=false, teardownFailed=false, removeBaseline=null, baselineTimer=null
+  const live=()=>!destroyed&&!isCancelled()&&getViewer()&&!getViewer().isDestroyed?.()
+  const owns=entry=>getViewer()===entry.viewer&&entry.viewer.imageryLayers===entry.collection&&entry.layers.every(layer=>entry.collection.contains(layer))
+  const creditsVisible=entry=>{
+    const node=getHost()?.querySelector?.('.cesium-widget-credits')
+    const style=node?.ownerDocument?.defaultView?.getComputedStyle?.(node)
+    return Boolean(node&&node.getClientRects?.().length&&style?.display!=='none'&&style?.visibility!=='hidden'&&style?.opacity!=='0'
+      &&entry.credits.every(text=>node.textContent.includes(text)))
+  }
+  const footprint=entry=>{
+    try {
+      const viewer=getViewer(), [w,s,e,n]=entry.descriptor.bounds
+      const points=[[w,s],[w,n],[e,s],[e,n]].map(([lon,lat])=>Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene,Cesium.Cartesian3.fromDegrees(lon,lat)))
+      if(points.some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null
+      return {left:Math.min(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),right:Math.max(...points.map(p=>p.x)),bottom:Math.max(...points.map(p=>p.y)),width:viewer.canvas.clientWidth,height:viewer.canvas.clientHeight}
+    }catch{return null}
+  }
+  const state=()=>({available:Boolean(live()&&!clearing&&!teardownFailed),adapterGeneration,attachmentGeneration:generation,
+    status:teardownFailed?'teardown-failed':active?.confirmed?'active':active?'loading':clearing?'clearing':'idle',sourceId:active?.descriptor.sourceId??null,
+    assetSha256:active?.loaded.assetSha256??null,bounds:active?.descriptor.bounds??null,level:active?.descriptor.level??null,
+    ancestry:active?.descriptor.ancestry??null,baselineLayerCount:live()?getViewer().imageryLayers.length-[...entries].reduce((sum,entry)=>sum+entry.layers.length,0):0,
+    ownedPhotoLayerCount:[...entries].reduce((sum,entry)=>sum+entry.layers.length,0),successfulTileKeys:active?[...active.successful]:[],providerSuccesses:active?.successes??0,
+    nativeFrameObserved:active?.confirmed??false,creditsVisible:active?creditsVisible(active):false,baselineFrameObserved:!clearing,
+    retainedRgbaBytes:[...entries].reduce((sum,entry)=>sum+entry.loaded.decodedByteLength,0),bitmapLeaseCount:entries.size,
+    screenFootprint:active?footprint(active):null,renderedFrames:frame,visibilityFenced:clearing})
+  const publish=()=>{try{onChange(structuredClone(state()))}catch{/* display observation cannot grant authority */}}
+  const hide=()=>{const host=getHost();if(host)host.style.visibility='hidden'}
+  const cleanup=entry=>{
+    if(entry.cleaned)return true
+    // The getter can disappear during outer renderer cleanup. Only the actual
+    // Viewer which owns these layers can prove their native lifetime ended.
+    const viewer=entry.viewer
+    const retained=[]
+    for(const layer of entry.layers){
+      try{if(viewer&&!viewer.isDestroyed?.()&&entry.collection.contains(layer)){
+        entry.collection.remove(layer,true)
+        if(entry.collection.contains(layer)){retained.push(layer);continue}
+      }}catch{retained.push(layer)}
+    }
+    entry.layers=retained
+    if(retained.length&&viewer&&!viewer.isDestroyed?.()){
+      if(!teardownFailed){teardownFailed=true;hide();try{onTeardownFailure()}catch{/* failure notification cannot release live images */}}
+      publish();return false
+    }
+    entry.cleaned=true;entry.layers=[]
+    try{entry.releaseLease()}finally{entries.delete(entry);publish()}
+    return true
+  }
+  const disposeEntry=entry=>{
+    if(entry.disposed)return;entry.disposed=true;entry.removeFrame?.();entry.removeFrame=null
+    clearTimeout(entry.timer);entry.signal?.removeEventListener('abort',entry.abort)
+    if(active===entry)active=null
+    // A renderError/context-loss callback can be inside Cesium's draw. Keep
+    // bitmap ownership until the draw exits, even if controller cleanup reenters.
+    if(isCancelled()&&!destroyed)queueMicrotask(()=>cleanup(entry));else cleanup(entry)
+  }
+  const stopBaseline=()=>{removeBaseline?.();removeBaseline=null;clearTimeout(baselineTimer);baselineTimer=null}
+  function fence() {
+    generation++;hide();clearing=true;stopBaseline()
+    for(const entry of [...entries]){entry.reject?.(Error('source-attachment-invalidated'));disposeEntry(entry)}
+    if(!live()){publish();return}
+    const token=generation, before=frame, viewer=getViewer()
+    removeBaseline=viewer.scene.postRender.addEventListener(()=>{
+      if(!live()||teardownFailed||entries.size||token!==generation||active)return
+      if(frame<=before+1){viewer.scene.requestRender?.();return}
+      stopBaseline();clearing=false;const host=getHost();if(host)host.style.visibility='';publish()
+    })
+    baselineTimer=setTimeout(()=>{if(token!==generation)return;stopBaseline();publish()},deadlineMs)
+    viewer.scene.requestRender?.();publish()
+  }
+  // This listener is independent from attachment observers and witnesses the
+  // actual native frame sequence, including cleanup baseline frames.
+  let frameViewer=null, removeFrames=null
+  function ensureFrames(){const viewer=getViewer();if(viewer===frameViewer)return;removeFrames?.();frameViewer=viewer;removeFrames=viewer?.scene?.postRender?.addEventListener(()=>{frame++})}
+  async function attach(loaded,descriptor,{signal}={}) {
+    ensureFrames()
+    if(!live()||clearing||teardownFailed||signal?.aborted||!validateWorldViewBoundedRgbLoaded(loaded,descriptor))throw Error('bounded-source-binding-unavailable')
+    const viewer=getViewer()
+    if(active||entries.size||viewer.imageryLayers.length!==1||loaded.tiles.length>4)throw Error('source-baseline-or-layer-bound')
+    const credits=(descriptor.metadata?.attribution??[]).map(item=>item.text)
+    if(!credits.length||credits.some(text=>typeof text!=='string'||!text.trim()))throw Error('source-credit-unavailable')
+    const escape=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+    const entry={viewer,collection:viewer.imageryLayers,loaded,descriptor,layers:[],credits,successful:new Set(),successes:0,successFrame:0,confirmed:false,
+      releaseLease:loaded.retainDecodedImages(),signal,disposed:false,cleaned:false,removeFrame:null,timer:null}
+    const token=++generation;entries.add(entry);active=entry
+    return new Promise((resolve,reject)=>{
+      let settled=false
+      entry.reject=error=>{if(settled)return;settled=true;reject(error)}
+      const fail=reason=>{entry.reject(Error(reason));hide();clearing=true;disposeEntry(entry);fence()}
+      entry.abort=()=>fail('source-attachment-aborted')
+      signal?.addEventListener('abort',entry.abort,{once:true})
+      try {
+        for(const tile of loaded.tiles){
+          const rectangle=Cesium.Rectangle.fromDegrees(...tile.bounds), errorEvent=new Cesium.Event()
+          const provider={rectangle,tileWidth:tile.width,tileHeight:tile.height,minimumLevel:0,maximumLevel:0,
+            tilingScheme:new Cesium.GeographicTilingScheme({rectangle,numberOfLevelZeroTilesX:1,numberOfLevelZeroTilesY:1}),
+            tileDiscardPolicy:undefined,errorEvent,credit:new Cesium.Credit(credits.map(escape).join(' · '),true),proxy:undefined,hasAlphaChannel:false,
+            getTileCredits:()=>undefined,pickFeatures:()=>undefined,
+            requestImage(x,y,level){
+              if(entry.disposed||!live()||token!==generation||signal?.aborted||x!==0||y!==0||level!==0)return Promise.reject(Error('source-tile-unavailable'))
+              return Promise.resolve(tile.imageBitmap).then(image=>{
+                if(entry.disposed||!live()||token!==generation||signal?.aborted)throw Error('source-tile-cancelled')
+                entry.successful.add(tile.key);entry.successes++;entry.successFrame=frame;viewer.scene.requestRender?.();publish();return image
+              })
+            }}
+          entry.layers.push(viewer.imageryLayers.addImageryProvider(provider))
+        }
+        entry.removeFrame=viewer.scene.postRender.addEventListener(()=>{
+          if(entry.disposed||!live()||token!==generation||signal?.aborted)return
+          if(entry.successful.size!==loaded.tiles.length||!owns(entry)||!creditsVisible(entry)||frame<=entry.successFrame+1){viewer.scene.requestRender?.();return}
+          entry.confirmed=true;clearTimeout(entry.timer);entry.removeFrame?.();entry.removeFrame=null
+          settled=true;publish();resolve({observation:{sourceId:descriptor.sourceId,status:'active',rendered:true,successes:entry.successes,
+            attributionVisible:true,bounds:[...descriptor.bounds],level:descriptor.level,ancestry:descriptor.ancestry,
+            assetSha256:loaded.assetSha256,adapterGeneration,attachmentGeneration:token,nativeFrameObserved:true,
+            successfulTileKeys:[...entry.successful],viewportCoverageQualified:false},dispose(){if(entry.disposed)return;fence()}})
+        })
+        entry.timer=setTimeout(()=>fail('source-native-frame-deadline'),deadlineMs)
+        viewer.scene.requestRender?.();publish()
+      }catch{fail('source-native-allocation-failed')}
+    })
+  }
+  return {attach,state,fence(){ensureFrames();fence()},destroy({destroyNative}={}){
+    if(!destroyed){destroyed=true;generation++;hide();stopBaseline();removeFrames?.();removeFrames=null}
+    for(const entry of [...entries]){entry.reject?.(Error('source-native-destroyed'));disposeEntry(entry);cleanup(entry)}
+    // If removal failed, destruction of the actual native Viewer is the next
+    // safe lifetime boundary. A failed Viewer destroy retains the lease and
+    // permits a later destroy attempt; it cannot close an image still in use.
+    try{destroyNative?.()}catch{/* retain unremoved live resources */}
+    for(const viewer of new Set([...entries].map(entry=>entry.viewer))){
+      try{if(!viewer.isDestroyed?.())viewer.destroy?.()}catch{/* retained lease stays fenced */}
+    }
+    for(const entry of [...entries])cleanup(entry)
+    active=null;publish()
+  }}
 }

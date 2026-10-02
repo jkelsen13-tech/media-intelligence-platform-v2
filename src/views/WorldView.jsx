@@ -410,6 +410,7 @@ export default function WorldView({
   onSelectGraphNode,
   investigationContext,
   onInvestigationAsOfTime,
+  sourceSession=null,readerActorId=null,sessionReady=false,sourceAccessKey=null,
   backend = mipBackend.publicData.spatial,
 }) {
   const cameraMemoryRef = useRef(null)
@@ -425,13 +426,15 @@ export default function WorldView({
     getCameraState: () => cameraControlsRef.current?.getCameraState?.() ?? null,
     setCameraState: value => cameraControlsRef.current?.setCameraState?.(value) ?? false,
   }), [])
-  const [sourceStatus, setSourceStatus] = useState(null)
+  const [sourceStatusSnapshot, setSourceStatus] = useState(null)
+  const sourceStatus=sourceStatusSnapshot?.accessKey===sourceAccessKey?sourceStatusSnapshot:null
   const [exploring, setExploring] = useState(false)
   const [exploreContextRequest, setExploreContextRequest] = useState(0)
   const handleExploreChange = useCallback(active => {
+    if (active) sourceSession?.interact()
     setExploring(active)
     if (!active) setExploreContextRequest(0)
-  }, [])
+  }, [sourceSession])
   const [contextOpen, setContextOpen] = useState(false)
   const keyboardOpenerCurrent = useRef(null)
   const keyboardContextCurrent = useRef(null)
@@ -689,7 +692,8 @@ export default function WorldView({
               {sourceStatus && <>
                 {[sourceStatus.imagery, sourceStatus.elevation, sourceStatus.buildings].map((source, index) =>
                   <p key={index} data-source-classification={source.status}><strong>{source.label}</strong> · {source.status}. {source.detail}</p>)}
-                <p>Qualified imagery source: {sourceStatus.qualifiedRealism?.status ?? 'UNKNOWN'}. {sourceStatus.qualifiedRealism?.activeSource ? `Admitted content: ${sourceStatus.qualifiedRealism.activeSource.contentKind}.` : 'No qualified imagery asset is confirmed active.'}</p>
+                <p>Qualified imagery source: {sourceStatus.photographicOverlay?.status ?? 'UNKNOWN'}. {sourceStatus.photographicOverlay?.status==='ACTIVE' ? `Observed rendered content: ${sourceStatus.photographicOverlay.contentKind}.` : 'No current photographic payload is confirmed active.'}</p>
+                {sourceStatus.photographicOverlay?.status==='ACTIVE'&&<p data-rgb-source-disclosure>{sourceStatus.photographicOverlay.detail} Capture: {sourceStatus.photographicOverlay.capture?.start} ({sourceStatus.photographicOverlay.capture?.precision} precision, ground condition). Coarser derivative spacing: {sourceStatus.photographicOverlay.resolutionMeters} metres. Attribution: {sourceStatus.photographicOverlay.attribution.map(item=>item.text).join(' · ')}</p>}
                 <p>{sourceStatus.sourceCapture.detail} {sourceStatus.background.detail}</p>
               </>}
             </details>
@@ -703,7 +707,7 @@ export default function WorldView({
           </div>
           <WorldViewExploreShell prototypeEnabled={prototypeEnabled && showMap}
             contextRequest={exploreContextRequest}
-            controls={fidelityControls} status={<p>{sourceSummary}. Capture dates unknown; background context only.</p>}
+            controls={fidelityControls} status={<p>{sourceSummary}. {sourceStatus?.photographicOverlay?.status==='ACTIVE'?`Photographic overlay capture ${sourceStatus.photographicOverlay.capture?.start} (${sourceStatus.photographicOverlay.capture?.precision} precision); reduced footprint; display background only.`:'Baseline capture dates unknown; background context only.'}</p>}
             attribution={<p>© OpenStreetMap contributors. Approved Ohio terrain: USGS 3DEP/SRTM/GMTED2010, NOAA ETOPO1, NRCan CDEM via Mapzen/AWS Terrain Tiles. Contains information licensed under the Open Government Licence – Canada.</p>}
             contextToken={exploreToken} recordedTimeLabel={recordedTime.atIso ? `Inspection time: ${recordedTime.atIso}` : 'Recorded time unavailable'}
             cameraAdapter={cameraBridge} interactionEnabled={touchInteraction} onInteractionChange={setTouchInteraction}
@@ -717,6 +721,7 @@ export default function WorldView({
           <div id="wv-mode-panel" role="tabpanel" aria-labelledby={`wv-mode-${mode}`} className={`wv-stage wv-stage-${mode}${touchInteraction ? ' wv-touch-active' : ''}`}>
             {showMap && (
               <WorldMapCanvas
+                sourceSession={sourceSession} readerActorId={readerActorId} sessionReady={sessionReady} sourceAccessKey={sourceAccessKey}
                 cameraMemory={cameraMemoryRef.current}
                 recordedTimeInstant={['selected', 'default'].includes(recordedTime.kind) ? recordedTime.atIso : null}
                 visualFidelity={visualFidelity}

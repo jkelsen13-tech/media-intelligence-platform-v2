@@ -1,5 +1,4 @@
-import { createWorldViewRealismController } from '../lib/worldViewRealismController.js'
-import { createWorldViewLocalResourceBudget } from '../lib/worldViewLocalResourceBudget.js'
+import { createWorldViewRealismSession } from '../lib/worldViewRealismController.js'
 import { resolveWorldViewRealismLayer } from '../lib/worldViewRealismAdmission.js'
 import { createWorldViewResourceGovernance } from '../lib/worldViewResourceGovernance.js'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -24,7 +23,7 @@ import { visualFidelityCapabilities, resolveVisualFidelityProfile } from '../lib
 import { createCameraFraming } from '../lib/worldViewCameraFraming'
 import { createCameraMemory, northAmericaCameraState } from '../lib/worldViewCameraMemory.js'
 import { activateAtlasMarker, atlasDisplayMetrics, atlasLabelLayout, atlasLabelText, atlasMarkerId, atlasScreenScale } from '../lib/worldViewAtlasLabelLayout.js'
-import { resolveWorldViewSourceStatus } from '../lib/worldViewSourceStatus.js'
+import { resolveWorldViewSourceStatus,resolveWorldViewQualifiedOverlayStatus } from '../lib/worldViewSourceStatus.js'
 import { createWorldViewPilotBookmarks } from '../lib/worldViewPilotBookmarks.js'
 import { createWorldViewUsage, worldViewResourceObservation } from '../lib/worldViewResourcePolicy.js'
 
@@ -245,7 +244,7 @@ function AtlasFallbackMap({ rows, selectedKeys, onSelectRow, emptyMessage, attri
 }
 
 export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSelectRow, emptyMessage, recordedTimeInstant, visualFidelity,
-  onVisualFidelityCapabilities, cameraControlsRef, onSourceStatus, contextOverlay, explorationActive = false, relationships = EMPTY_RELATIONSHIPS, onRelationshipDisplay, billboardEnabled = false, realismServices = null }) {
+  onVisualFidelityCapabilities, cameraControlsRef, onSourceStatus, contextOverlay, explorationActive = false, relationships = EMPTY_RELATIONSHIPS, onRelationshipDisplay, billboardEnabled = false, realismServices = null, sourceSession=null,readerActorId=null,sessionReady=false,sourceAccessKey=null }) {
   const [presentation, setPresentation] = useState(null)
   const [inspectedClusterId, setInspectedClusterId] = useState(null)
   const [inspectionRevision, setInspectionRevision] = useState(0)
@@ -318,6 +317,10 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   const governanceRef = useRef(null)
   if (!governanceRef.current) governanceRef.current = createWorldViewResourceGovernance()
   const realismRef = useRef(null)
+  const localSessionRef=useRef(null)
+  if(!localSessionRef.current)localSessionRef.current=createWorldViewRealismSession()
+  const ownerSession=sourceSession??localSessionRef.current
+  const [nativeSourceState,setNativeSourceState]=useState(null)
   const realismRequestRef = useRef(null)
   const realismSelectionRef = useRef(null)
   const realismExploreRef = useRef(explorationActive)
@@ -337,92 +340,45 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   const firstRef = useRef(first)
   firstRef.current = first
 
-  useEffect(() => {
-    const doc = hostRef.current?.ownerDocument ?? (typeof document === 'undefined' ? null : document)
-    const view = doc?.defaultView ?? (typeof window === 'undefined' ? null : window)
-    let alive = true, controller, timer = null, hasManagedWork = false, setupFailure = null
-    const publish = snapshot => {
-      if (!alive) return
-      setLocalSourceResource({...snapshot, bridgeFailure: setupFailure})
-      if (snapshot.pendingSourceId || snapshot.activeSourceId) { hasManagedWork = true; startPolling() }
-      if (snapshot.disposed) stopPolling()
-    }
-    const stopPolling = () => { if (timer !== null) view?.clearInterval?.(timer); timer = null }
-    const startPolling = () => {
-      if (!hasManagedWork || timer !== null || doc?.hidden || !view?.setInterval || controller?.snapshot().disposed) return
-      timer = view.setInterval(() => {
-        controller?.poll()
-        if (controller?.snapshot().disposed) stopPolling()
-      }, 1000)
-    }
-    const create = () => {
-      hasManagedWork = false
-      try {
-        if (setupFailure) throw new Error('source-service-unavailable')
-        controller = createWorldViewRealismController({
-          sources: realismServices?.sources ?? [], transport: realismServices?.transport ?? null,
-          renderer: realismServices?.renderer ?? null, estimateBytes: realismServices?.estimateBytes,
-          localBudget: createWorldViewLocalResourceBudget(realismServices?.budgetOptions), onChange: publish,
-        })
-      } catch {
-        setupFailure ??= 'source-service-setup-unavailable'
-        controller = createWorldViewRealismController({localBudget: createWorldViewLocalResourceBudget(), onChange: publish})
-      }
-      publish(controller.snapshot())
-    }
-    const interaction = () => {
-      if (!alive || doc?.hidden) return
-      // Only a real interaction starts a fresh local session after idle disposal.
-      if (controller.snapshot().disposed) create()
-      controller.interact()
-      governanceRef.current.interact()
-      startPolling()
-    }
-    const owner = {
-      snapshot: () => ({...controller.snapshot(), bridgeFailure: setupFailure}),
-      transition(state) { const actual = doc?.hidden ? 'hidden' : state; controller.transition(actual); if (actual === 'hidden') stopPolling(); else startPolling() },
-      select(input, meaningful) { if (meaningful) interaction(); return controller.select(input) },
-      interact() { interaction() },
-      failRequest() {
-        setupFailure = 'source-request-unavailable'
-        stopPolling()
-        try { controller.dispose() } catch { /* supplied service cleanup can also fail */ }
-        let observed = null
-        try { observed = controller.snapshot() } catch { /* unavailable state stays unconfirmed */ }
-        if (alive) setLocalSourceResource({...observed, status: 'fallback', activeSourceId: null,
-          activeDescriptor: null, observedLayer: null, bridgeFailure: setupFailure})
-      },
-    }
-    create(); realismRef.current = owner
-    realismSelectionRef.current = null
-    const visibility = () => owner.transition(doc?.hidden ? 'hidden' : realismExploreRef.current ? 'visible-active' : 'visible-idle')
-    visibility()
-    doc?.addEventListener?.('visibilitychange', visibility)
-    const refreshRequest = () => realismRequestRef.current?.(false)
+  useLayoutEffect(() => {
+    const doc=hostRef.current?.ownerDocument??(typeof document==='undefined'?null:document)
+    const view=doc?.defaultView
+    let alive=true,timer=null
+    if(!sourceSession)ownerSession.setAccess({actorId:readerActorId,sessionReady})
+    const configured=ownerSession.configure(realismServices)
+    const binding={state:()=>adapterRef.current?.getSourceImageryState?.()??{available:false},
+      attach:(loaded,descriptor,options)=>adapterRef.current?.attachSourceImagery?.(loaded,descriptor,options)??Promise.reject(Error('native-source-not-ready')),
+      fence:()=>adapterRef.current?.fenceSourceImagery?.()}
+    const unbind=ownerSession.bindAttachment(binding,snapshot=>{
+      if(!alive)return
+      setLocalSourceResource({...snapshot,bridgeFailure:snapshot.bridgeFailure??(configured?null:'source-service-configuration-changed')})
+      const shouldPoll=snapshot.localBudget?.requests>0&&!snapshot.disposed&&snapshot.lifecycle!=='hidden'
+      if(!shouldPoll&&timer!==null){view?.clearInterval(timer);timer=null}
+      if(shouldPoll&&timer===null&&view?.setInterval)timer=view.setInterval(()=>ownerSession.poll(),1000)
+    })
+    realismRef.current=ownerSession
+    const visibility=()=>ownerSession.transition(doc?.hidden?'hidden':realismExploreRef.current?'visible-active':'visible-idle')
+    visibility();doc?.addEventListener?.('visibilitychange',visibility)
     let unsubscribe
-    if (!setupFailure) {
-      try { unsubscribe = realismServices?.subscribeRequestChanges?.(refreshRequest) }
-      catch {
-        setupFailure = 'source-service-subscription-unavailable'
-        controller.dispose(); create()
-      }
+    try{unsubscribe=realismServices?.subscribeRequestChanges?.(()=>realismRequestRef.current?.(false))}catch{ownerSession.failRequest()}
+    return()=>{alive=false;if(timer!==null)view?.clearInterval(timer);doc?.removeEventListener?.('visibilitychange',visibility)
+      try{unsubscribe?.()}catch{/* ordinary cleanup remains owned */}
+      unbind();if(realismRef.current===ownerSession)realismRef.current=null
+      if(!sourceSession)ownerSession.dispose()
     }
-    startPolling()
-    return () => {
-      alive = false; stopPolling()
-      doc?.removeEventListener?.('visibilitychange', visibility)
-      if (typeof unsubscribe === 'function') { try { unsubscribe() } catch { /* baseline cleanup still owns disposal */ } }
-      controller.dispose()
-      if (realismRef.current === owner) realismRef.current = null
-    }
-  }, [realismServices])
+  },[ownerSession,realismServices,sourceSession])
+
+  useLayoutEffect(()=>{
+    ownerSession.setScope({access:sourceAccessKey,actorId:readerActorId,ready:sessionReady,
+      selected:first?projectionRowDisplayKey(first.row):null,revision:first?.row?.revision_id??null,time:recordedTimeInstant??null})
+  },[ownerSession,sourceAccessKey,readerActorId,sessionReady,first,recordedTimeInstant])
 
   // Native input belongs to the current renderer host. Atlas removes that
   // subtree; rebinding must not reset the source session or its local accounting.
   useEffect(() => {
     const host = hostRef.current
     if (!host || stackId === FALLBACK_MAP_STACK_ID) return undefined
-    const beginInteraction = () => realismRef.current?.interact()
+    const beginInteraction = () => {if(!host.ownerDocument?.hidden)realismRef.current?.interact()}
     const refreshRequest = () => realismRequestRef.current?.(false)
     const wheelInteraction = () => { beginInteraction(); refreshRequest() }
     host.addEventListener?.('pointerdown', beginInteraction)
@@ -473,6 +429,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       onSourceStatusChange: next => { if (!cancelled) setImageryStatus(next) },
       onSelectedAnchorChange: next => { if (!cancelled) setContextAnchor(next) },
       onCameraChange: () => { if (!cancelled) realismRequestRef.current?.(false) },
+      onSourceImageryStateChange: next=>{if(!cancelled){setNativeSourceState(next);if(next.available)queueMicrotask(()=>{if(!cancelled)realismRequestRef.current?.(false)})}},
       initialFeatures: features,
       recordedTimeInstant,
       isCancelled: () => cancelled,
@@ -497,6 +454,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     })
     return () => {
       memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
+      ownerSession.invalidateAttachment?.('native-stack-destroyed')
       cancelled = true
       adapter.destroy()
       adapterRef.current = null
@@ -541,8 +499,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   }, [explorationActive, stackId, rendererReady])
 
   useEffect(() => {
-    realismRef.current?.transition(explorationActive ? 'visible-active' : 'visible-idle')
-    if (explorationActive) realismRef.current?.interact()
+    const doc=hostRef.current?.ownerDocument??(typeof document==='undefined'?null:document)
+    realismRef.current?.transition(doc?.hidden?'hidden':explorationActive ? 'visible-active' : 'visible-idle')
   }, [explorationActive, realismServices])
 
   realismRequestRef.current = (meaningful = false) => {
@@ -552,7 +510,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     let request = null
     // Geographic bounds/LOD must come from an explicit viewport service. A
     // canonical evidence point or a camera floor is not a coverage descriptor.
-    if (selection && rendererReady && stackId !== FALLBACK_MAP_STACK_ID && !owner.snapshot().bridgeFailure) {
+    if (selection && sessionReady && !hostRef.current?.ownerDocument?.hidden && rendererReady && adapterRef.current?.getSourceImageryState?.().available && stackId !== FALLBACK_MAP_STACK_ID && !owner.snapshot().bridgeFailure) {
       try { request = realismServices?.getRequest?.({selection, stackId,
         cameraState: adapterRef.current?.getCameraState?.() ?? null, recordedTimeInstant, rendererReady}) ?? null }
       catch { request = null }
@@ -560,7 +518,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     // Keep the fire-and-forget UI boundary contained even if a supplied service
     // violates its contract. The controller owns ordinary admission failures.
     try {
-      void Promise.resolve(owner.select(request, meaningful)).catch(() => {
+      void Promise.resolve(owner.select(request)).catch(() => {
         if (realismRef.current !== owner) return
         owner.failRequest()
       })
@@ -573,7 +531,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     const meaningful = Boolean(key && realismSelectionRef.current !== key)
     realismSelectionRef.current = key
     realismRequestRef.current?.(meaningful)
-  }, [first, stackId, rendererReady, recordedTimeInstant, realismServices, explorationActive])
+  }, [first, stackId, rendererReady, recordedTimeInstant, realismServices, explorationActive,sessionReady,nativeSourceState?.available])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -588,7 +546,7 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       })
       observer.observe({ type: 'resource' })
     } catch { /* unavailable timing remains unobserved */ }
-    const probe = { snapshot: () => ({...usageRef.current.snapshot(),paidDetail:governanceRef.current.poll(),localSourceResource:realismRef.current?.snapshot() ?? null}),
+    const probe = { snapshot: () => ({...usageRef.current.snapshot(),paidDetail:governanceRef.current.poll(),localSourceResource:realismRef.current?.snapshot() ?? null,nativeSourceImagery:adapterRef.current?.getSourceImageryState?.()??null}),
       device: () => ({ deviceMemoryGb: navigator.deviceMemory ?? null,
         networkClass: navigator.connection?.effectiveType ?? null,
         javascriptHeapBytes: performance.memory?.usedJSHeapSize ?? null,
@@ -605,13 +563,14 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     const observed = resolveWorldViewSourceStatus({ stackId,
       rendererReady: stackId === FALLBACK_MAP_STACK_ID || rendererReady, terrainStatus,
       requestedProfile: visualFidelity, imageryStatus })
-    // No photographic/building asset has passed byte, rights and coverage admission.
-    // Report the actually observed cheap cartographic fallback independently.
-    return {...observed,localSourceResource,qualifiedRealism:localSourceResource?.status === 'active' && localSourceResource.activeDescriptor?.kind === 'imagery'
-      ? localSourceResource.observedLayer : resolveWorldViewRealismLayer({kind:'imagery',sources:[],
+    const current=ownerSession.snapshot()
+    const qualifiedRealism=current?.status === 'active' && current.activeDescriptor?.kind === 'imagery'
+      ? current.observedLayer : resolveWorldViewRealismLayer({kind:'imagery',sources:[],
       observation:observed.imagery.status==='ACTIVE' || stackId===FALLBACK_MAP_STACK_ID
-        ? {rendered:true,fallbackKind:stackId===FALLBACK_MAP_STACK_ID?'atlas':'cartographic'} : null})}
-  }, [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus, localSourceResource])
+        ? {rendered:true,fallbackKind:stackId===FALLBACK_MAP_STACK_ID?'atlas':'cartographic'} : null})
+    return {...observed,accessKey:sourceAccessKey,localSourceResource:current,qualifiedRealism,
+      photographicOverlay:resolveWorldViewQualifiedOverlayStatus({layer:qualifiedRealism,nativeState:adapterRef.current?.getSourceImageryState?.()})}
+  }, [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus, localSourceResource,nativeSourceState,sourceAccessKey,ownerSession])
   useEffect(() => { onSourceStatus?.(sourceStatus) }, [sourceStatus, onSourceStatus])
   const pilotBookmarks = createWorldViewPilotBookmarks({ coordinate, precisionClass: first?.row?.precision_class })
 
