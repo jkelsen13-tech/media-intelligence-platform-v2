@@ -1,4 +1,5 @@
 import { createFollowingHandler } from '../../source-proposals/investigationFollowingHandler.mjs'
+import { createStoryFollowingHandler } from '../../source-proposals/storyFollowingHandler.mjs'
 import { createSelectiveIntakeHandler } from '../../source-proposals/investigationSelectiveIntakeHandler.mjs'
 import { createWorkspaceHandler, createWorkspaceTransport } from '../investigation-workspace/handler.mjs'
 import { createEvidenceChecksHandler, createEvidenceChecksTransport } from '../investigation-evidence-checks/handler.mjs'
@@ -10,13 +11,14 @@ export const INVESTIGATION_API_CONTRACT = 'investigation-api-1'
 
 // One entry point, dispatching directly to the existing domain handlers. No
 // HTTP fan-out, arbitrary RPC proxy, response cache, or automatic retry.
-export function createInvestigationApiHandler({ authenticate, workspaceRpc, checksRpc, reviewsRpc, followingRpc, selectiveIntakeRpc,
+export function createInvestigationApiHandler({ authenticate, workspaceRpc, checksRpc, reviewsRpc, followingRpc, storyFollowingRpc, selectiveIntakeRpc,
   allowedOrigins = ['https://jkelsen13-tech.github.io'] }) {
   const common = { authenticate, allowedOrigins }
   const workspace = { ...common, rpc: workspaceRpc }
   const routes = new Map([
     ['workspace', createWorkspaceHandler(workspace)],
     ['following', createFollowingHandler({ ...common, rpc: followingRpc ?? (async () => ({ error: { code: 'not_configured' } })) })],
+    ['story-following', createStoryFollowingHandler({ ...common, rpc: storyFollowingRpc ?? (async () => ({ error: { code: 'not_configured' } })) })],
     ['selective-intake', createSelectiveIntakeHandler({ ...common, workspaceRpc,
       rpc: selectiveIntakeRpc ?? (async () => ({ error: { code: 'not_configured' } })) })],
     ['checks', createEvidenceChecksHandler({ ...common, rpc: checksRpc })],
@@ -52,6 +54,7 @@ export function createInvestigationApiTransport(options) {
   const rpcPaths = new Set([
     'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_workspace_v1',
     'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_following_v1',
+    'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_public_story_following_v1',
     'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_selective_intake_v1',
     'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_evidence_checks_v1',
     'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_evidence_reviews_v1',
@@ -87,7 +90,16 @@ export function createInvestigationApiTransport(options) {
     const data = await response.json()
     return response.ok ? { data } : { error: data }
   }
-  return { authenticate: workspace.authenticate, workspaceRpc: workspace.rpc, followingRpc, selectiveIntakeRpc,
+  const storyFollowingRpc = async (action, input) => {
+    // Fixed source binding; profile/actor/revoke checks stay in this domain owner.
+    const response = await transportOptions.fetchImpl(new URL('/rest/v1/rpc/mip_public_story_following_v1', options.url).href, {
+      method: 'POST', headers: { apikey: options.serviceKey, Authorization: `Bearer ${options.serviceKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_action: action, p_input: input }), redirect: 'error', signal: AbortSignal.timeout(15000),
+    })
+    const data = await response.json()
+    return response.ok ? { data } : { error: data }
+  }
+  return { authenticate: workspace.authenticate, workspaceRpc: workspace.rpc, followingRpc, storyFollowingRpc, selectiveIntakeRpc,
     checksRpc: createEvidenceChecksTransport(transportOptions).rpc,
     reviewsRpc: createEvidenceReviewsTransport(transportOptions).rpc }
 }

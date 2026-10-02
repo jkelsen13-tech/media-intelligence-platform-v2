@@ -1,4 +1,5 @@
 import { createInvestigationFollowingClient } from './investigationFollowingClient.js'
+import { createStoryFollowingBackend } from './storyFollowingClient.js'
 import { createInvestigationSelectiveIntakeClient } from './investigationSelectiveIntakeClient.js'
 import { createInvestigationWorkspaceClient } from './investigationWorkspaceClient.js'
 import { createInvestigationEvidenceChecksClient } from './investigationEvidenceChecksClient.js'
@@ -39,6 +40,7 @@ export function createInvestigationBackend(supabase) {
   return Object.freeze({
     workspace: createInvestigationWorkspaceClient(transport),
     following: createInvestigationFollowingClient({ call: followingCall }),
+    storyFollowing: createStoryFollowingBackend(supabase),
     selectiveIntake: createInvestigationSelectiveIntakeClient(transport),
     checks: createInvestigationEvidenceChecksClient(transport),
     reviews: createInvestigationEvidenceReviewsClient(transport),

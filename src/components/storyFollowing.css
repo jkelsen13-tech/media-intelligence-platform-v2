@@ -1,0 +1,11 @@
+.story-following, .story-following-panel { border: 1px solid var(--border, #334155); border-radius: 12px; padding: 1rem; margin-block: 1rem; min-width: 0; }
+.story-following h3, .story-following-panel h2 { margin-top: 0; }
+.story-following p, .story-following-panel p { line-height: 1.5; overflow-wrap: anywhere; }
+.story-following-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .75rem; }
+.story-following button, .story-following-panel button { padding: .6rem .8rem; min-height: 44px; cursor: pointer; }
+.story-following button:focus-visible, .story-following-panel button:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }
+.story-following-updates { padding-inline-start: 1.25rem; }
+.story-following-updates li + li { margin-top: .75rem; }
+.story-following-note, .story-following-updates small { color: var(--text-secondary, #b1bccb); }
+.story-following-identity { display: block; font-size: .75rem; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .story-following-actions { flex-direction: column; } .story-following-actions button { width: 100%; } }
