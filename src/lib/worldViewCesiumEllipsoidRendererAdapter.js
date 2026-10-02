@@ -214,15 +214,24 @@ export function createGlobeFailureLifecycle({
   let failed = false
   let disposed = false
   let queued = false
+  let finalizing = false
   const removers = []
   function removeListeners() {
-    for (const remove of removers.splice(0)) remove?.()
+    for (const remove of removers.splice(0)) {
+      try { remove?.() } catch { /* keep native finalization reachable */ }
+    }
   }
   function dispose() {
-    if (disposed) return
-    disposed = true
+    queued = false
+    if (disposed || finalizing) return disposed
+    finalizing = true
     removeListeners()
-    destroyResources?.()
+    // false is an explicit surviving native owner. Legacy void cleanup remains
+    // complete; a failed owner can be retried without restoring draw authority.
+    try { disposed = destroyResources?.() !== false }
+    catch { disposed = false }
+    finally { finalizing = false }
+    return disposed
   }
   function deferDispose() {
     if (queued || disposed) return
@@ -255,8 +264,9 @@ export function createGlobeFailureLifecycle({
   if (typeof removeRenderError === 'function') removers.push(removeRenderError)
   return {
     destroy() {
-      if (failed) deferDispose()
-      else dispose()
+      if (disposed) return true
+      if (failed) { deferDispose(); return false }
+      return dispose()
     },
   }
 }
@@ -390,7 +400,7 @@ export function createCesiumEllipsoidRendererAdapter({
   const activePrecisionClass = () => getPrecisionClass?.() ?? precisionClass
 
   async function mount() {
-    if (mounted) return
+    if (mounted || cancelledNow()) return
     mounted = true
 
     if (stackId === FALLBACK_MAP_STACK_ID) return
@@ -842,7 +852,7 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   function requestRender() {
-    if (activityState !== 'hidden') viewer?.scene?.requestRender?.()
+    if (!cancelledNow() && activityState !== 'hidden') viewer?.scene?.requestRender?.()
   }
 
   function setActivityState(next) {
@@ -997,33 +1007,59 @@ export function createCesiumEllipsoidRendererAdapter({
   }
 
   function destroyRendererResources() {
-    // Native teardown remains guaranteed when a per-layer removal fails. The
-    // image owner releases orphaned leases only after this Viewer is destroyed.
-    try { sourceImagery?.destroy({destroyNative:()=>destroyCesiumResources({eventHandler,viewer})}) }
-    finally { destroyCesiumResources({eventHandler,viewer});sourceImagery = null }
-    for (const remove of removeLayoutListeners.splice(0)) remove?.()
+    // Host visibility and publication authority stay revoked while the actual
+    // pinned native lifetime survives. Disposal retries only finalization.
+    for (const remove of removeLayoutListeners.splice(0)) {
+      try { remove?.() } catch { /* continue native teardown */ }
+    }
+    try { eventHandler?.destroy?.() } catch { /* Viewer teardown still runs */ }
+    eventHandler = null
+    try {
+      if (sourceImagery) sourceImagery.destroy({destroyNative:()=>destroyCesiumResources({viewer})})
+      else destroyCesiumResources({viewer})
+    } catch { destroyCesiumResources({viewer}) }
     labelMeasurements.clear()
     displayPresentation = null
     displaySignature = ''
-    terrainPlan?.destroy?.()
-    imageryObservation?.dispose()
+    try { terrainPlan?.destroy?.() } catch { /* ancillary failure cannot lose native ownership */ }
+    try { imageryObservation?.dispose() } catch { /* retain the native retry path */ }
     imageryObservation = null
-    destroyCesiumResources({ eventHandler, viewer })
     ownedHost?.destroy()
     ownedHost = null
-    viewer = null
-    eventHandler = null
     entities = []
     nativeBillboards=null;selectedBillboard=null;envelopeMemory=null;distanceMemory=null
     terrainPlan = null
     terrainDegraded = false
+    let nativeEnded = !viewer
+    try { nativeEnded ||= viewer.isDestroyed?.() === true } catch { /* absence is not destruction proof */ }
+    const retained = sourceImagery?.state()
+    const released = !retained || (retained.ownedPhotoLayerCount === 0
+      && retained.retainedRgbaBytes === 0 && retained.bitmapLeaseCount === 0)
+    if (nativeEnded && released) { sourceImagery = null; viewer = null; return true }
+    return false
   }
 
   function destroy() {
     localCancelled = true
-    if (failureLifecycle) failureLifecycle.destroy()
-    else destroyRendererResources()
+    // Stop even the ordinary render loop immediately. DOM detachment is safe
+    // inside a draw; native destruction still obeys the deferred fatal boundary.
+    if (viewer) viewer.useDefaultRenderLoop = false
+    if (ownedHost) { ownedHost.element.style.visibility = 'hidden'; ownedHost.destroy() }
     mounted = false
+    return failureLifecycle ? failureLifecycle.destroy() : destroyRendererResources()
+  }
+
+  function getSourceImageryState() {
+    const state = sourceImagery?.state()
+    if (state && !cancelledNow()) return { ...state, nativeTeardownPending: false }
+    let nativeTeardownPending = Boolean(viewer)
+    try { if (viewer?.isDestroyed?.() === true) nativeTeardownPending = false } catch { /* fail closed */ }
+    // A detached failed owner exposes accounting scalars only, never its old
+    // source ID, capture, bounds, pixel footprint, credit or active observation.
+    return { available: false, status: nativeTeardownPending ? 'teardown-pending' : 'unavailable',
+      ownedPhotoLayerCount: state?.ownedPhotoLayerCount ?? 0,
+      retainedRgbaBytes: state?.retainedRgbaBytes ?? 0, bitmapLeaseCount: state?.bitmapLeaseCount ?? 0,
+      visibilityFenced: true, nativeTeardownPending }
   }
 
   // Detached display scalars: expose the actual controller floor and raw
@@ -1071,8 +1107,8 @@ export function createCesiumEllipsoidRendererAdapter({
     getVisualFidelityRenderState: () => ({ cameraGovernance: cameraGovernanceState(), renderedFrames, layoutTiming: { ...layoutTiming }, markers: entities.map(e => ({ id: e.id, visible: e.show, labelVisible: e.label?.show?.getValue(viewer.clock.currentTime) === true, selected: e.__mipSelected })), refinement: refinementApplication.state(), recordedLighting: recordedLighting.state(), cameraPose: viewer?.camera ? ['position','direction','up','right'].map(key => ({ x: viewer.camera[key].x, y: viewer.camera[key].y, z: viewer.camera[key].z })) : null, atmosphere: atmosphereState(viewer), globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded === true, fxaa: cesiumFxaaState(viewer), resolution: cesiumResolutionState(viewer), requestRenderMode: viewer?.scene?.requestRenderMode === true }),
     requestRender,
     attachSourceImagery: (loaded,descriptor,options)=>sourceImagery?.attach(loaded,descriptor,options) ?? Promise.reject(Error('native-source-not-ready')),
-    getSourceImageryState: ()=>sourceImagery?.state() ?? {available:false,status:'unavailable',ownedPhotoLayerCount:0},
-    fenceSourceImagery: ()=>sourceImagery?.fence(),
+    getSourceImageryState,
+    fenceSourceImagery: ()=>cancelledNow() ? destroy() : sourceImagery?.fence(),
     destroy,
   }
 }

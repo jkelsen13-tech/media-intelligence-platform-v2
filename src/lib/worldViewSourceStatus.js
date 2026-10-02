@@ -92,8 +92,8 @@ export function resolveWorldViewSourceStatus({ stackId, rendererReady = false, t
   return Object.freeze({ renderer, requested, imagery, elevation,
     buildings: sourceMetadata(S.NOT_IMPLEMENTED, 'No 3D building source',
       'No building mesh, photogrammetric facades or extrusion layer is implemented in these renderers. Additional detail requires an admitted source.', null),
-    sourceCapture: Object.freeze({ status: S.UNKNOWN, label: 'Source capture dates unknown',
-      detail: 'Source capture dates are not established. Background content is not matched to investigation or evidence time.' }),
+    sourceCapture: Object.freeze({ status: S.UNKNOWN, label: 'Baseline capture dates unknown',
+      detail: 'Cartographic baseline and elevation capture dates are not established. Background content is not matched to investigation or evidence time.' }),
     background: Object.freeze({ label: 'Background context, not evidence',
       detail: 'Background detail does not change canonical coordinates, object/version, recorded time or evidence precision.' }),
   })

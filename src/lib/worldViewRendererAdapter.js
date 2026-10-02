@@ -1000,8 +1000,29 @@ export function createWorldViewRendererAdapter(args, {
     return mountPromise
   }
 
+  function getSourceImageryState() {
+    const state = rendererKind === 'ellipsoid-globe' ? impl?.getSourceImageryState?.() : null
+    if (state && ready && !cancelled()) return state
+    // Cancellation revokes display authority, not ownership of a native
+    // resource whose teardown failed. Keep only detached aggregate accounting.
+    return { available: false, status: state?.nativeTeardownPending === true ? 'teardown-pending' : 'unavailable',
+      ownedPhotoLayerCount: state?.ownedPhotoLayerCount ?? 0, retainedRgbaBytes: state?.retainedRgbaBytes ?? 0,
+      bitmapLeaseCount: state?.bitmapLeaseCount ?? 0, visibilityFenced: true,
+      nativeTeardownPending: state?.nativeTeardownPending === true }
+  }
+
+  function destroy() {
+    destroyed = true
+    ready = false
+    // The implementation retains its pinned native owner on explicit false.
+    // MapLibre/legacy void destruction retains its completed-cleanup contract.
+    const complete = impl?.destroy?.() !== false
+    if (complete) impl = null
+    return complete
+  }
+
   return {
-    getBillboardState: () => impl?.getBillboardState?.() ?? null,
+    getBillboardState: () => !destroyed ? impl?.getBillboardState?.() ?? null : null,
     getRendererKind: () => rendererKind ?? rendererKindForStackId(args?.stackId),
     getAttribution: () => impl?.getAttribution?.() ?? stackAttribution(args?.stackId),
     mount,
@@ -1025,21 +1046,19 @@ export function createWorldViewRendererAdapter(args, {
     getDisplayTiming: () => impl?.getDisplayTiming?.() ?? {},
     flyToSubjectCamera: (opts) => ready && !cancelled() ? impl?.flyToSubjectCamera?.(opts) ?? false : false,
     cancelCameraFlight: () => ready && !cancelled() ? impl?.cancelCameraFlight?.() ?? false : false,
-    getCameraState: () => impl?.getCameraState?.() ?? null,
+    getCameraState: () => !destroyed ? impl?.getCameraState?.() ?? null : null,
     getSourceStatus: () => impl?.getSourceStatus?.() ?? null,
-    getSourceImageryState: () => ready&&!cancelled()&&rendererKind==='ellipsoid-globe'
-      ? impl?.getSourceImageryState?.() ?? {available:false,status:'unavailable',ownedPhotoLayerCount:0}
-      : {available:false,status:'unavailable',ownedPhotoLayerCount:0},
+    getSourceImageryState,
     attachSourceImagery: (loaded,descriptor,options) => ready&&!cancelled()&&rendererKind==='ellipsoid-globe'
       ? impl?.attachSourceImagery?.(loaded,descriptor,options) ?? Promise.reject(Error('native-source-unsupported'))
       : Promise.reject(Error('native-source-unavailable')),
-    fenceSourceImagery: () => impl?.fenceSourceImagery?.(),
+    fenceSourceImagery: () => destroyed ? destroy() : impl?.fenceSourceImagery?.(),
     setActivityState: next => {
       if (cancelled() || !['visible-active', 'visible-idle', 'hidden'].includes(next)) return false
       activityState = next
       return impl?.setActivityState?.(next) ?? false
     },
-    setCameraState: (serialized) => impl?.setCameraState?.(serialized) ?? false,
+    setCameraState: (serialized) => !destroyed ? impl?.setCameraState?.(serialized) ?? false : false,
     getTerrainStatus: () => impl?.getTerrainStatus?.() ?? null,
     sampleTerrainHeights: (pairs, level) => impl?.sampleTerrainHeights?.(pairs, level) ?? null,
     // Stage D visual-continuity repair: relief shading is a globe-only
@@ -1064,14 +1083,8 @@ export function createWorldViewRendererAdapter(args, {
     getVisualFidelityCapabilities: () => ready && !cancelled()
       ? impl?.getVisualFidelityCapabilities?.() ?? visualFidelityCapabilities({ reason: 'Effects unavailable on this fallback renderer.' })
       : visualFidelityCapabilities(),
-    getVisualFidelityRenderState: () => impl?.getVisualFidelityRenderState?.() ?? null,
-    requestRender: () => activityState !== 'hidden' && impl?.requestRender?.(),
-    destroy: () => {
-      if (destroyed) return
-      destroyed = true
-      ready = false
-      impl?.destroy?.()
-      impl = null
-    },
+    getVisualFidelityRenderState: () => !destroyed ? impl?.getVisualFidelityRenderState?.() ?? null : null,
+    requestRender: () => !destroyed && activityState !== 'hidden' && impl?.requestRender?.(),
+    destroy,
   }
 }
