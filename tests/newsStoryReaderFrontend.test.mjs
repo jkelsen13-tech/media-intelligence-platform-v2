@@ -155,7 +155,7 @@ test('source-report admission stays visibly attributed and pending in ordinary f
   const article = { id: fixtureUuid(1), title: 'Source-only development', outlet: 'Synthetic publisher', url: 'https://example.invalid/source-only',
     summary: 'Publisher reports a development.', published_at: '2026-10-01T00:00:00Z', fetched_at: '2026-10-01T01:00:00Z' }
   const row = reviewedNewsArticleFixture(article)
-  row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []; row.admission = 'source_report'
+  row.public_version.admission_kind = 'source_report'; row.public_version.evidence = []; row.admission = 'source_report'; row.public_version.pending_revision = true
   for (const focused of [false, true]) {
     const f = newsBackendFixture({ tables: { news_reviewed_articles_public: [row] } })
     const backend = focused ? { ...f.backend, loadArticles: async () => ({ articles: [], total: 0 }) } : f.backend
@@ -171,6 +171,7 @@ test('source-report admission stays visibly attributed and pending in ordinary f
       assert.match(copy, /has not been independently established/)
       assert.match(copy, /Exact source-version fetch time.*unavailable/)
       assert.match(copy, /Remaining uncertainty.*Synthetic qualification/)
+      assert.match(copy, /newer retained source revision is pending review/)
       assert.doesNotMatch(copy, /Synthetic reviewed fixture claim|BREAKING • SOURCE REPORT/)
     } finally { await act(async () => renderer.unmount()) }
   }

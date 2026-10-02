@@ -144,6 +144,7 @@ function ArticleSourceReport({ article, compact = false }) {
     <strong>SOURCE REPORT</strong>
     <p className="news-source-report-verification">Pending MIP verification / reconciliation</p>
     <p>This attributed report has not been independently established by MIP.</p>
+    {article.public_version.pending_revision && <p>A newer retained source revision is pending review. This report retains its original approval.</p>}
     {!report.is_current_source_version && <p>A newer source version has superseded this retained report. This is the selected historical version.</p>}
     {!compact && <>
       <p>Remaining uncertainty: {report.review_uncertainty}</p>
