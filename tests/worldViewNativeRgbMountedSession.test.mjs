@@ -27,7 +27,15 @@ test('mounted production Canvas cannot treat retained active Explore state on re
  const doc={hidden:false,defaultView:view,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name,fn)=>{if(listeners.get(name)===fn)listeners.delete(name)}}
  const host={ownerDocument:doc,addEventListener:(name,fn)=>hostListeners.set(name,fn),removeEventListener:(name,fn)=>{if(hostListeners.get(name)===fn)hostListeners.delete(name)}}
  globalThis.window=view;globalThis.document=doc;Object.defineProperty(globalThis,'navigator',{value:{},configurable:true})
- globalThis.__independentCanvasRenderer=options=>({mount:async()=>options.onSourceImageryStateChange?.({available:true}),destroy(){destroys++},setFeatures:async()=>{},setActivityState(){},setRelationships(){},setCameraState(){return true},getCameraState:()=>'{"fixtureCamera":true}',getVisualFidelityCapabilities:()=>({}),setRecordedTime(){},setVisualFidelity(){},getSourceImageryState:()=>({available:true}),fenceSourceImagery(){},attachSourceImagery:async()=>({dispose(){}})})
+ globalThis.__independentCanvasRenderer=options=>{
+  let destroyed=false
+  return {mount:async()=>options.onSourceImageryStateChange?.({available:true}),
+    destroy(){if(!destroyed)destroys++;destroyed=true;return true},
+    setFeatures:async()=>{},setActivityState(){},setRelationships(){},setCameraState(){return true},
+    getCameraState:()=>'{"fixtureCamera":true}',getVisualFidelityCapabilities:()=>({}),setRecordedTime(){},setVisualFidelity(){},
+    getSourceImageryState:()=>({available:!destroyed,nativeTeardownPending:false,ownedPhotoLayerCount:0,retainedRgbaBytes:0,bitmapLeaseCount:0}),
+    fenceSourceImagery(){},attachSourceImagery:async()=>({dispose(){}})}
+}
  const row={mip_object_id:'qualification-subject',revision_id:'qualification-revision',precision_class:'city',object_type:'event',display_geometry:{type:'Point',coordinates:[-81.7,41.4]}}
  try{
   await act(async()=>{tree=TestRenderer.create(React.createElement(Canvas,{rows:[row],selectedKeys:new Set([row.mip_object_id]),onSelectRow(){},
