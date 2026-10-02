@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { mapLibreNoticeAssets } from './verifier/mapLibreNoticeAssets.mjs'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { browserKeyBuildGate } from './src/lib/browserBuildEnv.js'
 
 // Package boundaries only: application files such as worldViewCesium*.js
 // must remain in the ordinary application graph and lazy adapter chunk.
@@ -42,6 +43,7 @@ function worldViewBundleGraphPlugin() {
 
 export default defineConfig({
   plugins: [
+    browserKeyBuildGate(),
     react(),
     worldViewBundleGraphPlugin(),
     {
