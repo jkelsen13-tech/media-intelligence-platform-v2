@@ -180,7 +180,20 @@ export function createWorldViewRealismSession({enqueue=callback=>queueMicrotask(
       aggregateAllowanceConsumedBytes:(state.localBudget?.allowanceConsumedBytes??0)+priorControllers.reduce((sum,item)=>sum+(item.snapshot().localBudget?.allowanceConsumedBytes??0),0),
       ...(visible ? {failedSourceIds:[],rejected:(state.rejected??[]).map(item=>({reason:item.reason}))} : {status:'fallback',reason:terminal?'disposed':'scope-unbound',requestedSourceId:null,activeSourceId:null,activeDescriptor:null,observedLayer:null,rejected:[],pendingSourceId:null,failedSourceIds:[]})}
   }
-  const invalidate=reason=>{epoch++;attachment?.fence?.();controller?.invalidateAttachment(reason);notify()}
+  const fenceAttachment=(binding=attachment)=>{
+    try{binding?.fence?.();return true}
+    catch{configurationFailure='native-source-fence-failed';return false}
+  }
+  const retireNativeOwners=()=>{for(const adapter of [...nativeOwners])owner.retireAttachment(adapter)}
+  const invalidate=reason=>{
+    epoch++
+    const fenced=fenceAttachment()
+    // An observer/host fence is not the native lifetime boundary. Its failure
+    // revokes display authority before cancellation publishes, while every
+    // registered native handle remains owned until strict teardown succeeds.
+    try{controller?.invalidateAttachment(fenced?reason:configurationFailure)}
+    finally{if(!fenced)retireNativeOwners();notify()}
+  }
   const start=initialFailedSourceIds=>{
     const value=services
     let budget
@@ -202,7 +215,7 @@ export function createWorldViewRealismSession({enqueue=callback=>queueMicrotask(
     services=value;return start([])
   }
   const owner={snapshot,configure,invalidateAttachment:invalidate,
-    canAllocateNative(){return !terminal&&!retirementDraining&&!retiredOwners.size&&nativeOwners.size<nativeOwnerCapacity},
+    canAllocateNative(){return !terminal&&configurationFailure!=='native-source-fence-failed'&&!retirementDraining&&!retiredOwners.size&&nativeOwners.size<nativeOwnerCapacity},
     registerNativeAttachment(adapter){
       if(terminal||retiredOwners.has(adapter))return false
       if(nativeOwners.has(adapter))return true
@@ -226,9 +239,9 @@ export function createWorldViewRealismSession({enqueue=callback=>queueMicrotask(
       scheduleRetirement();notify();return !nativeOwners.has(adapter)
     },
     setCurrentAccessGetter(getter){getCurrentAccess=typeof getter==='function'?getter:()=>access},
-    setAccess(value){if(key(value)===key(access))return;access=structuredClone(value);invalidate('access-context-changed')},
-    setScope(value){const next=value==null?null:key(value);if(scope===next)return;scope=next;invalidate('selected-version-time-changed')},
-    bindAttachment(value,listener){const lease=++attachmentLease;invalidate('native-binding-changed');attachment=value;subscriber=listener;notify();return()=>{if(attachment!==value||lease!==attachmentLease)return;invalidate('native-unbound');attachment=null;if(subscriber===listener)subscriber=null;controller?.transition('visible-idle')}},
+    setAccess(value){if(terminal||key(value)===key(access))return;access=structuredClone(value);invalidate('access-context-changed')},
+    setScope(value){if(terminal)return;const next=value==null?null:key(value);if(scope===next)return;scope=next;invalidate('selected-version-time-changed')},
+    bindAttachment(value,listener){if(terminal)return()=>{};const lease=++attachmentLease;invalidate('native-binding-changed');attachment=value;subscriber=listener;notify();return()=>{if(attachment!==value||lease!==attachmentLease)return;invalidate('native-unbound');attachment=null;if(subscriber===listener)subscriber=null;controller?.transition('visible-idle')}},
     select(input){if(retiredOwners.size){controller?.invalidateAttachment('native-retirement-pending');return Promise.resolve(snapshot())}if(!controller||!accessCurrent()||scope===null||!attachment?.state?.().available){controller?.invalidateAttachment('native-or-access-unavailable');return Promise.resolve(snapshot())}return controller.select(input)},
     interact(){if(!accessCurrent())return false
       // An absent WorldView owns no polling loop. A remount transition may
@@ -246,10 +259,15 @@ export function createWorldViewRealismSession({enqueue=callback=>queueMicrotask(
     poll(){controller?.poll();drainRetirements();notify();return snapshot()},
     failRequest(){configurationFailure='source-request-service-unavailable';invalidate(configurationFailure)},
     retain(){if(terminal)return()=>{};mountLease++;finalizer++;let done=false;return()=>{if(done)return;done=true;mountLease--;invalidate('app-owner-unbound');const token=++finalizer;enqueue(()=>{if(mountLease===0&&token===finalizer)owner.dispose()})}},
-    dispose(){if(terminal)return;terminal=true;epoch++;attachment?.fence?.();controller?.dispose();attachment=null;subscriber=null;scope=null;access=null
+    dispose(){
+      if(terminal){scheduleRetirement();return}
+      terminal=true;epoch++
+      const binding=attachment
+      attachment=null;subscriber=null;scope=null;access=null
       // A terminal App owns no publication or requests. Native-only retirement
-      // remains reachable until destruction is verified, with one backoff timer.
-      for(const adapter of [...nativeOwners])owner.retireAttachment(adapter)
+      // remains reachable even when fencing throws, with one backoff timer.
+      fenceAttachment(binding)
+      try{controller?.dispose()}finally{retireNativeOwners()}
     },
   }
   return owner
