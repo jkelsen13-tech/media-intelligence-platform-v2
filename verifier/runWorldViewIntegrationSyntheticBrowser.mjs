@@ -84,6 +84,20 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  assert.ok(exploreGeometry.host.height>=80,'opened group chooser must not collapse Explore map viewport')
  if(scenario!=='atlas')assert.ok(exploreGeometry.native.height>=80,'native Explore canvas remains usable before hidden/resume')
  assert.ok(exploreGeometry.chooser.bottom<=exploreGeometry.surface.bottom-40,'group chooser retains native attribution floor')
+ const exploreChooser=page.locator('.wv-explore-map .wv-spatial-groups')
+ if(await exploreChooser.evaluate(details=>details.open)){
+  const summary=exploreChooser.locator('summary');await summary.focus();await summary.press('Space')
+ }
+ assert.equal(await exploreChooser.evaluate(details=>details.open),false,'original chooser summary remains keyboard closable')
+ if(scenario!=='atlas'){
+  const tabs=page.getByRole('tablist',{name:'Selected record modules',exact:true})
+  for(const tab of ['Context','Sources','Evidence'])await tabs.getByRole('tab',{name:tab,exact:true}).click()
+  await page.getByRole('button',{name:'Open inspector',exact:true}).click()
+  assert.ok(await page.locator('.wv-explore-context-body:not([hidden])').count(),'explicit inspector remains reachable after chooser collapse')
+  const nativeHeight=await page.locator('.cesium-widget canvas').evaluate(canvas=>canvas.clientHeight)
+  assert.ok(nativeHeight>=80,'native map remains usable beside explicit Explore inspector')
+ }
+
  await page.getByRole('button',{name:'Close Explore World View',exact:true}).click()
  assert.deepEqual(await context(),bound,'Explore entry/exit preserves canonical/time context')
  const beforeRemount=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
@@ -98,7 +112,7 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  // Existing read-only HEAD count queries are mocked; other non-GETs are aborted.
  const screenshot=`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic-${viewport.width}x${viewport.height}.png`
  await page.screenshot({path:screenshot,fullPage:true})
- receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
+ receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
  await page.close()
 }
 await writeFile(`/workspace/mip-oct02/evidence/lane1-2/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
