@@ -1,8 +1,6 @@
--- READ ONLY installed-state inspection with separately pinned installed catalog equality. Installation uses catalog.sql and a separately pinned equality guard.
--- An available RPC or favorable metadata result does not authorize installation.
+-- READ ONLY. Separately pin the complete canonical fresh catalog before install authority.
 begin read only;
 set local search_path=pg_catalog;
-do $preflight$ declare actual jsonb;expected text:=current_setting('mip.selective_execution_preflight_expected_catalog',true);begin
 with names as (
  select distinct p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='evidence_pipeline' or (n.nspname='public' and p.proname like 'mip\_%' escape '\')
  union select unnest(array['selective_metadata_decision','mip_selective_execution_v1'])
@@ -25,35 +23,5 @@ select jsonb_build_object(
  'target_relations',(select coalesce(jsonb_agg(jsonb_build_object('name',c.relname,'kind',c.relkind,'owner',pg_get_userbyid(c.relowner)) order by c.relname),'[]') from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='evidence_pipeline' and c.relname in (select name from targets)),
  'target_types',(select coalesce(jsonb_agg(jsonb_build_object('name',t.typname,'kind',t.typtype,'owner',pg_get_userbyid(t.typowner)) order by t.typname),'[]') from pg_type t join pg_namespace n on n.oid=t.typnamespace where n.nspname='evidence_pipeline' and t.typname in (select name from targets)),
  'target_signatures',jsonb_build_array(to_regprocedure('evidence_pipeline.selective_metadata_decision(jsonb,jsonb)')::text,to_regprocedure('public.mip_selective_execution_v1(text,jsonb)')::text)
-) into actual;
- if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'selective execution preflight catalog baseline missing or drifted';end if;
- if to_regprocedure('public.mip_selective_execution_v1(text,jsonb)') is null or to_regprocedure('evidence_pipeline.selective_metadata_decision(jsonb,jsonb)') is null then raise exception 'selective execution installation absent';end if;
-end $preflight$;
-select current_database() database_name, current_user actor, current_setting('server_version_num') server_version,
-  to_regprocedure('public.mip_pipeline_v1(text,jsonb)') native_intake,
-  to_regprocedure('public.mip_assessments_v1(text,jsonb)') native_assessments,
-  to_regprocedure('evidence_pipeline.declare_candidate_input_relevance(jsonb)') native_relevance,
-  to_regprocedure('public.mip_investigation_briefings_v1(text,jsonb)') native_observations,
-  to_regprocedure('public.mip_investigation_workspace_v1(text,jsonb)') native_workspace,
-  to_regprocedure('public.mip_investigation_selective_intake_v1(text,jsonb)') native_postcapture_receipts,
-  to_regprocedure('public.mip_selective_execution_v1(text,jsonb)') proposed_execution;
-select n.nspname schema_name,c.relname,c.relrowsecurity,c.relacl,
-  has_table_privilege('anon',c.oid,'SELECT,INSERT,UPDATE,DELETE') anon_any_access,
-  has_table_privilege('authenticated',c.oid,'SELECT,INSERT,UPDATE,DELETE') authenticated_any_access,
-  has_table_privilege('service_role',c.oid,'SELECT') operator_select,
-  has_table_privilege('service_role',c.oid,'INSERT') operator_insert
-from pg_class c join pg_namespace n on n.oid=c.relnamespace
-where n.nspname='evidence_pipeline' and c.relkind='r' and
-  (c.relname like 'selective_%' or c.relname in ('investigation_selective_intake_receipts','investigation_memberships','investigation_versions','article_captures','evidence_candidates','assessments'))
-order by c.relname;
-select n.nspname schema_name,p.proname,p.prosecdef,p.proconfig,p.proacl,
-  encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex') definition_sha256,
-  has_function_privilege('anon',p.oid,'EXECUTE') anon_execute,
-  has_function_privilege('authenticated',p.oid,'EXECUTE') authenticated_execute,
-  has_function_privilege('service_role',p.oid,'EXECUTE') operator_execute
-from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-where p.proname in ('mip_pipeline_v1','mip_assessments_v1','mip_investigation_workspace_v1',
-  'mip_investigation_briefings_v1','mip_investigation_selective_intake_v1','mip_selective_execution_v1','selective_metadata_decision')
-order by n.nspname,p.proname;
-select rolname,rolsuper,rolbypassrls,rolcanlogin from pg_roles where rolname in ('anon','authenticated','service_role');
-commit;
+) ;
+rollback;

@@ -1,8 +1,8 @@
--- READ ONLY installed-state inspection with separately pinned installed catalog equality. Installation uses catalog.sql and a separately pinned equality guard.
+-- READ ONLY pre-install inspection with exact separately supplied fresh catalog equality. Installation uses catalog.sql and a separately pinned equality guard.
 -- An available RPC or favorable metadata result does not authorize installation.
 begin read only;
 set local search_path=pg_catalog;
-do $preflight$ declare actual jsonb;expected text:=current_setting('mip.selective_execution_preflight_expected_catalog',true);begin
+do $preflight$ declare actual jsonb;expected text:=current_setting('mip.selective_execution_expected_catalog',true);begin
 with names as (
  select distinct p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='evidence_pipeline' or (n.nspname='public' and p.proname like 'mip\_%' escape '\')
  union select unnest(array['selective_metadata_decision','mip_selective_execution_v1'])
@@ -27,7 +27,7 @@ select jsonb_build_object(
  'target_signatures',jsonb_build_array(to_regprocedure('evidence_pipeline.selective_metadata_decision(jsonb,jsonb)')::text,to_regprocedure('public.mip_selective_execution_v1(text,jsonb)')::text)
 ) into actual;
  if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'selective execution preflight catalog baseline missing or drifted';end if;
- if to_regprocedure('public.mip_selective_execution_v1(text,jsonb)') is null or to_regprocedure('evidence_pipeline.selective_metadata_decision(jsonb,jsonb)') is null then raise exception 'selective execution installation absent';end if;
+ if actual->'target_relations'<>'[]'::jsonb or actual->'target_types'<>'[]'::jsonb or actual->'target_signatures'<>'[null,null]'::jsonb then raise exception 'selective execution target name occupied';end if;
 end $preflight$;
 select current_database() database_name, current_user actor, current_setting('server_version_num') server_version,
   to_regprocedure('public.mip_pipeline_v1(text,jsonb)') native_intake,

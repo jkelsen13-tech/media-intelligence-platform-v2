@@ -1,0 +1,151 @@
+{
+  "status": "SOURCE_QUALIFIED_UNAPPLIED",
+  "base": "c08e629adb171985a8ceba23d347a3d242d0b202",
+  "branch": "codex/mip-launch-selective-guards-20261002",
+  "live_operations": 0,
+  "live_installation": false,
+  "protected_grants": false,
+  "accepted_policy_registration": false,
+  "source_or_provider_requests": false,
+  "worker_activation": false,
+  "replaced_native_functions_or_views": 0,
+  "guards": {
+    "install": "mip.selective_execution_expected_catalog",
+    "installed_preflight": "mip.selective_execution_preflight_expected_catalog",
+    "rollback_installed": "mip.selective_execution_rollback_expected_catalog",
+    "empty_rollback_original": "mip.selective_execution_original_catalog"
+  },
+  "runs": [
+    {
+      "runtime": "v22.23.3",
+      "tests": 49,
+      "passed": 49,
+      "failed": 0,
+      "status": "PASS",
+      "raw_tap": "/workspace/mip-selective-catalog-qualification/node22.tap",
+      "tap_sha256": "eecb4642dbb254d175e4bb97be5831ba471002d36b1125b7da09bb75371feae1",
+      "case_receipt": "/workspace/mip-selective-catalog-qualification/node22.json",
+      "case_receipt_sha256": "09fb1d8a97d863a573b4f900fd2af884268bfa8da14596ed79bb0883a3c97b46",
+      "command": "MIP_SELECTIVE_CATALOG_RECEIPT=/workspace/mip-selective-catalog-qualification/node22.json /workspace/mip-runtime22/node_modules/node/bin/node --test tests/selectiveExecutionPackage.test.mjs tests/selectiveIntakeExecution.test.mjs"
+    },
+    {
+      "runtime": "v24.19.0",
+      "tests": 49,
+      "passed": 49,
+      "failed": 0,
+      "status": "PASS",
+      "raw_tap": "/workspace/mip-selective-catalog-qualification/node24.tap",
+      "tap_sha256": "ca98ea04cafed0260e812531885202ee0ae7251910f2f7b8f9a950041b6fb0ad",
+      "case_receipt": "/workspace/mip-selective-catalog-qualification/node24.json",
+      "case_receipt_sha256": "09fb1d8a97d863a573b4f900fd2af884268bfa8da14596ed79bb0883a3c97b46",
+      "command": "MIP_SELECTIVE_CATALOG_RECEIPT=/workspace/mip-selective-catalog-qualification/node24.json node --test tests/selectiveExecutionPackage.test.mjs tests/selectiveIntakeExecution.test.mjs"
+    }
+  ],
+  "case_names": [
+    "missing install/preflight baseline denied with no partial changes",
+    "catalog mutation refusal: native exact body",
+    "catalog mutation refusal: native owner",
+    "catalog mutation refusal: native ACL",
+    "catalog mutation refusal: native same-name overload",
+    "catalog mutation refusal: cross-schema same-name overload",
+    "catalog mutation refusal: schema ACL",
+    "catalog mutation refusal: default ACL",
+    "catalog mutation refusal: role attributes",
+    "catalog mutation refusal: role membership options",
+    "catalog mutation refusal: column default",
+    "catalog mutation refusal: column ACL",
+    "catalog mutation refusal: RLS",
+    "catalog mutation refusal: policy",
+    "freshly pinned collision refusal: table",
+    "freshly pinned collision refusal: row type",
+    "freshly pinned collision refusal: array type",
+    "freshly pinned collision refusal: index",
+    "freshly pinned collision refusal: implicit primary index",
+    "freshly pinned collision refusal: sequence",
+    "freshly pinned collision refusal: implicit unique index",
+    "freshly pinned collision refusal: exact public function",
+    "freshly pinned collision refusal: exact decision function",
+    "empty exact reverse restore and unrelated overload owner/ACL/definition preservation",
+    "populated audit history retained; exact service stop leaves unrelated overload untouched",
+    "unsafe fresh defaults denied; exact new sequence default reader ACL removed"
+  ],
+  "limits": [
+    "Disposable real PostgreSQL SQL via PGlite with synthetic prerequisites/roles; not live PostgREST or independent multi-session metadata concurrency",
+    "Source guards and exact rollback do not grant live installation, native prerequisite changes, policy acceptance, source operation rights or release authority",
+    "Prior selective qualification receipt remains historical for the unguarded predecessor installer"
+  ],
+  "artifacts": [
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+    },
+    {
+      "path": "scripts/selectiveExecutionPackage.mjs",
+      "sha256": "b69d39973336e9aec05ed4a095b1d9acfe0aaa7dac958b30ea03f01d72fb93e0"
+    },
+    {
+      "path": "tests/selectiveExecutionPackage.test.mjs",
+      "sha256": "63c6e00a8c8b8dae09fac9e0143c1853600f58ed6d4ae517abd4c06c998d2ddf"
+    },
+    {
+      "path": "tests/selectiveExecutionPackageFixture.mjs",
+      "sha256": "39dc888178d067ad4cfe70de2331d7a5a10439ac0c71b9d8d2423d92a260c459"
+    },
+    {
+      "path": "tests/selectiveIntakeExecution.test.mjs",
+      "sha256": "014fa42f6388c9e292483e3f95df042622f6d1f551b6839e7abc4e089bdef694"
+    },
+    {
+      "path": "docs/MIP_SELECTIVE_CATALOG_GUARDS_2026-10-02.md",
+      "sha256": "bc0b06d6969a53ef41eefb26ea387c08168b855ac1766f7a9f11c5c20543b414"
+    },
+    {
+      "path": "docs/MIP_SELECTIVE_EXECUTION_2026-10-02.md",
+      "sha256": "9e8ea7277c1b3200743fee2a1b47cd8f8eafec31d9334e21139fa7af3db1f521"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/catalog.sql",
+      "sha256": "5dcd5b56f0d56a87c419d363731263fbe3cbf553fc46752b98f1c7842eec8828"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/criteria-registration.json",
+      "sha256": "069e2c64fa33179fd1de26fcdef83bac6a2cd7a8d3343e47c2b01ae768372806"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/install.psql",
+      "sha256": "d6abe51178a32ac7f8bf01c6a9ea1aeb99055eb17aeda2aef6cee111aa37c2fc"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/installed-catalog.sql",
+      "sha256": "fb15c6cb72bd4ec5c57bb654ba0a33bd1de08870f38b87c3fec38c31749cccc4"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/preflight-install.sql",
+      "sha256": "8767c9b598258cb285317f5d45af5d25ea5effaa4d85057fd8581860c4987da7"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/preflight.sql",
+      "sha256": "010a350d86490b93ba9d0396e2fa3b736b948bc9dd9b78bf1d550cb767cd618f"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/register.psql",
+      "sha256": "be3919b6b8e79c95e5ca129eb4082db2feca0eba298c3f5e7bcb3455ced9a35c"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+      "sha256": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+      "sha256": "9c361f339a22ca974cd3ef4e05bcde9931beb36c39dc3f6d9e9890b0e1e06f97"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/run-preflight.psql",
+      "sha256": "c87770e6e083774a0691158a54e89700c75dec385904ff57fa72d50b065f2b18"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/source-authorization.json",
+      "sha256": "7829e4736bbcf5d985f9862423400f508a6c03e2be66959435ff1e5b44e24e2d"
+    }
+  ]
+}

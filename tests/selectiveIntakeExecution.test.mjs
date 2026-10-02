@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { installSelectiveExecutionFixture } from '../scripts/selectiveExecutionPackage.mjs'
 import { PGlite } from '@electric-sql/pglite'
 import { createOperatorBackend, PIPELINE_TARGET } from '../scripts/operatorBackend.mjs'
 import { runSelectiveSource, runSelectiveReconsideration, selectiveExecutionId } from '../scripts/selectiveIntakeExecution.mjs'
@@ -23,8 +24,9 @@ test('registered criteria execute through actual native SQL and fixed operator t
   const files = await readdir(new URL('../supabase/migrations/', import.meta.url))
   for (const suffix of ['evidence_pipeline_reliability', 'evidence_change_queue_v1', 'evidence_assessment_dependencies_v1', 'investigation_change_briefings_v1', 'investigation_workspace_batch_v1'])
     await db.exec(await read('../supabase/migrations/' + files.find(f => f.endsWith(`_${suffix}.sql`))))
-  for (const proposal of ['assessment_relevant_inputs_v1', 'investigation_selective_intake_v1', 'selective_intake_execution_v1'])
+  for (const proposal of ['assessment_relevant_inputs_v1', 'investigation_selective_intake_v1'])
     await db.exec(await read(`../supabase/source-proposals/${proposal}.sql`))
+  await installSelectiveExecutionFixture(db)
   await db.exec('alter table evidence_pipeline.evidence_changes alter column position restart with 9007199254740993')
   const rpc = name => async (action, input = {}) => (await db.query(`select public.${name}($1,$2::jsonb) r`, [action, JSON.stringify(input)])).rows[0].r
   const intake = rpc('mip_pipeline_v1'), workspace = rpc('mip_investigation_workspace_v1'), observe = rpc('mip_investigation_briefings_v1'), assessment = rpc('mip_assessments_v1')
@@ -294,8 +296,9 @@ test('clean-install rollback removes only the empty extension and preserves nati
   const files = await readdir(new URL('../supabase/migrations/', import.meta.url))
   for (const suffix of ['evidence_pipeline_reliability', 'evidence_change_queue_v1', 'evidence_assessment_dependencies_v1', 'investigation_change_briefings_v1', 'investigation_workspace_batch_v1'])
     await db.exec(await read('../supabase/migrations/' + files.find(f => f.endsWith(`_${suffix}.sql`))))
-  for (const proposal of ['assessment_relevant_inputs_v1', 'investigation_selective_intake_v1', 'selective_intake_execution_v1'])
+  for (const proposal of ['assessment_relevant_inputs_v1', 'investigation_selective_intake_v1'])
     await db.exec(await read(`../supabase/source-proposals/${proposal}.sql`))
+  await installSelectiveExecutionFixture(db)
   await db.exec(await read('../supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql'))
   const catalog = (await db.query("select to_regprocedure('public.mip_selective_execution_v1(text,jsonb)') extension, to_regprocedure('public.mip_investigation_selective_intake_v1(text,jsonb)') native")).rows[0]
   assert.equal(catalog.extension, null); assert.ok(catalog.native)

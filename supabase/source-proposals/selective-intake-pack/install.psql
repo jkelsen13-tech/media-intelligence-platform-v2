@@ -1,11 +1,9 @@
--- UNEXECUTED. Exact file order, only after separate installation authority and accepted catalog baseline.
+-- UNEXECUTED. Install only after separate owner authority and a separately pinned fresh canonical catalog.
 \set ON_ERROR_STOP on
--- Existing migrations and assessment_relevant_inputs_v1.sql MUST already be installed/qualified.
--- The post-capture owner is a separate earlier proposal. Apply it only when its exact catalog owner is absent.
-select to_regprocedure('public.mip_investigation_selective_intake_v1(text,jsonb)') is null as needs_postcapture_owner \gset
-\if :needs_postcapture_owner
-\ir ../investigation_selective_intake_v1.sql
-\endif
+-- All native prerequisites, relevant-input and original post-capture owners must already be installed/qualified.
+-- Supply exact reviewed JSON via -v expected_catalog='<one-line JSON>'; never silently capture/accept a baseline here.
+select set_config('mip.selective_execution_expected_catalog', :'expected_catalog', false);
+\ir preflight-install.sql
 \ir ../selective_intake_execution_v1.sql
-\ir preflight.sql
+\ir installed-catalog.sql
 -- No registration/enablement/source HTTP, periodic task or source-register union follows installation.
