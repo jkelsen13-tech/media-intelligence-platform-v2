@@ -1,4 +1,4 @@
-import { parseInspectionInstant } from './inspectionTime.js'
+import { parseInspectionInstant, inspectionInstantMilliseconds } from './inspectionTime.js'
 // R4.75 Step 6 — Deterministic joined deep links (DISPLAY / client only).
 //
 // Canonical contract: MIP_INVESTIGATION_CONTEXT_AND_GLOBAL_DISCOVERY_v0.1
@@ -50,7 +50,7 @@ export const VIEW_TO_DEEP_LINK_SLUG = Object.freeze({
   investigations: 'investigations',
 })
 
-export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place', 'at'])
+export const DEEP_LINK_SELECTION_KEYS = Object.freeze(['claim', 'entity', 'source', 'time', 'place', 'at', 'arc'])
 
 const MAX_ROUTE_LENGTH = 8192
 
@@ -170,7 +170,7 @@ export function parseDeepLink(input) {
   for (const key of DEEP_LINK_SELECTION_KEYS) {
     const values = params.getAll(key)
     const value = values.length === 1 ? values[0] : null
-    if (key === 'at' && value == null) continue
+    if ((key === 'at' || key === 'arc') && value == null) continue
     selection[key] = value && value.length <= 1024 && value.trim() !== ''
       && !hasControlCharacters(value) ? value : null
   }
@@ -211,19 +211,41 @@ export function parseTimeQuery(time) {
   if (time == null || String(time).trim() === '') return {}
   const raw = String(time)
   if (raw.includes('..')) {
-    const [fromRaw, toRaw] = raw.split('..')
+    const parts = raw.split('..')
+    if (parts.length !== 2) return {}
+    const [fromRaw, toRaw] = parts
     const from = fromRaw && fromRaw.trim() !== '' ? fromRaw : null
     const to = toRaw && toRaw.trim() !== '' ? toRaw : null
     if (!from && !to) return {}
+    if ((from && timeBoundaryMilliseconds(from) == null) || (to && timeBoundaryMilliseconds(to) == null)) return {}
+    if (from && to && timeBoundaryOrder(from) > timeBoundaryOrder(to)) return {}
     return {
       as_of_time: from,
       selected_time_range: { from, to },
     }
   }
+  if (timeBoundaryMilliseconds(raw) == null) return {}
   return {
     as_of_time: raw,
     selected_time_range: { from: raw, to: null },
   }
+}
+
+// Date-only evidence scopes remain dates. Inspection instants require an
+// explicit zone and a real calendar date. Never normalize canonical text.
+function timeBoundaryMilliseconds(value) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return inspectionInstantMilliseconds(`${value}T00:00:00Z`)
+  }
+  return inspectionInstantMilliseconds(value)
+}
+
+function timeBoundaryOrder(value) {
+  const ms = timeBoundaryMilliseconds(value)
+  // The Date clock truncates beyond milliseconds. Compare retained fractions
+  // separately so reversed micro/nanosecond intervals do not become valid.
+  const fraction = /:\d{2}\.(\d{1,9})/.exec(value)?.[1] ?? ''
+  return BigInt(ms) * 1000000n + BigInt(fraction.padEnd(9, '0').slice(3) || '0')
 }
 
 /**
@@ -252,6 +274,32 @@ export function selectionIdIsValid(kind, id, catalog, parentSubjectId) {
   })
 }
 
+/** Released graph membership is a bounded join; corpus presence alone is
+ * not evidence that an entity or place belongs to this investigation. */
+export function graphSelectionCatalog(graph, geographyRows, parentSubjectId) {
+  if (!graph) return null
+  const parent = parentSubjectId == null ? null : String(parentSubjectId)
+  const joined = new Set(parent ? [parent] : [])
+  for (const edge of graph.edges ?? []) {
+    if (String(edge.source) === parent) joined.add(String(edge.target))
+    if (String(edge.target) === parent) joined.add(String(edge.source))
+  }
+  const nodes = (graph.nodes ?? []).filter(node => joined.has(String(node.id ?? node.slug))
+    || (parent && String(node.parent_event_id) === parent))
+  const ids = new Set(nodes.map(node => String(node.id ?? node.slug)))
+  return {
+    entity: [...ids].map(id => ({ id, parentId: parent })),
+    place: (geographyRows ?? []).filter(row => ids.has(String(row.key))).map(row => ({
+      id: row.placeId ?? `${row.place ?? 'location'}:${row.longitude}:${row.latitude}`,
+      parentId: parent,
+    })),
+    claim: [],
+    source: [],
+    arc: (graph.nodes ?? []).filter(node => String(node.id ?? node.slug) === parent)
+      .map(node => node.arc_id).filter(Boolean).map(id => ({ id, parentId: parent })),
+  }
+}
+
 /**
  * Apply optional query selections against a catalog.
  * catalog == null → keep ids pending (graph not loaded yet).
@@ -261,9 +309,6 @@ export function selectionIdIsValid(kind, id, catalog, parentSubjectId) {
 
 export function applySelectionAgainstCatalog(selection, catalog, parentSubjectId) {
   const incoming = selection ?? emptyDeepLinkSelection()
-  if (catalog == null) {
-    return { selection: { ...emptyDeepLinkSelection(), ...incoming }, fallbacks: [], pending: true }
-  }
   const next = emptyDeepLinkSelection()
   const fallbacks = []
   for (const key of DEEP_LINK_SELECTION_KEYS) {
@@ -289,7 +334,7 @@ export function applySelectionAgainstCatalog(selection, catalog, parentSubjectId
       }
       continue
     }
-    if (!Object.hasOwn(catalog, key) || catalog[key] == null) {
+    if (catalog == null || !Object.hasOwn(catalog, key) || catalog[key] == null) {
       next[key] = value
       continue
     }
@@ -304,7 +349,7 @@ export function applySelectionAgainstCatalog(selection, catalog, parentSubjectId
       })
     }
   }
-  return { selection: next, fallbacks, pending: false }
+  return { selection: next, fallbacks, pending: catalog == null }
 }
 
 /**
@@ -324,17 +369,21 @@ export function reconstructFromDeepLink(parsed, { currentIc, catalog } = {}) {
     }
   }
 
-  const timeFields = parseTimeQuery(parsed.selection?.time)
-  const inspectionInstant = parseInspectionInstant(parsed.selection?.at)
+  const applied = applySelectionAgainstCatalog(parsed.selection, catalog, parsed.subjectId)
+  const timeFields = parseTimeQuery(applied.selection.time)
+  const inspectionInstant = parseInspectionInstant(applied.selection.at)
   if (inspectionInstant) timeFields.as_of_time = inspectionInstant
   const payload = {
     canonical_subject_type: Object.hasOwn(parsed, 'subjectType') ? parsed.subjectType : 'event',
     canonical_subject_id: parsed.subjectId,
     parent_event_id: parsed.parentEventId ?? null,
-    ...timeFields,
+    selected_arc_or_stage_id: applied.selection.arc ?? null,
+    // A route is a complete reconstruction. Absence must not inherit a
+    // different time from the caller's current view of this same subject.
+    as_of_time: timeFields.as_of_time ?? null,
+    selected_time_range: timeFields.selected_time_range ?? null,
   }
   const result = commitNewSubject(base, payload, { landingView })
-  const applied = applySelectionAgainstCatalog(parsed.selection, catalog, parsed.subjectId)
   const fallbacks = [...applied.fallbacks]
   if (parsed.unknownView) {
     fallbacks.push({
@@ -370,6 +419,7 @@ export function serializeDeepLink(ic, selection = {}) {
   const parent = routeIdentity(ic.parent_event_id)
   if (parent) params.set('parent_event', parent)
   const merged = { ...emptyDeepLinkSelection(), ...selection }
+  if (ic.selected_arc_or_stage_id) merged.arc = ic.selected_arc_or_stage_id
   if (!merged.time) {
     merged.time = formatTimeQuery(ic.as_of_time, ic.selected_time_range)
   }

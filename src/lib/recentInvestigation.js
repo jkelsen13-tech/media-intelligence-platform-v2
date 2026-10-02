@@ -50,6 +50,7 @@ export function snapshotRecentInvestigation(ic, subObject = null) {
       ? ic.active_view : 'news',
     as_of_time: navigationString(ic.as_of_time, 96),
     selected_time_range: from || to ? { from, to } : null,
+    selected_arc_or_stage_id: navigationString(ic.selected_arc_or_stage_id),
     subObject: SUB_OBJECT_KINDS.includes(subObject?.kind) && subId
       ? { kind: subObject.kind, id: subId } : null,
   }
@@ -93,16 +94,19 @@ export function restoreRecentInvestigation(item, { currentIc, catalog } = {}) {
     parent_event_id: item.parent_event_id ?? null,
     as_of_time: item.as_of_time ?? null,
     selected_time_range: item.selected_time_range ?? null,
+    selected_arc_or_stage_id: item.selected_arc_or_stage_id ?? null,
   }
   const result = commitNewSubject(base, payload, { landingView })
   const incoming = emptyDeepLinkSelection()
   incoming.time = formatTimeQuery(item.as_of_time, item.selected_time_range)
+  if (item.selected_arc_or_stage_id) incoming.arc = item.selected_arc_or_stage_id
   if (item.subObject?.kind && item.subObject?.id) {
     incoming[item.subObject.kind] = item.subObject.id
   }
   const applied = applySelectionAgainstCatalog(incoming, catalog, item.canonical_subject_id)
   return {
-    investigationContext: result.investigationContext,
+    investigationContext: { ...result.investigationContext,
+      selected_arc_or_stage_id: applied.selection.arc ?? null },
     committed: result.committed,
     selection: applied.selection,
     fallbacks: applied.fallbacks,

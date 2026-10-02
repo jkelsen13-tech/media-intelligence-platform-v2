@@ -32,7 +32,6 @@ import {
   setInvestigationAsOfTime,
   applySubject,
   subjectFromWorldViewSelection,
-  subjectFromGraphNode,
   subjectFromGraphInspection,
   graphNodeMatchingInvestigation,
 } from './lib/investigationContext'
@@ -46,6 +45,7 @@ import {
   parseDeepLink,
   serializeDeepLink,
   applySelectionAgainstCatalog,
+  graphSelectionCatalog,
 } from './lib/deepLinks'
 import {
   RECENT_INVESTIGATION_STORAGE_KEY,
@@ -105,10 +105,6 @@ import WorkspaceTechnicalDisclosure from './components/WorkspaceTechnicalDisclos
 
 // Mobile-first graph entry: the top N hubs by degree centrality.
 const HUB_LIST_SIZE = 30
-
-function placeKeyFromMention(row) {
-  return row?.placeId ?? (row?.place != null ? `${row.place}:${row.longitude}:${row.latitude}` : null)
-}
 
 function subObjectFromUi(selected, activeLocationKey) {
   if (selected?.id != null || selected?.slug != null) {
@@ -234,11 +230,14 @@ export default function App({
   )
   const recentRef = useRef(recentInvestigations)
   const investigationContextRef = useRef(investigationContext)
+  const navigationIntentRef = useRef(0)
   const [nodeQuery, setNodeQuery] = useState('')
   const [aboutOpen, setAboutOpen] = useState(false)
   // Track B nav restructure: the "More" tab opens a bottom sheet listing
   // the flag-gated surfaces instead of switching views itself.
   const [moreOpen, setMoreOpen] = useState(false)
+  const aboutDialogRef = useRef(null)
+  const moreDialogRef = useRef(null)
   // R4.75 Step 3 hunch: exploreOpen beside moreOpen. Header button opens
   // a sheet containing NewsView in drawer variant. Opening is NOT a view
   // change — do not changeView('news'), do not applySubject.
@@ -396,15 +395,24 @@ export default function App({
     writeRecentInvestigations(unauthenticatedRecentStorage(), recentInvestigations)
   }, [recentInvestigations])
 
-  const deepLinkCatalog = useMemo(() => {
-    if (!graph) return null
-    return {
-      entity: (graph.nodes ?? []).map((node) => node.id ?? node.slug).filter(Boolean),
-      place: (locationMentions ?? []).map(placeKeyFromMention).filter(Boolean),
-      claim: [],
-      source: [],
-    }
-  }, [graph, locationMentions])
+  const deepLinkCatalogForSubject = useCallback((id) => graphSelectionCatalog(
+    graph, recordedGeography(graph?.nodes ?? [], locationMentions), id,
+  ), [graph, locationMentions])
+  const deepLinkCatalog = useMemo(() => deepLinkCatalogForSubject(investigationContext.canonical_subject_id),
+    [deepLinkCatalogForSubject, investigationContext.canonical_subject_id])
+
+  // Explicit subject changes clear focuses from every analytical surface.
+  // Discovery filters stay in NewsView and do not filter this investigation.
+  const clearInvalidNewSubjectSubSelections = useCallback(() => {
+    setLinkSelection(emptyDeepLinkSelection())
+    setSelectionFallbacks([])
+    setFocusArc(null)
+    setFocusArticle(null)
+    setFocusTimelineEvent(null)
+    setFocusTimelineArc(null)
+    setFocusComparisonEvent(null)
+    setActiveLocationKey(null)
+  }, [])
 
   const rememberPriorSubject = useCallback((priorIc, nextId) => {
     if (!priorIc?.canonical_subject_id || nextId == null) return
@@ -468,6 +476,10 @@ export default function App({
         }
         return
       }
+      navigationIntentRef.current += 1
+      if (String(data.subject_graph_node_id ?? data.id ?? data.slug) !== String(investigationContextRef.current?.canonical_subject_id)) {
+        clearInvalidNewSubjectSubSelections()
+      }
       // A node inspector is the one primary overlay. Lists, review panels,
       // topic browser, and prior relationship evidence close before it opens.
       setGraphInspectorDismissed(false)
@@ -499,7 +511,7 @@ export default function App({
       }
       pushFocus(data)
     },
-    [pinned, pushFocus],
+    [pinned, pushFocus, rememberPriorSubject, clearInvalidNewSubjectSubSelections],
   )
 
   const openConsequenceView = useCallback((node) => {
@@ -532,16 +544,20 @@ export default function App({
         } else {
           setSelected(next)
           setPolicyNode(null)
-          setInvestigationContext((ic) => {
-            const subject = subjectFromGraphInspection(next, ic)
-            rememberPriorSubject(ic, subject.canonical_subject_id)
-            return applySubject(ic, subject)
-          })
         }
+        navigationIntentRef.current += 1
+        if (String(next.id ?? next.slug) !== String(investigationContextRef.current?.canonical_subject_id)) {
+          clearInvalidNewSubjectSubSelections()
+        }
+        setInvestigationContext((ic) => {
+          const subject = subjectFromGraphInspection(next, ic)
+          rememberPriorSubject(ic, subject.canonical_subject_id)
+          return applySubject(ic, subject)
+        })
         pushFocus(next)
       }
     },
-    [graph, pushFocus],
+    [graph, pushFocus, rememberPriorSubject, clearInvalidNewSubjectSubSelections],
   )
 
   // A location marker focuses the complete documented set at that place.
@@ -608,6 +624,10 @@ export default function App({
   const handleSelectProjection = useCallback(
     (node, row) => {
       if (!node) return
+      navigationIntentRef.current += 1
+      if (String(row?.subject_graph_node_id ?? node.subject_graph_node_id ?? node.id ?? node.slug) !== String(investigationContextRef.current?.canonical_subject_id)) {
+        clearInvalidNewSubjectSubSelections()
+      }
       setPolicyNode(null)
       setActiveLocationKey(null)
       setPinned(false)
@@ -619,6 +639,11 @@ export default function App({
           : node
       setInvestigationContext((ic) => {
         const subject = subjectFromWorldViewSelection({ node: seedNode, row })
+        if (String(subject.canonical_subject_id) === String(ic.canonical_subject_id)) {
+          subject.as_of_time = ic.as_of_time
+          subject.selected_time_range = ic.selected_time_range
+          subject.selected_arc_or_stage_id = ic.selected_arc_or_stage_id
+        }
         return commitNewSubjectFromApp(
           ic,
           {
@@ -647,7 +672,7 @@ export default function App({
       setSelected(node)
       pushFocus(node)
     },
-    [graph, pushFocus, commitNewSubjectFromApp],
+    [graph, pushFocus, commitNewSubjectFromApp, clearInvalidNewSubjectSubSelections],
   )
 
   const handleInvestigationAsOfTime = useCallback((iso) => {
@@ -657,6 +682,7 @@ export default function App({
 
   // Ordinary public tab switches retain the existing subject.
   const changeView = useCallback((key) => {
+    navigationIntentRef.current += 1
     setView(key)
     setInvestigationContext((ic) => setInvestigationActiveView(ic, key))
   }, [])
@@ -699,6 +725,24 @@ export default function App({
   // (setMoreOpen(true) — do not rewrite that seam) dismisses Explore.
   useEffect(() => {
     if (moreOpen) setExploreOpen(false)
+  }, [moreOpen])
+
+  useEffect(() => {
+    if (!aboutOpen) return
+    setMoreOpen(false)
+    setExploreOpen(false)
+    const origin = document.activeElement
+    const dialog = aboutDialogRef.current
+    ;(dialog?.querySelector('button') ?? dialog)?.focus()
+    return () => origin?.isConnected && origin.focus?.()
+  }, [aboutOpen])
+
+  useEffect(() => {
+    if (!moreOpen) return
+    const origin = document.activeElement
+    const dialog = moreDialogRef.current
+    ;(dialog?.querySelector('button') ?? dialog)?.focus()
+    return () => origin?.isConnected && origin.focus?.()
   }, [moreOpen])
 
   // One primary graph overlay at a time. A relationship panel, node/policy
@@ -766,22 +810,12 @@ export default function App({
   // R4.75 Step 5: Explore / News explicit select commits one new IC via
   // commitNewSubject, then clears only invalid prior-subject leftovers.
   const resetJumpContext = useCallback(() => {
+    navigationIntentRef.current += 1
     clearPrimaryGraphOverlays()
     // Cross-view navigation replaces the old graph focal context rather than
     // appending to it. A graph-target jump installs its own one-crumb root.
     setFocusStack([])
   }, [clearPrimaryGraphOverlays])
-
-  // R4.75 Step 5: prior-subject leftovers that JUMP_CLEARS does not cover.
-  // Discovery filters stay in NewsView — they are not investigation evidence.
-  const clearInvalidNewSubjectSubSelections = useCallback(() => {
-    setFocusArc(null)
-    setFocusArticle(null)
-    setFocusTimelineEvent(null)
-    setFocusTimelineArc(null)
-    setFocusComparisonEvent(null)
-    setActiveLocationKey(null)
-  }, [])
 
   const openNodeInGraph = useCallback(
     (nodeKey) => {
@@ -821,10 +855,11 @@ export default function App({
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   const openArticleInNews = useCallback((target) => {
-    resetJumpContext()
-    clearInvalidNewSubjectSubSelections()
+    const intent = ++navigationIntentRef.current
     const applyResolvedArticle = (articleId) => {
-      if (!articleId) return
+      if (!articleId || intent !== navigationIntentRef.current) return
+      resetJumpContext()
+      clearInvalidNewSubjectSubSelections()
       setFocusArticle(articleId)
       setView('news')
       setInvestigationContext((ic) =>
@@ -834,7 +869,7 @@ export default function App({
     // Direct News / Timeline / Arc ids pass through. Comparison cards pass
     // an opaque article_key plus the public member URL; resolve that through
     // an eligible articles row before loadArticleDetail runs.
-    void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle)
+    void mipBackend.publicData.resolveEligibleArticleForNews(target).then(applyResolvedArticle).catch(() => {})
   }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
 
   // Doc 05 pair 3/6 destination, now under the Package 1 item 2 navigation
@@ -856,11 +891,15 @@ export default function App({
       ? {
           type: 'event',
           id: resolved.eventKey,
-          parentEventId: resolved.scope === 'arc' ? resolved.arcId : null,
         }
       : { type: 'arc', id: resolved.arcId }
+    const scope = applySelectionAgainstCatalog(resolved.eventKey && resolved.arcId ? { arc: resolved.arcId } : {},
+      deepLinkCatalogForSubject(resolved.eventKey ?? resolved.arcId), resolved.eventKey ?? resolved.arcId)
+    payload.selected_arc_or_stage_id = scope.selection.arc ?? null
+    setLinkSelection(scope.selection)
+    setSelectionFallbacks(scope.fallbacks)
     setInvestigationContext((ic) => commitNewSubjectFromApp(ic, payload, { landingView: 'timeline' }))
-  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp])
+  }, [resetJumpContext, clearInvalidNewSubjectSubSelections, commitNewSubjectFromApp, deepLinkCatalogForSubject])
 
   // Doc 05 pair 5 destination: focus an event in Source Comparison.
   const openComparisonEvent = useCallback((eventId) => {
@@ -883,6 +922,8 @@ export default function App({
   }, [graph, nodeQuery])
 
   const pickNode = (node) => {
+    navigationIntentRef.current += 1
+    clearInvalidNewSubjectSubSelections()
     setEdgeEvidence(null)
     setEdgeListOpen(false)
     setReviewStatusOpen(false)
@@ -895,7 +936,7 @@ export default function App({
     setNodeQuery('')
     pushFocus(node)
     setInvestigationContext((ic) => {
-      const subject = subjectFromGraphNode(node)
+      const subject = subjectFromGraphInspection(node, ic)
       rememberPriorSubject(ic, subject.canonical_subject_id)
       return applySubject(ic, subject)
     })
@@ -938,6 +979,8 @@ export default function App({
         : null
 
   const openHub = useCallback((node) => {
+    navigationIntentRef.current += 1
+    clearInvalidNewSubjectSubSelections()
     setEdgeEvidence(null)
     setEdgeListOpen(false)
     setReviewStatusOpen(false)
@@ -949,11 +992,11 @@ export default function App({
     setSelected(null)
     setPinned(false)
     setInvestigationContext((ic) => {
-      const subject = subjectFromGraphNode(node)
+      const subject = subjectFromGraphInspection(node, ic)
       rememberPriorSubject(ic, subject.canonical_subject_id)
       return applySubject(ic, subject)
     })
-  }, [rememberPriorSubject])
+  }, [rememberPriorSubject, clearInvalidNewSubjectSubSelections])
 
   const focusedNodes = subgraph ? subgraph.nodes : graph?.nodes ?? []
   const focusedEdges = subgraph ? subgraph.edges : graph?.edges ?? []
@@ -1004,7 +1047,7 @@ export default function App({
     clearInvalidNewSubjectSubSelections()
     const restored = restoreRecentInvestigation(item, {
       currentIc: current,
-      catalog: deepLinkCatalog,
+      catalog: deepLinkCatalogForSubject(item?.canonical_subject_id),
     })
     setInvestigationContext(restored.investigationContext)
     setView(restored.investigationContext.active_view ?? item?.active_view ?? 'news')
@@ -1012,25 +1055,29 @@ export default function App({
     setSelectionFallbacks(restored.fallbacks)
     if (restored.selection.place) setActiveLocationKey(restored.selection.place)
     else setActiveLocationKey(null)
-  }, [rememberPriorSubject, resetJumpContext, clearInvalidNewSubjectSubSelections, deepLinkCatalog])
+  }, [rememberPriorSubject, resetJumpContext, clearInvalidNewSubjectSubSelections, deepLinkCatalogForSubject])
 
   // Re-validate pending deep-link sub-selections once live catalogs exist.
   useEffect(() => {
     if (!deepLinkCatalog) return
     const parsed = parseDeepLink(typeof window !== 'undefined' ? window.location.hash : '')
-    const incoming = parsed.subjectId ? parsed.selection : linkSelection
-    const parentId = parsed.subjectId ?? investigationContext.canonical_subject_id
+    const sameRoute = parsed.subjectId === investigationContext.canonical_subject_id
+    const incoming = sameRoute ? parsed.selection : linkSelection
+    const parentId = investigationContext.canonical_subject_id
     const applied = applySelectionAgainstCatalog(incoming, deepLinkCatalog, parentId)
     setLinkSelection(applied.selection)
     setSelectionFallbacks(applied.fallbacks)
-    if (applied.selection.place) setActiveLocationKey(applied.selection.place)
+    setActiveLocationKey(applied.selection.place ?? null)
+    setInvestigationContext(ic => ({ ...ic, selected_arc_or_stage_id: applied.selection.arc ?? null }))
   }, [deepLinkCatalog])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const nextHash = serializeDeepLink(investigationContext, {
       ...linkSelection,
-      entity: selected ? String(selected.id ?? selected.slug) : linkSelection.entity,
+      entity: selected && (String(selected.subject_graph_node_id ?? selected.id ?? selected.slug) === String(investigationContext.canonical_subject_id)
+        || String(selected.id ?? selected.slug) === String(linkSelection.entity))
+        ? String(selected.id ?? selected.slug) : linkSelection.entity,
       place: activeLocationKey ?? linkSelection.place,
       time: formatTimeQuery(investigationContext.as_of_time, investigationContext.selected_time_range),
     })
@@ -1048,7 +1095,12 @@ export default function App({
         return
       }
       const current = investigationContextRef.current
-      const hydrated = hydrateDeepLink(hash, { currentIc: current, catalog: deepLinkCatalog })
+      const parsed = parseDeepLink(hash)
+      const hydrated = hydrateDeepLink(hash, { currentIc: current,
+        catalog: deepLinkCatalogForSubject(parsed.subjectId) })
+      if (!hydrated.committed) return
+      resetJumpContext()
+      clearInvalidNewSubjectSubSelections()
       if (hydrated.parsed.subjectId) {
         rememberPriorSubject(current, hydrated.parsed.subjectId)
       }
@@ -1056,10 +1108,11 @@ export default function App({
       if (hydrated.investigationContext.active_view) setView(hydrated.investigationContext.active_view)
       setLinkSelection(hydrated.selection)
       setSelectionFallbacks(hydrated.fallbacks)
+      setActiveLocationKey(hydrated.selection.place ?? null)
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
-  }, [deepLinkCatalog, rememberPriorSubject])
+  }, [deepLinkCatalogForSubject, rememberPriorSubject, resetJumpContext, clearInvalidNewSubjectSubSelections])
 
   useEffect(() => {
     const subjectId = investigationContext.canonical_subject_id
@@ -1116,6 +1169,11 @@ export default function App({
     if (linkSelection.entity) {
       const entityNode = graph.nodes.find((node) => String(node.id ?? node.slug) === String(linkSelection.entity))
       if (entityNode) {
+        if (entityNode.type === 'policy') {
+          if (selected) setSelected(null)
+          if (policyNode !== entityNode) setPolicyNode(entityNode)
+          return
+        }
         const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
         if (selectedKey && String(selectedKey) === String(entityNode.id ?? entityNode.slug)) return
         setSelected(entityNode)
@@ -1124,10 +1182,15 @@ export default function App({
     }
     const match = graphNodeMatchingInvestigation(graph.nodes, investigationContext)
     if (!match) return
+    if (match.type === 'policy') {
+      if (selected) setSelected(null)
+      if (policyNode !== match) setPolicyNode(match)
+      return
+    }
     const selectedKey = selected ? selected.id ?? selected.slug ?? selected.subject_graph_node_id : null
     if (selectedKey && String(selectedKey) === String(match.id ?? match.slug)) return
     setSelected(match)
-  }, [view, graph, investigationContext, selected, linkSelection.entity, graphInspectorDismissed])
+  }, [view, graph, investigationContext, selected, policyNode, linkSelection.entity, graphInspectorDismissed])
 
   const canonicalNode = useMemo(
     () => graphNodeMatchingInvestigation(graph?.nodes ?? [], investigationContext),
@@ -1348,9 +1411,15 @@ export default function App({
       {aboutOpen && (
         <div className="sheet-backdrop" onClick={() => setAboutOpen(false)}>
           <div
+            ref={aboutDialogRef}
             className="sheet about-sheet"
             role="dialog"
+            aria-modal="true"
             aria-label="About"
+            tabIndex={-1}
+            onKeyDown={(event) => {
+              if (handleExploreDialogKeyDown(event, { dialogEl: aboutDialogRef.current, onDismiss: () => setAboutOpen(false) })) event.stopPropagation()
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sheet-head">
@@ -1371,9 +1440,15 @@ export default function App({
       {moreOpen && moreEntries.length > 0 && (
         <div className="sheet-backdrop" onClick={() => setMoreOpen(false)}>
           <div
+            ref={moreDialogRef}
             className="sheet more-sheet"
             role="dialog"
+            aria-modal="true"
             aria-label="More"
+            tabIndex={-1}
+            onKeyDown={(event) => {
+              if (handleExploreDialogKeyDown(event, { dialogEl: moreDialogRef.current, onDismiss: () => setMoreOpen(false) })) event.stopPropagation()
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sheet-head">
@@ -1849,7 +1924,7 @@ export default function App({
             onOpenArc={openArcInView}
             onOpenArticle={openArticleInNews}
             focusEventKey={focusTimelineEvent}
-            focusArcKey={focusTimelineArc}
+            focusArcKey={investigationContext.selected_arc_or_stage_id ?? (investigationContext.canonical_subject_type === 'arc' ? focusTimelineArc : null)}
             investigationContext={investigationContext}
           />
         )}

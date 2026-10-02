@@ -17,6 +17,7 @@ export const INVESTIGATION_CONTEXT_FIELDS = Object.freeze([
   'parent_event_id',
   'as_of_time',
   'selected_time_range',
+  'selected_arc_or_stage_id',
   'active_view',
   'temporal_assessment_reference',
 ])
@@ -27,6 +28,7 @@ export const EMPTY_INVESTIGATION_CONTEXT = Object.freeze({
   parent_event_id: null,
   as_of_time: null,
   selected_time_range: null,
+  selected_arc_or_stage_id: null,
   active_view: 'news',
   temporal_assessment_reference: null,
 })
@@ -86,6 +88,7 @@ export function applySubject(ic, subject = {}) {
     selected_time_range: Object.hasOwn(subject, 'selected_time_range')
       ? subject.selected_time_range ?? null
       : null,
+    selected_arc_or_stage_id: subject.selected_arc_or_stage_id ?? null,
     temporal_assessment_reference:
       subject.temporal_assessment_reference ?? temporalAssessmentReferenceFor(id),
   }
@@ -140,15 +143,17 @@ export function subjectFromGraphNode(node) {
   }
 }
 
-/** Inspecting the same canonical endpoint retains its recorded spatial
- * context when the graph has no recorded occurrence. New identities reset. */
+/** Inspecting the same canonical endpoint retains the user's time state.
+ * A node's occurrence is an initial scope, not a replacement for a scrubbed
+ * inspection instant or separately chosen range. New identities reset. */
 export function subjectFromGraphInspection(node, ic) {
   const subject = subjectFromGraphNode(node)
   if (subject.canonical_subject_id != null
     && String(subject.canonical_subject_id) === String(ic?.canonical_subject_id)
-    && node?.occurred_at == null && !node?.fromSpatialProjection) {
+    && !node?.fromSpatialProjection) {
     return { ...subject, as_of_time: ic.as_of_time ?? null,
-      selected_time_range: ic.selected_time_range ?? null }
+      selected_time_range: ic.selected_time_range ?? null,
+      selected_arc_or_stage_id: ic.selected_arc_or_stage_id ?? null }
   }
   return subject
 }
@@ -179,6 +184,7 @@ export function investigationContextDomProps(ic) {
     'data-parent-event-id': ic?.parent_event_id ?? '',
     'data-as-of-time': ic?.as_of_time ?? '',
     'data-selected-time-range': range ? `${range.from ?? ''}..${range.to ?? ''}` : '',
+    'data-selected-arc-or-stage-id': ic?.selected_arc_or_stage_id ?? '',
     'data-active-view': ic?.active_view ?? '',
     'data-temporal-assessment-reference': ic?.temporal_assessment_reference ?? '',
   }

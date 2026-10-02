@@ -38,8 +38,9 @@ test('member pick then bound-time scrub then same-endpoint inspection retains re
   assert.equal(newSubject.as_of_time,null)
   assert.equal(newSubject.selected_time_range,null)
   const dated = applySubject(ic,subjectFromGraphInspection({...node,occurred_at:'2025-12-01T00:00:00Z'},ic))
-  assert.equal(dated.as_of_time,'2025-12-01T00:00:00Z')
-  assert.deepEqual(dated.selected_time_range,{from:'2025-12-01T00:00:00Z',to:null})
+  // A later-loaded occurrence is event evidence, not a new user scrub.
+  assert.equal(dated.as_of_time,ic.as_of_time)
+  assert.deepEqual(dated.selected_time_range,ic.selected_time_range)
   const missing = subjectFromGraphInspection({id:'event-a',type:'event'},emptyInvestigationContext())
   assert.equal(missing.as_of_time,null)
   assert.equal(missing.selected_time_range,null)

@@ -101,6 +101,7 @@ export function resolveCanonicalSubject(payload) {
       parent_event_id: payload.parent_event_id ?? null,
       as_of_time: hasOwn(payload, 'as_of_time') ? payload.as_of_time ?? null : null,
       selected_time_range: hasOwn(payload, 'selected_time_range') ? payload.selected_time_range ?? null : null,
+      selected_arc_or_stage_id: payload.selected_arc_or_stage_id ?? null,
       temporal_assessment_reference: payload.temporal_assessment_reference,
     }
   }
@@ -157,11 +158,20 @@ function noCommit(ic, landingView) {
 export function commitNewSubject(ic, payload, options = {}) {
   const landingView = options.landingView
   const subject = resolveCanonicalSubject(payload)
+  if (hasOwn(payload, 'selected_arc_or_stage_id')) subject.selected_arc_or_stage_id = payload.selected_arc_or_stage_id ?? null
   if (!subject.canonical_subject_id) return noCommit(ic, landingView)
 
   const base = ic ?? emptyInvestigationContext(landingView ?? 'news')
   const withView = landingView ? setInvestigationActiveView(base, landingView) : base
-  const next = applySubject(withView, subject)
+  const sameSubject = String(base.canonical_subject_id) === String(subject.canonical_subject_id)
+    && base.canonical_subject_type === subject.canonical_subject_type
+  const carriesTime = ['as_of_time', 'selected_time_range', 'occurred_at', 'row']
+    .some(key => hasOwn(payload, key)) || payload?.fromSpatialProjection === true
+  const next = applySubject(withView, sameSubject && !carriesTime
+    ? { ...subject, as_of_time: base.as_of_time, selected_time_range: base.selected_time_range,
+        selected_arc_or_stage_id: hasOwn(payload, 'selected_arc_or_stage_id')
+          ? payload.selected_arc_or_stage_id ?? null : base.selected_arc_or_stage_id ?? null }
+    : subject)
   return {
     investigationContext: next,
     clearSubSelections: INVALID_SUBSELECTIONS_ON_NEW_SUBJECT,
