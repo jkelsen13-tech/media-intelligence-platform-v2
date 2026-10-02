@@ -1,0 +1,567 @@
+{
+  "contract": "mip-launch-install-sequence-qualification-v1",
+  "status": "PASS",
+  "runtime": "v24.19.0",
+  "live_operations": 0,
+  "source_only": true,
+  "synthetic_disposable": true,
+  "cases": [
+    {
+      "name": "literal-safe local compiler; exact source/catalog/artifact hashes; no overwrite or execution fallback",
+      "status": "PASS"
+    },
+    {
+      "name": "reviewed-public-versions exact empty checkpoint restore",
+      "status": "PASS",
+      "rollbackHash": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+    },
+    {
+      "name": "public-story-following exact empty checkpoint restore",
+      "status": "PASS",
+      "rollbackHash": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+    },
+    {
+      "name": "selective-execution exact empty checkpoint restore",
+      "status": "PASS",
+      "rollbackHash": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+    },
+    {
+      "name": "markets-directory exact empty checkpoint restore",
+      "status": "PASS",
+      "rollbackHash": "56753ce12cf31d6c5768748d6ff54370f018b0b7d48c6ac46232ddbc5f596550"
+    },
+    {
+      "name": "reviewed-comparison exact empty checkpoint restore",
+      "status": "PASS",
+      "rollbackHash": "327d0f853b31639b8d3307279eff13e0063ecce86c971a8f0acc41def8abf301"
+    },
+    {
+      "name": "whole installed stack defaults closed; publication/rights/policy/role boundaries distinct",
+      "status": "PASS"
+    },
+    {
+      "name": "whole empty reverse recovery with explicit retained dependency barrier",
+      "status": "PASS"
+    },
+    {
+      "name": "all populated restoration gates refuse atomically; exact revoke-only history preserved",
+      "status": "PASS"
+    }
+  ],
+  "stages": [
+    {
+      "id": "reviewed-public-versions",
+      "proposal": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sourceHash": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49",
+      "compiledHash": "2bcb5ab0706fc5009107b634d55493925e3a0a97c4ac1303f721d480bdf6eb69",
+      "transactionId": "778",
+      "originalCatalogHash": "796c2c2bc46467e389888e0eddb7b73739ac9521736cfd2ab6c49da5145b2fd3",
+      "installedCatalogHash": "abb59b9a04ee3cf883b959d30b0edb35b3ecbba608d417722ed29f9909667dd6",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.public_reviewed_article_evidence",
+            "mip_private.public_reviewed_article_versions",
+            "mip_private.reviewed_public_article_evidence",
+            "mip_private.reviewed_public_article_versions",
+            "mip_private.reviewed_public_stories",
+            "mip_private.reviewed_public_story_members",
+            "mip_private.reviewed_public_story_versions",
+            "public.news_reviewed_articles_public"
+          ],
+          "removed": [],
+          "changed": [
+            "public.articles",
+            "public.comparison_public",
+            "public.news_detail_public"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.bind_reviewed_public_article_version(uuid,uuid,text,text,text,text,text,uuid[],uuid,text)",
+            "mip_private.bind_reviewed_public_story_version(text,uuid,uuid[],text,text,uuid,text)",
+            "mip_private.public_article_evidence_is_visible(uuid,uuid)",
+            "mip_private.public_article_version_is_visible(uuid)",
+            "mip_private.public_story_version_is_visible(uuid)",
+            "mip_private.require_reviewed_public_article_version(uuid,uuid,text)",
+            "mip_private.reviewed_public_article_payload(uuid)",
+            "mip_private.reviewed_public_story_payload(uuid)",
+            "public.read_reviewed_public_article_v1(uuid,uuid)",
+            "public.read_reviewed_public_stories_for_article_v1(uuid)",
+            "public.read_reviewed_public_story_directory_v1(uuid,integer)",
+            "public.read_reviewed_public_story_for_article_v1(uuid)",
+            "public.read_reviewed_public_story_v1(uuid,uuid)",
+            "public.search_reviewed_public_article_ids_v1(text,integer)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "31557159dd1ac09582d45bb0376490271995562fd3b305467e4fed30adacd0ea",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+          "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+        },
+        {
+          "path": "supabase/source-proposals/public-reviewed-versions-v1.rollback.sql",
+          "sha256": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+        }
+      ]
+    },
+    {
+      "id": "public-story-following",
+      "proposal": "supabase/source-proposals/story_following_v1.sql",
+      "sourceHash": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e",
+      "compiledHash": "d87b4bc21f763e858fe30d3d3a3d5f81e8314337e0fa2d2e46c8267762f04752",
+      "transactionId": "791",
+      "originalCatalogHash": "abb59b9a04ee3cf883b959d30b0edb35b3ecbba608d417722ed29f9909667dd6",
+      "installedCatalogHash": "2e8e2ef8a1906539a96d976e80bddf8c179a7a2c422021451513cbfe57d2eb03",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.public_story_follow_events",
+            "mip_private.public_story_follows",
+            "mip_private.public_story_material_changes"
+          ],
+          "removed": [],
+          "changed": [
+            "public.articles",
+            "public.mip_profiles",
+            "public.nodes"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.declare_public_story_material_change_v1(jsonb)",
+            "mip_private.public_story_follow_payload(mip_private.public_story_follows)",
+            "mip_private.public_story_material_payload(mip_private.public_story_material_changes)",
+            "mip_private.read_public_story_follow(uuid,uuid,integer)",
+            "mip_private.reject_public_story_material_mutation()",
+            "mip_private.revoke_ineligible_story_follows()",
+            "mip_private.revoke_public_story_follow(uuid,uuid)",
+            "public.mip_public_story_following_v1(text,jsonb)",
+            "public.read_reviewed_public_story_context_v1(uuid,uuid)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "d97f56f451e00be0d090bb14c98fc1cd33f0d13327cb8425b7251c4b211b2b11",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/story_following_v1.sql",
+          "sha256": "2d351c4d74e30462265bdd3855720d4b4e5531ef8b633b80a8b2e18d2f1cc90e"
+        },
+        {
+          "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+          "sha256": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+        },
+        {
+          "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+          "sha256": "70913bb10c3f583156c96ecd46dd2cbffad61e0213043cf0962875b63ac03948"
+        }
+      ]
+    },
+    {
+      "id": "private-relevant-inputs",
+      "proposal": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "sourceHash": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19",
+      "compiledHash": "7f3ff1fbc3ab7466b5ff862f4c42d0556cb1c89e226d08301c7a2cb92580f1dc",
+      "transactionId": "795",
+      "originalCatalogHash": "2e8e2ef8a1906539a96d976e80bddf8c179a7a2c422021451513cbfe57d2eb03",
+      "installedCatalogHash": "51d374634993664b51a2bc2838e5f19b60ac54792addc53d0005934ea1a69d9a",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.candidate_input_relevance"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.assessment_relevance_keys(uuid,uuid[])",
+            "evidence_pipeline.declare_candidate_input_relevance(jsonb)",
+            "evidence_pipeline.diff_relevance_declarations(jsonb,jsonb)"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.assessment_causes(uuid)",
+            "evidence_pipeline.assessment_context(uuid,uuid[],bigint[])",
+            "evidence_pipeline.collect_investigation_snapshot(uuid[])",
+            "evidence_pipeline.diff_investigation_snapshots(jsonb,jsonb)",
+            "evidence_pipeline.process_dependency_job(uuid,uuid,integer)",
+            "public.mip_assessments_v1(text,jsonb)"
+          ]
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "c9ceafa1f33b1c0aa45ac3e726304c6a8543bf388280b3fed798781c2635aa83",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+          "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19"
+        }
+      ]
+    },
+    {
+      "id": "private-postcapture-receipts",
+      "proposal": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sourceHash": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703",
+      "compiledHash": "79ba7aeff49f149004681ce4f5ba72b9028fcb86fff80051a78fbd70743bca68",
+      "transactionId": "799",
+      "originalCatalogHash": "51d374634993664b51a2bc2838e5f19b60ac54792addc53d0005934ea1a69d9a",
+      "installedCatalogHash": "0db3f8e2831ccdc093bb748d0dbfbaa7d6e433b82357e28abfb26601643f917a",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.investigation_selective_intake_receipts",
+            "evidence_pipeline.investigation_selective_intake_receipts_ordinal_seq"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.selective_intake_payload(evidence_pipeline.investigation_selective_intake_receipts)",
+            "evidence_pipeline.selective_intake_subject(jsonb)",
+            "public.mip_investigation_selective_intake_v1(text,jsonb)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "8bc5a15f0058e2dd7002194254bb6dcc8b478ca1dfa02a19bd99c93ff6fcac3d",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+          "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+        }
+      ]
+    },
+    {
+      "id": "selective-execution",
+      "proposal": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sourceHash": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471",
+      "compiledHash": "4915c79325b40296b1f5f55cfdf8576dde601ce19011e07de17e3cb5dc7ec9f7",
+      "transactionId": "805",
+      "originalCatalogHash": "0db3f8e2831ccdc093bb748d0dbfbaa7d6e433b82357e28abfb26601643f917a",
+      "installedCatalogHash": "91d9837631e74187c9b443adaaa5220b8eebeea9e22b89f68001f08ae8fd41d3",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "evidence_pipeline.selective_authorization_revocations",
+            "evidence_pipeline.selective_criteria_versions",
+            "evidence_pipeline.selective_discovery_receipts",
+            "evidence_pipeline.selective_discovery_receipts_ordinal_seq",
+            "evidence_pipeline.selective_execution_receipts",
+            "evidence_pipeline.selective_execution_receipts_ordinal_seq",
+            "evidence_pipeline.selective_fetch_permits",
+            "evidence_pipeline.selective_source_authorizations"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "functions": {
+          "added": [
+            "evidence_pipeline.selective_metadata_decision(jsonb,jsonb)",
+            "public.mip_selective_execution_v1(text,jsonb)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "1140b727ada943ab8bad0109f3501843b58a2b0fc94be4b29a66e95f77ae9bd0",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+          "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+        },
+        {
+          "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+          "sha256": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+        },
+        {
+          "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+          "sha256": "9c361f339a22ca974cd3ef4e05bcde9931beb36c39dc3f6d9e9890b0e1e06f97"
+        }
+      ]
+    },
+    {
+      "id": "legacy-atomic-completion",
+      "proposal": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sourceHash": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066",
+      "compiledHash": "dc02b043e699ff9958ff2965bc539a4e3791fd3bfe195b9861d040a91691b4f1",
+      "transactionId": "809",
+      "originalCatalogHash": "91d9837631e74187c9b443adaaa5220b8eebeea9e22b89f68001f08ae8fd41d3",
+      "installedCatalogHash": "b1813e363406c34a0a5c760df9ceb0a1d3faaa34a1f767bdb004ecdc1bfa8568",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline",
+            "mip_private",
+            "public"
+          ]
+        },
+        "relations": {
+          "added": [
+            "mip_private.legacy_extraction_completions",
+            "mip_private.legacy_reviewed_completions"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.article_captures",
+            "evidence_pipeline.change_jobs",
+            "evidence_pipeline.evidence_changes",
+            "evidence_pipeline.evidence_changes_position_seq",
+            "evidence_pipeline.import_jobs",
+            "evidence_pipeline.import_receipts",
+            "evidence_pipeline.job_events",
+            "evidence_pipeline.job_events_id_seq",
+            "evidence_pipeline.record_versions",
+            "public.articles"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.legacy_extraction_apply_v1(text,jsonb)",
+            "mip_private.legacy_source_snapshot_v1(public.articles)",
+            "public.mip_legacy_extraction_v1(text,jsonb)",
+            "public.mip_legacy_reviewed_completion_v1(uuid,uuid,text,uuid,jsonb)"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.canonical_url(text)"
+          ]
+        },
+        "roles": {
+          "added": [
+            "mip_legacy_completion_owner"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "08cb57dea886eea0524f253ea5eac6d966a4343ce851134e8c33b7e43bda8bf8",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+          "sha256": "ee6bc75a31d6f691895387275db76ed4494a80e23f1b7f4bcd21b7232cb08066"
+        },
+        {
+          "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+          "sha256": "bae96d0483e818826bfee191bafa702c7baec0e5a08a342297c811db7ffebe5c"
+        }
+      ]
+    },
+    {
+      "id": "markets-directory",
+      "proposal": "supabase/source-proposals/markets-directory-v2.sql",
+      "sourceHash": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b",
+      "compiledHash": "8c712fbebe2fd8761e84ed542ef56ecef8102bd6013904261db645f9474b0d46",
+      "transactionId": "815",
+      "originalCatalogHash": "b1813e363406c34a0a5c760df9ceb0a1d3faaa34a1f767bdb004ecdc1bfa8568",
+      "installedCatalogHash": "3270a5cc498faebb6c034523a5bfce1281f625c375f7d6903866d55e2129da15",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.market_revision_qualifications",
+            "mip_private.market_revision_revocations",
+            "mip_private.market_revision_sources",
+            "mip_private.public_market_revisions",
+            "mip_private.public_market_source_bindings"
+          ],
+          "removed": [],
+          "changed": [
+            "evidence_pipeline.record_versions"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.append_market_revision(text,uuid,jsonb,text,text,jsonb)",
+            "mip_private.market_identity_json(evidence_pipeline.record_versions,jsonb,text,text)",
+            "mip_private.market_instant_ns(text)",
+            "mip_private.market_path_is_supported(uuid,uuid,numeric,jsonb,jsonb)",
+            "public.read_markets_source_directory_v1(text)"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "5151eb29b5e97802b9d537d3941b1124ddc51f67fe6a896e0e7cb1a28da0c710",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/markets-directory-v2.sql",
+          "sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b"
+        },
+        {
+          "path": "supabase/source-proposals/markets-directory-v2-rollback.sql",
+          "sha256": "56753ce12cf31d6c5768748d6ff54370f018b0b7d48c6ac46232ddbc5f596550"
+        }
+      ]
+    },
+    {
+      "id": "reviewed-comparison",
+      "proposal": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+      "sourceHash": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7",
+      "compiledHash": "88a9d1fe1b96b1c65b52db96bdf4d78ff9c1f249f44c6a80eaa4e5401bdabae0",
+      "transactionId": "821",
+      "originalCatalogHash": "3270a5cc498faebb6c034523a5bfce1281f625c375f7d6903866d55e2129da15",
+      "installedCatalogHash": "8c3f2034350f2cde29a2d9dc829d6cb82075f4dbc27d88a519226606f7da9539",
+      "delta": {
+        "schemas": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "relations": {
+          "added": [
+            "mip_private.comparison_bound_members",
+            "mip_private.comparison_bound_surfaces",
+            "mip_private.comparison_install_snapshot",
+            "mip_private.comparison_reviewed_members",
+            "mip_private.comparison_reviewed_surfaces"
+          ],
+          "removed": [],
+          "changed": [
+            "public.comparison_public"
+          ]
+        },
+        "functions": {
+          "added": [
+            "mip_private.bind_comparison_member(uuid,uuid,text)",
+            "mip_private.bind_comparison_surface(uuid,uuid,text,uuid,uuid[],uuid[])",
+            "mip_private.comparison_member_is_visible(uuid,uuid)",
+            "mip_private.comparison_surface_is_visible(uuid,uuid)",
+            "public.read_reviewed_comparison_v1()"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "roles": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "default_privileges": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "rehearsalHash": "2034d57d1f5032745a2ce0d059473be7984b1800f2e33092a694d8f9854f7854",
+      "artifacts": [
+        {
+          "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+          "sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7"
+        },
+        {
+          "path": "supabase/source-proposals/comparison-reviewed-versions-v1.rollback.sql",
+          "sha256": "327d0f853b31639b8d3307279eff13e0063ecce86c971a8f0acc41def8abf301"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "PGlite synthetic existing-owner fixture; no live grants/admission/provider acquisition or protected transaction",
+    "Single-session engine; no live PostgreSQL/PostgREST/JWT/multisession lock qualification",
+    "Legacy and native prerequisites intentionally retained; no global destructive uninstall claimed"
+  ]
+}
