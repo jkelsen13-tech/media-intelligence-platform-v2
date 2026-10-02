@@ -1,0 +1,41 @@
+# Shortest safe launch sequence
+
+Date: October 2, 2026. This plan uses the current whole-platform convergence matrix and chronological source/receipt registers. It is not merge, deployment, provider activation, SQL installation or live maintenance permission. Complete already-qualified evidence is preserved; changed scope receives new qualification.
+
+## Source candidate and independent qualification
+
+1. Finish the current bounded authenticated private Following and Markets navigation integration lanes; integrate only coherent objective repairs into `codex/mip-prelaunch-convergence-20261002`, descended from frozen `b8ac166`. Keep the separate backend synthetic client `93adb52` frozen rather than mixing it into a frontend release. Preserve historical versions and unapplied source proposals.
+2. Freeze the exact candidate SHA/tree. Run all tests, builds and bundle-isolation checks sequentially on Node22 and24 in one checkout; exercise changed integrated App/private gateway journeys with controlled data. Push the non-release branch and verify exact-head public CI, job counts, dependency audit and builds. Distinguish synthetic SDK/SQL/browser qualification from installed/live behavior.
+3. Parent obtains fresh bounded independent Cursor source review of that exact candidate. Repair consequential findings within existing authority, requalify changed scope and use targeted rereview where warranted. No perpetual review loop or claim of complete system/security certification.
+
+## Live installation and audience gates
+
+| Gate | Smallest next authorized/owner action | Required proof before launch behavior is claimed |
+|---|---|---|
+| Article extraction permission | Review the source-only fifteen-column proposal and exact fresh standalone catalog/consumer baseline; obtain separate protected privilege-change approval. | Same raw catalog query serialized once and parameter-bound, exact grantor/role/RLS/trigger/projection baseline, positive intentional fields/counts/search, negative raw/wildcard/mixed reads. Parent transport-form metadata is not this execution baseline. No real row probe has run in convergence. |
+| Profile excess privileges | Review the minimal non-CRUD ACL revoke proposal separately. | Fresh exact owner/grantor/inheritance baseline and least-privilege read/write/auth behavior; no RLS weakening or broad privilege rewrite. |
+| Private change consumers | Review exact relevance and private Following proposal ordering/manifest; settle provisional declaration ownership/materiality before installation/activation. Approve required SQL installation and private API deployment separately. | Installed native owner identity/snapshot/diff, verified Auth user binding, assigned-membership enforcement, browser RPC/table denial, CAS, expiry/revoke/late response, saved preference/readback and exact displayed-version acknowledgment. Current source tests do not qualify real accounts or deployed API v8. |
+| Public output writers | Obtain precise metadata-only authority/activation/trigger evidence for retained legacy graph writers. | Intentional public output reads stay unchanged; a reachable bypass requires faithful disposable reproduction and bounded writer/admission repair. Disabled native candidates/staging do not prove every privileged legacy producer safe. |
+| Public Story Following | Resolve stable admitted public story/version/audience and material declaration contracts. | Published arc grouping, panel pins and private investigation preference are not substitutes. Public story scope is not silently reclassified post-launch. |
+| Selective intake | Bind explicit disposition declarations to an approved authenticated durable owner and editorial/criteria version contract when authorized. | Existing shared capture/candidate/observation owners, exact version/cause/provenance and caller authority; no new domain engine, automatic admission or unsupported collection coverage. Current pure module alone is not an installed writer. |
+| Source publication | Qualify the actual enabled producer and public projection contracts before cutover. | Pending-only new revision intake, inspectable provenance, source availability and admission/default-deny. Current identity/status projections lack an exact immutable reviewed capture/hash join; privileged writes or future mutable legacy reactivation require that boundary to be resolved explicitly. |
+
+## Data, cost, device and host gates
+
+Cleveland source selection must obtain lawful photographic/terrain/facade bytes and verify capture dates, CRS, horizontal/vertical datum, units, resolution, alignment, commercial/cache/redistribution/derivative rights and attribution. Metadata-only Ohio, USGS, NAIP and Microsoft candidates are not admitted assets. Denied official routes may not be bypassed. Existing canonical anchors and precision floor remain; no near plaque is unlocked by invented precision or a silent subjective redesign.
+
+World View temperature, precipitation, wind speed/direction and correctly labeled current/historical context remain required initial scope. The ordinary official KCLE metadata request was blocked, with no observation bytes acquired or alternate route attempted. Missing modules remain unavailable rather than fabricated relevance or historical weather.
+
+Markets remains initial-release scope. A lawful public typed directory/path surface and account-specific rights/credit/cache/history qualification remain necessary; current source lookup consumes only already-authorized supplied snapshots. TradingView hosted stock display does not establish a native price API. CoinMarketCap free-tier arithmetic is not actual entitlement, installed cadence or billing authority. No paid alternative, subscription or overage is authorized; Markets incremental provider spend must stay $0.
+
+Non-Supabase normal infrastructure target is approximately $100/month, with a $200 ceiling requiring explicit approval above it. Frontend/session counters are not provider billing receipts or authoritative global enforcement. Confirm entitled hosting and bounded actual provider/account/concurrency/active-time allowances, quota receipts and cheap fallback before costly live routes. Current commercial GitHub Pages eligibility needs resolution; researched Cloudflare or self-hosted options are comparisons, not a selected migration or spend approval.
+
+Retain historical cold-portrait RED and original threshold. Qualify meaningful physical-device behavior only with actual device evidence; controlled cloud Chromium viewport success does not establish FPS. Graceful renderer/source/backend/network/auth failures must preserve truthful unavailable/unknown states and fail closed where evidence/security demands it.
+
+## Release and backend maintenance remain separate
+
+After source, audience, rights, cost and required product gates are met, request owner permission for the exact merge/deploy sequence. Main remains `39fdab77fc75736c57f2eb3a9b8500456ea27eae` at the current read. Use the single qualified candidate ancestry; do not assemble independently clean branches ad hoc. Compare exact main/staging/deployed identities, retain deployment/rollback receipts and verify changed routes after an approved deployment. No merge or deployment is included in this run.
+
+Backend consolidation is independent: frozen `1021d5c` and synthetic successor `93adb52` are clean bounded source gates only. First supply the eleven real wrapper inputs, exact trusted CA/certificate and protected logs/provider-window/role/ACL/security baselines. Then seek explicit **ROLLBACK-only** live rehearsal approval with exact target row/count/timeouts/failure/restoration receipts. A later **COMMIT** requires separate owner authorization. Neither action has run. Frontend source readiness does not waive this boundary, and backend retirement is not authorized.
+
+When remaining source work is exhausted, parent final handoff records exact candidate/CI/review, fixed and unresolved defects, installed versus synthetic evidence, rights/cost/security, owner choices, deployment drift and this sequence in the MIP Library/workspace. New final receipts should reference the frozen reviewed source rather than altering it merely to embed its own hash.
