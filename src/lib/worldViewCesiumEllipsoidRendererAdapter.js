@@ -713,6 +713,10 @@ export function createCesiumEllipsoidRendererAdapter({
           const width=state==='plaque'?180:state==='ribbon'?132:24,height=state==='plaque'?56:state==='ribbon'?32:24
           nativeBillboards.add({position:ground.get(marker.id).worldPosition,
             image:worldViewNativeBillboardTexture(marker.label,state,entity.__mipRow.precision_class),width,height,
+            // Separate surface-coincident quad paint from globe depth by the
+            // existing 0.5m ray tolerance, toward the eye only. World position,
+            // canonical anchor/tether and GPU depth testing remain unchanged.
+            eyeOffset:new Cesium.Cartesian3(0,0,-0.5),
             verticalOrigin:Cesium.VerticalOrigin.CENTER,disableDepthTestDistance:0,id:entity})
         }
         changed=true
@@ -1025,7 +1029,7 @@ export function createCesiumEllipsoidRendererAdapter({
     },
     getDisplayLayout: () => { if (refreshDisplayLayout()) viewer?.scene?.requestRender?.(); return displayPresentation },
     getBillboardState: () => ({enabled:billboardEnabled,selected:selectedBillboard ? JSON.parse(JSON.stringify(selectedBillboard)) : null,
-      markers:nativeBillboards ? Array.from({length:nativeBillboards.length},(_,i)=>{const b=nativeBillboards.get(i),screen=b.computeScreenSpacePosition(viewer.scene);return {key:b.id.__mipMarker.id,declaredWorldPosition:{x:b.position.x,y:b.position.y,z:b.position.z},screen:screen?{x:screen.x,y:screen.y}:null,width:b.width,height:b.height,heightReference:b.heightReference,disableDepthTestDistance:b.disableDepthTestDistance}}):[]}),
+      markers:nativeBillboards ? Array.from({length:nativeBillboards.length},(_,i)=>{const b=nativeBillboards.get(i),screen=b.computeScreenSpacePosition(viewer.scene);return {key:b.id.__mipMarker.id,declaredWorldPosition:{x:b.position.x,y:b.position.y,z:b.position.z},eyeOffset:{x:b.eyeOffset?.x ?? 0,y:b.eyeOffset?.y ?? 0,z:b.eyeOffset?.z ?? 0},screen:screen?{x:screen.x,y:screen.y}:null,width:b.width,height:b.height,heightReference:b.heightReference,disableDepthTestDistance:b.disableDepthTestDistance}}):[]}),
     getDisplayTiming: () => ({ ...layoutTiming }),
     flyToSubjectCamera,
     cancelCameraFlight: () => cancelGlobeCameraFlight(viewer),

@@ -85,6 +85,9 @@ test('actual adapter enters a supported city scope plaque at its existing floor,
   assert.equal(state.markers.length,1)
   assert.equal(state.markers[0].height,56)
   assert.equal(state.markers[0].disableDepthTestDistance,0)
+  assert.deepEqual(state.markers[0].eyeOffset,{x:0,y:0,z:-0.5},'bounded eye-space paint bias is separate from declared world coordinates')
+  const observed=adapter.getBillboardState();observed.markers[0].eyeOffset.z=-1000000
+  assert.deepEqual(adapter.getBillboardState().markers[0].eyeOffset,{x:0,y:0,z:-0.5},'diagnostic output cannot mutate live GPU paint offset')
   assert.equal(state.markers[0].heightReference,MathCesium.HeightReference.NONE)
   assert.deepEqual(state.selected.canonicalCoordinates,f.position)
   assert.equal(state.selected.nearDetailKind,'scope')
@@ -100,6 +103,7 @@ test('actual adapter enters a supported city scope plaque at its existing floor,
   assert.deepEqual(state.selected.card,box)
   assert.equal(state.selected.anchor.x,anchor.x-25)
   assert.deepEqual(state.selected.canonicalCoordinates,f.position)
+  assert.deepEqual(state.markers[0].declaredWorldPosition,declared,'orbit cannot convert paint bias into a world/canonical offset')
   f.height(heightMetersForPrecisionClass('city')*1.13);adapter.getDisplayLayout()
   assert.equal(adapter.getBillboardState().markers[0].height,24,'scope-density exit returns to the original physical distance bands')
   f.height(heightMetersForPrecisionClass('city')-10);adapter.getDisplayLayout()
