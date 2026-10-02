@@ -1,0 +1,2573 @@
+{
+  "date": "2026-10-02",
+  "status": "PASS_ENUMERATED_SCOPE_WITH_CONCRETE_500_IMMERSIVE_FOLLOW_ON",
+  "sourceCandidate": {
+    "head": "338b1204c2feb991d95590e9d6f743a78dfdda84",
+    "tree": "c4d8cc0702fe4aa959925f62e069d963ebe1c501",
+    "harnessSha256": "451d9b60578265949a11c79789b48502931535d9b5c150f74de13f62a839902e",
+    "baseHead": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+    "baseTree": "de8b46f03beba9ec3d7d2424f292c5ff0580e6b4",
+    "sourceFiles": [
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/src/lib/worldViewBillboardLayout.js",
+        "bytes": 10970,
+        "sha256": "f320cedd800c18ba85833f91378fedc79fdebacdcfba3b595be255abca2cf281"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/src/lib/worldViewBillboardPresentation.js",
+        "bytes": 12668,
+        "sha256": "32a7e91b9f7408c7181f85e12f079188bb87b2ae73b387c6a5af07f0e5356e3b"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/src/lib/worldViewCesiumEllipsoidRendererAdapter.js",
+        "bytes": 53277,
+        "sha256": "f088109ba84ca595fd9c62f24c5dd8619d761455e9c539535e7f0b051b2149e8"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/src/lib/worldViewSelectedCardViewport.js",
+        "bytes": 1513,
+        "sha256": "54149d89c1604547848321ccd22436d2cf4b716d25cd4553cc75355f3c74382d"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/src/styles/world-view-billboard-prototype.css",
+        "bytes": 12896,
+        "sha256": "3cc911484ab10e49110459e698cce83e56381887176a25ca407391c6aaf9b5ff"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/tests/worldViewSelectedCardAllocation.test.mjs",
+        "bytes": 5009,
+        "sha256": "8485aad3d02545ef35a51f8decdffa02836b6397ba8e64627cc86885745a5a85"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/tests/worldViewSelectedCardScroll.browser.mjs",
+        "bytes": 8457,
+        "sha256": "c3156a912162657f323bd4019dae7e67882c0dec93d1d689f4922bc25a9381e2"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/verifier/runWorldViewSelectedCardScrollSyntheticBrowser.mjs",
+        "bytes": 21298,
+        "sha256": "451d9b60578265949a11c79789b48502931535d9b5c150f74de13f62a839902e"
+      },
+      {
+        "path": "/workspace/mip-launch-card-scroll-corrections/verifier/worldViewProjectionFixture.mjs",
+        "bytes": 13026,
+        "sha256": "14e819533327da16195b830d415c421b45ed51531aafaea8fc043d8645fbafa4"
+      }
+    ]
+  },
+  "runtimeChecks": [
+    {
+      "node": "24.19.0",
+      "focusedTests": 63,
+      "controlledRealOverlayCssBrowserCases": 8,
+      "build": "PASS"
+    },
+    {
+      "node": "22.23.3",
+      "focusedTests": 63,
+      "controlledRealOverlayCssBrowserCases": 8,
+      "build": "PASS"
+    }
+  ],
+  "actualApp": {
+    "receipt": {
+      "path": "/workspace/mip-card-scroll-final400/full-app/selected-card-scroll-full-app.json",
+      "bytes": 3542434,
+      "sha256": "9eb68836e5dff1cb3fc4ac350723f596c8b7381de1b4d18dba092ad73797049b"
+    },
+    "additional500DockReceipt": {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/selected-card-scroll-full-app.json",
+      "bytes": 252972,
+      "sha256": "ca47d9f0e338115bc7cc85455c0a69ec08f506bb45ceb37e86b873001f3d9565"
+    },
+    "browser": "Chromium151.0.7922.173 Debian13",
+    "renderContext": "headless SwiftShader native ellipsoid fallback; synthetic public-reader fixtures; no physical-device/FPS/live-provider qualification",
+    "fullViewportOnly": true,
+    "passingCases": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 178,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 852,
+              "y": 556,
+              "width": 360,
+              "height": 240,
+              "right": 1212,
+              "bottom": 796
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 59,
+            "bodyScrollTop": 200,
+            "bodyLineHeight": "18.85px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 1165,
+              "y": 569,
+              "width": 32,
+              "height": 32,
+              "right": 1197,
+              "bottom": 601
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 865,
+              "y": 754,
+              "width": 334,
+              "height": 34,
+              "right": 1199,
+              "bottom": 788
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 1194,
+              "y": 406.890625,
+              "width": 32,
+              "height": 44,
+              "right": 1226,
+              "bottom": 450.890625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 70,
+                  "y": 106,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 180.640625,
+                  "bottom": 150
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 186.640625,
+                  "y": 106,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 260.96875,
+                  "bottom": 150
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 588.0000000000687,
+              "y": 375.9999999990827
+            },
+            "actualTetherAnchor": {
+              "x": 588.0000000000687,
+              "y": 375.9999999990827
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 592,
+              "y": 556,
+              "width": 360,
+              "height": 240,
+              "right": 952,
+              "bottom": 796
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 59,
+            "bodyScrollTop": 200,
+            "bodyLineHeight": "18.85px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 905,
+              "y": 569,
+              "width": 32,
+              "height": 32,
+              "right": 937,
+              "bottom": 601
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 605,
+              "y": 754,
+              "width": 334,
+              "height": 34,
+              "right": 939,
+              "bottom": 788
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 1189,
+              "y": 732,
+              "width": 32,
+              "height": 44,
+              "right": 1221,
+              "bottom": 776
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 57,
+                  "y": 93,
+                  "width": 91,
+                  "height": 44,
+                  "right": 148,
+                  "bottom": 137
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 57,
+                  "y": 143,
+                  "width": 91,
+                  "height": 44,
+                  "right": 148,
+                  "bottom": 187
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 406.00000000008714,
+              "y": 375.99999999936665
+            },
+            "actualTetherAnchor": {
+              "x": 406.00000000008714,
+              "y": 375.99999999936665
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 640,
+          "height": 360
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 127,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 228,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 588,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 61,
+            "bodyScrollTop": 178,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 549,
+              "y": 71,
+              "width": 32,
+              "height": 32,
+              "right": 581,
+              "bottom": 103
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 237,
+              "y": 211,
+              "width": 342,
+              "height": 30,
+              "right": 579,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 596,
+              "y": 162.890625,
+              "width": 32,
+              "height": 44,
+              "right": 628,
+              "bottom": 206.890625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 28,
+                  "y": 80,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 138.640625,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 144.640625,
+                  "y": 80,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 218.96875,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 310.00000000003615,
+              "y": 111.9999999995164
+            },
+            "actualTetherAnchor": {
+              "x": 310.00000000003615,
+              "y": 111.9999999995164
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 164,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 524,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 61,
+            "bodyScrollTop": 178,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 485,
+              "y": 71,
+              "width": 32,
+              "height": 32,
+              "right": 517,
+              "bottom": 103
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 173,
+              "y": 211,
+              "width": 342,
+              "height": 30,
+              "right": 515,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 209,
+              "y": 13,
+              "width": 44,
+              "height": 44,
+              "right": 253,
+              "bottom": 57
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 572,
+                  "y": 67,
+                  "width": 53,
+                  "height": 50,
+                  "right": 625,
+                  "bottom": 117
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 572,
+                  "y": 123,
+                  "width": 53,
+                  "height": 44,
+                  "right": 625,
+                  "bottom": 167
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 277.00000000005946,
+              "y": 111.99999999956789
+            },
+            "actualTetherAnchor": {
+              "x": 277.00000000005946,
+              "y": 111.99999999956789
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 640,
+          "height": 360,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 127,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 228,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 588,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 537,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 581,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 237,
+              "y": 197,
+              "width": 342,
+              "height": 44,
+              "right": 579,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 596,
+              "y": 162.890625,
+              "width": 32,
+              "height": 44,
+              "right": 628,
+              "bottom": 206.890625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 28,
+                  "y": 80,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 138.640625,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 144.640625,
+                  "y": 80,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 218.96875,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 310.00000000003615,
+              "y": 111.9999999995164
+            },
+            "actualTetherAnchor": {
+              "x": 310.00000000003615,
+              "y": 111.9999999995164
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 164,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 524,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 473,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 517,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 173,
+              "y": 197,
+              "width": 342,
+              "height": 44,
+              "right": 515,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 209,
+              "y": 13,
+              "width": 44,
+              "height": 44,
+              "right": 253,
+              "bottom": 57
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 572,
+                  "y": 67,
+                  "width": 53,
+                  "height": 50,
+                  "right": 625,
+                  "bottom": 117
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 572,
+                  "y": 123,
+                  "width": 53,
+                  "height": 44,
+                  "right": 625,
+                  "bottom": 167
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 277.00000000005946,
+              "y": 111.99999999956789
+            },
+            "actualTetherAnchor": {
+              "x": 277.00000000005946,
+              "y": 111.99999999956789
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 690,
+          "height": 360,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 130,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 278,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 638,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 587,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 631,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 287,
+              "y": 197,
+              "width": 342,
+              "height": 44,
+              "right": 629,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 646,
+              "y": 162.890625,
+              "width": 32,
+              "height": 44,
+              "right": 678,
+              "bottom": 206.890625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 28,
+                  "y": 80,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 138.640625,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 144.640625,
+                  "y": 80,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 218.96875,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 335.0000000000391,
+              "y": 111.99999999947741
+            },
+            "actualTetherAnchor": {
+              "x": 335.0000000000391,
+              "y": 111.99999999947741
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 214,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 574,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 523,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 567,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 223,
+              "y": 197,
+              "width": 342,
+              "height": 44,
+              "right": 565,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 209,
+              "y": 13,
+              "width": 44,
+              "height": 44,
+              "right": 253,
+              "bottom": 57
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 622,
+                  "y": 67,
+                  "width": 53,
+                  "height": 50,
+                  "right": 675,
+                  "bottom": 117
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 622,
+                  "y": 123,
+                  "width": 53,
+                  "height": 44,
+                  "right": 675,
+                  "bottom": 167
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 302.0000000000648,
+              "y": 111.9999999995289
+            },
+            "actualTetherAnchor": {
+              "x": 302.0000000000648,
+              "y": 111.9999999995289
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 590,
+          "height": 360,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 118,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 226.96875,
+              "y": 70,
+              "width": 311.03125,
+              "height": 172,
+              "right": 538,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 207,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 487,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 531,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 235.96875,
+              "y": 197,
+              "width": 293.03125,
+              "height": 44,
+              "right": 529,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 546,
+              "y": 162.890625,
+              "width": 32,
+              "height": 44,
+              "right": 578,
+              "bottom": 206.890625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 28,
+                  "y": 80,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 138.640625,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 144.640625,
+                  "y": 80,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 218.96875,
+                  "bottom": 124
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 285.00000000003325,
+              "y": 111.99999999955541
+            },
+            "actualTetherAnchor": {
+              "x": 285.00000000003325,
+              "y": 111.99999999955541
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 114,
+              "y": 70,
+              "width": 360,
+              "height": 172,
+              "right": 474,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 423,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 467,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 123,
+              "y": 197,
+              "width": 342,
+              "height": 44,
+              "right": 465,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 209,
+              "y": 13,
+              "width": 44,
+              "height": 44,
+              "right": 253,
+              "bottom": 57
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 522,
+                  "y": 67,
+                  "width": 53,
+                  "height": 50,
+                  "right": 575,
+                  "bottom": 117
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 522,
+                  "y": 123,
+                  "width": 53,
+                  "height": 44,
+                  "right": 575,
+                  "bottom": 167
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 252.0000000000541,
+              "y": 111.99999999960689
+            },
+            "actualTetherAnchor": {
+              "x": 252.0000000000541,
+              "y": 111.99999999960689
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 136,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 26,
+              "y": 450,
+              "width": 338,
+              "height": 240,
+              "right": 364,
+              "bottom": 690
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 50,
+            "bodyScrollTop": 208,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 309,
+              "y": 460,
+              "width": 44,
+              "height": 44,
+              "right": 353,
+              "bottom": 504
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 39,
+              "y": 638,
+              "width": 312,
+              "height": 44,
+              "right": 351,
+              "bottom": 682
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 346,
+              "y": 380.6875,
+              "width": 32,
+              "height": 44,
+              "right": 378,
+              "bottom": 424.6875
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 28,
+                  "y": 138,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 138.640625,
+                  "bottom": 182
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 144.640625,
+                  "y": 138,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 218.96875,
+                  "bottom": 182
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 185.00000000003584,
+              "y": 306.9999999995211
+            },
+            "actualTetherAnchor": {
+              "x": 185.00000000003584,
+              "y": 306.9999999995211
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 26,
+              "y": 389,
+              "width": 272,
+              "height": 240,
+              "right": 298,
+              "bottom": 629
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 32,
+            "bodyScrollTop": 269,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 243,
+              "y": 399,
+              "width": 44,
+              "height": 44,
+              "right": 287,
+              "bottom": 443
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 39,
+              "y": 577,
+              "width": 246,
+              "height": 44,
+              "right": 285,
+              "bottom": 621
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 333,
+              "y": 606,
+              "width": 32,
+              "height": 44,
+              "right": 365,
+              "bottom": 650
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 322,
+                  "y": 125,
+                  "width": 53,
+                  "height": 50,
+                  "right": 375,
+                  "bottom": 175
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 322,
+                  "y": 181,
+                  "width": 53,
+                  "height": 44,
+                  "right": 375,
+                  "bottom": 225
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 152.00000000005934,
+              "y": 276.4999999995687
+            },
+            "actualTetherAnchor": {
+              "x": 152.00000000005934,
+              "y": 276.4999999995687
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 844,
+          "height": 390,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 134,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "immersive",
+            "card": {
+              "x": 422,
+              "y": 88,
+              "width": 360,
+              "height": 184,
+              "right": 782,
+              "bottom": 272
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 47,
+            "bodyScrollTop": 192,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 731,
+              "y": 89,
+              "width": 44,
+              "height": 44,
+              "right": 775,
+              "bottom": 133
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 431,
+              "y": 227,
+              "width": 342,
+              "height": 44,
+              "right": 773,
+              "bottom": 271
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 790,
+              "y": 177.390625,
+              "width": 32,
+              "height": 44,
+              "right": 822,
+              "bottom": 221.390625
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 38,
+                  "y": 98,
+                  "width": 110.640625,
+                  "height": 44,
+                  "right": 148.640625,
+                  "bottom": 142
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 154.640625,
+                  "y": 98,
+                  "width": 74.328125,
+                  "height": 44,
+                  "right": 228.96875,
+                  "bottom": 142
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 402.0000000000469,
+              "y": 117.99999999937289
+            },
+            "actualTetherAnchor": {
+              "x": 402.0000000000469,
+              "y": 117.99999999937289
+            },
+            "fixedExploreViewportBound": true
+          },
+          {
+            "direction": "dock",
+            "card": {
+              "x": 164,
+              "y": 88,
+              "width": 360,
+              "height": 184,
+              "right": 524,
+              "bottom": 272
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 47,
+            "bodyScrollTop": 192,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 473,
+              "y": 89,
+              "width": 44,
+              "height": 44,
+              "right": 517,
+              "bottom": 133
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 173,
+              "y": 227,
+              "width": 342,
+              "height": 44,
+              "right": 515,
+              "bottom": 271
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 785,
+              "y": 222,
+              "width": 32,
+              "height": 44,
+              "right": 817,
+              "bottom": 266
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 25,
+                  "y": 85,
+                  "width": 91,
+                  "height": 44,
+                  "right": 116,
+                  "bottom": 129
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 25,
+                  "y": 135,
+                  "width": 91,
+                  "height": 44,
+                  "right": 116,
+                  "bottom": 179
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 220.0000000000472,
+              "y": 117.99999999965681
+            },
+            "actualTetherAnchor": {
+              "x": 220.0000000000472,
+              "y": 117.99999999965681
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      },
+      {
+        "viewport": {
+          "width": 500,
+          "height": 360,
+          "coarse": true
+        },
+        "status": "PASS",
+        "rendererContext": "headless Chromium SwiftShader native ellipsoid fallback; controlled synthetic records, no physical-device/live qualification",
+        "errors": [],
+        "nonlocalGETs": 112,
+        "mockedHEADs": 5,
+        "blockedNonReadMethods": [
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          },
+          {
+            "method": "POST",
+            "path": "/rest/v1/rpc/read_reviewed_public_story_directory_v1"
+          }
+        ],
+        "directions": [
+          {
+            "direction": "dock",
+            "card": {
+              "x": 26,
+              "y": 70,
+              "width": 358,
+              "height": 172,
+              "right": 384,
+              "bottom": 242
+            },
+            "outerCardScrollTop": 0,
+            "bodyClientHeight": 35,
+            "bodyScrollTop": 204,
+            "bodyLineHeight": "17.4px",
+            "precisionFullyPainted": true,
+            "scopeFullyPainted": true,
+            "displayStatusFullyPainted": true,
+            "close": {
+              "x": 333,
+              "y": 71,
+              "width": 44,
+              "height": 44,
+              "right": 377,
+              "bottom": 115
+            },
+            "closeFullyPainted": true,
+            "inspector": {
+              "x": 35,
+              "y": 197,
+              "width": 340,
+              "height": 44,
+              "right": 375,
+              "bottom": 241
+            },
+            "inspectorFullyPainted": true,
+            "page": {
+              "x": 209,
+              "y": 13,
+              "width": 44,
+              "height": 44,
+              "right": 253,
+              "bottom": 57
+            },
+            "pageCenterHits": true,
+            "gestureButtons": [
+              {
+                "text": "Done \u2014 scroll",
+                "rect": {
+                  "x": 432,
+                  "y": 67,
+                  "width": 53,
+                  "height": 50,
+                  "right": 485,
+                  "bottom": 117
+                },
+                "full": true,
+                "hit": true
+              },
+              {
+                "text": "Options",
+                "rect": {
+                  "x": 432,
+                  "y": 123,
+                  "width": 53,
+                  "height": 44,
+                  "right": 485,
+                  "bottom": 167
+                },
+                "full": true,
+                "hit": true
+              }
+            ],
+            "canonicalCoordinates": [
+              -81.69999999999999,
+              41.4
+            ],
+            "canonicalProjectedAnchor": {
+              "x": 207.00000000002416,
+              "y": 111.99999999967709
+            },
+            "actualTetherAnchor": {
+              "x": 207.00000000002416,
+              "y": 111.99999999967709
+            },
+            "fixedExploreViewportBound": true
+          }
+        ]
+      }
+    ],
+    "500DockScopeLimit": "Selected reader/canonical/gesture/Page hit routes pass. Existing toolbar Page overlaps A-modebutton left edge at500; this narrow-toolbar issue remains for the objective500 follow-on."
+  },
+  "remaining500Immersive": {
+    "status": "OBJECTIVE_ACCESS_DEFECT_UNQUALIFIED",
+    "receipt": {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/remaining-500-access-evidence.json",
+      "bytes": 353864,
+      "sha256": "e40896935a3995c58ea06dbfb99245df396fc482f552adcc5838e81c7442e9ab"
+    },
+    "isolatedMeasurementHarness": {
+      "path": "/workspace/mip-card-scroll-final400/runRemaining500AccessEvidence.mjs",
+      "bytes": 17418,
+      "sha256": "6171dfbe6270a931c773f370a205ab29b08e0d958caa880158c2eb2eed8e43c9"
+    },
+    "initialAndActualKeyboardStates": [
+      {
+        "step": "entry",
+        "active": {
+          "ariaLabel": "Close selected card",
+          "role": null,
+          "text": ""
+        },
+        "card": {
+          "x": 226.96875,
+          "y": 70,
+          "width": 221.03125,
+          "height": 172,
+          "right": 448,
+          "bottom": 242
+        },
+        "cardScrollTop": 0,
+        "headerHeight": 88.6875,
+        "bodyClientHeight": 0,
+        "bodyScrollTop": 0,
+        "inspector": {
+          "x": 235.96875,
+          "y": 206.6875,
+          "width": 203.03125,
+          "height": 44,
+          "right": 439,
+          "bottom": 250.6875
+        },
+        "inspectorFullyPainted": false,
+        "closeFullyPainted": true,
+        "precisionFullyPainted": true,
+        "pageCenterHits": true,
+        "gestureButtons": [
+          {
+            "text": "Done \u2014 scroll",
+            "rect": {
+              "x": 28,
+              "y": 80,
+              "width": 110.640625,
+              "height": 44,
+              "right": 138.640625,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          },
+          {
+            "text": "Options",
+            "rect": {
+              "x": 144.640625,
+              "y": 80,
+              "width": 74.328125,
+              "height": 44,
+              "right": 218.96875,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          }
+        ]
+      },
+      {
+        "step": "bodyFocused",
+        "active": {
+          "ariaLabel": null,
+          "role": "tabpanel",
+          "text": "Canonical location-81.69999999999999, 41.4Evidence precision"
+        },
+        "card": {
+          "x": 226.96875,
+          "y": 70,
+          "width": 221.03125,
+          "height": 172,
+          "right": 448,
+          "bottom": 242
+        },
+        "cardScrollTop": 0,
+        "headerHeight": 88.6875,
+        "bodyClientHeight": 0,
+        "bodyScrollTop": 0,
+        "inspector": {
+          "x": 235.96875,
+          "y": 206.6875,
+          "width": 203.03125,
+          "height": 44,
+          "right": 439,
+          "bottom": 250.6875
+        },
+        "inspectorFullyPainted": false,
+        "closeFullyPainted": true,
+        "precisionFullyPainted": true,
+        "pageCenterHits": true,
+        "gestureButtons": [
+          {
+            "text": "Done \u2014 scroll",
+            "rect": {
+              "x": 28,
+              "y": 80,
+              "width": 110.640625,
+              "height": 44,
+              "right": 138.640625,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          },
+          {
+            "text": "Options",
+            "rect": {
+              "x": 144.640625,
+              "y": 80,
+              "width": 74.328125,
+              "height": 44,
+              "right": 218.96875,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          }
+        ]
+      },
+      {
+        "step": "scrolled",
+        "active": {
+          "ariaLabel": null,
+          "role": "tabpanel",
+          "text": "Canonical location-81.69999999999999, 41.4Evidence precision"
+        },
+        "card": {
+          "x": 226.96875,
+          "y": 70,
+          "width": 221.03125,
+          "height": 172,
+          "right": 448,
+          "bottom": 242
+        },
+        "cardScrollTop": 0,
+        "headerHeight": 88.6875,
+        "bodyClientHeight": 0,
+        "bodyScrollTop": 398,
+        "inspector": {
+          "x": 235.96875,
+          "y": 206.6875,
+          "width": 203.03125,
+          "height": 44,
+          "right": 439,
+          "bottom": 250.6875
+        },
+        "inspectorFullyPainted": false,
+        "closeFullyPainted": true,
+        "precisionFullyPainted": true,
+        "pageCenterHits": true,
+        "gestureButtons": [
+          {
+            "text": "Done \u2014 scroll",
+            "rect": {
+              "x": 28,
+              "y": 80,
+              "width": 110.640625,
+              "height": 44,
+              "right": 138.640625,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          },
+          {
+            "text": "Options",
+            "rect": {
+              "x": 144.640625,
+              "y": 80,
+              "width": 74.328125,
+              "height": 44,
+              "right": 218.96875,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          }
+        ]
+      },
+      {
+        "step": "inspectorFocused",
+        "active": {
+          "ariaLabel": null,
+          "role": null,
+          "text": "Open inspector"
+        },
+        "card": {
+          "x": 226.96875,
+          "y": 70,
+          "width": 221.03125,
+          "height": 172,
+          "right": 448,
+          "bottom": 242
+        },
+        "cardScrollTop": 0,
+        "headerHeight": 88.6875,
+        "bodyClientHeight": 0,
+        "bodyScrollTop": 398,
+        "inspector": {
+          "x": 235.96875,
+          "y": 206.6875,
+          "width": 203.03125,
+          "height": 44,
+          "right": 439,
+          "bottom": 250.6875
+        },
+        "inspectorFullyPainted": false,
+        "closeFullyPainted": true,
+        "precisionFullyPainted": true,
+        "pageCenterHits": true,
+        "gestureButtons": [
+          {
+            "text": "Done \u2014 scroll",
+            "rect": {
+              "x": 28,
+              "y": 80,
+              "width": 110.640625,
+              "height": 44,
+              "right": 138.640625,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          },
+          {
+            "text": "Options",
+            "rect": {
+              "x": 144.640625,
+              "y": 80,
+              "width": 74.328125,
+              "height": 44,
+              "right": 218.96875,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          }
+        ]
+      },
+      {
+        "step": "idle",
+        "active": {
+          "ariaLabel": null,
+          "role": null,
+          "text": "Open inspector"
+        },
+        "card": {
+          "x": 226.96875,
+          "y": 70,
+          "width": 221.03125,
+          "height": 172,
+          "right": 448,
+          "bottom": 242
+        },
+        "cardScrollTop": 0,
+        "headerHeight": 88.6875,
+        "bodyClientHeight": 0,
+        "bodyScrollTop": 398,
+        "inspector": {
+          "x": 235.96875,
+          "y": 206.6875,
+          "width": 203.03125,
+          "height": 44,
+          "right": 439,
+          "bottom": 250.6875
+        },
+        "inspectorFullyPainted": false,
+        "closeFullyPainted": true,
+        "precisionFullyPainted": true,
+        "pageCenterHits": true,
+        "gestureButtons": [
+          {
+            "text": "Done \u2014 scroll",
+            "rect": {
+              "x": 28,
+              "y": 80,
+              "width": 110.640625,
+              "height": 44,
+              "right": 138.640625,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          },
+          {
+            "text": "Options",
+            "rect": {
+              "x": 144.640625,
+              "y": 80,
+              "width": 74.328125,
+              "height": 44,
+              "right": 218.96875,
+              "bottom": 124
+            },
+            "full": true,
+            "hit": true
+          }
+        ]
+      }
+    ],
+    "frozenBeforeReceipt": {
+      "path": "/workspace/mip-card-scroll-boundary-comparison/frozen-500/constraint-measurement.json",
+      "bytes": 44531,
+      "sha256": "d9ca7fc0dc07973da36b9e4e1b73b8fa8e9454552cd686a946b8522756a94490"
+    },
+    "beforeInitialInspectorOutsidePx": 117.6875,
+    "finalInspectorOutsidePx": 8.6875,
+    "zeroVisibleBody": true,
+    "disposition": "Separate isolated responsive follow-on after currentcandidate freeze; not an owner preference or age-based externalgate. No subjective fallback selected. Existing66px action-rail/Page allocation is the smallest existing-rule proposal to evaluate."
+  },
+  "immutableBeforeReceipts": [
+    {
+      "path": "/workspace/mip-selected-card-640-qualification/decisive-sequences/selected-card-640.json",
+      "bytes": 621638,
+      "sha256": "7ed0c51e673d683f6064ea64bd8ead96c91d62bb25ae4bf55204e953b2f75495"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-boundary-comparison/frozen-500/constraint-measurement.json",
+      "bytes": 44531,
+      "sha256": "d9ca7fc0dc07973da36b9e4e1b73b8fa8e9454552cd686a946b8522756a94490"
+    }
+  ],
+  "retainedPartialReceipts": [
+    {
+      "kind": "TOOLING_FALSE_NEGATIVE_FIXED_ANCESTOR_CLIP_WALK",
+      "artifact": {
+        "path": "/workspace/mip-card-scroll-final/full-app/selected-card-scroll-partial.json",
+        "bytes": 2178964,
+        "sha256": "7036e4c734b06913bb558c8b60e19966e4e982564ff8b91d64df0e9b0b63db48"
+      }
+    },
+    {
+      "kind": "REAL_844_DOCK_90PX_READER_FAILURE_OF_480_CLASSIFIER",
+      "artifact": {
+        "path": "/workspace/mip-card-scroll-final/full-app-corrected/selected-card-scroll-partial.json",
+        "bytes": 3139868,
+        "sha256": "ea29aa331a1fbb3da5d14c9b940f5f2a6eaf9352b9f7e4c0edf75c20f977ce1d"
+      }
+    }
+  ],
+  "inspectedFullViewportScreenshots": [
+    "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-ordinary-Tab-Inspector.png",
+    "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-ordinary-Tab-Inspector.png",
+    "/workspace/mip-card-scroll-final400-css-node24/480x360-400-coarse.png",
+    "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-immersive-actual-Tab-Inspector.png",
+    "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-ordinary-Tab-Inspector.png"
+  ],
+  "artifacts": [
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-Inspector-focus-idle.png",
+      "bytes": 104708,
+      "sha256": "28bfa37dd9fcd39d34237f215a046a81c24959cd7f0c3fcc85cd0a57ba63c204"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-keyboard-Close.png",
+      "bytes": 104912,
+      "sha256": "7f87f6c75f059aca47de774c8dc3a276bc3c4a6086e5627e376342a72c1e515a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-native-reopened.png",
+      "bytes": 105742,
+      "sha256": "6be4f491d8fb733e8e64e92157c7dddc98cd6cba921c501597c8cad1719efcff"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-ordinary-Tab-Inspector.png",
+      "bytes": 104708,
+      "sha256": "28bfa37dd9fcd39d34237f215a046a81c24959cd7f0c3fcc85cd0a57ba63c204"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-pointer-closed.png",
+      "bytes": 81604,
+      "sha256": "f803525c077fc06cea33641070ad52e8833e6b8a3968f5448a2e24ef961647b8"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-dock-selected.png",
+      "bytes": 104974,
+      "sha256": "4d064dc6c7f61f9386328e3a331957de4a66c2bbf7429db82592b4b41cc34e5d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-Inspector-focus-idle.png",
+      "bytes": 107251,
+      "sha256": "2219aaccd1cb69d04a897eeb552a69c53735c7da5e5a28d7c5b2a10a3d0e88de"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-keyboard-Close.png",
+      "bytes": 107534,
+      "sha256": "45e8a802c796b8197c13aa7a2142539031d68962baa20aba2eee1de8cb4d5883"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-native-reopened.png",
+      "bytes": 108250,
+      "sha256": "1740737764e674c8e8bdb121170865cb02e92cdcb134714a0497a365214921a4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 107251,
+      "sha256": "2219aaccd1cb69d04a897eeb552a69c53735c7da5e5a28d7c5b2a10a3d0e88de"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-pointer-closed.png",
+      "bytes": 82713,
+      "sha256": "085dd7132a4fd28e96679d22a4d44ce3ebd9bc6453a406903430d1b778167ec9"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/1280x900-fine-immersive-selected.png",
+      "bytes": 107473,
+      "sha256": "8d488df9815edc34d1e010d1fc251c6d28cf9a2456c70d22d7fa7433122ec459"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 78750,
+      "sha256": "e3e691e8c9e28a2f0ba69534f0bd8c857444647976f7cb49f3c7c273a67511b5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-keyboard-Close.png",
+      "bytes": 79045,
+      "sha256": "2219bbce80a7530529c5c95cc6c8cbed5c908a95c102c92bc68690177f1ac59b"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-native-reopened.png",
+      "bytes": 78884,
+      "sha256": "953fcb37cd16fb8ca2aaf14831bbc5752212a1e5ccce8f604a4c0e4f758bbdd4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 78750,
+      "sha256": "e3e691e8c9e28a2f0ba69534f0bd8c857444647976f7cb49f3c7c273a67511b5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-pointer-closed.png",
+      "bytes": 59873,
+      "sha256": "bf6036d2c6aae51babb83fd2e4b72201e374911e68c9c4e0efa18a195dbdce2b"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-dock-selected.png",
+      "bytes": 77987,
+      "sha256": "ce4b8776787b521d6f2d4281413e6d781eda387711f5a4bdc270d48585ea8848"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 78838,
+      "sha256": "bcad0ba0b534afcf40ed221b67e33bdd98ec60774cb24a16d4eefb5c0ff526be"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-keyboard-Close.png",
+      "bytes": 79149,
+      "sha256": "a78c469085291a3284d54c02624c47b123b76a9f330224cc996b86d57620ec9c"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-native-reopened.png",
+      "bytes": 79614,
+      "sha256": "6ab4c267fa9ce63d2583b35a6d7a60a6e13867889cdc85ee47ee0efa000a9723"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 78838,
+      "sha256": "bcad0ba0b534afcf40ed221b67e33bdd98ec60774cb24a16d4eefb5c0ff526be"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-pointer-closed.png",
+      "bytes": 60779,
+      "sha256": "c7e91f02cbba5a18f0b8a459da27408419f2ef7ab71af79f2def6327661270c0"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/390x844-coarse-immersive-selected.png",
+      "bytes": 78723,
+      "sha256": "c3cd7976ccf5b54a3a7b1e3e3f508940a8b69a037e5e80f15023dad3c21f4a20"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 64060,
+      "sha256": "f9aecfdb6ed522c1fa87e3a3674264e22741825146a68ce2fc687722187979ac"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-keyboard-Close.png",
+      "bytes": 64097,
+      "sha256": "dfe4c5fcd10d2811a95961471412b9973c5672707adc60aa9e78142d2ffce121"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-native-reopened.png",
+      "bytes": 65754,
+      "sha256": "5ea25e452d44153a5d449b568f327d56df1481d1b28778d1efedd65531a276cc"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 64060,
+      "sha256": "f9aecfdb6ed522c1fa87e3a3674264e22741825146a68ce2fc687722187979ac"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-pointer-closed.png",
+      "bytes": 45274,
+      "sha256": "96d5516128ed296c9bb2ea58875dc3b35df02c11c3e52f911c28ed03e76b88ac"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-dock-selected.png",
+      "bytes": 65350,
+      "sha256": "2b93546fcfe3d1027992b97e185dafa92d603a5dde02540c123e291fee175334"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 66218,
+      "sha256": "93791ae15389268fb84a39d61a95a73e07a0c3db87de5b223a382ea69143d571"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-keyboard-Close.png",
+      "bytes": 66303,
+      "sha256": "99816a8505f097bfb3e4e2c9bbceddd260724df587da24553ec366b150843e0c"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-native-reopened.png",
+      "bytes": 67621,
+      "sha256": "b66886e22d4532c42f5863123852502e729c15b71f058db22ff950ee9a0b1d1d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 66218,
+      "sha256": "93791ae15389268fb84a39d61a95a73e07a0c3db87de5b223a382ea69143d571"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-pointer-closed.png",
+      "bytes": 46494,
+      "sha256": "b3c7c636c7528087b23db461657b681d4d1d567baeb55eda59cf93ed55532f8c"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/590x360-coarse-immersive-selected.png",
+      "bytes": 67140,
+      "sha256": "b5273aca4402f433bd7f2f818f0aae6847f56aeb8a879b817003e18d2893ca75"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 64412,
+      "sha256": "7e925b38b4d24d25007289df91209f783436f347dad73bed7c914b29d0841620"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-keyboard-Close.png",
+      "bytes": 64466,
+      "sha256": "805f9a84fa7d44b3d240cc552a5c0e38808e013051fb5a88060e567ea6197f74"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-native-reopened.png",
+      "bytes": 66360,
+      "sha256": "ed0a135130ed886eef0ff07a79e09f211ec3c3b2148c3f9b275cc3bbc7a14fe8"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 64412,
+      "sha256": "7e925b38b4d24d25007289df91209f783436f347dad73bed7c914b29d0841620"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-pointer-closed.png",
+      "bytes": 45455,
+      "sha256": "5ec4a2bcd173c4512ceb269d2a405f6f7b1b58d9127273e7907ae9198ce1292a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-dock-selected.png",
+      "bytes": 65935,
+      "sha256": "b0de2e26a4f2a9ba044696238e9917ef6cfae13065e892f520b2a4d4bdbc1b21"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 65696,
+      "sha256": "47ee0840f3391bf3b319f03aaaa9eae386d0099d075c5fe620e57ec7d5c9b3f4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-keyboard-Close.png",
+      "bytes": 65820,
+      "sha256": "72f4855313bc317e114d11ae28cc45930ab5e8a1d3b94f81fc2363e4b232668d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-native-reopened.png",
+      "bytes": 67215,
+      "sha256": "b2cecf4bece4ffcf489358aacb8ae96a0af033b45d3a2f2c25a188790264106d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 65696,
+      "sha256": "47ee0840f3391bf3b319f03aaaa9eae386d0099d075c5fe620e57ec7d5c9b3f4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-pointer-closed.png",
+      "bytes": 46563,
+      "sha256": "a7872fff3a5a112a7a451e337dbd289f154ae2b9651bd36b8f1a39b53ad75688"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-coarse-immersive-selected.png",
+      "bytes": 66730,
+      "sha256": "a257132be150145ad3c3dd2b1ff71bec5c862fd9148b18313cb9e003bc046a3f"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-Inspector-focus-idle.png",
+      "bytes": 69285,
+      "sha256": "bcbad0093ac01ad06612553c320cb5f1cf18a09c92ff6ce507c330ec9d71ffea"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-keyboard-Close.png",
+      "bytes": 69468,
+      "sha256": "d4d5cbe7786083cee6785f92f56cdae4fc8fe96ee2548cc5a975fd71d24c1c8d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-native-reopened.png",
+      "bytes": 69124,
+      "sha256": "ac3fc7701a970aed19b13284bf6ff5583219a97260a7a8a85933d7c11bc19949"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-ordinary-Tab-Inspector.png",
+      "bytes": 69285,
+      "sha256": "bcbad0093ac01ad06612553c320cb5f1cf18a09c92ff6ce507c330ec9d71ffea"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-pointer-closed.png",
+      "bytes": 45455,
+      "sha256": "5ec4a2bcd173c4512ceb269d2a405f6f7b1b58d9127273e7907ae9198ce1292a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-dock-selected.png",
+      "bytes": 68551,
+      "sha256": "d519094e0b54af520a63fcb505b896c1d28225b9219db939ec3978461b4f25f4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-Inspector-focus-idle.png",
+      "bytes": 70346,
+      "sha256": "06b7563d9d9cb42b98e486440c7e1db10d0a727afcd4687d9b614129207d1739"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-keyboard-Close.png",
+      "bytes": 70559,
+      "sha256": "55b9e7695f7874400f20dba5abc2a2e277698f7679142787a11540929c4ada49"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-native-reopened.png",
+      "bytes": 69632,
+      "sha256": "e491f8f0d4dd4dddc5871eac41b7fe8bd571e92e7f72ab94db8f8e3c9aea98fb"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 70346,
+      "sha256": "06b7563d9d9cb42b98e486440c7e1db10d0a727afcd4687d9b614129207d1739"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-pointer-closed.png",
+      "bytes": 46563,
+      "sha256": "a7872fff3a5a112a7a451e337dbd289f154ae2b9651bd36b8f1a39b53ad75688"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/640x360-fine-immersive-selected.png",
+      "bytes": 69062,
+      "sha256": "852c16b574e490b19e0427281ecd2576f4bdb694cf594ce9aa667988c7c3fe82"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 64010,
+      "sha256": "0a5188b2697334fe5672d7882a42768bc26069811683279eb3eca1dc381709b9"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-keyboard-Close.png",
+      "bytes": 64077,
+      "sha256": "401657f4fe2531a4bff503d017160746db001fa74409bc791f4a8cee7b6561d8"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-native-reopened.png",
+      "bytes": 65653,
+      "sha256": "8b3dcea1d92b6989dbab30a5abafb0b49cfb02f1ea367f64909ea31a5d64b61a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 64010,
+      "sha256": "0a5188b2697334fe5672d7882a42768bc26069811683279eb3eca1dc381709b9"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-pointer-closed.png",
+      "bytes": 44753,
+      "sha256": "2b88c1fe3355f0541ff9f05c3e87518ba6c0825246349e0a6b2b74dfdf5f35b2"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-dock-selected.png",
+      "bytes": 65208,
+      "sha256": "f540364dbf6a4f379d8ce0da4fb167d6d93ea53bc1b3429470485c5dc4b616e3"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 65832,
+      "sha256": "8935f8f861a47fbacef7631ee831fc6cdbe05233edc1996556077d5c4cb50090"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-keyboard-Close.png",
+      "bytes": 65930,
+      "sha256": "c09f15e3cbdc08a22069c2ec31923fc136451ee7fc593732b2c36cb3b4d7276a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-native-reopened.png",
+      "bytes": 67169,
+      "sha256": "71cca96f5cb98216212661d4c783929b16b319e01888898ce522292b8eea50d9"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 65832,
+      "sha256": "8935f8f861a47fbacef7631ee831fc6cdbe05233edc1996556077d5c4cb50090"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-pointer-closed.png",
+      "bytes": 45886,
+      "sha256": "73bf6e8c3168cfebd0ffd933aeadc6a18d15b2caea5604ea5968b38ac8477951"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/690x360-coarse-immersive-selected.png",
+      "bytes": 66690,
+      "sha256": "dfb1c83c8e44a348523f6fe867e8454d1a41dd11590f56fcb303c89a5a13760c"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 69784,
+      "sha256": "fded8b7e55dbe3eba79ebd475b98586e65d123b149314f8aca87f0e911f4c0c5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-keyboard-Close.png",
+      "bytes": 69871,
+      "sha256": "d27c2f31f14830e710e373f0b5f88f0e7899c3eaaa8a9b8e8438f83fdbcb95d7"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-native-reopened.png",
+      "bytes": 70553,
+      "sha256": "cf66379ebf4b6c824ea95c5384efc18f54af560ebad496da25b5b964493d8420"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 69784,
+      "sha256": "fded8b7e55dbe3eba79ebd475b98586e65d123b149314f8aca87f0e911f4c0c5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-pointer-closed.png",
+      "bytes": 50504,
+      "sha256": "60ebc9edf1a22bcfb1a38942714d09d48bd86fbc5e07a912e3f910660843c3ee"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-dock-selected.png",
+      "bytes": 70154,
+      "sha256": "df9613523f6bb945a2e28ee65928f36715218c72cc18021a0f57d18ba09f1bb2"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 71493,
+      "sha256": "3146995104a406ebc8c69fae7332e81040d41b7b5f7828cd2656e5048563596e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-keyboard-Close.png",
+      "bytes": 71659,
+      "sha256": "50b885c7ef912c224a1c6b4f60980671a06b7a4aca93b3ec95834c2351aac64a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-native-reopened.png",
+      "bytes": 72563,
+      "sha256": "37d3301c512005e13f29df6b901395ba2ac7f75870b61adf0e2c7b6dce5c859d"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-ordinary-Tab-Inspector.png",
+      "bytes": 71493,
+      "sha256": "3146995104a406ebc8c69fae7332e81040d41b7b5f7828cd2656e5048563596e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-pointer-closed.png",
+      "bytes": 51067,
+      "sha256": "e74873688b86c97fc60d8d63c9a04319177eb43ed9b292314f2551c898f94ec4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/844x390-coarse-immersive-selected.png",
+      "bytes": 72006,
+      "sha256": "041a4d9f44f7f86ff979ab8f9467f6bbf2b66dfdff404c5a7864d2a2b34fa75e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/full-app/selected-card-scroll-full-app.json",
+      "bytes": 3542434,
+      "sha256": "9eb68836e5dff1cb3fc4ac350723f596c8b7381de1b4d18dba092ad73797049b"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 58334,
+      "sha256": "97d69cf14fa60ba0fa948bed51cdcd753b391f4cf1a845a40e9fda4328309a08"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-keyboard-Close.png",
+      "bytes": 58388,
+      "sha256": "bf6fcae3843748d2775192f770193f3e4197394ddbc235d3f4d43fe8fe2a73f1"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-native-reopened.png",
+      "bytes": 59462,
+      "sha256": "f30ba5ea0748788ad9b5f718c0a8b3cf3a41aba8c7b4ea5cc8a2eb0225519bd1"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-ordinary-Tab-Inspector.png",
+      "bytes": 58334,
+      "sha256": "97d69cf14fa60ba0fa948bed51cdcd753b391f4cf1a845a40e9fda4328309a08"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-pointer-closed.png",
+      "bytes": 39542,
+      "sha256": "d3a611841b476063726ce971ecb4dc5bd28569a6229e1f6c97f6abce3735e669"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/500x360-coarse-dock-selected.png",
+      "bytes": 59055,
+      "sha256": "92560b9285472bd2e6c62036f8ec7625197609dd9c825ef5466f47c8a3e96888"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/500-dock/selected-card-scroll-full-app.json",
+      "bytes": 252972,
+      "sha256": "ca47d9f0e338115bc7cc85455c0a69ec08f506bb45ceb37e86b873001f3d9565"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-dock-Inspector-focus-idle.png",
+      "bytes": 58331,
+      "sha256": "208872428bd8f051e1f7f3af4a9e5022e1d9f8711bdd3d3024f3089bf6e3d1f3"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-dock-actual-Tab-Inspector.png",
+      "bytes": 58331,
+      "sha256": "208872428bd8f051e1f7f3af4a9e5022e1d9f8711bdd3d3024f3089bf6e3d1f3"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-dock-actual-Tab-body.png",
+      "bytes": 58838,
+      "sha256": "857988fef6b34eb01d04a5d1517a579559ee00f9e503f153abb1c1bd26ddfeb5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-dock-selected-unqualified-measurement.png",
+      "bytes": 59053,
+      "sha256": "c00b4b45f5ffe5b9dc95f359f283eece42489151d0622a7cd7961860fc089c14"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-immersive-Inspector-focus-idle.png",
+      "bytes": 57559,
+      "sha256": "657a62e1d54fef38f0e205b3b7ee243985f94d16476827d5d34c5b06cac1d0d5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-immersive-actual-Tab-Inspector.png",
+      "bytes": 57559,
+      "sha256": "657a62e1d54fef38f0e205b3b7ee243985f94d16476827d5d34c5b06cac1d0d5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-immersive-actual-Tab-body.png",
+      "bytes": 57290,
+      "sha256": "afb957e2890538dbf1ddcba3c70d8b9ccc82d16496e423c1faa5b356d2bb1b80"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/500x360-coarse-immersive-selected-unqualified-measurement.png",
+      "bytes": 57299,
+      "sha256": "fade8c4e9b63107e855177e6a5a09a00188988bd4614af154a85fad38865a41c"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/remaining500/remaining-500-access-evidence.json",
+      "bytes": 353864,
+      "sha256": "e40896935a3995c58ea06dbfb99245df396fc482f552adcc5838e81c7442e9ab"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-app-500-dock.log",
+      "bytes": 70,
+      "sha256": "c89727319bf9204f1fd9354d7e3558485895e853baab27561da02a5e993ab59f"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-app-final400.log",
+      "bytes": 463,
+      "sha256": "3acd9de385d47d00bb8f9c919e43640baff742ee0dce8630ea14d8852d3c5b85"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-build-node22-final400.log",
+      "bytes": 7629,
+      "sha256": "fad4b288e931ce2da0f78ce268c15ab43ced016d03fbd8a0f778fc695fa611f5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-build-node24-final400.log",
+      "bytes": 7629,
+      "sha256": "569167648a68455de04cf4be8c9045611532ca05fab346c28c3af4edd9f3659e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-remaining500.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-tests-node22-final400.log",
+      "bytes": 17377,
+      "sha256": "6eb5f6103f286375a3245288f6272ff37a6777b7cd7591be6ff6c8dc0052c9cf"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400/logs/mip-card-scroll-tests-node24-final400.log",
+      "bytes": 7612,
+      "sha256": "67c59fe15390dc19e67ac53d177450b65627f5e20cf2a21ef4b5b7959919e07f"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/390x844-370-coarse.png",
+      "bytes": 25068,
+      "sha256": "31a33f9000594a0ac8c0cb0549df4e9b6f1484785aaea00d831cfef4e34299ef"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/480x360-400-coarse.png",
+      "bytes": 20320,
+      "sha256": "2cd687b4ee99da5fae12e674c5a77fa29780b725e5e38f59c81496e23f743aa4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/500x360-414-coarse.png",
+      "bytes": 23394,
+      "sha256": "26133d655bcecee07dbe4989c223d57d368a6d8b5a48e16c34aceeb2338fd46a"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/640x360-554-coarse.png",
+      "bytes": 26083,
+      "sha256": "5b1c2ec2876d1e5ab1de0a9ac78a0ff96375cb5ae04eef872dbe8698e3450e8e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/640x360-620-coarse.png",
+      "bytes": 23788,
+      "sha256": "ddd40e59f889e7bc3d4732427e2e5d48190cac8b1fa47e4a84b6540164802766"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/640x360-620-fine.png",
+      "bytes": 29166,
+      "sha256": "b7806c9ec1bedaf4be4ab9f8b25a7415f4d7eebcf075b868cc0837f788a1c002"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/690x360-604-coarse.png",
+      "bytes": 24082,
+      "sha256": "d68ea38e6b18bcdc993103fe3ed093b7fbb2808a2003fe9bddf51a0a24a92175"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/844x390-736-coarse.png",
+      "bytes": 27961,
+      "sha256": "27b6b4db3f9400d1947d85bc2f1ce5fcaa49ad8ee7096ec4c344dde80536e368"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node24/controlled-reader-allocation.json",
+      "bytes": 90962,
+      "sha256": "8ea94071f6717f0ae8f389c0cee96034487a8268e26151dbf3e5eeafb1597efa"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/390x844-370-coarse.png",
+      "bytes": 25069,
+      "sha256": "036d07f5100050bcb83084a1187089e57e568e668f43b8d3280c22541461bd85"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/480x360-400-coarse.png",
+      "bytes": 20320,
+      "sha256": "2cd687b4ee99da5fae12e674c5a77fa29780b725e5e38f59c81496e23f743aa4"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/500x360-414-coarse.png",
+      "bytes": 23397,
+      "sha256": "cfc6955ff690a8385ecef04ada4bde46004fad41a4eddd4dec92139d11982b36"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/640x360-554-coarse.png",
+      "bytes": 26083,
+      "sha256": "5b1c2ec2876d1e5ab1de0a9ac78a0ff96375cb5ae04eef872dbe8698e3450e8e"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/640x360-620-coarse.png",
+      "bytes": 23788,
+      "sha256": "ddd40e59f889e7bc3d4732427e2e5d48190cac8b1fa47e4a84b6540164802766"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/640x360-620-fine.png",
+      "bytes": 29165,
+      "sha256": "b8667536638c14d6e75b98178ead6ae271d5714674359964abcfd711d438e576"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/690x360-604-coarse.png",
+      "bytes": 24081,
+      "sha256": "1d1a2c9ed3b70219966aaadcfe8304e80f1519b6f852a038a10b14ad07cabb33"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/844x390-736-coarse.png",
+      "bytes": 27960,
+      "sha256": "5aa85dc514c3d1c87dfc81bef056bcb59fd5cfe7ee55371886a9f7406dbf31b5"
+    },
+    {
+      "path": "/workspace/mip-card-scroll-final400-css-node22/controlled-reader-allocation.json",
+      "bytes": 90962,
+      "sha256": "e55c5ff79c6166d300b3ea3b897204d8a537bf5815f7917342f60559f0dd0f0d"
+    }
+  ],
+  "remainingExternalQualifications": [
+    "physical-device/Safari/pointer/touch and physicalFPS",
+    "live-provider/current-context or publication admission"
+  ],
+  "remainingParentWork": [
+    "coherent integrated-root fulltests/build/publicCI/manifest",
+    "Cursor review",
+    "isolated500Immersive body/Inspector access and narrowtoolbar Page/A allocation follow-on"
+  ],
+  "mutations": "local successor worktree source/tests/docs commits only; no deployment/protected mutation/provider activation"
+}
