@@ -427,7 +427,9 @@ export default function WorldView({
     setCameraState: value => cameraControlsRef.current?.setCameraState?.(value) ?? false,
   }), [])
   const [sourceStatusSnapshot, setSourceStatus] = useState(null)
-  const sourceStatus=sourceStatusSnapshot?.accessKey===sourceAccessKey?sourceStatusSnapshot:null
+  // A source observation belongs to a mounted map. Graph mode removes its
+  // native lifetime even when the actor and investigation key stay the same.
+  const sourceStatus=mode!=='graph'&&sourceStatusSnapshot?.accessKey===sourceAccessKey?sourceStatusSnapshot:null
   const [exploring, setExploring] = useState(false)
   const [exploreContextRequest, setExploreContextRequest] = useState(0)
   const handleExploreChange = useCallback(active => {

@@ -303,6 +303,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
   fidelityRef.current = visualFidelity
   const fidelityCapabilitiesCallback = useRef(onVisualFidelityCapabilities)
   fidelityCapabilitiesCallback.current = onVisualFidelityCapabilities
+  const sourceStatusCallback = useRef(onSourceStatus)
+  sourceStatusCallback.current = onSourceStatus
 
   const framingRef = useRef(null)
   if (!framingRef.current) framingRef.current = createCameraFraming()
@@ -404,7 +406,18 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
     setContextAnchor({ visible: false })
     receiveDisplayLayout(null)
     setInspectedClusterId(null)
-    adapterRef.current?.destroy?.()
+    const previousAdapter = adapterRef.current
+    if (previousAdapter) {
+      if (ownerSession.retireAttachment) ownerSession.retireAttachment(previousAdapter)
+      else previousAdapter.destroy?.()
+      adapterRef.current = null
+    }
+    // Failed native teardown is still owned by the App-local session. A new
+    // Viewer cannot overlap that retained lifetime; the cheap overview remains.
+    if (ownerSession.canAllocateNative?.() === false) {
+      setStackId(FALLBACK_MAP_STACK_ID)
+      return undefined
+    }
     framingRef.current.resetRenderer()
     const adapter = createWorldViewRendererAdapter({
       stackId,
@@ -434,6 +447,11 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       recordedTimeInstant,
       isCancelled: () => cancelled,
     })
+    if (ownerSession.registerNativeAttachment?.(adapter) === false) {
+      adapter.destroy()
+      setStackId(FALLBACK_MAP_STACK_ID)
+      return undefined
+    }
     adapterRef.current = adapter
     adapter.setActivityState?.(document.hidden ? 'hidden' : 'visible-idle')
     void adapter.mount().then(() => {
@@ -456,7 +474,8 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       memory.remember(adapter.getCameraState?.(), framingRef.current.getFramedKey(), stackId)
       ownerSession.invalidateAttachment?.('native-stack-destroyed')
       cancelled = true
-      adapter.destroy()
+      if (ownerSession.retireAttachment) ownerSession.retireAttachment(adapter)
+      else adapter.destroy()
       adapterRef.current = null
       cancelDisplayPublication()
       presentationRef.current = null
@@ -572,6 +591,12 @@ export default function WorldMapCanvas({ cameraMemory, rows, selectedKeys, onSel
       photographicOverlay:resolveWorldViewQualifiedOverlayStatus({layer:qualifiedRealism,nativeState:adapterRef.current?.getSourceImageryState?.()})}
   }, [stackId, rendererReady, terrainStatus, visualFidelity, imageryStatus, localSourceResource,nativeSourceState,sourceAccessKey,ownerSession])
   useEffect(() => { onSourceStatus?.(sourceStatus) }, [sourceStatus, onSourceStatus])
+  useLayoutEffect(() => () => {
+    // Unbinding disables ordinary subscriber callbacks before its clear is
+    // emitted. Clear the retained parent observation independently, before a
+    // removed map can be presented as a current photographic source.
+    sourceStatusCallback.current?.(null)
+  }, [])
   const pilotBookmarks = createWorldViewPilotBookmarks({ coordinate, precisionClass: first?.row?.precision_class })
 
   useEffect(() => {
