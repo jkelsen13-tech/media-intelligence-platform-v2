@@ -6,8 +6,20 @@
   "expected_bytes": 93644524,
   "expected_sha256": "31484438471e3f04ebc46de362757b65d73072b61a800e6ad7f8f2ca6a037f46",
   "prepared_materialize": "succeeded; authorized signed GET URL supplied",
-  "signed_url_GET": "execution proxy tunnel403Forbidden; no bytesreceived; no retry/bypass",
+  "signed_url_GET": "first ordinary signed GET and one supported prepare_materialize refresh/GET retry both execution-proxy tunnel403Forbidden; zero bytes; no bypass",
   "download_file": "file exceeds executor transfer limit32MiB",
-  "next_supported_transfer": "Library upload/materialization of original archive split into <=32MiB parts with wholearchive/part hashes; or bounded derived evidence packet",
-  "no_source_pixel_qualification_in_consumer": true
+  "next_supported_transfer": "Separate genuinely bounded runtime/inspection derivative plus original/derived hash provenance and actual XML/notices via ordinary supported Library input; no original archive shards/reassembly",
+  "no_source_pixel_qualification_in_consumer": true,
+  "bounded_consumer_retry": "completed one supported refresh + ordinary GET; same403/zero bytes",
+  "full_original_local_qualification": "unperformed; no claims inherited from native parent as consumer-local proof",
+  "bounded_new_derivative": {
+    "library_file_id": "libfile_1fd01270717881919b844e6b347d3122",
+    "file_id": "file_0000000083c8820c9f61eeb56a5200a3",
+    "version": 0,
+    "bytes": 5400912,
+    "sha256": "db846c2628464e175a0edcea4282da29809e0416c70b93689abdfbf17bda1cca",
+    "consumer_transfer": "supported prepare_materialize and authorized download_file succeeded; ZIP safe paths/15 payload hashes/CRC verified",
+    "original_byte_qualification_in_consumer": false,
+    "qualification": "1024 RGB coarser nearest-neighbor derivative; consumer pixel/transform/render checks underway; no admission"
+  }
 }

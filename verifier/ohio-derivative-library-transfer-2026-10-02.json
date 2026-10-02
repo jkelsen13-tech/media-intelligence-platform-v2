@@ -1,0 +1,86 @@
+{
+  "library_file_id": "libfile_1fd01270717881919b844e6b347d3122",
+  "file_id": "file_0000000083c8820c9f61eeb56a5200a3",
+  "version": 0,
+  "received_bytes": 5400912,
+  "received_sha256": "db846c2628464e175a0edcea4282da29809e0416c70b93689abdfbf17bda1cca",
+  "crc_and_safe_paths": "pass",
+  "payloads": [
+    {
+      "path": "BN18756325-RGB-1024-preview.png",
+      "bytes": 2509090,
+      "sha256": "8ef0f117b17a5ad64ee09e48791c04fb01f70d83abc7ce208ce9436e3924ef43"
+    },
+    {
+      "path": "BN18756325-RGB-1024-preview.png.aux.xml",
+      "bytes": 2702,
+      "sha256": "b0ee33e405ac1d8565376a2f7fa17e81dc25cd6a8a6cdd6e9d3374a0a67862b3"
+    },
+    {
+      "path": "BN18756325-RGB-1024-research.gdalinfo.json",
+      "bytes": 13078,
+      "sha256": "4efaa9ea833d132281b14c2b82763012a69ae66fdb911de1874febce05d57c15"
+    },
+    {
+      "path": "BN18756325-RGB-1024-research.ifd.json",
+      "bytes": 5556,
+      "sha256": "ed0a37dc0d8f46b11fdf3c7bc8985bfdd7110c5178fbe96b341226dd05fbdda2"
+    },
+    {
+      "path": "BN18756325-RGB-1024-research.tif",
+      "bytes": 3147703,
+      "sha256": "3fb5a148cbef43d06a580ec8263be13f007eb52bb93ca9ad66b52cdff4f9c8ba"
+    },
+    {
+      "path": "ORIGINAL_SOURCE_METADATA_BN18756325.tif.xml",
+      "bytes": 11340,
+      "sha256": "5c45fc70e2380c94696a517eb16759614b44821627db6abb9b8119dc47e000ad"
+    },
+    {
+      "path": "QUALIFICATION.txt",
+      "bytes": 8453,
+      "sha256": "c1575ae7e8f39845b32362a9d8861b53d7b7a25b61071afda7d55e80806ce463"
+    },
+    {
+      "path": "derivation-command.json",
+      "bytes": 2224,
+      "sha256": "e34506dfa6c7c4283ae872f5e33cbcacde31e665e84a7feb5cbecbc64a034b70"
+    },
+    {
+      "path": "derived-HARN-geographic-footprint.geojson",
+      "bytes": 965,
+      "sha256": "60433a1060a684c3429dea6de69b32b41f3244a9c04ae4442f8b0408a38ff4fb"
+    },
+    {
+      "path": "derived-native-footprint.geojson",
+      "bytes": 849,
+      "sha256": "ff04ff2ff82816eba3b542a7414c44235ce6b2e74770d73fc65e813547cbeff6"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 14141,
+      "sha256": "56f6e9f97637838b885cffa10ee1774de8686fc751b52050a6cb19a5cfd042f5"
+    },
+    {
+      "path": "preview-command.json",
+      "bytes": 565,
+      "sha256": "491982c9a9520ecb3c795cdd646f4053b1ebcaa9d27cdf2a92ff1bd11377c19d"
+    },
+    {
+      "path": "verification-command.log",
+      "bytes": 694,
+      "sha256": "050315d75ab2ecdd9bcb20ec1cb0a4cf2f5000caec80cdece098f63c3189124b"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 2438,
+      "sha256": "31b43ae5ca97ea3adbc3baa92f0279b36dbb3d533db8c79bc991286d8af7ef2a"
+    },
+    {
+      "path": "verify_derivative.py",
+      "bytes": 7423,
+      "sha256": "8c0749dc50b61d2b52b25c9551eee39e9061502674f065f7495455eed1f7f182"
+    }
+  ],
+  "qualification": "bounded coarser derivative received; original decoded only by producer, not this consumer"
+}
