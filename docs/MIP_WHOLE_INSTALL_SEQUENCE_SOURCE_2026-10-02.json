@@ -7,7 +7,7 @@
   "sources": [
     {
       "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_2026-10-02.md",
-      "sha256": "807ccffa88eae4397c373f8bb95a0b229cab97d2005b630360a624498ea753d8"
+      "sha256": "0b0b432c195cdf1d0cb962ff8b7f3fcf8e19bf725706448944f26f21de4f801c"
     },
     {
       "path": "package-lock.json",
@@ -63,7 +63,7 @@
     },
     {
       "path": "scripts/verifyLaunchInstallationSequence.mjs",
-      "sha256": "148917b759e87762f02f768a97140098a0bad9a7458a9cbdc5e4f24115cf17d8"
+      "sha256": "c6c5665786c5cfe290ff0db81ef867b67ad19cb1a017609dfea6c97938dd4165"
     },
     {
       "path": "src/components/StoryFollowingControls.jsx",
@@ -355,7 +355,7 @@
     },
     {
       "path": "tests/launchInstallationSequence.test.mjs",
-      "sha256": "f6dae65e10ea60982f1bc15865b8680dd6fb49823b20e283128cebcf97d8d8ac"
+      "sha256": "102edeb2ab172b5af52d2f6284bdca3330a8a34325016423339379c3bc27e98e"
     },
     {
       "path": "tests/launchInstallationSequenceFixture.mjs",
@@ -363,17 +363,17 @@
     },
     {
       "path": "docs/MIP_WHOLE_INSTALL_APPROVAL_2026-10-02.md",
-      "sha256": "8863da57b1cf36992cb4c18ea294f47ca3c1a82e1c20d570344d82667ba94370"
+      "sha256": "aa59a71a75093badb71959091e3d9e513a4cc299c11a34af8e2a691bb4d7e054"
     }
   ],
   "qualifications": [
     {
       "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_NODE24_2026-10-02.json",
-      "sha256": "987c7dff381d6166afa941f79c164422c221dd0c17bfe2dfbd7d8d0aa6f9f3ab"
+      "sha256": "27844c8982526417800588b599244f30af81f5eaba817aa6ee5e01d53dd866b2"
     },
     {
       "path": "docs/MIP_WHOLE_INSTALL_SEQUENCE_NODE22_2026-10-02.json",
-      "sha256": "b1ff5c50d355c462b28e6489243a7cbb46aa28bd2f89c77081e125e2da773c01"
+      "sha256": "756365a174d0a054e49939e14f550d8704b110f27d6f741073cf7e357050bc9f"
     }
   ],
   "stage_order": [

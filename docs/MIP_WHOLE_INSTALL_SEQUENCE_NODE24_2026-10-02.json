@@ -7,6 +7,10 @@
   "synthetic_disposable": true,
   "cases": [
     {
+      "name": "existing-data availability cutover; installed-empty withholding; missing-owner no-fallback; explicit population; rollback predecessor raw exposure",
+      "status": "PASS"
+    },
+    {
       "name": "literal-safe local compiler; exact source/catalog/artifact hashes; no overwrite or execution fallback",
       "status": "PASS"
     },

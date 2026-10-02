@@ -7,13 +7,70 @@ import { PGlite } from '@electric-sql/pglite'
 import { INITIAL_STAGES, prepareLaunchFixtureFoundation, launchCatalog, installLaunchStageFixture,recoverLaunchStageFixture,compileStageSql,compileRollbackOnlyStageSql,fileIdentity,sha256 } from '../scripts/launchInstallationSequence.mjs'
 import { wholeLaunchFixture,populateLaunchHistory,retainedHistory,scalar,roleCall } from './launchInstallationSequenceFixture.mjs'
 import { compileLaunchInstallationStage } from '../scripts/compileLaunchInstallationStage.mjs'
+import { createClient } from '@supabase/supabase-js'
+import { createNewsBackend } from '../src/lib/newsBackend.js'
 
 const results=[],receipts=[]
 const record=(name,details={})=>results.push({name,status:'PASS',...details})
 test.after(async()=>{
   if(process.env.MIP_LAUNCH_SEQUENCE_RECEIPT)await writeFile(process.env.MIP_LAUNCH_SEQUENCE_RECEIPT,JSON.stringify({contract:'mip-launch-install-sequence-qualification-v1',
-    status:results.length===INITIAL_STAGES.filter(s=>s.rollback).length+4?'PASS':'INCOMPLETE',runtime:process.version,live_operations:0,source_only:true,synthetic_disposable:true,cases:results,stages:receipts,
+    status:results.length===INITIAL_STAGES.filter(s=>s.rollback).length+5?'PASS':'INCOMPLETE',runtime:process.version,live_operations:0,source_only:true,synthetic_disposable:true,cases:results,stages:receipts,
     limits:['PGlite synthetic existing-owner fixture; no live grants/admission/provider acquisition or protected transaction','Single-session engine; no live PostgreSQL/PostgREST/JWT/multisession lock qualification','Legacy and native prerequisites intentionally retained; no global destructive uninstall claimed']},null,2)+'\n')
+})
+test('existing eligible content is withheld by empty immutable ledgers; missing owners never fall back and rollback restores predecessor exposure',async t=>{
+  const db=await PGlite.create();t.after(()=>db.close());await prepareLaunchFixtureFoundation(db)
+  const pipeline=(action,input={})=>scalar(db,'select public.mip_pipeline_v1($1,$2::jsonb)',[action,JSON.stringify(input)])
+  await pipeline('enqueue',{run_id:'synthetic-availability-cutover',article:{url:'https://example.invalid/cutover-existing',title:'EXISTING ELIGIBLE SOURCE BEFORE CUTOVER',
+    outlet:'Synthetic predecessor outlet',summary:'An existing source has no immutable reviewed admission yet.',body_text:'PREDECESSOR RAW COLUMN EXPOSURE',published_at:'2026-10-01T00:00:00Z'}})
+  const job=await pipeline('claim'),source=await pipeline('finish',{job_id:job.id,lease_token:job.lease_token})
+  await db.query("update public.articles set reader_state='eligible' where id=$1",[source.article_id])
+  const predecessor=await roleCall(db,'anon','select title,body_text from public.articles where id=$1',[source.article_id])
+  assert.equal(predecessor,'EXISTING ELIGIBLE SOURCE BEFORE CUTOVER')
+  const oldDetail=await roleCall(db,'anon',"select coalesce(jsonb_agg(t),'[]') from public.news_detail_public t where article_id=$1",[source.article_id])
+  assert.equal(oldDetail.length,1,'the predecessor reader did expose this eligible source')
+  const calls=[]
+  const client=createClient('https://synthetic-cutover-sdk.invalid','synthetic-publishable',{accessToken:async()=> 'synthetic-current-session',global:{fetch:async(input,init)=>{
+    const request=new Request(input,init),url=new URL(request.url),resource=url.pathname.split('/').at(-1);calls.push({resource,method:request.method})
+    await db.exec('begin;set local role anon')
+    try{
+      let rows
+      if(resource==='news_reviewed_articles_public')rows=(await db.query('select id,published_at,fetched_at,public_version_id,public_version from public.news_reviewed_articles_public')).rows
+      else if(resource==='articles')rows=(await db.query('select id,title,body_text from public.articles')).rows
+      else if(resource==='news_detail_public')rows=(await db.query('select * from public.news_detail_public')).rows
+      else if(resource==='read_reviewed_public_story_directory_v1'){
+        const payload=await request.json(),data=await scalar(db,'select public.read_reviewed_public_story_directory_v1($1,$2)',[payload.p_after??null,payload.p_limit??30])
+        return new Response(JSON.stringify(data),{headers:{'content-type':'application/json'}})
+      }else throw Error('unexpected synthetic SDK request: '+resource)
+      return new Response(JSON.stringify(rows),{headers:{'content-type':'application/json','content-range':`0-${Math.max(rows.length-1,0)}/${rows.length}`}})
+    }catch(e){return new Response(JSON.stringify({code:e.code??'fixture_failure',message:e.message}),{status:400,headers:{'content-type':'application/json'}})}
+    finally{await db.exec('rollback')}
+  }}})
+  const backend=createNewsBackend(client)
+  const missing=await backend.loadArticles();assert.deepEqual(missing.articles,[]);assert.ok(missing.articlesUnavailable)
+  assert.equal((await backend.loadStoryDirectory()).status,'unavailable')
+  assert.deepEqual(calls.map(c=>c.resource),['news_reviewed_articles_public','read_reviewed_public_story_directory_v1'],'raw predecessors are available but no fallback request is issued')
+  const stage=INITIAL_STAGES[0],r=await installLaunchStageFixture(db,stage,{approvedCatalog:await launchCatalog(db)})
+  assert.equal(await scalar(db,'select count(*)::int from public.articles where id=$1',[source.article_id]),1,'the cutover does not delete existing source content')
+  assert.equal(await scalar(db,'select count(*)::int from mip_private.reviewed_public_article_versions'),0)
+  assert.deepEqual((await backend.loadArticles()).articles,[],'installation alone withholds existing eligible content')
+  assert.equal((await backend.loadArticles()).articlesUnavailable,null,'installed empty is distinct from missing owner')
+  assert.equal((await backend.loadStoryDirectory()).stories.length,0)
+  await assert.rejects(roleCall(db,'anon','select body_text from public.articles where id=$1',[source.article_id]),/permission denied/)
+  assert.deepEqual(await roleCall(db,'anon',"select coalesce(jsonb_agg(t),'[]') from public.news_detail_public t where article_id=$1",[source.article_id]),[])
+  await recoverLaunchStageFixture(db,stage,r,{approvedCatalog:await launchCatalog(db)})
+  assert.equal(await roleCall(db,'anon','select body_text from public.articles where id=$1',[source.article_id]),'PREDECESSOR RAW COLUMN EXPOSURE','empty rollback reopens the exact predecessor raw-column authority')
+  assert.equal((await roleCall(db,'anon',"select coalesce(jsonb_agg(t),'[]') from public.news_detail_public t where article_id=$1",[source.article_id])).length,1)
+  assert.deepEqual((await backend.loadArticles()).articles,[],'modern reader still refuses the missing immutable owner after rollback')
+  assert.ok((await backend.loadArticles()).articlesUnavailable)
+  const reinstalled=await installLaunchStageFixture(db,stage,{approvedCatalog:await launchCatalog(db)})
+  const hash=await scalar(db,'select content_hash from evidence_pipeline.article_captures where id=$1',[source.capture_id])
+  const admitted=await scalar(db,"select mip_private.bind_reviewed_public_article_version($1,$2,$3,'source_report','synthetic-explicit-cutover-review','synthetic-policy','Pending factual verification; explicit synthetic report-envelope admission only.')",[source.article_id,source.capture_id,hash])
+  const visible=await backend.loadArticles();assert.equal(visible.articles.length,1);assert.equal(visible.articles[0].public_version_id,admitted)
+  assert.equal(visible.articles[0].public_version.admission_kind,'source_report');assert.deepEqual(visible.articles[0].public_version.evidence,[])
+  await assert.rejects(recoverLaunchStageFixture(db,stage,reinstalled,{approvedCatalog:await launchCatalog(db)}),/admitted history exists/);await db.exec('rollback')
+  assert.equal((await backend.loadArticles()).articles[0].public_version_id,admitted)
+  assert.equal(calls.some(c=>c.resource==='articles'||c.resource==='news_detail_public'),false)
+  record('existing-data availability cutover; installed-empty withholding; missing-owner no-fallback; explicit population; rollback predecessor raw exposure')
 })
 test('local compiler binds exact bytes, handles literal catalog text and never overwrites an accepted artifact',async t=>{
   const db=await PGlite.create(),directory=await mkdtemp(join(tmpdir(),'mip-launch-compile-'));t.after(async()=>{await db.close();await rm(directory,{recursive:true,force:true})})
