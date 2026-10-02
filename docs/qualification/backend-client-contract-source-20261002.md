@@ -162,3 +162,41 @@ should review this new source delta only. Before any live adapter can qualify,
 the trusted binding, genuine inputs and exact rollback-only authorization above
 must be established through a separate reviewed successor; this module cannot
 be activated for live use by editing its manifest.
+
+## Review followup: bind caller inputs before execution
+
+The preceding `2f8e999045ce1c43e791554edabbc98df0d9238f` source commit and its
+31-test/build evidence remain preserved. Parent review reproduced a consequential
+mutable-input defect: validate a 1ms operation deadline, start the async runner,
+then immediately change the caller's deadline to 500ms. A 40ms mock operation
+wrongly returned `REHEARSAL_ROLLED_BACK` with its operation acknowledged. The
+adapter also retained the caller's fault-plan reference: changing an original
+abort to a late success and adding a bad rollback acknowledgment changed the
+running outcome to UNKNOWN. Both counterexamples are retained as RED receipts.
+
+This followup binds the complete manifest to a private inert snapshot before
+validation and the first await, and binds adapter options/baseline/fault plan
+before validation and factory return. Operation, pre-submit, cancellation,
+rollback and verification deadlines subsequently read only those private bound
+values. Neither caller mutation of a nested object nor insertion/replacement of
+a fault affects the attempt. There is no mid-transaction caller-config read.
+
+The snapshot boundary admits inert JSON-like data only. Accessors, functions,
+exotic objects, cycles and cloning/inspection failures produce fixed
+`MANIFEST_REFUSED` or `ADAPTER_REFUSED`; accessors are not evaluated and raw
+exceptions do not enter receipts. This is a configuration-binding guarantee
+inside the existing closed mock adapter, not a provider security binding or
+new live capability.
+
+The two unchanged RED assertions now pass GREEN. One additional regression
+covers non-inert/uncloneable manifests and fault plans, fixed-code redaction and
+zero command submission. Current bounded scope: **34 passed** (the original
+31 plus these three regressions), with a fresh build, syntax and whitespace
+checks. No historical guarded SQL, pre-submit fragment, synthetic fixture/receipt
+or required-input manifest was changed. The separate trusted live binding and
+genuine provider/security/authority inputs remain absent.
+
+Followup receipts in `/workspace/mip-backend-client-contract-receipts/`:
+`mutation-counterexamples-red.tap`, `mutation-counterexamples-green.tap`,
+`client-input-binding-final.tap`, and `build-input-binding.log`. Exact successor
+hashes and tested-byte chronology are retained in a separate followup manifest.

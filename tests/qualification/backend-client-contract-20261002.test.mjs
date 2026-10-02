@@ -236,3 +236,53 @@ test('invalid deadlines, source hashes and network modes are refused before BEGI
     assert.equal(receipt.outcome, 'REFUSED'); assert.deepEqual(adapter.inspect().commands, [])
   }
 })
+
+test('caller mutation cannot extend the validated operation deadline after execution starts', async () => {
+  const manifest = await loadSyntheticManifest()
+  manifest.clientDeadlinesMs.operation = 1
+  const adapter = createSyntheticAdapter({ faults: { guarded_operation: { type: 'late', delayMs: 40 } } })
+  const pending = runSyntheticRollbackRehearsal(manifest, adapter)
+  manifest.clientDeadlinesMs.operation = 500
+  const receipt = await pending
+  assert.equal(receipt.outcome, 'ABORT_ROLLED_BACK')
+  assert.equal(receipt.code, 'COMMAND_TIMEOUT'); assert.equal(receipt.operationAcknowledged, false)
+  await wait(50)
+  assert.deepEqual(adapter.inspect().snapshot, syntheticBaseline())
+  assert.ok(adapter.inspect().history.some(h => h.commandId === 'guarded_operation' && h.discarded))
+})
+
+test('caller mutation cannot replace the validated adapter fault plan during execution', async () => {
+  const manifest = await loadSyntheticManifest(), faults = { guarded_operation: { type: 'abort' } }
+  const adapter = createSyntheticAdapter({ faults })
+  const pending = runSyntheticRollbackRehearsal(manifest, adapter)
+  faults.guarded_operation.type = 'late'; faults.guarded_operation.delayMs = 1
+  faults.rollback = { type: 'bad_ack' }
+  const receipt = await pending
+  assert.equal(receipt.outcome, 'ABORT_ROLLED_BACK')
+  assert.equal(receipt.code, 'COMMAND_FAILED'); assert.equal(receipt.operationAcknowledged, false)
+  assert.equal(receipt.rollbackAcknowledged, true); assert.equal(receipt.independentlyVerified, true)
+})
+
+test('non-inert or uncloneable caller inputs fail with fixed codes before any command', async () => {
+  const secret = 'NEVER-EMIT-CLONE-FAILURE'
+  let getterCalls = 0
+  const getterManifest = await loadSyntheticManifest()
+  Object.defineProperty(getterManifest.clientDeadlinesMs, 'operation', { enumerable: true, get: () => { getterCalls++; throw new Error(secret) } })
+  const cyclicManifest = await loadSyntheticManifest(); cyclicManifest.loop = cyclicManifest
+  const functionManifest = await loadSyntheticManifest(); functionManifest.callback = () => secret
+  const hostileManifest = new Proxy({}, { ownKeys: () => { throw new Error(secret) } })
+  for (const manifest of [getterManifest, cyclicManifest, functionManifest, hostileManifest]) {
+    const adapter = createSyntheticAdapter(), receipt = await runSyntheticRollbackRehearsal(manifest, adapter)
+    assert.equal(receipt.outcome, 'REFUSED'); assert.equal(receipt.code, 'MANIFEST_REFUSED')
+    assert.deepEqual(adapter.inspect().commands, [])
+    assert.equal(JSON.stringify(receipt).includes(secret), false)
+  }
+  assert.equal(getterCalls, 0)
+  const accessorFault = {}
+  Object.defineProperty(accessorFault, 'type', { enumerable: true, get: () => { getterCalls++; throw new Error(secret) } })
+  for (const options of [{ faults: { guarded_operation: accessorFault } }, { faults: { guarded_operation: { type: 'abort', callback: () => secret } } },
+    new Proxy({}, { ownKeys: () => { throw new Error(secret) } })]) {
+    assert.throws(() => createSyntheticAdapter(options), error => error.message === 'ADAPTER_REFUSED')
+  }
+  assert.equal(getterCalls, 0)
+})

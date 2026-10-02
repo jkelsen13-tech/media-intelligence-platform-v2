@@ -96,11 +96,38 @@ function safeError(code, aborted = false) {
 }
 const failureCode = error => FIXED_CODES.has(error?.fixedCode) ? error.fixedCode : 'COMMAND_FAILED'
 
+// Bind caller-owned configuration before validation or the first await. Only
+// inert JSON-like data is admitted: no accessor evaluation, functions, exotic
+// objects or cycles. Clone/inspection failures expose one fixed refusal code.
+function bindInertData(value, code) {
+  try {
+    const active = new WeakSet()
+    const inspect = (v, depth = 0) => {
+      if (v === null || typeof v === 'string' || typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) return
+      if (typeof v !== 'object' || depth > 64 || active.has(v)) throw new Error('inert data required')
+      const prototype = Object.getPrototypeOf(v)
+      if (prototype !== Object.prototype && prototype !== null && !(Array.isArray(v) && prototype === Array.prototype)) throw new Error('inert data required')
+      active.add(v)
+      for (const key of Reflect.ownKeys(v)) {
+        if (typeof key !== 'string') throw new Error('inert data required')
+        if (Array.isArray(v) && key === 'length') continue
+        const descriptor = Object.getOwnPropertyDescriptor(v, key)
+        if (!descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) throw new Error('inert data required')
+        inspect(descriptor.value, depth + 1)
+      }
+      active.delete(v)
+    }
+    inspect(value)
+    return structuredClone(value)
+  } catch { throw safeError(code) }
+}
+
 // Fault data is inert. No callback, client URL, credential, SQL driver or injected
 // executor is accepted. The returned object is privately branded in this module.
 export function createSyntheticAdapter(options = {}) {
-  if (options === null || typeof options !== 'object' || Object.keys(options).some(key => !['baseline', 'faults'].includes(key))) throw new Error('ADAPTER_REFUSED')
-  const { baseline = syntheticBaseline(), faults = {} } = options
+  const boundOptions = bindInertData(options, 'ADAPTER_REFUSED')
+  if (boundOptions === null || typeof boundOptions !== 'object' || Object.keys(boundOptions).some(key => !['baseline', 'faults'].includes(key))) throw new Error('ADAPTER_REFUSED')
+  const { baseline = syntheticBaseline(), faults = {} } = boundOptions
   if (!validBaseline(baseline) || faults === null || typeof faults !== 'object' || Object.keys(faults).some(id => !IDS.includes(id))) throw new Error('BASELINE_REFUSED')
   if (Object.values(faults).some(f => !f || !['disconnect', 'timeout', 'late', 'abort', 'secret_error', 'bad_ack', 'negative_verify'].includes(f.type)
     || (f.delayMs !== undefined && (!Number.isInteger(f.delayMs) || f.delayMs < 1 || f.delayMs > 30000)))) throw new Error('ADAPTER_REFUSED')
@@ -205,7 +232,7 @@ function validateManifest(manifest) {
 export async function runSyntheticRollbackRehearsal(manifest, adapter) {
   const events = [], api = adapters.get(adapter)
   let begun = false, code = null, rollbackAcknowledged = false, verified = false, operationAcknowledged = false
-  let connected = true, drained = true, baseline = null
+  let connected = true, drained = true, baseline = null, deadlines = null
   const record = (commandId, status) => events.push({ commandId, status })
   const command = async (id, budget) => {
     record(id, 'submitted')
@@ -224,15 +251,16 @@ export async function runSyntheticRollbackRehearsal(manifest, adapter) {
     } finally { clearTimeout(timer) }
   }
   const cancelPending = async () => {
-    try { drained = (await command('cancel_and_drain', manifest.clientDeadlinesMs.cancelDrain)).drained === true }
+    try { drained = (await command('cancel_and_drain', deadlines.cancelDrain)).drained === true }
     catch { drained = false }
   }
   try {
     if (!api) throw safeError('ADAPTER_REFUSED')
-    validateManifest(manifest)
+    const boundManifest = bindInertData(manifest, 'MANIFEST_REFUSED')
+    validateManifest(boundManifest)
     if (api.used) throw safeError('ADAPTER_REFUSED')
     api.used = true // One session/attempt: never replay a lost or unknown outcome.
-    const deadlines = manifest.clientDeadlinesMs
+    deadlines = boundManifest.clientDeadlinesMs
     // Mark attempted BEGIN before awaiting it: lost acknowledgment cannot prove
     // the transaction never opened, so recovery must still attempt rollback.
     begun = true
@@ -276,7 +304,7 @@ export async function runSyntheticRollbackRehearsal(manifest, adapter) {
     // cleanup and go to rollback; missing/drifting acknowledgments stay UNKNOWN.
     if (begun && connected && drained) {
       try {
-        const r = await command('rollback', manifest.clientDeadlinesMs.rollback)
+        const r = await command('rollback', deadlines.rollback)
         rollbackAcknowledged = r.rolledBack === true && r.transactionState === 'idle'
       } catch {
         // Fence/drain a timed-out rollback before verification. Its missing
@@ -286,7 +314,7 @@ export async function runSyntheticRollbackRehearsal(manifest, adapter) {
     }
     if (begun && connected && drained && api) {
       try {
-        const v = await command('verify_independently', manifest.clientDeadlinesMs.verification)
+        const v = await command('verify_independently', deadlines.verification)
         verified = v.independent === true && v.baselineMatches === true
       } catch { /* Verification cannot manufacture an acknowledgment. */ }
     }
