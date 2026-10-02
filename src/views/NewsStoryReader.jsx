@@ -45,7 +45,7 @@ export default function NewsStoryReader({ context, state, history, reports, onCl
       {member.pending_revision && <p>A newer retained source revision is pending review; this displayed version retains its original approval.</p>}
       {member.correction_reason && <p>Correction: {member.correction_reason}</p>}
       <SourceLink url={member.source_url} outlet={member.source_outlet} />
-      {onOpenArticle && <button type="button" className="news-chip" onClick={() => onOpenArticle(member.article_id)}>Open article evidence</button>}
+      {onOpenArticle && <button type="button" className="news-chip" onClick={() => onOpenArticle(member)}>Open article evidence</button>}
     </article>)}
     {reports.map(report => <article className="news-source-report" aria-label="Attributed source report" key={report.public_version_id}>
       <strong>{report.label}</strong>

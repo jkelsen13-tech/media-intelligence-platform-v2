@@ -1,0 +1,24 @@
+# Historical Story article evidence handoff
+
+Source base: `670efb8ebd6b4d7fb09368d399fe5a2afbc03a77`. This is a bounded N1 repair. It changes the existing App, News and Story reader handoff; it adds no publication owner, SQL package, route engine, installed capability or hosted operation.
+
+Previously, “Open article evidence” passed only `member.article_id`. `expandArticle(id)` read the latest article decision. A historical Story containing an earlier proposition could therefore open a newer attributed report with a different capture, or attach current analytical joins to the historical reader.
+
+The button now passes its canonical normalized member envelope. News verifies membership in the displayed Story, requests `read_reviewed_public_article_v1(article_id, public_version_id)` through the existing bound News backend, and checks the returned canonical DTO against the selected member before display. The comparison includes the immutable decision/capture/hash, admitted evidence fields and spans, source title/summary/URL/outlet/clocks, review lineage/policy and display metadata. Only currentness, supersession and pending-capture flags may legitimately change during the read.
+
+App retains the selected member in memory scoped to its displayed Story decision. Selecting evidence from an initial head route pins that actual Story public version through the existing Story route serializer. A graph or ordinary tab return rereads the pinned Story and exact member. An explicit Story route change, article navigation, closing the Story or ordinary feed selection clears the relevant selection. This evidence preview does not replace canonical Investigation Context.
+
+The existing exact-version analytical gate suppresses current article-to-Story, graph, location, timeline and Source Comparison joins. The selected reader explains that analytical links for this exact source version are unavailable. Byline and classification badges come from the selected immutable detail, and current outlet region is withheld because the reviewed DTO does not bind it. The current feed row for the selected article is excluded while exact evidence is displayed. A refused, missing, malformed or mixed-version detail also withholds the cached Story envelope. No newer decision or URL fallback is attempted.
+
+Qualification:
+
+- `tests/storyArticleExactVersionJourney.test.mjs` executes restored native publication SQL under the ordinary anonymous read role, through the installed Supabase SDK and mounted production App/News/Story button. It reproduces two article decisions with distinct captures and checks exact version/hash/span identity; graph return; earlier proposition withdrawal while the newer report remains readable; immutable caption and evidence drift; newer byline/classification/region isolation; head-route pinning after a newer Story retains the same member; account/readiness and backend replacement races; and held detail after Story context withdrawal. Nine tests pass.
+- The focused six-file suite includes the existing `newsStoryReaderFrontend`, `appStoryFollowingJourneys`, `comparisonExactNewsNavigation`, `newsBackend`, and `newsViewBackendBoundary` contracts. Node 22 and Node 24 each pass 46/46.
+- `tests/storyArticleExactVersionBrowser.mjs` uses Chromium, real production App/News/Story DOM and the installed SDK over local HTTP backed by the restored SQL owners. Four browser journeys pass, with no page errors: exact historical capture, production Story graph action and pinned return, account/readiness cancellation, and actual withdrawal while a newer report remains readable. Nonlocal requests are blocked. This runner is optional and is not part of ordinary Node test discovery.
+- Node 22 Vite build passes. Existing browser `node:crypto` externalization and large chunk warnings remain. `git diff --check` passes.
+
+Qualification boundaries: the SDK transport is a local translator into real disposable PGlite SQL, not hosted PostgREST or live authentication. Personal Following responses and unrelated analytical renderers in the new journeys are bounded probes; the existing App/Following suite separately exercises its native owner and gateway. No exact mapping to a deeper analytical surface is asserted. Synthetic fixture reviews and captures establish no production source rights or truth. No protected project was installed, modified, published or deployed.
+
+Publication version examples do not define governed uncertainty levels. The locked vocabulary remains [UNCERTAINTY_VOCABULARY.md](UNCERTAINTY_VOCABULARY.md).
+
+Local receipts: `/workspace/mip-launch-story-article-evidence/node22-focused.txt`, `node24-focused.txt`, `build.txt`, and `browser-node22/receipt.json`. Browser images are retained beside that receipt. The parent owns coherent successor integration, full CI and independent review.

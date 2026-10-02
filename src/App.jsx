@@ -238,6 +238,7 @@ export default function App({
   // A reviewed Story collection has its own reader route. It is not an event
   // ID and browsing it does not silently replace Investigation Context.
   const [storyReaderRoute, setStoryReaderRoute] = useState(INITIAL_STORY_ROUTE)
+  const [storyArticleSelection, setStoryArticleSelection] = useState(null)
   const [savedInvestigationHandoff, setSavedInvestigationHandoff] = useState(null)
   const [marketReturnContext, setMarketReturnContext] = useState(null)
   const [marketReturnSelection, setMarketReturnSelection] = useState(null)
@@ -920,6 +921,7 @@ export default function App({
       setFocusArticleVersion(typeof resolved === 'object' ? resolved.publicVersionId ?? null : null)
       setFocusArticleSource(typeof resolved === 'object' ? resolved.sourceVersion ?? null : null)
       setStoryReaderRoute({ storyId: null, publicVersionId: null })
+      setStoryArticleSelection(null)
       setView('news')
       setInvestigationContext((ic) =>
         commitNewSubjectFromApp(ic, { type: 'article', id: articleId }, { landingView: 'news' }),
@@ -935,6 +937,7 @@ export default function App({
     if (!hash) return
     navigationIntentRef.current += 1
     setStoryReaderRoute(parseStoryReaderRoute(hash))
+    setStoryArticleSelection(null)
     setFocusArticle(null)
     setFocusArticleVersion(null)
     setFocusArticleSource(null)
@@ -946,7 +949,19 @@ export default function App({
   const closePublicStory = useCallback(() => {
     navigationIntentRef.current += 1
     setStoryReaderRoute({ storyId: null, publicVersionId: null })
+    setStoryArticleSelection(null)
   }, [])
+
+  const selectPublicStoryArticle = useCallback(selection => {
+    if (!selection) { setStoryArticleSelection(null); return }
+    const route = { storyId: selection.storyId, publicVersionId: selection.storyVersionId }
+    if (!serializeStoryReaderRoute(route) || route.storyId !== storyReaderRoute.storyId
+      || (storyReaderRoute.publicVersionId && route.publicVersionId !== storyReaderRoute.publicVersionId)) return
+    // A head route resolves once. Evidence selection pins the displayed Story
+    // decision so graph/tab return cannot substitute a newer collection header.
+    setStoryReaderRoute(route)
+    setStoryArticleSelection(selection)
+  }, [storyReaderRoute])
 
   const selectMarketAsset = useCallback(({ asset, at }) => {
     // Recheck the supplied canonical identity through the same authorized
@@ -1227,6 +1242,7 @@ export default function App({
       const story = parseStoryReaderRoute(hash)
       if (story.storyId) {
         setStoryReaderRoute(story)
+        setStoryArticleSelection(null)
         setFocusArticle(null)
         setFocusArticleVersion(null)
         setFocusArticleSource(null)
@@ -1235,6 +1251,7 @@ export default function App({
         return
       }
       setStoryReaderRoute({ storyId: null, publicVersionId: null })
+      setStoryArticleSelection(null)
       if (!isInvestigationDeepLink(hash) && parseDeepLink(hash).subjectId == null) {
         return
       }
@@ -1687,6 +1704,8 @@ export default function App({
             focusArticleSourceVersion={focusArticleSource}
             focusStoryId={storyReaderRoute.storyId}
             publicVersionId={storyReaderRoute.publicVersionId}
+            storyArticleSelection={storyArticleSelection}
+            onSelectStoryArticle={selectPublicStoryArticle}
             onOpenStory={openPublicStory}
             onCloseStory={closePublicStory}
             readerActorId={auth.user?.id ?? null}

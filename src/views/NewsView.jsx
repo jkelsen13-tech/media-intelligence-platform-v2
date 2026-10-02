@@ -171,7 +171,25 @@ function SelectedSourceVersionNotice({ article }) {
     <p>{version.is_current_source_version ? 'This is the selected current reviewed decision.' : 'This earlier reviewed decision remains authorized. A newer reviewed decision is available.'}</p>
     {version.pending_revision && <p>A newer retained source capture is pending review. The selected reviewed version stays displayed.</p>}
     <p>Analytical links for this exact source version are unavailable.</p>
+    <details className="news-version-details"><summary>Selected source and capture</summary>
+      <p>Public source version <code>{version.public_version_id}</code> · Exact capture <code>{version.capture_id}</code></p>
+      <p>Exact capture digest: <code>{version.capture_hash}</code></p>
+    </details>
   </section>
+}
+
+// Both operands use the canonical publication DTO. A retained Story member
+// binds a decision, capture and admitted spans; currentness may change later.
+function sameArticleEvidenceVersion(left, right) {
+  const a = normalizeReviewedPublicVersion(left), b = normalizeReviewedPublicVersion(right)
+  // Exclude only the owner's dynamic currentness, supersession and pending
+  // capture flags. Source-report fields are derived from these same DTO fields.
+  const fields = ['contract','public_version_id','sequence','predecessor_public_version_id','correction_reason',
+    'review_ref','reviewed_by','reviewed_at','visible_at','policy_version','review_state','visibility_state',
+    'article_id','capture_id','source_version_id','capture_hash','admission_kind','source_url','source_outlet',
+    'title','summary','published_at','fetched_at','fetched_at_semantics','captured_at','remaining_uncertainty',
+    'display_metadata','evidence']
+  return !!a && !!b && JSON.stringify(fields.map(field => a[field])) === JSON.stringify(fields.map(field => b[field]))
 }
 
 function OriginalSourceLocator({ article }) {
@@ -240,7 +258,7 @@ function PublisherSourceRecord({ article, region }) {
 // overlay — same discovery system (search, chips, list, honest empty). Local
 // discovery filters stay in this instance and never write Investigation Context.
 // They do not filter Graph / World View / Timeline / Arcs evidence.
-export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusArticleVersionId = null, focusArticleSourceVersion = null, focusStoryId, publicVersionId = null, onOpenStory, onCloseStory, readerActorId = null, sessionReady = false, followingBackend, clockNow, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
+export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusArticleVersionId = null, focusArticleSourceVersion = null, focusStoryId, publicVersionId = null, storyArticleSelection, onSelectStoryArticle, onOpenStory, onCloseStory, readerActorId = null, sessionReady = false, followingBackend, clockNow, onOpenTimeline, onOpenComparison, variant = 'page', initialSearch = '', investigationContext, backend = mipBackend.publicData.news }) {
   const isDrawer = variant === 'drawer'
   const [readerMode, setReaderMode] = useState('home')
   const [homeResponse, setHomeResponse] = useState(null)
@@ -259,15 +277,21 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   const [error, setError] = useState(null)
   const [articlesUnavailable, setArticlesUnavailable] = useState(null)
   const [expanded, setExpanded] = useState(null) // article id
+  const [localStoryArticleSelection, setLocalStoryArticleSelection] = useState(null)
+  const selectedStoryArticle = storyArticleSelection === undefined ? localStoryArticleSelection : storyArticleSelection
+  const selectedStoryMember = selectedStoryArticle && focusStoryId && selectedStoryArticle.storyId === focusStoryId
+    && (publicVersionId === null || selectedStoryArticle?.storyVersionId === publicVersionId)
+    ? normalizeReviewedPublicVersion(selectedStoryArticle.member) : null
+  const selectedStoryVersionId = publicVersionId ?? (selectedStoryMember ? selectedStoryArticle.storyVersionId : null)
   const [detailValue, setDetail] = useState(null)
   const [detailBinding, setDetailBinding] = useState(null)
   const focusReadKey = [focusArticleId,focusArticleVersionId,focusArticleSourceVersion?.articleId,
     focusArticleSourceVersion?.captureId,focusArticleSourceVersion?.captureHash,focusArticleSourceVersion?.articleClaimId,
     focusArticleSourceVersion?.sourceField,focusArticleSourceVersion?.spanStart,focusArticleSourceVersion?.spanEnd,
-    focusArticleSourceVersion?.excerptHash].map(value => String(value ?? '')).join(':')
-  const detail = detailBinding?.backend === backend && detailBinding.actorId === readerActorId
-    && detailBinding.sessionReady === sessionReady && detailBinding.focusReadKey === focusReadKey ? detailValue : null
+    focusArticleSourceVersion?.excerptHash,focusStoryId,publicVersionId].map(value => String(value ?? '')).join(':')
   const exactFocusedSource = focusArticleVersionId !== null || focusArticleSourceVersion !== null
+  const exactSelectedSource = exactFocusedSource || selectedStoryMember !== null
+  const exactSelectedArticleId = selectedStoryMember?.article_id ?? focusArticleId
   const [articleStory, setArticleStory] = useState(null)
   const [storyResponse, setStoryResponse] = useState(null)
   const [storyLoading, setStoryLoading] = useState(false)
@@ -313,11 +337,11 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   useEffect(() => {
     let cancelled = false
     setStoryResponse(null)
-    if (!focusStoryId) { setStoryLoading(false); return }
     detailRequestRef.current += 1
     setExpanded(null); setDetail(null); setArticleStory(null); setGraphLinks([])
     setDetailError(null); setDetailUnavailable(null); setDetailMissing(false)
     setSky(null); setTimelineKey(null); setComparisonEvents([])
+    if (!focusStoryId) { setStoryLoading(false); return }
     setStoryLoading(true)
     if (typeof backend.loadStoryStateContext !== 'function') {
       setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
@@ -325,7 +349,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
       return
     }
     const recheck = recheckVersionRef.current
-    const requestedVersion = recheck?.storyId === focusStoryId && recheck.versionScope === publicVersionId && recheck.backend === backend ? recheck.publicVersionId : publicVersionId
+    const requestedVersion = recheck?.storyId === focusStoryId && recheck.versionScope === publicVersionId && recheck.backend === backend ? recheck.publicVersionId : selectedStoryVersionId
     backend.loadStoryStateContext(focusStoryId, { publicVersionId: requestedVersion })
       .then(result => {
         if (cancelled) return
@@ -338,7 +362,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
       .catch(() => { if (!cancelled) setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null }) })
       .finally(() => { if (!cancelled) setStoryLoading(false) })
     return () => { cancelled = true }
-  }, [focusStoryId, publicVersionId, backend, storyReadEpoch])
+  }, [focusStoryId, publicVersionId, selectedStoryVersionId, backend, storyReadEpoch])
 
   useEffect(() => {
     let cancelled = false
@@ -368,6 +392,12 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   }, [readerMode, isDrawer, focusStoryId, backend])
 
   const storyContext = storyResponse?.storyId === focusStoryId && storyResponse?.versionId === publicVersionId ? storyResponse.data : null
+  const detail = detailBinding?.backend === backend && detailBinding.actorId === readerActorId
+    && detailBinding.sessionReady === sessionReady && detailBinding.focusReadKey === focusReadKey
+    && (!detailBinding.storyMemberVersionId || (storyContext
+      && storyContext.story.public_version_id === selectedStoryArticle?.storyVersionId
+      && detailBinding.storyMemberVersionId === selectedStoryMember?.public_version_id
+      && storyContext.story.members.some(member => sameArticleEvidenceVersion(member, selectedStoryMember)))) ? detailValue : null
   const onStoryAccessFailure = useCallback(code => {
     if (code !== 'access_denied') return
     // A verified private read has refused this Story's access. Withhold the
@@ -518,12 +548,16 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
       })
   }, [debouncedQ, outlet, status, evidenceBasis, selectedRegionOutlets, selectedTopicTerms, publicationBounds, feedReadEpoch])
 
-  const expandArticle = (id, versionOptions) => {
+  const expandArticle = (id, versionOptions, storyMember = null) => {
     const seq = ++detailRequestRef.current
     const isCurrent = () => seq === detailRequestRef.current
     const exact = versionOptions !== undefined
+    const withholdStoryMember = () => {
+      if (storyMember) setStoryResponse({ storyId: focusStoryId, versionId: publicVersionId, data: null })
+    }
     setExpanded(id)
-    setDetailBinding({ backend, actorId: readerActorId, sessionReady, focusReadKey, exact })
+    setDetailBinding({ backend, actorId: readerActorId, sessionReady, focusReadKey, exact,
+      storyMemberVersionId: storyMember?.public_version_id ?? null })
     setDetail(null)
     setArticleStory(null)
     setGraphLinks([])
@@ -533,7 +567,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
     setSky(null)
     setTimelineKey(null)
     setComparisonEvents([])
-    if (exact && !sessionReady) return
+    if (exact && !sessionReady) return seq
     if (!exact && onOpenStory && typeof backend.loadArticleStory === 'function') {
       backend.loadArticleStory(id).then(result => {
         if (!isCurrent()) return
@@ -566,24 +600,54 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
       .then((d) => {
         if (!isCurrent()) return
         if (d?.articlesUnavailable) {
+          withholdStoryMember()
           setDetail(null)
           setDetailUnavailable(d.articlesUnavailable)
           return
         }
         if (d?.articleMissing || !d) {
+          withholdStoryMember()
           setDetail(null)
           setDetailMissing(true)
           return
         }
-        if (exact && (d.id !== id || d.public_version_id !== versionOptions.publicVersionId)) {
+        if (exact && (d.id !== id || d.public_version_id !== versionOptions.publicVersionId
+          || (storyMember && !sameArticleEvidenceVersion(d.public_version, storyMember)))) {
+          withholdStoryMember()
           setDetail(null); setDetailUnavailable('reviewed_version_invalid'); return
         }
         setDetail(d)
         if (!exact && !articleSourceReport(d)) loadAnalyticalLinks()
       })
-      .catch((err) => { if (isCurrent()) setDetailError(err.message) })
-
+      .catch((err) => { if (isCurrent()) { withholdStoryMember(); setDetailError(err.message) } })
+    return seq
   }
+
+  const selectStoryArticle = member => {
+    const selected = storyContext?.story.members.find(candidate => sameArticleEvidenceVersion(candidate, member))
+    if (!selected) return
+    const selection = { storyId: focusStoryId, storyVersionId: storyContext.story.public_version_id, member: selected }
+    setLocalStoryArticleSelection(selection)
+    onSelectStoryArticle?.(selection)
+  }
+
+  // Recheck the exact member on return and account/readiness changes. The
+  // Story route stays selected, and unsupported current analytical joins are
+  // excluded by expandArticle's existing exact-version gate.
+  useEffect(() => {
+    if (!selectedStoryMember || !storyContext) return
+    if (storyContext.story.public_version_id !== selectedStoryArticle.storyVersionId) return
+    const member = storyContext.story.members.find(candidate => sameArticleEvidenceVersion(candidate, selectedStoryMember))
+    if (!member) {
+      detailRequestRef.current += 1
+      setExpanded(selectedStoryMember.article_id); setDetail(null)
+      setDetailUnavailable('reviewed_version_invalid')
+      return
+    }
+    const seq = expandArticle(member.article_id, { publicVersionId: member.public_version_id }, member)
+    return () => { if (detailRequestRef.current === seq) detailRequestRef.current += 1 }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStoryArticle, storyContext, backend, readerActorId, sessionReady])
 
   // Cross-view entry: another view asked us to open a specific article.
   useEffect(() => {
@@ -647,6 +711,8 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   }
 
   const toggleExpand = (id) => {
+    setLocalStoryArticleSelection(null)
+    onSelectStoryArticle?.(null)
     if (expanded === id) {
       detailRequestRef.current += 1
       setExpanded(null)
@@ -671,13 +737,13 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   // Step 4 event grouping: multi-article events collapse into one group
   // card; singles and eventless articles stay flat, feed order preserved.
   const feedEntries = useMemo(
-    () => groupArticlesByEvent(exactFocusedSource ? articles.filter(a => a.id !== focusArticleId) : articles, eventMap),
-    [articles, eventMap, exactFocusedSource, focusArticleId],
+    () => groupArticlesByEvent(exactSelectedSource ? articles.filter(a => a.id !== exactSelectedArticleId) : articles, eventMap),
+    [articles, eventMap, exactSelectedSource, exactSelectedArticleId],
   )
 
   // If a focused article isn't in the current page, still render its detail.
   const focusedMissing =
-    expanded && ((exactFocusedSource && expanded === focusArticleId) || !articles.some((a) => a.id === expanded)) ? expanded : null
+    expanded && ((exactSelectedSource && expanded === exactSelectedArticleId) || !articles.some((a) => a.id === expanded)) ? expanded : null
 
   // Doc 05 pairs 3 & 5: cross-window chips. Each renders only when its join
   // resolved — never a broken link, never a fabricated destination.
@@ -685,7 +751,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   // ORIGINATING arc so the timeline lands on that arc (return-to-origin),
   // not the global corpus. Arc unknown (focused-miss detail) → arcId null
   // → the contract's declared global fallback applies.
-  const expandedArcId = articles.find((a) => a.id === expanded)?.arc_id ?? null
+  const expandedArcId = (detailBinding?.exact ? detail?.arc_id : articles.find((a) => a.id === expanded)?.arc_id) ?? null
   const isReportDetail = articleSourceReport(detail) !== null
   const currentArticleStory = articleStory?.articleId === expanded ? articleStory.story : null
   const crossWindowChips = ((!isReportDetail && (timelineKey || comparisonEvents.length > 0)) || currentArticleStory) && (
@@ -792,7 +858,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
   const articleUnavailableNotice = (reason) =>
     reason ? (
       <div className="notice">
-        {reason === 'reviewed_version_unavailable' || (exactFocusedSource && reason === 'reviewed_version_invalid')
+        {reason === 'reviewed_version_unavailable' || (exactSelectedSource && reason === 'reviewed_version_invalid')
           ? 'The selected reviewed source version is unavailable. No newer source decision is substituted.'
           : <>public.articles is unavailable ({reason === 'permission_denied' ? 'permission denied' : reason}). 0 articles; no rows are invented.</>}
       </div>
@@ -830,7 +896,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
             </div>
           )}
           {crossWindowChips}
-          <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
+          <PublisherSourceRecord article={detail} region={detailBinding?.exact ? null : outletRegions.get(detail.outlet) ?? null} />
           {/* Location corroboration (formerly Sky verification; 02A
               Amendment B): renders only when a corroboration exists. */}
           <SkyBadge verification={isReportDetail ? null : sky} />
@@ -880,10 +946,10 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
             </div>
           </div>
           {/* Status badges live on the EXPANDED detail only (owner ruling
-              #9 — card faces carry no status badge). Source row is the list
-              record, whose shape is pinned by loadArticles. */}
+              #9 — card faces carry no status badge). Exact reads use their
+              selected immutable display metadata, including a retained byline. */}
           {(() => {
-            const src = articles.find((x) => x.id === expanded)
+            const src = detailBinding?.exact ? detail : articles.find((x) => x.id === expanded)
             if (!src) return null
             return (
               <div className="news-badges">
@@ -1167,7 +1233,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
       </>}
 
       {focusStoryId && (storyContext ? <NewsStoryReader context={storyContext} state={storyState} history={storyHistory} reports={sourceReports}
-        onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={expandArticle} />
+        onCloseStory={onCloseStory} onOpenNode={onOpenNode} onOpenArticle={selectStoryArticle} />
         : <section className="news-story-reader" aria-label="Story reader"><p>{storyLoading ? 'Loading reviewed story…' : 'This exact story version is unavailable. No latest-version or private-source fallback is displayed.'}</p>{!storyLoading && <button type="button" className="news-chip" onClick={() => setStoryReadEpoch(value => value + 1)}>Reload reviewed story</button>}{onCloseStory && <button type="button" className="news-chip" onClick={onCloseStory}>Back to news</button>}</section>)}
 
       {focusStoryId && followingStory && <div hidden={!storyContext} aria-hidden={!storyContext}><StoryFollowingControls story={followingStory} userId={readerActorId} sessionReady={sessionReady} backend={followingBackend} onAccessFailure={onStoryAccessFailure} /></div>}
@@ -1213,7 +1279,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
         )}
       </ol>
 
-      {focusedMissing && (exactFocusedSource && expanded === focusArticleId ? (
+      {focusedMissing && (exactSelectedSource && expanded === exactSelectedArticleId ? (
         <section className="news-focused-reviewed-version" aria-label="Selected reviewed source">
           {detail && <h3 className="news-focus-title">{detail.title}</h3>}
           {expandedDetail}
@@ -1232,7 +1298,7 @@ export default function NewsView({ onOpenArc, onOpenNode, focusArticleId, focusA
             <>
               <ArticleSourceReport article={detail} compact />
               <h3 className="news-focus-title">{detail.title}</h3>
-              <PublisherSourceRecord article={detail} region={outletRegions.get(detail.outlet) ?? null} />
+              <PublisherSourceRecord article={detail} region={detailBinding?.exact ? null : outletRegions.get(detail.outlet) ?? null} />
               {crossWindowChips}
               <SkyBadge verification={isReportDetail ? null : sky} />
               {!isReportDetail && graphLinks.length > 0 && (
