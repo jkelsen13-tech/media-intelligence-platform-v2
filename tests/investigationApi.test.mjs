@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
+import { relative } from 'node:path'
 import { createInvestigationApiHandler, createInvestigationApiTransport } from '../supabase/functions/investigation-api/handler.mjs'
 import { createInvestigationBackend } from '../src/lib/investigationBackend.js'
 import { FIXTURE_USER, FIXTURE_BUNDLES } from '../src/lib/investigationWorkspaceFixtures.js'
@@ -26,11 +28,30 @@ function fixture(overrides = {}) {
 }
 
 test('current private source candidate manifest matches the exact gateway and preserved domain source files', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../verifier/investigation-api-private-following-2026-10-02.json', import.meta.url), 'utf8'))
-  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 10)
+  const root = new URL('../', import.meta.url)
+  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-prelaunch-convergence-2026-10-02.json', root), 'utf8'))
+  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 12)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
     assert.equal(createHash('sha256').update(content).digest('hex'), entry.sha256, entry.path)
+  }
+  const retained = new Set(), external = new Set()
+  async function visit(url) {
+    const path = relative(fileURLToPath(root), fileURLToPath(url))
+    if (retained.has(path)) return
+    retained.add(path)
+    const text = await readFile(url, 'utf8')
+    for (const match of text.matchAll(/(?:\bimport\s+(?:[^'";]*?\s+from\s+)?|\bexport\s+[^'";]*?\s+from\s+|\bimport\s*\(\s*)['"]([^'"]+)['"]/g)) {
+      if (match[1].startsWith('.')) await visit(new URL(match[1], url))
+      else external.add(match[1])
+    }
+  }
+  await visit(new URL('supabase/functions/investigation-api/index.ts', root))
+  assert.deepEqual([...retained].sort(), manifest.files.map(f => f.path).sort())
+  assert.deepEqual([...external].sort(), manifest.runtime_module_dependencies.map(d => d.specifier).sort())
+  for (const entry of manifest.sql_source_proposals) {
+    assert.equal(entry.status, 'not_applied')
+    assert.equal(createHash('sha256').update(await readFile(new URL(entry.path, root))).digest('hex'), entry.sha256, entry.path)
   }
 })
 
@@ -201,4 +222,39 @@ test('Following actor expectation only refuses stale sessions and Auth stamps su
   assert.match(preflight.headers.get('access-control-allow-headers'), /x-mip-expected-user/)
   assert.equal((await handler(request('following', body))).status, 200)
   assert.equal(calls.length, 2) // Header-free API callers retain current authenticated actor semantics.
+})
+
+test('selective intake is registered with the existing verified gateway and mapped SDK boundary', async () => {
+  const calls = [], candidateId = bundle.version.id
+  const body = { action: 'read', input: { investigation_id: bundle.investigation_id, candidate_id: candidateId } }
+  const { handler } = fixture({ selectiveIntakeRpc: async (action, input) => {
+    calls.push({ action, input }); return { data: { contract_version: 'private-investigation-selective-intake-1', publicly_eligible: false, investigation_id: input.investigation_id, candidate_id: input.candidate_id, receipts: [] } }
+  } })
+  const response = await handler(request('selective-intake', body, { headers: { 'X-MIP-Expected-User': FIXTURE_USER.id } }))
+  assert.equal(response.status, 200)
+  const payload = await response.json(); assert.equal(payload.authenticated_user_id, FIXTURE_USER.id)
+  assert.equal(calls[0].input.user_id, FIXTURE_USER.id)
+  assert.equal((await handler(request('selective-intake', body, { headers: { 'X-MIP-Expected-User': '00000000-0000-0000-0000-000000000001' } }))).status, 401)
+  assert.equal((await handler(request('selective-intake', { ...body, input: { ...body.input, user_id: FIXTURE_USER.id } }))).status, 400)
+  assert.equal(calls.length, 1)
+  assert.equal((await fixture().handler(request('selective-intake', body))).status, 503)
+  const sdkCalls = [], backend = createInvestigationBackend({ functions: { invoke: async (name, options) => { sdkCalls.push({ name, options }); return { data: payload } } } })
+  assert.equal((await backend.selectiveIntake.read(body.input, { expectedUserId: FIXTURE_USER.id })).error, null)
+  assert.equal(sdkCalls[0].name, 'investigation-api/selective-intake')
+  assert.equal(sdkCalls[0].options.headers['X-MIP-Expected-User'], FIXTURE_USER.id)
+  assert.equal(Object.hasOwn(sdkCalls[0].options.body.input, 'user_id'), false)
+  assert.equal((await createInvestigationBackend(null).selectiveIntake.read(body.input)).error.code, 'service_unavailable')
+})
+
+test('selective intake server transport preserves fixed target and both current credential formats', async () => {
+  for (const serviceKey of ['sb_secret_selective_fixture', 'legacy-selective-server-jwt']) {
+    const calls = [], transport = createInvestigationApiTransport({ url: 'https://qikvmopbtijoebdqosyq.supabase.co', anonKey: 'synthetic-public-key', serviceKey,
+      fetchImpl: async (url, init) => { calls.push({ url, init }); return Response.json({ synthetic: true }) } })
+    assert.deepEqual(await transport.selectiveIntakeRpc('read', { user_id: FIXTURE_USER.id }), { data: { synthetic: true } })
+    assert.equal(calls[0].url, 'https://qikvmopbtijoebdqosyq.supabase.co/rest/v1/rpc/mip_investigation_selective_intake_v1')
+    assert.equal(calls[0].init.headers.apikey, serviceKey)
+    assert.equal(new Headers(calls[0].init.headers).get('authorization'), serviceKey.startsWith('sb_secret_') ? null : `Bearer ${serviceKey}`)
+    assert.equal(calls[0].init.redirect, 'error'); assert.ok(calls[0].init.signal instanceof AbortSignal)
+    assert.deepEqual(JSON.parse(calls[0].init.body), { p_action: 'read', p_input: { user_id: FIXTURE_USER.id } })
+  }
 })

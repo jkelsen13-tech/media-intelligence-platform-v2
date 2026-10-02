@@ -1,4 +1,5 @@
 import { createInvestigationFollowingClient } from './investigationFollowingClient.js'
+import { createInvestigationSelectiveIntakeClient } from './investigationSelectiveIntakeClient.js'
 import { createInvestigationWorkspaceClient } from './investigationWorkspaceClient.js'
 import { createInvestigationEvidenceChecksClient } from './investigationEvidenceChecksClient.js'
 import { createInvestigationEvidenceReviewsClient } from './investigationEvidenceReviewsClient.js'
@@ -8,6 +9,7 @@ import { createInvestigationSourceSpansClient } from './investigationSourceSpans
 const ROUTES = new Map([
   ['investigation-workspace', 'workspace'],
   ['investigation-following', 'following'],
+  ['investigation-selective-intake', 'selective-intake'],
   ['investigation-evidence-checks', 'checks'],
   ['investigation-evidence-reviews', 'reviews'],
   ['investigation-input-impact', 'input-impact'],
@@ -37,6 +39,7 @@ export function createInvestigationBackend(supabase) {
   return Object.freeze({
     workspace: createInvestigationWorkspaceClient(transport),
     following: createInvestigationFollowingClient({ call: followingCall }),
+    selectiveIntake: createInvestigationSelectiveIntakeClient(transport),
     checks: createInvestigationEvidenceChecksClient(transport),
     reviews: createInvestigationEvidenceReviewsClient(transport),
     inputImpact: createInvestigationInputImpactClient(transport),
