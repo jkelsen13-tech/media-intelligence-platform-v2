@@ -27,3 +27,9 @@ qik-transform-proposal.sql preserves the historical block except the new_uri ass
 Additional actual disposable PG17.6 full proposed DO: 11/11 consequential refusal cases pass—missing UPDATE, missing/wrong operation, duplicate head singleton, malformed source, duplicate URI parameter, already-applied target, bad auditor, bad TLS, fixture-trigger ROW_COUNT0, independent-session advisory-lock contention. Each verifies rolled-back original route, denied UPDATE and ENABLE/FORCE RLS. Synthetic-only fixture grants, CA path and dblink stub are explicit; they do not qualify provider permissions, CA or logging. Runner is available as optional RUN_SYNTHETIC_PG_QUALIFICATION=1 mode in the new test file; it requires the separately provisioned synthetic fixture container, never a live connection. Remote bootstrap/extras and JSON receipt remain in /workspace/mip-oct02/evidence.
 
 Remaining gates: fresh provider security baseline; authoritative temporary column/SET approval; real CA/TLS and dblink/log redaction evidence; fresh independent exact-head review; explicit bounded live rollback/commit authorization.
+
+## Default test routing
+
+The five dependency-free Node credential-transform checks are included in `npm test` through `tests/qualification/qik-audit-route-transform-20261002.test.mjs`. Run only these checks with `RUN_SYNTHETIC_PG_QUALIFICATION=0 node --test tests/qualification/qik-audit-route-transform-20261002.test.mjs`. This mode imports no container tooling, reads no proposal SQL and makes no PostgreSQL or network connection. The previous `.mjs` filename omitted these checks from the repository's `*.test.mjs` discovery.
+
+Actual disposable PG qualification remains a deliberate optional run: `RUN_SYNTHETIC_PG_QUALIFICATION=1 node --test tests/qualification/qik-audit-route-transform-20261002.test.mjs`, with explicitly provisioned isolated fixture/container and proposal paths. Default CI does not claim those 11 PG cases or any provider qualification.
