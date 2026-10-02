@@ -3,22 +3,29 @@ import {cameraStatesEqual} from '../src/lib/worldViewCameraState.js'
 // Synthetic full-App execution only. No live reader/auth or source qualification.
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
-import {mkdir,writeFile} from 'node:fs/promises'
+import {mkdir,writeFile,readFile} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
 import {PROJECTION_FIXTURE_COLUMNS,makeClusteringContractRows,clusteringGraphContractRows} from './worldViewProjectionFixture.mjs'
 const require=createRequire((process.env.MIP_BROWSER_PACKAGE ?? '/tmp/mip-browser')+'/package.json'),{chromium}=require('playwright')
 const output=process.env.MIP_INTEGRATION_EVIDENCE ?? '/workspace/mip-oct02/evidence/lane1-2'
 await mkdir(output,{recursive:true})
 const base=process.env.MIP_INTEGRATION_BASE ?? 'http://127.0.0.1:4178/media-intelligence-platform-v2/'
-const candidate=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
+const candidate=process.env.MIP_INTEGRATION_CANDIDATE ?? spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
+assert.match(candidate,/^[a-f0-9]{40}$/)
+const harnessSha256=createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex')
 const scenario=process.env.MIP_INTEGRATION_SCENARIO ?? 'city'
 const template={...Object.fromEntries(PROJECTION_FIXTURE_COLUMNS.map(k=>[k,null])),projection_contract_version:'v1',mip_object_id:'synthetic',subject_graph_node_id:'synthetic',revision_id:'synthetic',revision_ordinal:1,revision_known_at_utc:'2025-12-01T00:00:00Z',review_effective_at_utc:'2026-01-01T12:00:00Z',release_effective_at_utc:'2025-12-01T00:00:00Z',precision_class:scenario==='facility'?'facility':'city',object_type:'event',spatial_role:'event',geometry_status:'coarsened_to_precision_class',release_state:'released',review_state:'reviewed',valid_from_utc:'2026-01-01T00:00:00Z',valid_to_utc:'2026-01-02T00:00:00Z',display_geometry:{type:'Point',coordinates:[-81.7,41.4]},evidence_refs:[]}
 const faultJourney=process.env.MIP_SOURCE_FAULTS==='1'
 const rows=makeClusteringContractRows(template,'US-local',{count:12}),graph=clusteringGraphContractRows(rows)
 const browser=await chromium.launch({headless:true,executablePath:process.env.MIP_BROWSER_EXECUTABLE ?? '/usr/bin/chromium',args:['--enable-unsafe-swiftshader']})
 const receipts=[]
+let activePage=null
 try{
-for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,height:844},{width:844,height:390}]:[{width:1280,height:900}]){
+const viewports=process.env.MIP_INTEGRATION_VIEWPORTS ? JSON.parse(process.env.MIP_INTEGRATION_VIEWPORTS) : scenario==='city'?[{width:1280,height:900},{width:390,height:844},{width:844,height:390}]:[{width:1280,height:900}]
+assert.ok(Array.isArray(viewports)&&viewports.length>0&&viewports.length<=4&&viewports.every(v=>Number.isInteger(v.width)&&v.width>=320&&v.width<=1920&&Number.isInteger(v.height)&&v.height>=320&&v.height<=1200))
+for(const viewport of viewports){
  const page=await browser.newPage({viewport}),errors=[],requests=[]
+ activePage=page
  page.on('pageerror',e=>errors.push(e.message))
  if(scenario==='atlas')await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return /webgl/i.test(kind)?null:original.call(this,kind,...args)}})
  await page.route('**/*',async route=>{
@@ -48,7 +55,7 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
   window.__MIP_TEST_BRIDGE__={services:{sources:[source],estimateBytes:()=>{estimates++;if(mode==='estimate')throw Error('TEST estimator');return 100},getRequest:()=>scope,subscribeRequestChanges:cb=>{callback=cb;return()=>{callback=null}},transport:{load:async()=>{loads++;if(mode==='defer')await new Promise(resolve=>deferred.push(resolve));return{observedBytes:10,dispose(){disposals++}}}},renderer:{attach:async(l,d)=>({observation:{sourceId:d.sourceId,status:'active',rendered:true,successes:1,attributionVisible:true,bounds:d.bounds,level:d.level,ancestry:'direct'},dispose(){}})}},wrapBudget:budget=>({...budget,reserve:value=>{reserves++;if(mode==='reserve'){reserveFaults++;throw Error('TEST reserve')}return budget.reserve(value)}}),mode:v=>{mode=v},scope:v=>{scope=v;callback?.()},refresh:()=>callback?.(),settle:()=>deferred.splice(0).forEach(fn=>fn()),stats:()=>({loads,disposals,estimates,reserves,reserveFaults})}
  })
  await page.goto(base+'?worldViewPrototype=1')
- await page.getByRole('tablist',{name:'Evidence views',exact:true}).getByRole('tab',{name:'World View',exact:true}).click()
+ await page.getByRole('navigation',{name:'Evidence views',exact:true}).getByRole('button',{name:'World View',exact:true}).click()
  await page.waitForFunction(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getState()?.layout?.stats?.inputCount===12,{},{timeout:60000})
  const state=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getState())
  assert.equal(state.layout.stats.inputCount,12)
@@ -71,8 +78,8 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  assert.ok(selected,'full App member choice commits canonical original endpoint')
  if(scenario!=='atlas')await page.getByRole('button',{name:'Stop camera flight',exact:true}).click()
  const native=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getBillboardState()?.native ?? null)
- if(scenario!=='atlas')assert.ok(native.markers.every(marker=>marker.disableDepthTestDistance===0 && marker.heightReference===2))
- if(scenario==='facility')assert.ok(native.markers.some(marker=>marker.width===132&&marker.height===32),'facility precision floor permits native medium ribbon')
+ if(scenario!=='atlas')assert.ok(native.markers.every(marker=>marker.disableDepthTestDistance===0 && marker.heightReference===0))
+ if(scenario==='facility')assert.ok(native.markers.some(marker=>marker.width===180&&marker.height===56),'facility legal precision floor permits native scope plaque')
  const before=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
 
 
@@ -123,6 +130,33 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
 
  if(scenario!=='atlas'){
   const tabs=page.getByRole('tablist',{name:'Selected record modules',exact:true})
+  if(!await tabs.count()){
+   // Inspector close returns to the compact native plaque. Explicitly pick
+   // that same projected marker; opening Explore does not reopen the card.
+   await controls.getByRole('button',{name:'Interact',exact:true}).click()
+   const nativeState=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CLUSTER_PROBE__.getBillboardState()?.native)
+   const marker=nativeState.markers.find(m=>m.key===nativeState.selected?.key) ?? nativeState.markers.find(m=>m.screen)
+   assert.ok(marker?.screen,'current native plaque has a projected pick point')
+   const canvas=page.locator('.cesium-widget canvas'),box=await canvas.boundingBox()
+   await page.mouse.click(box.x+marker.screen.x,box.y+marker.screen.y)
+   await tabs.waitFor({state:'visible'})
+   await controls.getByRole('button',{name:'Done — scroll',exact:true}).click()
+  }
+  // A native glyph also has an equivalent keyboard path. The transparent
+  // control must leave pointer ownership with Cesium and show keyboard focus.
+  const opener=page.getByRole('button',{name:/^Open selected record card:/})
+  await page.getByRole('button',{name:'Close selected card',exact:true}).click()
+  await page.locator('.wv-explore-map').screenshot({path:`${output}/compact-glyph-${scenario}-${viewport.width}x${viewport.height}.png`})
+  await opener.focus()
+  await opener.press('Shift+Tab')
+  await page.keyboard.press('Tab')
+  assert.equal(await opener.evaluate(n=>document.activeElement===n),true,'native equivalent is reachable by sequential keyboard navigation')
+  assert.equal(await opener.evaluate(n=>getComputedStyle(n).pointerEvents),'none')
+  assert.notEqual(await opener.evaluate(n=>getComputedStyle(n).outlineStyle),'none')
+  const beforeKeyboard=await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState())
+  await opener.press('Enter')
+  await tabs.waitFor({state:'visible'})
+  assert.equal(await page.evaluate(()=>window.__MIP_WORLD_VIEW_CAMERA_PROBE__.getCameraState()),beforeKeyboard,'keyboard expansion preserves camera')
   for(const tab of ['Context','Sources','Evidence'])await tabs.getByRole('tab',{name:tab,exact:true}).click()
   await page.locator('.wv-explore-map').screenshot({path:`${output}/selected-reader-${scenario}-${viewport.width}x${viewport.height}.png`})
   await page.getByRole('button',{name:'Open inspector',exact:true}).click()
@@ -178,5 +212,12 @@ for(const viewport of scenario==='city'?[{width:1280,height:900},{width:390,heig
  receipts.push({candidate,scenario,viewport,native,qualification:'synthetic-full-App-only-no-live-reader-or-provider',renderer:state.rendererKind,inputs:state.layout.stats.inputCount,selectedKey:selected,exploreGeometry,journeys:scenario==='atlas'?['Map/Graph/Split forced native failure→Atlas','Atlas group inspect/member Space choice','bound time/same-endpoint relationship inspection','Explore positive viewport/attribution floor','Atlas remount context/no unsupported camera']:['Map/Graph/Split','native group inspect/member Space choice','selected modules/tether/explicit inspector camera retention','bound time/same-endpoint relationship inspection','Explore positive native viewport/attribution floor/keyboard chooser collapse/reader tabs/explicit inspector','Graph→native Map remount camera/context retention'],errors,nonlocalGETs:requests.filter(r=>r.method==='GET').length,mockedHEADs:requests.filter(r=>r.method==='HEAD'),blockedNonReadMethods:requests.filter(r=>!['GET','HEAD'].includes(r.method)),screenshot})
  await page.close()
 }
-await writeFile(`${output}/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,receipts},null,2))
+await writeFile(`${output}/full-app-${scenario}-synthetic.json`,JSON.stringify({candidate,harnessSha256,status:'PASS',receipts},null,2))
+}catch(error){
+ await writeFile(`${output}/full-app-${scenario}-synthetic-partial.json`,JSON.stringify({candidate,harnessSha256,status:'FAILED_INCOMPLETE',completedReceipts:receipts,error:error.message},null,2))
+ if(activePage){
+  try{await activePage.screenshot({path:output+'/failure.png',fullPage:true})}catch{}
+  try{await writeFile(output+'/failure-state.json',JSON.stringify(await activePage.evaluate(()=>({text:document.body.innerText,native:window.__MIP_WORLD_VIEW_CLUSTER_PROBE__?.getBillboardState?.(),context:document.querySelector('.wv-view')?.outerHTML?.slice(0,3000)})),null,2))}catch{}
+ }
+ throw error
 }finally{await browser.close()}
