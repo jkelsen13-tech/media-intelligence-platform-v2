@@ -1,5 +1,6 @@
 GRANT UPDATE,DELETE,INSERT ON ALL TABLES IN SCHEMA mip_comparison_install,mip_native_activation TO postgres;
 CREATE OR REPLACE FUNCTION mip_factual_transport_raw.dblink(uri text,query text) RETURNS SETOF record LANGUAGE plpgsql AS $$ BEGIN
+ IF current_setting('synthetic.probe_mode',true)='slow' THEN PERFORM pg_sleep(8); END IF;
  RETURN QUERY SELECT CASE WHEN current_setting('synthetic.probe_mode',true)='badidentity'
    OR split_part(split_part(uri,'@',1),'mip_native_audit_v1:',2) IS DISTINCT FROM current_setting('synthetic.expected_password',true)
    THEN 'wrong_synthetic_auditor' ELSE 'mip_native_audit_v1' END::text,

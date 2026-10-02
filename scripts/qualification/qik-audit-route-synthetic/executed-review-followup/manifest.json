@@ -1,0 +1,429 @@
+{
+  "runnerSha256": "6b4db24f0c0c34e864b92cc0f9001f8d42910dd8b2273105cbb4a5ed879e8bd2",
+  "scope": "SYNTHETIC ONLY; no real CA/TLS/dblink/provider log qualification",
+  "head": "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+  "version": "PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit\n",
+  "imageId": "sha256:50903ccdcab597707a1f61c7ae016a06b0b548da53a6f7ad716d56b072bedba0",
+  "imageRepoDigests": [
+    "postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929"
+  ],
+  "networkMode": "none",
+  "deadlineFragmentSha256": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d",
+  "bootstrapSha256": "72059c67b996f37e9094433b8446865f57c75358f264520882245472180a092e",
+  "extrasSha256": "5899132105bd97a0948f07869c003a06e34416651d981fa0a0a8c3d48f760be9",
+  "historicalSha256": "4e574834ecae813985733c8c39041c914ac414682524afad4d320e4af74ddffa",
+  "proposalSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46",
+  "executed": [
+    {
+      "case": "preexisting-column-privilege-success",
+      "sqlSha256": "63380a8f0607c658b572589f2c37f3653f75129d27ec82d2665f76015a468762",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "opaque-ampersand-password-success",
+      "sqlSha256": "8792bbe885380cf37e0848b85f4e0967b7ea54beb2b114f3bad68b9ac033b493",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "ordinary-success",
+      "sqlSha256": "829737aa1a749e88ceb02711d9384010ffa39d0ee74674ef76bfae916ee11438",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "query-sentinel-success",
+      "sqlSha256": "a73fb5af4485c3456edbd0cf14a46e5eb9d343c2afa1732290c84a0a6ffe197e",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "username-sentinel-success",
+      "sqlSha256": "ffafe316a02b46da93473969ba08c0a6eb0c7633384d7f43cf3ba502847a8804",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "historical-query-sentinel-red",
+      "sqlSha256": "e4df39665750f20d3f74ae2c0b765d69698fbcca9a87fadc609e38de29f7257c",
+      "importedSourceSha256": "4e574834ecae813985733c8c39041c914ac414682524afad4d320e4af74ddffa"
+    },
+    {
+      "case": "historical-username-sentinel-red",
+      "sqlSha256": "9505e8242947879e210c49f43fca510cf575c80ecd004bec351520ac409e7df5",
+      "importedSourceSha256": "4e574834ecae813985733c8c39041c914ac414682524afad4d320e4af74ddffa"
+    },
+    {
+      "case": "missing-selected-true-row",
+      "sqlSha256": "3e12e60bb6e3e83c6f6305c36478ca070dfba4a5c2e3464949bdafde20de60b2",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "false-id-only",
+      "sqlSha256": "3e12e60bb6e3e83c6f6305c36478ca070dfba4a5c2e3464949bdafde20de60b2",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "unrelated-false-id-row-success",
+      "sqlSha256": "5ff0ed4997908a7c42a0af8e35f6cbb409a51be82255b5a843b8aa0a6bc74a57",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "unsafe-logging-guard",
+      "sqlSha256": "d758ab687ac899c8f8da4511c2316c4f550f047251d242b855e5b7e7094c028b",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "missing-update",
+      "sqlSha256": "b268986dd0518353574f6636bb63f1961c85288fb5e6afda80c64ae24933c8a4",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "missing-operation",
+      "sqlSha256": "bbe63f1d8320e19dfb62f6120b3e70a508b7af9d3ae8b90a56299a36238a4d83",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "wrong-operation",
+      "sqlSha256": "e0e764cdd331d16d7f3c66f6d832e0a35d0e720d03bc0dfb0e4d3178421988cd",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "duplicate-singleton",
+      "sqlSha256": "d0b2ad41c56f70a885b5fe7bc1fe4dcba21f1ff9493aa624f962244df6be4ac3",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "malformed-source",
+      "sqlSha256": "97b21330912bb0d290175a4d9224c80b6cd69b944529f331065e46dde670bd46",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "duplicate-parameter",
+      "sqlSha256": "d0f53ca41e6da69cac3490377b0256a0f7a6d9359fdfba066ea6129c1e9ca08d",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "already-applied",
+      "sqlSha256": "8de148a645478470c45a874b2fc8ac31793bb617f0d4a60c719be9584c164b46",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "bad-auditor",
+      "sqlSha256": "2e695e94ad96e838669e4a9fed5284be564c77f5d86dfdc133b8c8dbeb3c0241",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "bad-tls",
+      "sqlSha256": "d0841da39d14bd178916c86461e63ff5c2cf174ee7a9bbb3885f76a5668369cc",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "rowcount-zero",
+      "sqlSha256": "7a46174a04d36f6dfece063ede4c1ceb48ffce1d0e13d25fcb373c822775acfb",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "independent-session-lock-contention",
+      "sqlSha256": "a53729f674477f42b833d4913a98e091536429a7da893e610a4122844b621bdf",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "inside-do-timeout-red",
+      "sqlSha256": "4c1b7a499e20660611b79ba142cd086be17345330b3ade427cfcb8c8632bf845",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "case": "pre-submission-timeout-green",
+      "sqlSha256": "78ff47b08e60e58805829782be9478fda085a16c05b2874cd068d1bf1f448608",
+      "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    }
+  ],
+  "results": [
+    {
+      "name": "preexisting-column-privilege-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "opaque-ampersand-password-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "ordinary-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "query-sentinel-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "username-sentinel-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "historical-query-sentinel-red",
+      "pass": true,
+      "expectedRefusal": "probe_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "historical-username-sentinel-red",
+      "pass": true,
+      "expectedRefusal": "probe_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "missing-selected-true-row",
+      "pass": true,
+      "expectedRefusal": "missing-row",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "false-id-only",
+      "pass": true,
+      "expectedRefusal": "missing-row",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "unrelated-false-id-row-success",
+      "pass": true,
+      "expectedRefusal": null,
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "unsafe-logging-guard",
+      "pass": true,
+      "expectedRefusal": "logging_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "missing-update",
+      "pass": true,
+      "expectedRefusal": "grant_missing",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "missing-operation",
+      "pass": true,
+      "expectedRefusal": "state_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "wrong-operation",
+      "pass": true,
+      "expectedRefusal": "state_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "duplicate-singleton",
+      "pass": true,
+      "expectedRefusal": "state_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "malformed-source",
+      "pass": true,
+      "expectedRefusal": "source_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "duplicate-parameter",
+      "pass": true,
+      "expectedRefusal": "source_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "already-applied",
+      "pass": true,
+      "expectedRefusal": "already_applied",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "bad-auditor",
+      "pass": true,
+      "expectedRefusal": "probe_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "bad-tls",
+      "pass": true,
+      "expectedRefusal": "probe_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "rowcount-zero",
+      "pass": true,
+      "expectedRefusal": "write_refused",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    },
+    {
+      "name": "independent-session-lock-contention",
+      "pass": true,
+      "expectedRefusal": "inflight",
+      "exactWithinTransactionAclMembershipGrantorRolesPoliciesRestored": true,
+      "semanticWithinTransactionAuthorityRestored": true,
+      "exactPreRollbackAttacl": true,
+      "exactAfterRollbackRowAclMembershipGrantorRolesPoliciesRestored": true
+    }
+  ],
+  "timeoutResults": [
+    {
+      "name": "inside-do-timeout-red",
+      "pass": true,
+      "statementDurationMs": 8013.011,
+      "durationMs": 8107.803802,
+      "transactionAborted": false,
+      "exactRollbackRestoration": true
+    },
+    {
+      "name": "pre-submission-timeout-green",
+      "pass": true,
+      "statementDurationMs": 7000.688,
+      "durationMs": 7090.166205999998,
+      "transactionAborted": true,
+      "exactRollbackRestoration": true
+    }
+  ],
+  "pass": 24,
+  "fail": 0,
+  "baselineBefore": {
+    "rls": [
+      "mip_cutover_schema_owner_v1",
+      true,
+      true
+    ],
+    "row": [
+      {
+        "id": true,
+        "connection_string": "postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:dummy_sslrootcert=system_sentinel@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslrootcert=system&sslmode=verify-full&connect_timeout=5"
+      }
+    ],
+    "roles": [
+      [
+        "mip_cutover_schema_owner_v1",
+        false,
+        false
+      ],
+      [
+        "postgres",
+        false,
+        true
+      ]
+    ],
+    "attacl": [
+      [
+        "id",
+        null
+      ],
+      [
+        "connection_string",
+        null
+      ]
+    ],
+    "relacl": "{mip_cutover_schema_owner_v1=arwdDxtm/mip_cutover_schema_owner_v1,mip_factual_owner_v3=ar/mip_cutover_schema_owner_v1,synthetic_reader=r/mip_cutover_schema_owner_v1}",
+    "policies": [
+      {
+        "oid": "16399",
+        "polcmd": "*",
+        "polname": "factual_kernel",
+        "polqual": "{CONST :consttype 16 :consttypmod -1 :constcollid 0 :constlen 1 :constbyval true :constisnull false :location -1 :constvalue 1 [ 1 0 0 0 0 0 0 0 ]}",
+        "polrelid": "16392",
+        "polroles": [
+          "16387"
+        ],
+        "polwithcheck": "{CONST :consttype 16 :consttypmod -1 :constcollid 0 :constlen 1 :constbyval true :constisnull false :location -1 :constvalue 1 [ 1 0 0 0 0 0 0 0 ]}",
+        "polpermissive": true
+      }
+    ],
+    "membership": [
+      [
+        "mip_cutover_schema_owner_v1",
+        "supabase_admin",
+        true,
+        false,
+        false
+      ],
+      [
+        "synthetic_reader",
+        "bootstrap_super",
+        false,
+        true,
+        false
+      ]
+    ]
+  },
+  "cleanup": {
+    "ownedContainer": "qik-synthetic-177333",
+    "removed": true,
+    "remainingMatchingContainers": 0
+  }
+}

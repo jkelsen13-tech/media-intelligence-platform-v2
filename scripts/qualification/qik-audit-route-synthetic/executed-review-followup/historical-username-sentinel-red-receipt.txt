@@ -1,0 +1,24 @@
+BEGIN
+SELECT 1
+GRANT ROLE
+SET
+DO
+GRANT
+RESET
+UPDATE 1
+dummy_postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:_sentinel
+SELECT 1
+SET
+SET
+DO
+DO
+SET
+REVOKE
+RESET
+REVOKE ROLE
+DO
+DO
+WITHIN_TRANSACTION_SEMANTIC_AUTHORITY_RESTORED
+PRE_ROLLBACK_ATTACL_EXACT:true
+ROLLBACK
+{"rls": ["mip_cutover_schema_owner_v1", true, true], "row": [{"id": true, "connection_string": "postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:dummy_sslrootcert=system_sentinel@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslrootcert=system&sslmode=verify-full&connect_timeout=5"}], "roles": [["mip_cutover_schema_owner_v1", false, false], ["postgres", false, true]], "attacl": [["id", null], ["connection_string", null]], "relacl": "{mip_cutover_schema_owner_v1=arwdDxtm/mip_cutover_schema_owner_v1,mip_factual_owner_v3=ar/mip_cutover_schema_owner_v1,synthetic_reader=r/mip_cutover_schema_owner_v1}", "policies": [{"oid": "16399", "polcmd": "*", "polname": "factual_kernel", "polqual": "{CONST :consttype 16 :consttypmod -1 :constcollid 0 :constlen 1 :constbyval true :constisnull false :location -1 :constvalue 1 [ 1 0 0 0 0 0 0 0 ]}", "polrelid": "16392", "polroles": ["16387"], "polwithcheck": "{CONST :consttype 16 :consttypmod -1 :constcollid 0 :constlen 1 :constbyval true :constisnull false :location -1 :constvalue 1 [ 1 0 0 0 0 0 0 0 ]}", "polpermissive": true}], "membership": [["mip_cutover_schema_owner_v1", "supabase_admin", true, false, false], ["synthetic_reader", "bootstrap_super", false, true, false]]}
