@@ -42,6 +42,7 @@ import {
 import {
   cameraStateFromMapCamera,
   mapCameraForCameraState,
+  createWorldViewRendererAdapter,
 } from '../src/lib/worldViewRendererAdapter.js'
 import {
   applyCameraStateToGlobeViewer,
@@ -280,10 +281,41 @@ test('camera state stays out of Investigation Context and deep-link routes', () 
   assert.match(MAP_CANVAS, /__MIP_WORLD_VIEW_CAMERA_PROBE__/)
 })
 
-test('adapter wiring: both renderers and the dispatcher expose the camera contract', () => {
-  // Dispatcher passthrough.
-  assert.match(ADAPTER, /getCameraState:\s*\(\)\s*=>\s*impl\?\.getCameraState/)
-  assert.match(ADAPTER, /setCameraState:\s*\(serialized\)\s*=>\s*impl\?\.setCameraState/)
+test('adapter wiring: both renderers and the dispatcher expose the camera contract', async () => {
+  // Exercise actual dispatcher delegation and the destruction gate, including
+  // an implementation retained for native teardown retry after cancellation.
+  const serialized = serializeCameraState(subjectEllipsoidCamera(CLEVELAND, 'city'), 'city')
+  for (const stackId of ['openfreemap-positron', 'ellipsoid-globe']) {
+    const calls = []
+    let released = false, destroys = 0
+    const impl = {
+      mount: async () => {}, setFeatures: async () => {},
+      getCameraState() { calls.push(['get']); return serialized },
+      setCameraState(value) { calls.push(['set', value]); return value === serialized },
+      destroy() { destroys++; return released },
+    }
+    const adapter = createWorldViewRendererAdapter({ stackId }, {
+      createMapAdapter: () => impl,
+      loadGlobeAdapter: async () => ({ createCesiumEllipsoidRendererAdapter: () => impl }),
+    })
+    assert.equal(adapter.getCameraState(), null)
+    assert.equal(adapter.setCameraState(serialized), false)
+    await adapter.mount()
+    assert.equal(adapter.getCameraState(), serialized)
+    assert.equal(adapter.setCameraState(serialized), true)
+    assert.deepEqual(calls, [['get'], ['set', serialized]])
+    assert.equal(adapter.destroy(), false, 'failed native teardown retains the implementation')
+    assert.equal(destroys, 1)
+    calls.length = 0
+    assert.equal(adapter.getCameraState(), null, 'destroyed facade cannot expose a retained camera')
+    assert.equal(adapter.setCameraState(serialized), false, 'destroyed facade cannot restore a retained camera')
+    assert.deepEqual(calls, [], 'cancellation prevents delegation even while the implementation survives')
+    released = true
+    assert.equal(adapter.destroy(), true)
+    assert.equal(destroys, 2)
+    assert.equal(adapter.getCameraState(), null)
+    assert.equal(adapter.setCameraState(serialized), false)
+  }
   // MapLibre adapter restores via jumpTo with the precision-capped camera.
   assert.match(ADAPTER, /mapCameraForCameraState\(parsed, activePrecisionClass\(\), precisionGovernor\?\.width\(\)\)/)
   assert.match(ADAPTER, /map\.jumpTo/)

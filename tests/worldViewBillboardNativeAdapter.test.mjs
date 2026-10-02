@@ -23,8 +23,9 @@ function fixture(precision='city'){
  const C=MathCesium,listeners=new Set(),probes={collections:[],handlers:[],removedHosts:0,requests:0,terrainHeight:184.5,yaw:0,terrainBlocks:false,selectedAnchors:[]}
  const size={width:1280,height:900}
  const event=()=>({addEventListener(fn){listeners.add(fn);return()=>listeners.delete(fn)}})
- const doc={createElement:()=>({style:{},isConnected:true,querySelector:()=>null,getContext:()=>({measureText:text=>({width:text.length*7})}),remove:()=>probes.removedHosts++})}
- const host={ownerDocument:doc,appendChild(){}}
+ const doc={createElement:()=>({style:{},isConnected:false,querySelector:()=>null,getContext:()=>({measureText:text=>({width:text.length*7})}),
+  remove(){if(!this.isConnected)return;this.isConnected=false;probes.removedHosts++}})}
+ const host={ownerDocument:doc,appendChild(element){element.isConnected=true}}
  const screen=point=>{
   const coord=C.Cartographic.fromCartesian(point)
   return new C.Cartesian2(size.width/2+(C.Math.toDegrees(coord.longitude)+81.7)*2400-probes.yaw,Math.min(size.height-90,240)-coord.height*.04)
@@ -32,7 +33,8 @@ function fixture(precision='city'){
  class Collection{constructor(){this.values=[];probes.collections.push(this)}get length(){return this.values.length}removeAll(){this.values=[]}
   add(options){const value={...options,show:true,heightReference:C.HeightReference.NONE,computeScreenSpacePosition:()=>screen(options.position)};this.values.push(value);return value}get(index){return this.values[index]}}
  let viewer
- class Viewer{constructor(){
+ class Viewer{constructor(element){
+  this.element=element
   this.destroyed=false;this.clock={currentTime:C.JulianDate.fromIso8601('2024-04-08T18:00:00Z'),shouldAnimate:false}
   this.camera={positionCartographic:new C.Cartographic(C.Math.toRadians(-81.7),C.Math.toRadians(41.4),heightMetersForPrecisionClass(precision)),
    positionWC:C.Cartesian3.fromDegrees(-81.7,41.4,heightMetersForPrecisionClass(precision)),heading:0,pitch:-Math.PI/2,roll:0,
@@ -115,6 +117,7 @@ test('actual adapter enters a supported city scope plaque at its existing floor,
 
 test('actual adapter preserves selected canonical tether through mobile orientation and terrain occlusion, then releases native ownership',async t=>{
  await runFixture(t,async(f,adapter)=>{
+  assert.equal(f.viewer().element.isConnected,true)
   adapter.getDisplayLayout()
   for(const [width,height] of [[390,844],[844,390]]){
    f.viewport(width,height);adapter.getDisplayLayout()
@@ -132,7 +135,8 @@ test('actual adapter preserves selected canonical tether through mobile orientat
   assert.equal(f.viewer().destroyed,true)
   assert.equal(f.probes.handlers[0].destroyed,true)
   assert.equal(f.listeners.size,0)
-  assert.equal(f.probes.removedHosts,1)
+  assert.equal(f.viewer().element.isConnected,false)
+  assert.equal(f.probes.removedHosts,1,'the connected owned host is detached once; repeated DOM remove calls are inert')
   assert.deepEqual(adapter.getBillboardState().markers,[])
  })
 })

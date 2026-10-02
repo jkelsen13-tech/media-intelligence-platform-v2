@@ -17,6 +17,16 @@ function deferred() {
   const promise = new Promise(yes => { resolve = yes })
   return { promise, resolve }
 }
+// Canvas registers each adapter before mounting. Readiness doubles provide the
+// same typed healthy teardown proof without claiming native/GPU resources.
+function healthyNativeOwnership(onDestroy) {
+  let destroyed = false
+  return {
+    getSourceImageryState: () => ({ available: !destroyed, status: destroyed ? 'unavailable' : 'idle',
+      nativeTeardownPending: false, ownedPhotoLayerCount: 0, retainedRgbaBytes: 0, bitmapLeaseCount: 0 }),
+    destroy() { if (!destroyed) { destroyed = true; onDestroy?.() } return true },
+  }
+}
 const available = visualFidelityCapabilities({ fxaa: true })
 function fxaaProfile() {
   const category = reduceVisualFidelityProfile(defaultVisualFidelityProfile(),
@@ -126,6 +136,7 @@ test('canvas commits current FXAA capability controls before ready camera framin
   let engineEnabled = false, rendererReady = false, destroys = 0
   const fixture = {
     createAdapter: args => ({
+      ...healthyNativeOwnership(() => { destroys++ }),
       mount: () => started.promise.then(() => {
         rendererReady = true; engineEnabled = true
         args.onDisplayLayout?.({
@@ -138,7 +149,6 @@ test('canvas commits current FXAA capability controls before ready camera framin
       setVisualFidelityProfile: profile => { if (rendererReady) engineEnabled = resolveVisualFidelityProfile(profile, available).fxaa },
       getVisualFidelityCapabilities: () => rendererReady ? available : unavailable,
       getVisualFidelityRenderState: () => ({ fxaa: { enabled: engineEnabled } }),
-      destroy() { destroys++ },
     }),
   }
   const { Canvas, Panel } = await loadCanvas(t, fixture)
@@ -229,7 +239,7 @@ test('atlas resize reprojects unchanged-scale viewport translation and extent, a
 test('renderer observer delivery publishes only the latest presentation after delivery and cancels stale UI frames', async t => {
   let root
   const previousWindow = globalThis.window
-  let frameNumber = 0, insideObserver = false, adapterArgs
+  let frameNumber = 0, insideObserver = false, adapterArgs, adapter, destroys = 0
   const frames = new Map(), cancelled = [], received = []
   const view = {
     requestAnimationFrame(callback) { const id = ++frameNumber; frames.set(id, callback); return id },
@@ -244,9 +254,10 @@ test('renderer observer delivery publishes only the latest presentation after de
   const { Canvas } = await loadCanvas(t, {
     createAdapter: args => {
       adapterArgs = args
-      return {
+      return adapter = {
+        ...healthyNativeOwnership(() => { destroys++ }),
         mount: async () => {}, setFeatures: async () => {}, setOnSelectRow() {}, setRelationships() {},
-        setRecordedTimeInstant() {}, setVisualFidelityProfile() {}, destroy() {},
+        setRecordedTimeInstant() {}, setVisualFidelityProfile() {},
         getVisualFidelityCapabilities: () => visualFidelityCapabilities(),
       }
     },
@@ -296,6 +307,11 @@ test('renderer observer delivery publishes only the latest presentation after de
   await act(async () => { staleFrame(); adapterArgs.onDisplayLayout(latest) })
   assert.equal(received.length, count, 'cancelled frames and disposed renderer callbacks must not publish')
   assert.equal(view.__MIP_WORLD_VIEW_CLUSTER_PROBE__, undefined)
+  assert.equal(destroys, 1)
+  assert.equal(adapter.destroy(), true)
+  assert.equal(destroys, 1, 'repeated cleanup cannot destroy the readiness fixture instance twice')
+  assert.deepEqual(adapter.getSourceImageryState(), { available: false, status: 'unavailable',
+    nativeTeardownPending: false, ownedPhotoLayerCount: 0, retainedRgbaBytes: 0, bitmapLeaseCount: 0 })
 })
 
 
