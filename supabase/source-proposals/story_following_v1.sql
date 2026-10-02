@@ -3,6 +3,47 @@
 begin;
 set local lock_timeout = '5s';
 set local statement_timeout = '30s';
+set local search_path = pg_catalog;
+lock table mip_private.reviewed_public_stories,mip_private.reviewed_public_story_versions,
+  mip_private.reviewed_public_story_members,public.mip_profiles,public.articles,public.nodes in share row exclusive mode;
+do $preflight$
+declare actual jsonb; expected text:=current_setting('mip.story_following_expected_catalog',true);
+begin
+  -- BEGIN STORY FOLLOWING BASELINE
+  select jsonb_build_object(
+    'schema_owner',(select pg_get_userbyid(nspowner) from pg_namespace where nspname='mip_private'),
+    'schema_acl',(select jsonb_agg(jsonb_build_object('grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,
+      'grantor',pg_get_userbyid(a.grantor),'privilege',a.privilege_type,'grantable',a.is_grantable) order by a.grantee,a.grantor,a.privilege_type)
+      from pg_namespace n cross join lateral aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a where n.nspname='mip_private'),
+    'relations',(select jsonb_agg(jsonb_build_object('identity',c.oid::regclass::text,'owner',pg_get_userbyid(c.relowner),
+      'acl',c.relacl::text,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,
+      'columns',(select jsonb_agg(jsonb_build_object('name',a.attname,'type',format_type(a.atttypid,a.atttypmod),'acl',a.attacl::text) order by a.attnum)
+        from pg_attribute a where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),
+      'constraints',(select coalesce(jsonb_agg(pg_get_constraintdef(x.oid) order by x.conname),'[]') from pg_constraint x where x.conrelid=c.oid),
+      'policies',(select coalesce(jsonb_agg(jsonb_build_object('name',p.polname,'cmd',p.polcmd,'roles',p.polroles,
+        'using',pg_get_expr(p.polqual,p.polrelid),'check',pg_get_expr(p.polwithcheck,p.polrelid)) order by p.polname),'[]') from pg_policy p where p.polrelid=c.oid),
+      'triggers',(select coalesce(jsonb_agg(jsonb_build_object('name',t.tgname,'enabled',t.tgenabled,'definition',pg_get_triggerdef(t.oid),
+        'function',pg_get_functiondef(t.tgfoid)) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.oid::regclass::text)
+      from pg_class c where c.oid=any(array['mip_private.reviewed_public_stories'::regclass,'mip_private.reviewed_public_story_versions'::regclass,
+        'mip_private.reviewed_public_story_members'::regclass,'public.mip_profiles'::regclass,'public.articles'::regclass,'public.nodes'::regclass])),
+    'functions',(select jsonb_agg(jsonb_build_object('identity',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),
+      'acl',p.proacl::text,'definition',pg_get_functiondef(p.oid)) order by p.oid::regprocedure::text) from pg_proc p
+      where p.oid=any(array['public.read_reviewed_public_story_v1(uuid,uuid)'::regprocedure,
+        'mip_private.public_story_version_is_visible(uuid)'::regprocedure])),
+    'roles',(select jsonb_agg(jsonb_build_object('name',r.rolname,'superuser',r.rolsuper,'bypass_rls',r.rolbypassrls,
+      'memberships',(select coalesce(jsonb_agg(jsonb_build_object('role',pg_get_userbyid(m.roleid),'grantor',pg_get_userbyid(m.grantor),
+        'admin',m.admin_option,'inherit',m.inherit_option,'set',m.set_option) order by m.roleid,m.grantor),'[]') from pg_auth_members m where m.member=r.oid)) order by r.rolname)
+      from pg_roles r where r.rolname in ('anon','authenticated','service_role')),
+    'new_objects',(select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by c.relname),'[]') from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='mip_private' and c.relname in ('public_story_material_changes','public_story_follows','public_story_follow_events'))
+  ) into actual;
+  -- END STORY FOLLOWING BASELINE
+  if nullif(expected,'') is null or actual is distinct from expected::jsonb then raise exception 'Story Following catalog baseline missing or drifted'; end if;
+  if actual->'new_objects'<>'[]'::jsonb then raise exception 'Story Following package already installed'; end if;
+  if current_user in ('anon','authenticated','service_role') or actual->>'schema_owner' is distinct from current_user
+    or exists(select 1 from jsonb_array_elements(actual->'relations') r where r->>'owner' is distinct from current_user)
+    then raise exception 'exact existing public story, profile and publication owner required'; end if;
+end $preflight$;
 
 create table mip_private.public_story_material_changes (
   material_change_id uuid primary key,
@@ -85,6 +126,8 @@ begin
     then raise exception using errcode='22023',message='invalid material declaration'; end if;
   change_id := (p_input->>'material_change_id')::uuid;
   if change_id is null or (p_input->>'effective_at')::timestamptz is null then raise exception using errcode='22023',message='missing material identity or clock'; end if;
+  if p_input->>'effective_at' !~ '^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}(:?\d{2})?)$'
+    then raise exception using errcode='22023',message='explicit material clock offset required'; end if;
   select * into after_v from mip_private.reviewed_public_story_versions where public_version_id=(p_input->>'public_version_id')::uuid;
   select * into before_v from mip_private.reviewed_public_story_versions where public_version_id=(p_input->>'previous_public_version_id')::uuid;
   select * into s from mip_private.reviewed_public_stories where story_id=(p_input->>'story_id')::uuid;
@@ -101,6 +144,7 @@ begin
     from mip_private.reviewed_public_story_members where public_version_id=before_v.public_version_id;
   if refs is null or cardinality(refs) <> (select count(distinct x) from unnest(refs) x)
     or not refs <@ after_members or reviews is null or not after_v.review_ref=any(reviews)
+    or not reviews <@ array[after_v.review_ref,before_v.review_ref]
     or cardinality(reviews) <> (select count(distinct x) from unnest(reviews) x)
     or p_input->>'policy_version' is distinct from after_v.policy_version
     or after_members=before_members
@@ -290,7 +334,8 @@ create policy public_story_follow_event_service on mip_private.public_story_foll
 
 create function public.read_reviewed_public_story_context_v1(p_story_id uuid,p_public_version_id uuid default null) returns jsonb
 language plpgsql stable security invoker set search_path = '' as $$
-declare story jsonb; selected_sequence bigint; changes jsonb:='[]'; evidence jsonb:='[]'; c record; envelope jsonb; member jsonb; n integer:=0;
+declare story jsonb; selected_sequence bigint; changes jsonb:='[]'; evidence jsonb:='[]'; c record; envelope jsonb; member jsonb;
+  n integer:=0; additional integer; truncated boolean:=false; result jsonb;
 begin
   story:=public.read_reviewed_public_story_v1(p_story_id,p_public_version_id);
   if story is null or public.read_reviewed_public_story_v1(p_story_id,null) is null then return null; end if;
@@ -298,16 +343,21 @@ begin
   for c in select material_change_id,story_id,subject_type,subject_id,public_version_id,previous_public_version_id,sequence,
     effective_at,declared_at,reason,evidence_refs,review_refs,policy_version,kind,importance,novelty,event_state
     from mip_private.public_story_material_changes where story_id=p_story_id and sequence<=selected_sequence order by sequence desc limit 101 loop
-    n:=n+1; if n>100 then exit; end if;
+    n:=n+1; if n>100 then truncated:=true; exit; end if;
     envelope:=public.read_reviewed_public_story_v1(p_story_id,c.public_version_id);
     if envelope is null then continue; end if;
+    select count(*)::integer into additional from unnest(c.evidence_refs) ref
+      where not exists(select 1 from jsonb_array_elements(evidence) x where x->>'public_version_id'=ref::text);
+    if jsonb_array_length(evidence)+additional>100 then truncated:=true; exit; end if;
     changes:=jsonb_build_array(to_jsonb(c)||jsonb_build_object('sequence',c.sequence::text,'materiality_owner','reviewed_publication_owner'))||changes;
     for member in select value from jsonb_array_elements(envelope->'members') where (value->>'public_version_id')::uuid=any(c.evidence_refs) loop
       if not exists(select 1 from jsonb_array_elements(evidence) x where x->>'public_version_id'=member->>'public_version_id') then evidence:=evidence||jsonb_build_array(member); end if;
     end loop;
   end loop;
-  return jsonb_build_object('contract','mip-public-story-context-v1','story',story,'material_changes',changes,
-    'evidence_versions',evidence,'has_more',n>100,'coverage','declared_material_changes_only');
+  result:=jsonb_build_object('contract','mip-public-story-context-v1','story',story,'material_changes',changes,
+    'evidence_versions',evidence,'has_more',truncated,'coverage','declared_material_changes_only');
+  if octet_length(result::text)>2097152 then return null; end if;
+  return result;
 end $$;
 
 revoke all on mip_private.public_story_material_changes,mip_private.public_story_follows,mip_private.public_story_follow_events from public,anon,authenticated,service_role;
@@ -333,6 +383,45 @@ end $$;
 revoke all on function mip_private.reject_public_story_material_mutation() from public,anon,authenticated,service_role;
 create trigger public_story_material_immutable before update or delete on mip_private.public_story_material_changes
 for each row execute function mip_private.reject_public_story_material_mutation();
+create trigger public_story_material_no_truncate before truncate on mip_private.public_story_material_changes
+for each statement execute function mip_private.reject_public_story_material_mutation();
+create trigger public_story_follow_event_immutable before update or delete on mip_private.public_story_follow_events
+for each row execute function mip_private.reject_public_story_material_mutation();
+create trigger public_story_follow_event_no_truncate before truncate on mip_private.public_story_follow_events
+for each statement execute function mip_private.reject_public_story_material_mutation();
+
+-- Existing owner withdrawal changes revoke preferences at the same transaction
+-- boundary. Foreground checks also cover other evidence eligibility changes.
+create function mip_private.revoke_ineligible_story_follows() returns trigger
+language plpgsql security invoker set search_path='' as $$
+declare f record; affected_id uuid;
+begin
+  affected_id:=case when tg_op='DELETE' then old.id else new.id end;
+  for f in select pref.user_id,pref.story_id from mip_private.public_story_follows pref
+    join mip_private.reviewed_public_stories s on s.story_id=pref.story_id
+    join lateral (select v.public_version_id from mip_private.reviewed_public_story_versions v where v.story_id=s.story_id order by v.sequence desc limit 1) head on true
+    where pref.status='active' and not mip_private.public_story_version_is_visible(head.public_version_id)
+      and ((tg_table_name='nodes' and s.subject_type='graph_node' and s.subject_id=affected_id)
+        or (tg_table_name='articles' and (s.subject_type='article' and s.subject_id=affected_id
+          or exists(select 1 from mip_private.reviewed_public_story_members m join mip_private.reviewed_public_article_versions a
+            on a.public_version_id=m.article_public_version_id where m.public_version_id=head.public_version_id and a.article_id=affected_id))))
+    order by pref.user_id,pref.story_id loop
+    perform mip_private.revoke_public_story_follow(f.user_id,f.story_id);
+  end loop;
+  return null;
+end $$;
+revoke all on function mip_private.revoke_ineligible_story_follows() from public,anon,authenticated,service_role;
+grant execute on function mip_private.revoke_ineligible_story_follows() to service_role;
+do $$ declare owner_name text; begin
+  select pg_get_userbyid(relowner) into owner_name from pg_class where oid='mip_private.reviewed_public_story_versions'::regclass;
+  execute format('create policy public_story_follow_owner on mip_private.public_story_follows for all to %I using (true) with check (true)',owner_name);
+  execute format('create policy public_story_follow_event_owner on mip_private.public_story_follow_events for all to %I using (true) with check (true)',owner_name);
+  execute format('grant execute on function mip_private.revoke_public_story_follow(uuid,uuid),mip_private.public_story_follow_payload(mip_private.public_story_follows),mip_private.revoke_ineligible_story_follows() to %I',owner_name);
+end $$;
+create trigger public_story_follow_article_withdrawal after update of reader_state,source_status,url,outlet,title,summary,published_at on public.articles
+for each row execute function mip_private.revoke_ineligible_story_follows();
+create trigger public_story_follow_subject_withdrawal after update of type or delete on public.nodes
+for each row execute function mip_private.revoke_ineligible_story_follows();
 comment on table mip_private.public_story_follows is 'Private foreground public Story Following. Separate from investigation preferences; explicit displayed-version ack, CAS, revocation, in-app only.';
 comment on table mip_private.public_story_material_changes is 'Append-only reviewed publication-owner declarations. Source-report permission does not admit a proposition; no automatic breaking classification.';
 commit;

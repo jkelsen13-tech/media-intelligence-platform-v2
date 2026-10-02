@@ -27,10 +27,10 @@ function fixture(overrides = {}) {
   return { handler, calls }
 }
 
-test('current private source candidate manifest matches the exact gateway and preserved domain source files', async () => {
+test('current launch source candidate manifest matches the exact gateway and preserved domain source files', async () => {
   const root = new URL('../', import.meta.url)
-  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-prelaunch-convergence-2026-10-02.json', root), 'utf8'))
-  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 12)
+  const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-launch-gates-2026-10-02.json', root), 'utf8'))
+  assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 16)
   for (const entry of manifest.files) {
     const content = (await readFile(new URL('../' + entry.path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n')
     assert.equal(createHash('sha256').update(content).digest('hex'), entry.sha256, entry.path)
@@ -52,6 +52,12 @@ test('current private source candidate manifest matches the exact gateway and pr
   for (const entry of manifest.sql_source_proposals) {
     assert.equal(entry.status, 'not_applied')
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path, root))).digest('hex'), entry.sha256, entry.path)
+  }
+  for (const entry of [...manifest.frontend_files,...manifest.story_following.installation_pack]) {
+    assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
+  }
+  for (const entry of manifest.previous_manifests) {
+    assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
 })
 

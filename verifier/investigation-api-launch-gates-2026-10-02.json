@@ -1,0 +1,242 @@
+{
+  "project_id": "qikvmopbtijoebdqosyq",
+  "function": "investigation-api",
+  "contract": "investigation-api-1",
+  "verify_jwt": true,
+  "status": "source_candidate_not_deployed",
+  "previous_manifests": [
+    {
+      "path": "verifier/investigation-api-input-identity-2026-09-08.json",
+      "sha256": "b62186ef13e2ec1db7bc838308a857e171a3f3b554efe8d32b2a659c933d93bf",
+      "status": "preserved"
+    },
+    {
+      "path": "verifier/investigation-api-private-following-2026-10-02.json",
+      "sha256": "333f78bd9cefa9872e269b68ba720021be663947b89ba52cf072ef5a866dfd78",
+      "status": "preserved"
+    },
+    {
+      "path": "verifier/investigation-api-prelaunch-convergence-2026-10-02.json",
+      "sha256": "55479de2d873c598379e729584461548e638e444b2711bee9a07591fb208a139",
+      "status": "preserved"
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/selectiveIntakeDeclaration.mjs",
+      "sha256": "3f49a5b80d9c7a4fe66d7ef1f315f90f78d6872286486cca6ad553565250488c"
+    },
+    {
+      "path": "src/lib/inspectionTime.js",
+      "sha256": "cd60bd88dc78d8e7916ccf53b10f67df4ee00e01d057fd337957ea4e578d373a"
+    },
+    {
+      "path": "src/lib/reviewedPublicVersion.js",
+      "sha256": "9ab1c9e48e32c13a5bb6961065bf17c785b9a6d7f779ce259c744f7f8047d846"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "supabase/functions/investigation-api/handler.mjs",
+      "sha256": "c847594714aac59b053f38b613de7ed8eb788c2b66f0e59878c04998afa080da"
+    },
+    {
+      "path": "supabase/functions/investigation-api/index.ts",
+      "sha256": "2a7b879c9547ef1f44254b6b697fd24ec4f160de992e5ea97ce5a3fed7f70e51"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-checks/handler.mjs",
+      "sha256": "14c8d7d39d09b59498a76712086d26ac5a4c2086db7bd3f67c3d20ec1b26be10"
+    },
+    {
+      "path": "supabase/functions/investigation-evidence-reviews/handler.mjs",
+      "sha256": "4dfde82551e33e4d23f894f2ae1876c0e7ba5e39a17243e212efa3497cb8af17"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/handler.mjs",
+      "sha256": "88a96549f50262df502842abaac0a8407560e3cbc8b53de06cad6dce999ce0fb"
+    },
+    {
+      "path": "supabase/functions/investigation-input-impact/impact.mjs",
+      "sha256": "0deac9fb60c5afd5ce7366b16ce08d4382b47085ef80116faaad4c4145c844b0"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/handler.mjs",
+      "sha256": "ccc93b3d85309a74fe777f9ceb34b9ad0c169dd83c495948cf750e7b47b2bf54"
+    },
+    {
+      "path": "supabase/functions/investigation-source-spans/spans.mjs",
+      "sha256": "45b519ce29fc98e40dfd0d61168969d3c225dbb13630556734df743872e96448"
+    },
+    {
+      "path": "supabase/functions/investigation-workspace/handler.mjs",
+      "sha256": "6d3c5e311476fe850498c64c2c534464db2a0c600e4a84eca0dda8a48b6748cd"
+    },
+    {
+      "path": "supabase/source-proposals/investigationFollowingHandler.mjs",
+      "sha256": "89217d579867deca0bc4c31899887117107cb255f0e0cfbcf643531e128b6696"
+    },
+    {
+      "path": "supabase/source-proposals/investigationSelectiveIntakeHandler.mjs",
+      "sha256": "ef83522c4a8bbe2f373c0ffa68d8ee47bbe5a30b80d2b0fd5eff91785ecce51e"
+    },
+    {
+      "path": "supabase/source-proposals/storyFollowingHandler.mjs",
+      "sha256": "0219abcdbf4ff71152282c432627bd9745f6807de39c74ddc878b3870b47b8b0"
+    }
+  ],
+  "runtime_module_dependencies": [
+    {
+      "specifier": "node:crypto",
+      "qualification": "native_exact_tree_check_pending"
+    }
+  ],
+  "sql_source_proposals": [
+    {
+      "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_following_v1.sql",
+      "sha256": "cb8f4818645cc429bf3a7a8d740e8fb4b3fa2bd2ce069e01db8f8774362d7f14",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sha256": "19ae74d4c603685dfb19eff7f124d42b0ab7e94cefca991b5586ecedf9e93047",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "b0060d9b660a8b35169bdd830decf9069ec6f485b4ec2f186cd6242a93bb8ebd",
+      "status": "not_applied"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "be7c82b26313ef0ef67900f33ecd3a649cc13b97a583076fc5ca05ce0fd19739",
+      "status": "not_applied"
+    }
+  ],
+  "deployment_verification": "Source launch candidate only. Canonical SQL and Following remain unapplied; live deployment/Auth/account boundary readback and physical-device acceptance remain unperformed.",
+  "following": {
+    "scope": "private_assigned_investigation",
+    "user_actions": [
+      "list",
+      "read",
+      "subscribe",
+      "acknowledge",
+      "unsubscribe"
+    ],
+    "trusted_materiality": "provisional_unexposed",
+    "sql_source_proposal": {
+      "path": "supabase/source-proposals/investigation_following_v1.sql",
+      "sha256": "cb8f4818645cc429bf3a7a8d740e8fb4b3fa2bd2ce069e01db8f8774362d7f14",
+      "status": "not_applied"
+    },
+    "actor_binding": {
+      "response_field": "authenticated_user_id",
+      "authority": "server_verified_auth_user_id",
+      "conditional_request_header": "X-MIP-Expected-User",
+      "expectation": "refusal_only_never_identity_authority"
+    }
+  },
+  "selective_intake": {
+    "scope": "private_assigned_investigation",
+    "route": "investigation-api/selective-intake",
+    "server_rpc": "mip_investigation_selective_intake_v1",
+    "actions": [
+      "read",
+      "receipt",
+      "declare",
+      "reconsider"
+    ],
+    "actor_binding": {
+      "authority": "server_verified_auth_user_id",
+      "response_envelope_field": "authenticated_user_id",
+      "conditional_request_header": "X-MIP-Expected-User",
+      "expectation": "refusal_only_never_identity_authority"
+    },
+    "criteria": "caller_self_assertions_no_registry",
+    "retention": "durable_private_receipt_with_unchanged_canonical_draft",
+    "analysis_execution": "none",
+    "source_acquisition": "none",
+    "publicly_eligible": false,
+    "core_commit": "8535723bb0606e1dc6d4e32e60f2dcb754c6452b"
+  },
+  "frontend_files": [
+    {
+      "path": "src/lib/investigationBackend.js",
+      "sha256": "fae09604e2640e71f69024dcd29719311214fae6cd3ece3c5752f65e20668c18"
+    },
+    {
+      "path": "src/lib/storyFollowingClient.js",
+      "sha256": "8f61a8891a87a1e2ee776712105b3e4f95c6fbc43c319b3d8c55816c1ad2df0b"
+    },
+    {
+      "path": "src/lib/useStoryFollowing.js",
+      "sha256": "61701073905f0a96051b7fa395c9d0d35c91dc2b2d2a0f5417dabe2e696d66ff"
+    },
+    {
+      "path": "src/components/StoryFollowingControls.jsx",
+      "sha256": "f80f91ca0bdf4cc2b9b7c4ef1216a4f6b5eefc7c3e3ac54d57aee20cccd8b527"
+    },
+    {
+      "path": "src/components/StoryFollowingPanel.jsx",
+      "sha256": "4b5f6ffcb82df87ab42fb275f949a4462cd3f111aea9fb62b02455887ce14ac5"
+    },
+    {
+      "path": "src/components/storyFollowing.css",
+      "sha256": "6b4fa012636668cde8a923c0c86bbd0bf2e5c264f260eac2d926bcab16cc745e"
+    }
+  ],
+  "story_following": {
+    "scope": "private_personal_preferences_for_public_reviewed_stories",
+    "route": "investigation-api/story-following",
+    "server_rpc": "mip_public_story_following_v1",
+    "public_context_rpc": "read_reviewed_public_story_context_v1",
+    "canonical_owner": "mip_private.reviewed_public_stories + reviewed_public_story_versions + reviewed_public_story_members",
+    "materiality_owner": "existing_reviewed_publication_owner",
+    "delivery_channel": "in_app",
+    "external_channels": "deferred_post_launch",
+    "user_actions": [
+      "list",
+      "read",
+      "subscribe",
+      "acknowledge",
+      "unsubscribe"
+    ],
+    "trusted_commands_excluded": [
+      "revoke",
+      "declare_public_story_material_change_v1"
+    ],
+    "actor_binding": {
+      "response_field": "authenticated_user_id",
+      "authority": "server_verified_auth_user_id",
+      "conditional_request_header": "X-MIP-Expected-User",
+      "expectation": "refusal_only_never_identity_authority"
+    },
+    "acknowledgement": "exact_displayed_public_version_only",
+    "limits": {
+      "request_bytes": 8192,
+      "parsed_response_bytes": 2097152,
+      "context_material_changes": 100,
+      "context_evidence_versions": 100,
+      "private_changes": 50,
+      "deadline_ms": 15000
+    },
+    "installation_pack": [
+      {
+        "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+        "sha256": "70913bb10c3f583156c96ecd46dd2cbffad61e0213043cf0962875b63ac03948"
+      },
+      {
+        "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+        "sha256": "35877c788d24680d210c31472b817b3327e262f0f8557755a325c93e0936c9e3"
+      }
+    ],
+    "qualification": "disposable_restored_SQL_verified_gateway_installed_SDK_mounted_native_controls_and_list; not installed or deployed"
+  }
+}
