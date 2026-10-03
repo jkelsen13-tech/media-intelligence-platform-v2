@@ -47,6 +47,8 @@ Do not submit an execute-now question containing unresolved digest/window/execut
 
 ## Qualification limits and review
 
+Dependency correspondence: the old93 branch still pinned DOMPurify3.4.14 and its fresh audit reported the retained LOW GHSA-p98j-92pf-mc4p. The successor reuses the exact three-line3.4.16 lockfile correction already qualified in native/frontendca72; no package.json range, backend operation, application code or source-lock/bundle bytes change. The [advisory's patched release](https://github.com/advisories/GHSA-p98j-92pf-mc4p) is3.4.16. The pre-repair audit and intermediate8147 source/test/build receipts remain historical; new exact CI/build/audit evidence must bind the corrected successor. This does not reopen the settled frontend security audit or combine the candidates into a release.
+
 New SQL fixtures use disposable PGlite0.5.8/PostgreSQL18.3/WASM with dummy data and networknone. They exercise actual templates/DO, role/ACL/RLS boundaries, exact data/security comparisons and fixed failure behavior. They do not establish native17, live dblink/TLS/certificate/error secrecy, real concurrency/client transport or provider restoration. Existing93 closed-adapter fault tests remain synthetic source qualification.
 
 The exact successor, source hashes, executed fixture/test/build logs, public Node22/24 CI, immutable historical correspondence and parent review request are recorded in the external proof manifest. Joffrey owns fresh independent Cursor review. This source package authorizes no live action, merge, deploy, release, spend or backend retirement.
