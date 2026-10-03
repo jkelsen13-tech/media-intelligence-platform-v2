@@ -1,0 +1,11 @@
+{
+  "path": "/workspace/mip-oct03-launch-readiness/terrain-comparison-portable/MIP_Terrain_Comparison_Portable_Source_2026-10-03.zip",
+  "bytes": 186080,
+  "sha256": "35e2ab96c923fee2b98b8ac712ecab3cd3595105ec75d2f38c6b23ec3ce01008",
+  "member_count": 13,
+  "members_verified": true,
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "scope": "portable exact offline helper source only",
+  "actual_AB_executed": false,
+  "provider_data_bytes_included": false
+}
