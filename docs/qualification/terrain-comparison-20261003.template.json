@@ -1,0 +1,545 @@
+{
+  "schema": "mip.terrain-comparison.v1",
+  "evidenceClass": "ACTUAL_SOURCE_RESEARCH",
+  "mode": "UNBOUND",
+  "status": "NOT_EXECUTED",
+  "invariants": {
+    "canonicalAnchorUnchanged": true,
+    "precisionFloorUnchanged": true,
+    "noRoofHeightInference": true,
+    "noPhysicalPerformanceClaim": true,
+    "applicationAdmitted": false,
+    "providerActivated": false,
+    "deployed": false
+  },
+  "baseSource": {
+    "commit": "ffd633d4173c859238231b455290b96f36c2f85e",
+    "tree": "d6d14c7cc01a4e65b10eaf69ff75c2859f2696cc",
+    "githubAtPreparation": "422 No commit found; authorized local committed RC"
+  },
+  "sources": {
+    "dem": {
+      "id": "64b61d91d34e70357a2b1331",
+      "title": "USGS 1 Meter 17 x44y459 OH_Statewide_Phase1_2019_B19",
+      "provider": "USGS 3DEP / Woolpert",
+      "binding": {
+        "status": "UNBOUND",
+        "path": null,
+        "sha256": "cd684d9d5311092ef90d4e8c34a1b5de8b842ccf03633b6858424dbf8b652f3a",
+        "bytes": 591155
+      },
+      "manifest": {
+        "path": "/workspace/mip-oct03-launch-readiness/requirements/terrain-source-manifest-library.read.txt",
+        "bytes": 54610,
+        "sha256": "ae80877f1ba25a48d2ae186dc94575151de0e57e5ae354d11ee19d446977ce6d",
+        "classification": "current Library manifest semantic extract; pixels unavailable"
+      },
+      "capture": {
+        "exactDay": null,
+        "projectWindow": "2019-11-09 to 2020-05-02",
+        "basis": "NOAA69581 Block1 group; not exact local pixel capture; TNM Phase1_8/Lorain lineage anomaly unresolved"
+      },
+      "horizontalCrs": "EPSG:26917",
+      "horizontalUnits": "metres",
+      "realization": "generic NAD83 header; exact realization/epoch unknown",
+      "geotransform": [
+        441017.99997115403,
+        1.0,
+        0.0,
+        4583862.000010459,
+        0.0,
+        -1.0
+      ],
+      "footprint": [
+        441017.99997115403,
+        4583350.000010459,
+        441529.99997115403,
+        4583862.000010459
+      ],
+      "size": [
+        512,
+        512
+      ],
+      "pixelOrigin": "GDAL affine corners; render samples pixel centres",
+      "pixelAreaOrPoint": "UNKNOWN until supplied TIFF metadata inspected",
+      "authority": "UNAPPROVED_SOURCE_RESEARCH",
+      "samples": {
+        "type": "Float32",
+        "nodata": -999999,
+        "rowMajorLittleEndianSha256": "4fe0e9051b735037549842cbf1e5540d62d96949550855c827932157711a59f0",
+        "expectedValidCount": 262144,
+        "expectedNonfiniteCount": 0,
+        "minimum": 251.32293701171875,
+        "maximum": 268.4857177734375,
+        "mean": 265.4152234760113
+      },
+      "nativeResolutionMetres": [
+        1,
+        1
+      ],
+      "surface": "bare earth; no roof, facade or deck heights",
+      "sourceFullAsset": {
+        "bytes": 335471207,
+        "sha256": null,
+        "acquired": false
+      },
+      "consumerCustodyBlocker": {
+        "path": "/workspace/mip-oct03-launch-readiness/terrain-official-reacquisition/custody.json",
+        "bytes": 594,
+        "sha256": "58a2511006957e13f1c57abca062377796ca0480b91ddfcf20b6eedb0461ac49",
+        "record": {
+          "schema": "mip-bounded-official-provider-reacquisition-v1",
+          "source_url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1m/Projects/OH_Statewide_Phase1_2019_B19/TIFF/USGS_1M_17_x44y459_OH_Statewide_Phase1_2019_B19.tif",
+          "scope": "new provider byte custody; not Library materialization, source admission, production transform or activation",
+          "full_source_bytes": 335471207,
+          "full_source_sha256": null,
+          "etag_not_content_hash": true,
+          "parts": [],
+          "requests": 1,
+          "status": "STOPPED_NO_RETRY",
+          "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      },
+      "libraryIdentities": {
+        "nativeFixtureFileId": "libfile_3c089027ec9c81918d0bdea00df4880d",
+        "manifestFileId": "libfile_a5e615e386fc8191919c274a5429b71f",
+        "consumerBytes": "UNBOUND"
+      }
+    },
+    "ortho": {
+      "id": "ohio-2023-BN18756325",
+      "provider": "Cuyahoga County / Ohio Statewide Imagery Program / Woolpert",
+      "binding": {
+        "status": "BOUND_LOCAL_BYTES",
+        "path": "/workspace/mip-real-imagery-evidence/ohio-BN18756325-wgs84-research.zip",
+        "sha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c",
+        "bytes": 2918432
+      },
+      "custody": "existing resident research derivative; not new Library transfer or application admission",
+      "reference": {
+        "path": "/workspace/mip-native-imagery-integration-plan/payload-reference.json",
+        "bytes": 9757,
+        "sha256": "1ff070991363abbded076eef9d4454ab37b889a736122193201834ba692fac53"
+      },
+      "admissionRecord": {
+        "path": "/workspace/mip-real-imagery-evidence/existing-admission-gate.json",
+        "bytes": 9404,
+        "sha256": "21ea5338c49d6b2ae127c420ead3920d260dece13ea09f0fed9889db34aa1e15"
+      },
+      "runtimeProvenance": {
+        "name": "provenance.json",
+        "byteLength": 20329,
+        "sha256": "343a35a7a5d9f11493ab67a8bce08f8aa07d802f1d5869607b3b5b2429cf58d3"
+      },
+      "metadataXml": {
+        "name": "source-metadata.xml",
+        "byteLength": 11340,
+        "sha256": "5c45fc70e2380c94696a517eb16759614b44821627db6abb9b8119dc47e000ad"
+      },
+      "capture": {
+        "precision": "day",
+        "start": "2023-03-07",
+        "basis": "exact retained source metadata XML ground-condition day"
+      },
+      "horizontalCrs": "EPSG:4326",
+      "horizontalUnits": "degrees",
+      "realization": "WGS84 derivative produced through retained EPSG3753 HARN operation; terrain registration unresolved",
+      "footprint": [
+        -81.70168427944155,
+        41.400004131028425,
+        -81.69717870180786,
+        41.403396541317306
+      ],
+      "size": [
+        1024,
+        1024
+      ],
+      "pixelOrigin": "retained affine pixel corners; tile order from exact named bounds",
+      "pixelAreaOrPoint": "declared derivative grid; PNG itself has no GeoKeys",
+      "authority": "UNAPPROVED_SOURCE_RESEARCH",
+      "tiles": [
+        {
+          "name": "tile-0-0.png",
+          "sha256": "82d8d1b75f7a9702b9caa94f03badddd57437aff4aac13ebf118fd1fe32a1dea",
+          "byteLength": 712043,
+          "rgbSha256": "137c428407231fa95b41106dde45d1b91bc5e142c3d471b872af2ef910389a2b",
+          "width": 512,
+          "height": 512,
+          "bounds": [
+            -81.70168427944155,
+            41.401700336172865,
+            -81.6994314906247,
+            41.403396541317306
+          ],
+          "crs": "EPSG:4326",
+          "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-0-0.png",
+          "pixelOrder": "planar RGB",
+          "interleavedRgbSha256": "1606cebc414151a2dd3e48f878fafa05609dc560a662b4e45796306bc6a47211",
+          "gridStepDegrees": [
+            4.39997815790405e-06,
+            3.312900672736152e-06
+          ],
+          "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+        },
+        {
+          "name": "tile-0-1.png",
+          "sha256": "334cf0fb048ce34d40641e672c268f6be59e36ed367909d7bd648b7ca03176bc",
+          "byteLength": 710631,
+          "rgbSha256": "6515c51b6543a267263cae66568faf4d6df59037e001432234e1e243d2d1e417",
+          "width": 512,
+          "height": 512,
+          "bounds": [
+            -81.6994314906247,
+            41.401700336172865,
+            -81.69717870180786,
+            41.403396541317306
+          ],
+          "crs": "EPSG:4326",
+          "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-0-1.png",
+          "pixelOrder": "planar RGB",
+          "interleavedRgbSha256": "41ce3e2d926f5aa11c8978b457d0d2dccd5ce919b6709f9aeeeef43e5a1af24b",
+          "gridStepDegrees": [
+            4.39997815790405e-06,
+            3.312900672736152e-06
+          ],
+          "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+        },
+        {
+          "name": "tile-1-0.png",
+          "sha256": "7bc9cea86f7569d5769d78e34cac5a79ad298a1da132852f7f03c437f2e63d35",
+          "byteLength": 723958,
+          "rgbSha256": "48497a262905a7aedd7b413dbb2a4322f04b3cbb892d0cfceba1709d8c30816a",
+          "width": 512,
+          "height": 512,
+          "bounds": [
+            -81.70168427944155,
+            41.400004131028425,
+            -81.6994314906247,
+            41.401700336172865
+          ],
+          "crs": "EPSG:4326",
+          "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-1-0.png",
+          "pixelOrder": "planar RGB",
+          "interleavedRgbSha256": "4e0cfbde584270d71cab13c52995f88097d0c0ac8bd183bfc9d100a67efc90ee",
+          "gridStepDegrees": [
+            4.39997815790405e-06,
+            3.312900672736152e-06
+          ],
+          "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+        },
+        {
+          "name": "tile-1-1.png",
+          "sha256": "88f4441ba10f82e511c521a934ddae07a2e347059d3ec020d196893d777d1766",
+          "byteLength": 725224,
+          "rgbSha256": "831605b10f3cfe69e5467e220cc793c71843de1f927ce323295445faee777a43",
+          "width": 512,
+          "height": 512,
+          "bounds": [
+            -81.6994314906247,
+            41.400004131028425,
+            -81.69717870180786,
+            41.401700336172865
+          ],
+          "crs": "EPSG:4326",
+          "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-1-1.png",
+          "pixelOrder": "planar RGB",
+          "interleavedRgbSha256": "83e2c0ac6a38aa2bd2b8f985e9bb4f77daf29750e3859e800dccf1c4421bebf1",
+          "gridStepDegrees": [
+            4.39997815790405e-06,
+            3.312900672736152e-06
+          ],
+          "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+        }
+      ],
+      "upstreamOperation": {
+        "alwaysXY": true,
+        "areaOfUse": {
+          "bounds": [
+            -124.79,
+            24.41,
+            -66.91,
+            49.38
+          ],
+          "name": "United States (USA) - CONUS onshore - Alabama; Arizona; Arkansas; California; Colorado; Connecticut; Delaware; Florida; Georgia; Idaho; Illinois; Indiana; Iowa; Kansas; Kentucky; Louisiana; Maine; Maryland; Massachusetts; Michigan; Minnesota; Mississippi; Missouri; Montana; Nebraska; Nevada; New Hampshire; New Jersey; New Mexico; New York; North Carolina; North Dakota; Ohio; Oklahoma; Oregon; Pennsylvania; Rhode Island; South Carolina; South Dakota; Tennessee; Texas; Utah; Vermont; Virginia; Washington; West Virginia; Wisconsin; Wyoming."
+        },
+        "axisConvention": "pyproj alwaysXY lon/lat; GDAL explicit final swap to EPSG:4326 official lat/lon axes",
+        "ballparkAllowed": false,
+        "bestAvailable": true,
+        "coverage": "explicit reduced inscribed rectangle; one native pixel inset",
+        "edgeSamples": 129,
+        "evidencePointRegistered": false,
+        "gdalCoordinateOperation": "proj=pipeline step proj=unitconvert xy_in=us-ft xy_out=m step inv proj=lcc lat_0=39.6666666666667 lon_0=-82.5 lat_1=41.7 lat_2=40.4333333333333 x_0=600000 y_0=0 ellps=GRS80 step proj=push v_3 step proj=cart ellps=GRS80 step proj=helmert x=-0.991 y=1.9072 z=0.5129 rx=-0.0257899075194932 ry=-0.0096500989602704 rz=-0.0116599432323421 s=0 convention=coordinate_frame step inv proj=cart ellps=WGS84 step proj=pop v_3 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1",
+        "gdalCoordinateOperationSha256": "f2a48439e5cbbf249cde4ba29e1567631ff13d48229677a012e1d3d503254e50",
+        "grids": [],
+        "measuredRegistrationAccuracyMetres": null,
+        "nativeBounds": [
+          2187500,
+          632500,
+          2188750,
+          633750
+        ],
+        "networkEnabled": false,
+        "operation": "Inverse of SPCS83 Ohio North zone (US survey foot) + NAD83(HARN) to WGS 84 (3) + axis order change (2D)",
+        "pipeline": "proj=pipeline step proj=unitconvert xy_in=us-ft xy_out=m step inv proj=lcc lat_0=39.6666666666667 lon_0=-82.5 lat_1=41.7 lat_2=40.4333333333333 x_0=600000 y_0=0 ellps=GRS80 step proj=push v_3 step proj=cart ellps=GRS80 step proj=helmert x=-0.991 y=1.9072 z=0.5129 rx=-0.0257899075194932 ry=-0.0096500989602704 rz=-0.0116599432323421 s=0 convention=coordinate_frame step inv proj=cart ellps=WGS84 step proj=pop v_3 step proj=unitconvert xy_in=rad xy_out=deg",
+        "pipelineSha256": "d0b30090edb74d5cfaf692a66a1abdb7ce1318b4f9c8f17e2628313f2e9759a6",
+        "policyReference": "detached-background-research operation-reported accuracy <=1m; no evidence registration or admission",
+        "rendererBounds": [
+          -81.70168427944155,
+          41.40000413102843,
+          -81.69717870180786,
+          41.403396541317306
+        ],
+        "reportedOperationAccuracyMetres": 1,
+        "sourceAccuracySpecification": {
+          "basis": "exact original XML horizontal accuracy class specification; not locally measured registration",
+          "combinedWithOperationError": false,
+          "horizontal95PercentMetres": 0.276,
+          "horizontalRmseMetres": 0.11
+        },
+        "sourceCrs": "EPSG:3753",
+        "status": "qualified-operation-for-detached-derivative",
+        "targetCrs": "EPSG:4326",
+        "toleranceMetres": 1,
+        "unavailableOperations": [],
+        "verticalTransformation": null,
+        "warpApproximationErrorPixels": 0
+      },
+      "sourceAccuracySpecification": {
+        "basis": "exact original XML horizontal accuracy class specification; not locally measured registration",
+        "combinedWithOperationError": false,
+        "horizontal95PercentMetres": 0.276,
+        "horizontalRmseMetres": 0.11
+      },
+      "sourceOriginal": {
+        "byteLength": 100364809,
+        "metadata": {
+          "assetCrs": "EPSG:3753",
+          "bandCount": 4,
+          "bands": [
+            {
+              "alpha": false,
+              "colorInterpretation": "Red",
+              "dataType": "Byte",
+              "index": 1,
+              "nearInfrared": false,
+              "usedForRgb": true
+            },
+            {
+              "alpha": false,
+              "colorInterpretation": "Green",
+              "dataType": "Byte",
+              "index": 2,
+              "nearInfrared": false,
+              "usedForRgb": true
+            },
+            {
+              "alpha": false,
+              "colorInterpretation": "Blue",
+              "dataType": "Byte",
+              "index": 3,
+              "nearInfrared": false,
+              "usedForRgb": true
+            },
+            {
+              "alpha": false,
+              "colorInterpretation": "Undefined",
+              "dataType": "Byte",
+              "index": 4,
+              "nearInfrared": false,
+              "usedForRgb": false
+            }
+          ],
+          "height": 5000,
+          "horizontalUnits": "US-survey-foot",
+          "nativeBounds": [
+            2187500,
+            632500,
+            2188750,
+            633750
+          ],
+          "nativeGeotransform": [
+            2187500,
+            0.25,
+            0,
+            633750,
+            0,
+            -0.25
+          ],
+          "verificationScope": "upstream producer claim; original not decoded by this consumer",
+          "width": 5000
+        },
+        "sha256": "cdd20d732dca52f94edf0eaf0e1afbd544c50886a9b131a9fcc18accf140a17c",
+        "verifiedByProducer": false
+      },
+      "sourceLibraryIdentities": {
+        "outerOriginal": {
+          "backingFileId": "file_000000008824820cb2c2b03218147d22",
+          "byteLength": 93644524,
+          "fileId": "libfile_46b6f72f95e88191ae48240e4eb3ce13",
+          "locallyVerified": false,
+          "sha256": "31484438471e3f04ebc46de362757b65d73072b61a800e6ad7f8f2ca6a037f46",
+          "version": 0
+        },
+        "receivedDerivative": {
+          "file_id": "file_0000000083c8820c9f61eeb56a5200a3",
+          "library_file_id": "libfile_1fd01270717881919b844e6b347d3122",
+          "received_bytes": 5400912,
+          "received_sha256": "db846c2628464e175a0edcea4282da29809e0416c70b93689abdfbf17bda1cca",
+          "version": 0
+        }
+      },
+      "receivedNativeDerivative": {
+        "sha256": "3fb5a148cbef43d06a580ec8263be13f007eb52bb93ca9ad66b52cdff4f9c8ba",
+        "bytes": 3147703,
+        "crs": "EPSG:3753",
+        "pixelStepUsSurveyFeet": [
+          1.220703125,
+          1.220703125
+        ],
+        "pixelStepMetres": [
+          0.37207105664211326,
+          0.37207105664211326
+        ],
+        "decodedHere": false
+      },
+      "nominalAppReferenceResolutionMetres": 0.38,
+      "originalPixelStepMetres": [
+        0.0762001524003048,
+        0.0762001524003048
+      ],
+      "renderedResolutionMetres": null,
+      "notices": [
+        "Cuyahoga County / Ohio Statewide Imagery Program attribution",
+        "planning-only",
+        "noncadastral",
+        "day-only capture",
+        "display background; no evidence precision upgrade"
+      ]
+    }
+  },
+  "registration": {
+    "status": "UNRESOLVED",
+    "sourceCrs": "EPSG:4326",
+    "targetCrs": "EPSG:26917",
+    "operation": null,
+    "reportedAccuracyMetres": null,
+    "measuredResidualRmseMetres": null,
+    "arbitraryAlignmentOffsetMetres": [
+      0,
+      0
+    ],
+    "globalRegistrationClaim": false,
+    "evidence": [],
+    "exactSourceHorizontalBasis": null,
+    "exactTargetHorizontalBasis": null
+  },
+  "height": {
+    "mode": "SOURCE_RELATIVE_METRES",
+    "originRule": "minimum finite non-nodata DEM value",
+    "verticalExaggeration": 1,
+    "verticalTransform": null,
+    "sourceBasis": "NAVD88 / metres from standard1m catalogue only; no vertical GeoKeys; exact geoid unresolved",
+    "qualification": "UNRESOLVED",
+    "exactGeoidOrHeightBasis": null,
+    "evidence": []
+  },
+  "shared": {
+    "footprint": [
+      441017.99997115403,
+      4583350.000010459,
+      441529.99997115403,
+      4583862.000010459
+    ],
+    "camera": {
+      "azimuthDegrees": -60,
+      "elevationDegrees": 35,
+      "projection": "orthographic",
+      "boxAspect": [
+        512.0,
+        512.0,
+        512.0
+      ]
+    },
+    "light": {
+      "azimuthDegrees": 315,
+      "altitudeDegrees": 45
+    },
+    "render": {
+      "canvasPixels": [
+        1600,
+        1200
+      ],
+      "dpi": 144,
+      "meshMaximumEdge": 129,
+      "textureSampling": "face mean of bilinear-warped RGB",
+      "nodataPolicy": "crop largest fully valid common rectangle; never fill/extrapolate"
+    },
+    "requestedNativeFootprint": [
+      441017.99997115403,
+      4583350.000010459,
+      441529.99997115403,
+      4583862.000010459
+    ]
+  },
+  "buildings": {
+    "variant": "C",
+    "status": "UNAVAILABLE",
+    "geometryAvailable": false,
+    "heightAvailable": false,
+    "reason": "Overture 2026-09-23.1 rowgroup97 only id/names/sources provenance acquired; geometry and height/roof bodies absent. No synthetic/extruded roof substitute. Official OSM editing-API feasibility stopped on provider-purpose policy before any map request; not a geometry/heights or data-rights denial.",
+    "twoDimensionalOutlineMetadata": {
+      "libraryFileId": "libfile_fe2e32811c4c8191b1d8ddad6cbc022d",
+      "backingFileId": "file_00000000da8881fb91a378d889b49abc",
+      "bytes": 3117,
+      "sha256": "fe14f6d6472de92c67e34136db9a97a816e9e49e17208354523f683d10872735",
+      "fullRingBoundsLonLat": [
+        -81.6999051,
+        41.4004629,
+        -81.6996735,
+        41.4008596
+      ],
+      "ways": [
+        {
+          "id": 1511440097,
+          "version": 1
+        },
+        {
+          "id": 1511440098,
+          "version": 1
+        }
+      ],
+      "authority": "parent-verified official read-only Overpass response semantic metadata; source=microsoft/BuildingFootprints, building=yes",
+      "consumerRawBytes": "UNBOUND; supported Library helper tools/list transfer blocked; no workaround",
+      "heightsFloorsRoofs": "ABSENT; no verified height basis",
+      "manifest": {
+        "path": "/workspace/mip-oct03-launch-readiness/requirements/building-footprint-manifest-library.read.txt",
+        "bytes": 19659,
+        "sha256": "0dc0e5581c33acf407d900f448f0be7ef3de0caf244cae52bc616dc31c8f0515",
+        "classification": "complete Library manifest semantic extract; no consumer GeoJSON bytes"
+      },
+      "rights": {
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "copyright_url": "https://www.openstreetmap.org/copyright",
+        "attribution": "\u00a9 OpenStreetMap contributors",
+        "commercial_use": "permitted conditionally",
+        "derivatives": "permitted conditionally",
+        "temporary_and_permanent_cache": "permitted conditionally",
+        "redistribution": "permitted conditionally",
+        "conditions": "Retain copyright/licence notices and credit. Public derivative-database use requires share-alike and machine-readable database or alterations offer. Produced Work and collective-database boundaries require design-specific qualification. No small-extract exemption assumed.",
+        "public_compliance_design_qualified": false,
+        "provider_endpoint_is_production_CDN": false,
+        "production_service_SLA": null
+      }
+    }
+  },
+  "observations": [],
+  "execution": {
+    "recordedAt": null,
+    "harnessSha256": null,
+    "contractSha256": null,
+    "sourceVersion": null,
+    "variants": [],
+    "metrics": null
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "schema": "mip.terrain-comparison-preparation.v1",
+  "recordedAt": "2026-10-03T05:01:36.418601+00:00",
+  "scope": "resident ortho custody only; real DEM/ortho A/B NOT_EXECUTED",
+  "terrainBytesAvailable": false,
+  "actualComparisonExecuted": false,
+  "inputs": [
+    {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/terrain-source-manifest-library.read.txt",
+      "bytes": 54610,
+      "sha256": "ae80877f1ba25a48d2ae186dc94575151de0e57e5ae354d11ee19d446977ce6d",
+      "classification": "current Library manifest semantic extract; pixels unavailable"
+    },
+    {
+      "path": "/workspace/mip-native-imagery-integration-plan/payload-reference.json",
+      "bytes": 9757,
+      "sha256": "1ff070991363abbded076eef9d4454ab37b889a736122193201834ba692fac53"
+    },
+    {
+      "path": "/workspace/mip-real-imagery-evidence/existing-admission-gate.json",
+      "bytes": 9404,
+      "sha256": "21ea5338c49d6b2ae127c420ead3920d260dece13ea09f0fed9889db34aa1e15"
+    },
+    {
+      "path": "/workspace/mip-real-imagery-evidence/ohio-BN18756325-wgs84-research.zip",
+      "bytes": 2918432,
+      "sha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c"
+    },
+    {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/building-footprint-manifest-library.read.txt",
+      "bytes": 19659,
+      "sha256": "0dc0e5581c33acf407d900f448f0be7ef3de0caf244cae52bc616dc31c8f0515",
+      "classification": "complete Library manifest semantic extract; no consumer GeoJSON bytes"
+    }
+  ],
+  "orthoTiles": [
+    {
+      "name": "tile-0-0.png",
+      "sha256": "82d8d1b75f7a9702b9caa94f03badddd57437aff4aac13ebf118fd1fe32a1dea",
+      "byteLength": 712043,
+      "rgbSha256": "137c428407231fa95b41106dde45d1b91bc5e142c3d471b872af2ef910389a2b",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.70168427944155,
+        41.401700336172865,
+        -81.6994314906247,
+        41.403396541317306
+      ],
+      "crs": "EPSG:4326",
+      "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-0-0.png",
+      "pixelOrder": "planar RGB",
+      "interleavedRgbSha256": "1606cebc414151a2dd3e48f878fafa05609dc560a662b4e45796306bc6a47211",
+      "gridStepDegrees": [
+        4.39997815790405e-06,
+        3.312900672736152e-06
+      ],
+      "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+    },
+    {
+      "name": "tile-0-1.png",
+      "sha256": "334cf0fb048ce34d40641e672c268f6be59e36ed367909d7bd648b7ca03176bc",
+      "byteLength": 710631,
+      "rgbSha256": "6515c51b6543a267263cae66568faf4d6df59037e001432234e1e243d2d1e417",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.6994314906247,
+        41.401700336172865,
+        -81.69717870180786,
+        41.403396541317306
+      ],
+      "crs": "EPSG:4326",
+      "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-0-1.png",
+      "pixelOrder": "planar RGB",
+      "interleavedRgbSha256": "41ce3e2d926f5aa11c8978b457d0d2dccd5ce919b6709f9aeeeef43e5a1af24b",
+      "gridStepDegrees": [
+        4.39997815790405e-06,
+        3.312900672736152e-06
+      ],
+      "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+    },
+    {
+      "name": "tile-1-0.png",
+      "sha256": "7bc9cea86f7569d5769d78e34cac5a79ad298a1da132852f7f03c437f2e63d35",
+      "byteLength": 723958,
+      "rgbSha256": "48497a262905a7aedd7b413dbb2a4322f04b3cbb892d0cfceba1709d8c30816a",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.70168427944155,
+        41.400004131028425,
+        -81.6994314906247,
+        41.401700336172865
+      ],
+      "crs": "EPSG:4326",
+      "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-1-0.png",
+      "pixelOrder": "planar RGB",
+      "interleavedRgbSha256": "4e0cfbde584270d71cab13c52995f88097d0c0ac8bd183bfc9d100a67efc90ee",
+      "gridStepDegrees": [
+        4.39997815790405e-06,
+        3.312900672736152e-06
+      ],
+      "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+    },
+    {
+      "name": "tile-1-1.png",
+      "sha256": "88f4441ba10f82e511c521a934ddae07a2e347059d3ec020d196893d777d1766",
+      "byteLength": 725224,
+      "rgbSha256": "831605b10f3cfe69e5467e220cc793c71843de1f927ce323295445faee777a43",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.6994314906247,
+        41.400004131028425,
+        -81.69717870180786,
+        41.401700336172865
+      ],
+      "crs": "EPSG:4326",
+      "path": "/workspace/mip-real-imagery-evidence/planar-inspection/tile-1-1.png",
+      "pixelOrder": "planar RGB",
+      "interleavedRgbSha256": "83e2c0ac6a38aa2bd2b8f985e9bb4f77daf29750e3859e800dccf1c4421bebf1",
+      "gridStepDegrees": [
+        4.39997815790405e-06,
+        3.312900672736152e-06
+      ],
+      "extentAuthority": "retained derivative provenance; not a new original-TIFF registration measurement"
+    }
+  ],
+  "pixelHashRepresentation": {
+    "retained": "band-planar contiguous uint8 RGB (3,height,width)",
+    "PillowInput": "interleaved uint8 RGB (height,width,3)",
+    "result": "all four file SHA, byte counts, dimensions and documented planar RGB hashes match; no decoder discrepancy"
+  },
+  "capabilities": {
+    "gdalCli": "GDAL 3.10.3, released 2025/04/01",
+    "numpy": true,
+    "Pillow": true,
+    "matplotlib": true,
+    "pythonOsgeo": false,
+    "rasterio": false,
+    "pyproj": false,
+    "installedForTask": false
+  },
+  "authority": "GENUINE Ohio RGB derivative / UNAPPROVED source; historical native browser permissions SIMULATED QA only",
+  "demGates": [
+    "actual native512 TIFF unavailable",
+    "ortho-to-DEM operation/grid/accuracy unresolved",
+    "exact DEM realization/geoid and local capture unresolved",
+    "new official-provider header attempt stopped first request on tunnel403; zero bytes; no retry/bypass"
+  ],
+  "buildings": "UNAVAILABLE geometry/heights",
+  "originalDecodedByConsumer": false,
+  "terrainOfficialReacquisition": {
+    "path": "/workspace/mip-oct03-launch-readiness/terrain-official-reacquisition/custody.json",
+    "bytes": 594,
+    "sha256": "58a2511006957e13f1c57abca062377796ca0480b91ddfcf20b6eedb0461ac49",
+    "record": {
+      "schema": "mip-bounded-official-provider-reacquisition-v1",
+      "source_url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1m/Projects/OH_Statewide_Phase1_2019_B19/TIFF/USGS_1M_17_x44y459_OH_Statewide_Phase1_2019_B19.tif",
+      "scope": "new provider byte custody; not Library materialization, source admission, production transform or activation",
+      "full_source_bytes": 335471207,
+      "full_source_sha256": null,
+      "etag_not_content_hash": true,
+      "parts": [],
+      "requests": 1,
+      "status": "STOPPED_NO_RETRY",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  },
+  "buildingQualification": {
+    "manifest": {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/building-footprint-manifest-library.read.txt",
+      "bytes": 19659,
+      "sha256": "0dc0e5581c33acf407d900f448f0be7ef3de0caf244cae52bc616dc31c8f0515",
+      "classification": "complete Library manifest semantic extract; no consumer GeoJSON bytes"
+    },
+    "states": {
+      "acquired": true,
+      "qualified": "bounded source-byte, full-reference, valid polygon and approximate raster-coverage checks; no verified registration or 3D height",
+      "admitted": false,
+      "active": false,
+      "deployed": false
+    },
+    "rights": {
+      "licence": "ODbL-1.0",
+      "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "copyright_url": "https://www.openstreetmap.org/copyright",
+      "attribution": "\u00a9 OpenStreetMap contributors",
+      "commercial_use": "permitted conditionally",
+      "derivatives": "permitted conditionally",
+      "temporary_and_permanent_cache": "permitted conditionally",
+      "redistribution": "permitted conditionally",
+      "conditions": "Retain copyright/licence notices and credit. Public derivative-database use requires share-alike and machine-readable database or alterations offer. Produced Work and collective-database boundaries require design-specific qualification. No small-extract exemption assumed.",
+      "public_compliance_design_qualified": false,
+      "provider_endpoint_is_production_CDN": false,
+      "production_service_SLA": null
+    },
+    "consumerRawGeometry": "UNBOUND; semantic metadata only",
+    "stageC": "UNAVAILABLE true3D; no verified heights/floors/roofs"
+  }
+}
