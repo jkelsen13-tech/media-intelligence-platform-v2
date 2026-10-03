@@ -1,0 +1,133 @@
+{
+  "contract": "mip-card-correction-final-evidence-files-v1",
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "files": [
+    {
+      "path": "FINAL_CORRECTION_COORDINATOR_HANDOFF_2026-10-03.md",
+      "bytes": 3184,
+      "sha256": "d351ac24a8a03c4b56267e4b360954bc32c425aa72329742454737d677c0d110"
+    },
+    {
+      "path": "MIP_CARD_CONTAINMENT_LATE_FINDING_2026-10-03.md",
+      "bytes": 6716,
+      "sha256": "e84b0fd2d278b8a2193fcb6f14cc67b7fa6fbe95dbcaee56aae9f0947680359a"
+    },
+    {
+      "path": "MIP_Card_Correction_Browser_Receipts_2026-10-03.zip",
+      "bytes": 29720242,
+      "sha256": "cee99cac354ad9b9ffa934cb2af8e4376c98f4456eb4d5e9765471c1b4b4f805"
+    },
+    {
+      "path": "MIP_Card_Correction_Qualified_Dist_2026-10-03.zip",
+      "bytes": 9798738,
+      "sha256": "e0fbf5017d8d75f28c68c7a0df64cb984917387fda5df3dc09137eed7b6afb96"
+    },
+    {
+      "path": "MIP_Card_Correction_Runtime_Receipts_2026-10-03.zip",
+      "bytes": 1192612,
+      "sha256": "7ee6cb56282cf78e8cf93fa37d6638ac02e2a04e9fb742c4a1fe4998bc761945"
+    },
+    {
+      "path": "MIP_OCT03_LAUNCH_EXECUTION_STATUS.md",
+      "bytes": 17044,
+      "sha256": "8ac39136b895e9b953a875962a9597545da2efb38abbdc04544a6689cc7659b6"
+    },
+    {
+      "path": "audit-report-node22.json",
+      "bytes": 365,
+      "sha256": "1771204320d17cbc46952c5535ef0a43b3eab50da8849205da8c6aaa7494445f"
+    },
+    {
+      "path": "audit-report-node24.json",
+      "bytes": 365,
+      "sha256": "1771204320d17cbc46952c5535ef0a43b3eab50da8849205da8c6aaa7494445f"
+    },
+    {
+      "path": "browser-independent-readback.json",
+      "bytes": 3645,
+      "sha256": "c130a6ac8c7fe60d193e6544fb0ca6f0f74f2bd84e811702dc0407007f514ccb"
+    },
+    {
+      "path": "browser-normal-sequential-command.json",
+      "bytes": 818,
+      "sha256": "f4a3588e587dd17bfba64df1b894ef56a3e5f2e90d71de2bca56d503c7c84ca4"
+    },
+    {
+      "path": "browser-title-stress-sequential-command.json",
+      "bytes": 910,
+      "sha256": "4b0f8ea8b2af05ab176fc4bfb0d9571d275cc8d7246ffd355e18426f116da05f"
+    },
+    {
+      "path": "completed-public-ci.json",
+      "bytes": 15961,
+      "sha256": "edc26714ee3beb0000bd7bbcab67364d2949dd045e266de892b17a61bf55c068"
+    },
+    {
+      "path": "completed-runtime-browser-export-files.json",
+      "bytes": 677,
+      "sha256": "d29ab7a4d5c171cb6cd2d127995e01bb650a79cf6c86bbdb1919437342b5bd25"
+    },
+    {
+      "path": "concurrent-browser-attempt.json",
+      "bytes": 1400,
+      "sha256": "bcd97e9e844a0fe82ce1e94694771bea93e7c5ccc743ca23b3fb68105e3faf17"
+    },
+    {
+      "path": "dist-export-identity.json",
+      "bytes": 414,
+      "sha256": "42658036a84293e458be26d308fc65133988198c214d5d56e0c55ba253bdba3b"
+    },
+    {
+      "path": "final-source-main-api-readback.json",
+      "bytes": 3108,
+      "sha256": "e48ddf5fe62071ed6164c1cfc04d774fa56218025fb49533e5747b4493a27c4a"
+    },
+    {
+      "path": "independent-cursor-card-correction-review.txt",
+      "bytes": 7087,
+      "sha256": "7f76c9ae83c675e3453eb7d7ca8c0c5de2c8627ad3410a6f45c516911d4882ef"
+    },
+    {
+      "path": "initial-export-files.json",
+      "bytes": 2127,
+      "sha256": "5edab255b402487578958fc61b37f9e91875e6c98d5505ba65cd690360624a88"
+    },
+    {
+      "path": "local-node22-first-full-failure.json",
+      "bytes": 999,
+      "sha256": "728b61b9444debaacb5ce1e6f1322a0c2d0633f833f5bce826d994da2e4cd7d7"
+    },
+    {
+      "path": "progress-20261003.md",
+      "bytes": 43794,
+      "sha256": "a047643c5137e5d41e167ac66b4636e20c518539a21d8a4328674c3cd69b4111"
+    },
+    {
+      "path": "qualification-envelope.json",
+      "bytes": 6554,
+      "sha256": "1e4870446e7ca073a4f0011e07e442d4b9c754c1a761375b82a591e37c83ff2f"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 43430,
+      "sha256": "225ee898a8791916d1299ce4557015a1081839132a244800b51147c10514546d"
+    },
+    {
+      "path": "release-artifact-node22.json",
+      "bytes": 185168,
+      "sha256": "4bed592eddfecc70faf131551d5518a81041e633dcbc341e406e2d2efe5fdd8f"
+    },
+    {
+      "path": "release-artifact-node24.json",
+      "bytes": 185168,
+      "sha256": "a2ef19091c1c8354649f03e010434f685b07c441780fd9d90b0d237bf4b48700"
+    },
+    {
+      "path": "review-capture.json",
+      "bytes": 7474,
+      "sha256": "b9247a0ac3cf1a2cf9984a33f889ebf5d25e8c57443cc96b79705faca9e22c7f"
+    }
+  ],
+  "self_hash": "exact final evidence head/tree externally binds this manifest"
+}

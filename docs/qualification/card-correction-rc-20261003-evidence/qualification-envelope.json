@@ -1,0 +1,191 @@
+{
+  "contract": "mip-card-correction-exact-qualified-envelope-v1",
+  "observed_at_utc": "2026-10-03T08:00:22.979228+00:00",
+  "candidate": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+    "clean": true
+  },
+  "branch": "codex/mip-launch-card-correction-rc-20261003",
+  "predecessor": {
+    "head": "58667adcef63dfff56fd14242ed74082490873c9",
+    "tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b"
+  },
+  "source_binding": {
+    "path": "docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json",
+    "sha256": "ef719675efff016a883f43cb513d830939105feec5e191a7a6ca1853d2540497",
+    "current_files": 254,
+    "historical_snapshots": 16,
+    "qualified_manifests": 12
+  },
+  "public_ci": {
+    "run_id": 37106376394,
+    "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37106376394",
+    "status": "completed",
+    "conclusion": "success",
+    "completed_at": "2026-10-03T07:33:39Z",
+    "tests_each_runtime": 2691,
+    "failures_skips_cancellations_todo": 0,
+    "build_seconds": {
+      "22": 24.66,
+      "24": 24.76
+    },
+    "node24_actual_audit_total": 0,
+    "node22_public_audit": "workflow-skipped; both local actual audits0"
+  },
+  "local": {
+    "runtime_versions": {
+      "22": "v22.23.3",
+      "24": "v24.19.0"
+    },
+    "test_counts": {
+      "22": {
+        "tests": 2691,
+        "suites": 0,
+        "pass": 2691,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "24": {
+        "tests": 2691,
+        "suites": 0,
+        "pass": 2691,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "build_seconds": {
+      "22": 25.700859996999498,
+      "24": 23.07947312900069
+    },
+    "audit": {
+      "22": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "24": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "build_outputs_byte_identical": true,
+    "initial_node22_failure_preserved": "local-node22-first-full-failure.json",
+    "execution_limits": "Controlled Node22 rerun passed; exact verified successful original Node24 receipt reused; source/assertions/timeouts unchanged."
+  },
+  "browser": {
+    "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+    "cases": [
+      {
+        "case": "normal",
+        "totals": {
+          "passed": 40,
+          "failed": 0,
+          "blocked": 4,
+          "screenshots": 180,
+          "orientation_states": 20,
+          "geometry_samples": 200,
+          "control_preparations": 80,
+          "hit_test_points": 720,
+          "distinct_encoded_png_hashes": 132
+        }
+      },
+      {
+        "case": "title-stress",
+        "totals": {
+          "passed": 20,
+          "failed": 0,
+          "blocked": 2,
+          "screenshots": 94,
+          "orientation_states": 10,
+          "geometry_samples": 104,
+          "control_preparations": 40,
+          "hit_test_points": 360,
+          "distinct_encoded_png_hashes": 58
+        }
+      }
+    ],
+    "record_schema_valid": 6,
+    "physical_acceptance": false,
+    "source_session_geometry": "SYNTHETIC",
+    "limits": "Landscape controls individually reachable through recorded ordinary scroll windows. No simultaneous whole-card visibility or real-source/final visual/hardware/Safari/live account verdict."
+  },
+  "static_artifact": {
+    "file_count": 442,
+    "total_bytes": 23634201,
+    "largest_file": {
+      "path": "assets/index.es-Du2UdQLy.js",
+      "bytes": 4975628,
+      "sha256": "30c8a723713be16f9bab0974b4b33ccba849dc465191abae889c302309ec0694"
+    },
+    "canonical_cesium_file_count": 389,
+    "canonical_cesium_bytes": 7101061,
+    "canonical_match": true,
+    "noncanonical_paths": 0,
+    "actual_body_export": {
+      "path": "/workspace/mip-oct03-launch-rc-evidence/docs/qualification/card-correction-rc-20261003-evidence/MIP_Card_Correction_Qualified_Dist_2026-10-03.zip",
+      "bytes": 9798738,
+      "sha256": "e0fbf5017d8d75f28c68c7a0df64cb984917387fda5df3dc09137eed7b6afb96",
+      "members": 446,
+      "source": {
+        "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+        "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+        "working_tree_clean": true
+      }
+    }
+  },
+  "independent_review": {
+    "agent_id": "bc-9b4d8e6e-ccd9-5a45-8b0c-ba508bf033a4",
+    "url": "https://cursor.com/agents/bc-9b4d8e6e-ccd9-5a45-8b0c-ba508bf033a4",
+    "actual_original_model_name": "cursor-grok-4.6-xhigh",
+    "report_ts": "1791013846.428039",
+    "completed_at_utc": "2026-10-03T07:50:46Z",
+    "verdict": "CLEAN FOR BOUNDED SELECTED-CARD CONTAINMENT CORRECTION SOURCE GATE",
+    "consequential_blockers": 0,
+    "report_sha256": "7f76c9ae83c675e3453eb7d7ca8c0c5de2c8627ad3410a6f45c516911d4882ef",
+    "report_bytes": 7087,
+    "runtime_pixels_observed_by_reviewer": false,
+    "limits": "Reviewer source/publicCI observations separate from later root completed browser/artifact and parent consumer verification."
+  },
+  "exports": [
+    {
+      "path": "MIP_Card_Correction_Runtime_Receipts_2026-10-03.zip",
+      "bytes": 1192612,
+      "sha256": "7ee6cb56282cf78e8cf93fa37d6638ac02e2a04e9fb742c4a1fe4998bc761945",
+      "members": 79,
+      "payloads": 78
+    },
+    {
+      "path": "MIP_Card_Correction_Browser_Receipts_2026-10-03.zip",
+      "bytes": 29720242,
+      "sha256": "cee99cac354ad9b9ffa934cb2af8e4376c98f4456eb4d5e9765471c1b4b4f805",
+      "members": 349,
+      "payloads": 348
+    }
+  ],
+  "current_verdict": "INDEPENDENT_BOUNDED_SOURCE_CLEAN_AND_SOURCE_BOUND_SYNTHETIC_BROWSER_QUALIFIED",
+  "owner_or_external_gates": [
+    "Live installation/real Auth/RLS and immutable version capture/hash admission",
+    "Original qik eleven trust/private/native/live bindings and later separate ROLLBACK-only authority",
+    "Lawful real source bytes/rights/datum/registration/admission",
+    "Representative real breaking/developing calibration",
+    "Markets actual account/provider rights and $0 global quota authority",
+    "Commercial hosting/DNS/deployment authority",
+    "Physical responsive-web function/appearance/performance and original cold-portrait RED",
+    "Explicit merge/deploy/release approval"
+  ],
+  "protected_mutations_provider_paid_activations_merge_deploy_release": 0,
+  "fresh_owner_product_decisions_opened": 0
+}

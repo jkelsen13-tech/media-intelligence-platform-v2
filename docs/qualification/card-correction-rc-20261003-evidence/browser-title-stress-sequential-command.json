@@ -1,0 +1,22 @@
+{
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "clean": true,
+  "case": "title-stress",
+  "started_at": "2026-10-03T07:47:05.968939+00:00",
+  "completed_at": "2026-10-03T07:48:17.122050+00:00",
+  "elapsed_seconds": 71.15312126599747,
+  "argv": [
+    "node",
+    "scripts/device-acceptance/run-browser.mjs"
+  ],
+  "environment_parameters": {
+    "MIP_DEVICE_CARD_STRESS": "1",
+    "MIP_DEVICE_PROFILES": "iphone,narrow"
+  },
+  "output": "/workspace/mip-launch-receipts/oct03-card-corrected-0ebf51d80179/device-browser-title-stress-sequential",
+  "exit_code": 0,
+  "log_sha256": "c680c5dc58d2375bd14f695af30ded5a64d7f44036196d562d0fdd5342732e74",
+  "source_assertions_timeouts_changed": false,
+  "scope": "Sequential actual-App development-transform browser proof; synthetic sources/session/geometry only. No physical acceptance."
+}

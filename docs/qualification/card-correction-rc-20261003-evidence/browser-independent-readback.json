@@ -1,0 +1,110 @@
+{
+  "contract": "mip-card-corrected-browser-independent-readback-v1",
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "schema_sha256": "b3e998984485c61769f05f7b0cc4b90c10193895a67b9d4ed26f8a612ef2a10c",
+  "validator": "Python jsonschema Draft202012Validator",
+  "cases": [
+    {
+      "case": "normal",
+      "summary_sha256": "2fca9680d3dc303568cc9aae83be9ba3a48cf181990d1bb4d81f8c1fed845f33",
+      "totals": {
+        "passed": 40,
+        "failed": 0,
+        "blocked": 4,
+        "screenshots": 180,
+        "orientation_states": 20,
+        "geometry_samples": 200,
+        "control_preparations": 80,
+        "hit_test_points": 720,
+        "distinct_encoded_png_hashes": 132
+      },
+      "records": [
+        {
+          "profile": "ipad",
+          "record_valid": true,
+          "receipt_sha256": "d60d7ed63de9180262a3dffc80172fa4bec80cf18c645b75b43a0d2f46af02ad",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 50,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        },
+        {
+          "profile": "iphone",
+          "record_valid": true,
+          "receipt_sha256": "c564ea3ff2e21edd770a870e891e8326a03cfba9920d750b849e8ef592e8302e",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 50,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        },
+        {
+          "profile": "narrow",
+          "record_valid": true,
+          "receipt_sha256": "9f3dc2fd8285e37b04940385f6fd3d6d871e6dd569f1545b511c36937db17881",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 50,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        },
+        {
+          "profile": "desktop",
+          "record_valid": true,
+          "receipt_sha256": "90aa757a5e6b26b53d8c44d5bedfee43b04be648000350ea6d4a25170bea6f0f",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 50,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        }
+      ]
+    },
+    {
+      "case": "title-stress",
+      "summary_sha256": "95781133738c29ef45b56d4a4ad1588b8b14b18222d9229004ef282aa57e63fe",
+      "totals": {
+        "passed": 20,
+        "failed": 0,
+        "blocked": 2,
+        "screenshots": 94,
+        "orientation_states": 10,
+        "geometry_samples": 104,
+        "control_preparations": 40,
+        "hit_test_points": 360,
+        "distinct_encoded_png_hashes": 58
+      },
+      "records": [
+        {
+          "profile": "iphone",
+          "record_valid": true,
+          "receipt_sha256": "7c3c4b463d856f6ff40a98bcb1f96e901c46eabbdef1bf9430b08682a5b1a3cc",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 52,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        },
+        {
+          "profile": "narrow",
+          "record_valid": true,
+          "receipt_sha256": "6a7b7e6354e79aa297c5519ec613ce9221b59dde6ff9c3eb871929594d88063c",
+          "passed": 10,
+          "blocked": 1,
+          "geometry_samples": 52,
+          "orientation_states": 5,
+          "control_preparations": 20,
+          "page_errors": 0
+        }
+      ]
+    }
+  ],
+  "qualified_scope": "Actual App local Chromium development transform and independently rehashed structured browser receipts; synthetic backend/session/geometry. No physical/live/final-appearance acceptance."
+}

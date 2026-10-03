@@ -1,0 +1,19 @@
+{
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "clean": true,
+  "case": "normal",
+  "started_at": "2026-10-03T07:44:56.159667+00:00",
+  "completed_at": "2026-10-03T07:47:05.968549+00:00",
+  "elapsed_seconds": 129.80888443200092,
+  "argv": [
+    "node",
+    "scripts/device-acceptance/run-browser.mjs"
+  ],
+  "environment_parameters": {},
+  "output": "/workspace/mip-launch-receipts/oct03-card-corrected-0ebf51d80179/device-browser-normal-sequential",
+  "exit_code": 0,
+  "log_sha256": "e45abbd6ce5595fda585719e3ff9a7f4ca06da6804f3b6987ea3c3c81106c26e",
+  "source_assertions_timeouts_changed": false,
+  "scope": "Sequential actual-App development-transform browser proof; synthetic sources/session/geometry only. No physical acceptance."
+}

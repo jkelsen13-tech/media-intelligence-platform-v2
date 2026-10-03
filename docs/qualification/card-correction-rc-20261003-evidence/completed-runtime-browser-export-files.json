@@ -1,0 +1,21 @@
+{
+  "contract": "mip-card-correction-completed-export-identities-v1",
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "files": [
+    {
+      "path": "MIP_Card_Correction_Runtime_Receipts_2026-10-03.zip",
+      "bytes": 1192612,
+      "sha256": "7ee6cb56282cf78e8cf93fa37d6638ac02e2a04e9fb742c4a1fe4998bc761945",
+      "members": 79,
+      "payloads": 78
+    },
+    {
+      "path": "MIP_Card_Correction_Browser_Receipts_2026-10-03.zip",
+      "bytes": 29720242,
+      "sha256": "cee99cac354ad9b9ffa934cb2af8e4376c98f4456eb4d5e9765471c1b4b4f805",
+      "members": 349,
+      "payloads": 348
+    }
+  ]
+}
