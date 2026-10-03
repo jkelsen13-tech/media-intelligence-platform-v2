@@ -1,0 +1,10 @@
+{
+  "contract": "mip-card-correction-retained-source-history-v1",
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "source_tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b",
+  "original_path": "docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json",
+  "retained_path": "docs/qualification/card-containment-20261003-predecessor/launch-rc-58667-source.json",
+  "bytes": 59827,
+  "sha256": "614a894d383ae34d1742dc74eeb6ef6cfc412feabc45a91fa62459dea1e0ae3d",
+  "authority": "immutable historical current-byte binding; no previous source or browser verdict extends to the correction"
+}

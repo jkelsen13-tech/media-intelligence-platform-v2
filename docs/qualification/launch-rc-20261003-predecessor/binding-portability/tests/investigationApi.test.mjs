@@ -78,26 +78,13 @@ test('launch source bindings preserve qualified history and bind the integrated 
     assert.equal(entry.status, 'not_applied')
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path, root))).digest('hex'), entry.sha256, entry.path)
   }
-  const sourceManifestPath = 'docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json'
-  const source = JSON.parse(await readFile(new URL(sourceManifestPath,root),'utf8'))
-  for (const entry of manifest.frontend_files) {
-    // The native qualification pins the same ca72 frontend bytes. Preserve
-    // that history when a separately qualified correction changes the file;
-    // the integrated manifest below still hashes every current source byte.
-    const pin = source.sources.find(pin => pin.path === entry.path)
-    if (pin) {
-      assert.equal(pin.sha256, entry.sha256, entry.path)
-      await boundBytes(sourceManifestPath, entry)
-    } else {
-      assert.equal(hash(await readRepositorySource(root, entry.path)), entry.sha256, entry.path)
-    }
-  }
-  for (const entry of manifest.story_following.installation_pack) {
+  for (const entry of [...manifest.frontend_files,...manifest.story_following.installation_pack]) {
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
   for (const entry of manifest.previous_manifests) {
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
+  const source = JSON.parse(await readFile(new URL('docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json',root),'utf8'))
   assert.equal(source.status,'CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT')
   const successor = JSON.parse(await readFile(new URL('docs/qualification/release-dependency-20261003-source.json',root),'utf8'))
   assert.equal(successor.contract, 'mip-release-dependency-source-v1')

@@ -186,24 +186,6 @@
     },
     {
       "manifest_path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
-      "source_path": "src/lib/worldViewBillboardLayout.js",
-      "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/src/lib/worldViewBillboardLayout.js",
-      "lane": "ca72",
-      "source_commit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
-      "sha256": "f320cedd800c18ba85833f91378fedc79fdebacdcfba3b595be255abca2cf281",
-      "bytes": 10970
-    },
-    {
-      "manifest_path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
-      "source_path": "src/styles/world-view-billboard-prototype.css",
-      "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/src/styles/world-view-billboard-prototype.css",
-      "lane": "ca72",
-      "source_commit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
-      "sha256": "3cc911484ab10e49110459e698cce83e56381887176a25ca407391c6aaf9b5ff",
-      "bytes": 12896
-    },
-    {
-      "manifest_path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
       "source_path": "tests/investigationApi.test.mjs",
       "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/tests/investigationApi.test.mjs",
       "lane": "ca72",
@@ -273,23 +255,9 @@
       "source_commit": "5bd71b362e46049cbe66da6a23506da333d51235",
       "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026",
       "bytes": 6410
-    },
-    {
-      "manifest_path": "docs/qualification/markets-provider-contract-portability-20261003.json",
-      "source_path": "tests/investigationApi.test.mjs",
-      "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/tests/investigationApi.test.mjs",
-      "lane": "binding-portability",
-      "source_commit": "5bd71b362e46049cbe66da6a23506da333d51235",
-      "sha256": "cb01c8ce566babe3351ffb0b0fc3d57d4797ec122ea512dcee1679217378bf59",
-      "bytes": 25185
     }
   ],
   "sources": [
-    {
-      "path": "docs/MIP_CARD_CONTAINMENT_CORRECTION_REVIEW_PACKET_2026-10-03.md",
-      "bytes": 7248,
-      "sha256": "22f76febff6b180cc21d43239e769bc911314a8240256bca7dc23f269d66c372"
-    },
     {
       "path": "docs/MIP_LAUNCH_INSTALL_PACKAGES_2026-10-03.md",
       "bytes": 15556,
@@ -836,24 +804,9 @@
       "sha256": "b3e998984485c61769f05f7b0cc4b90c10193895a67b9d4ed26f8a612ef2a10c"
     },
     {
-      "path": "docs/qualification/card-containment-20261003-predecessor/launch-rc-58667-source.json",
-      "bytes": 59827,
-      "sha256": "614a894d383ae34d1742dc74eeb6ef6cfc412feabc45a91fa62459dea1e0ae3d"
-    },
-    {
-      "path": "docs/qualification/card-containment-20261003-predecessor/retained-source-manifest.json",
-      "bytes": 583,
-      "sha256": "7aa5166c5ca4f08aa364e27c77e8e39530b3ada745870c6a4b15932f321957d8"
-    },
-    {
       "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/scripts/buildLaunchRcSourceBinding20261003.py",
       "bytes": 6410,
       "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
-    },
-    {
-      "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/tests/investigationApi.test.mjs",
-      "bytes": 25185,
-      "sha256": "cb01c8ce566babe3351ffb0b0fc3d57d4797ec122ea512dcee1679217378bf59"
     },
     {
       "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/package-lock.json",
@@ -879,16 +832,6 @@
       "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/src/lib/newsStoryState.js",
       "bytes": 14701,
       "sha256": "1d1357f226cef21a2dfda6b991b6d25497a7b4a0f66b4438ff5535ca4a5105ed"
-    },
-    {
-      "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/src/lib/worldViewBillboardLayout.js",
-      "bytes": 10970,
-      "sha256": "f320cedd800c18ba85833f91378fedc79fdebacdcfba3b595be255abca2cf281"
-    },
-    {
-      "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/src/styles/world-view-billboard-prototype.css",
-      "bytes": 12896,
-      "sha256": "3cc911484ab10e49110459e698cce83e56381887176a25ca407391c6aaf9b5ff"
     },
     {
       "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/tests/investigationApi.test.mjs",
@@ -1142,8 +1085,8 @@
     },
     {
       "path": "scripts/device-acceptance/run-browser.mjs",
-      "bytes": 38957,
-      "sha256": "eff2b3a5612bcb77c27fa731b3a72afec24af1ef8198175d76105fafec84cd91"
+      "bytes": 23990,
+      "sha256": "796b05022c2f6978f943eb48a6c6ff916bcc3b1b4b9839210f3a1f8fd29cfc70"
     },
     {
       "path": "scripts/device-acceptance/vite.config.mjs",
@@ -1216,29 +1159,14 @@
       "sha256": "6170ae52f29bf11008227426cc650552563150022ac2188a361d3bc88b15c020"
     },
     {
-      "path": "src/components/WorldViewBillboardOverlay.jsx",
-      "bytes": 17013,
-      "sha256": "30d45418ceb3e19651c2296cd7b1ae4589df94d564eb20b3a6819ef6786c2c44"
-    },
-    {
       "path": "src/lib/newsStoryState.js",
       "bytes": 15785,
       "sha256": "9f4a843ad913b5cafa1ccaf258e56c715c63ce70e56494c7ef308e507c7b4270"
     },
     {
-      "path": "src/lib/worldViewBillboardLayout.js",
-      "bytes": 11192,
-      "sha256": "7030dacac8067cdf10fe4b780547a8a440eccd12a80f55acbc07ddba1c843cc5"
-    },
-    {
       "path": "src/lib/worldViewTerrainCompositionContract.js",
       "bytes": 13436,
       "sha256": "ce26a0c872c7bc5a920c2053ddb4c0b8d58fd4ea3d6be8c896ee1418bccb0884"
-    },
-    {
-      "path": "src/styles/world-view-billboard-prototype.css",
-      "bytes": 13484,
-      "sha256": "ef21ff47ecf05dd34a613761ffb8056feba0e82a537b6a61cb2add209e80bd02"
     },
     {
       "path": "supabase/functions/_shared/marketsProviderPolicy.mjs",
@@ -1272,8 +1200,8 @@
     },
     {
       "path": "tests/investigationApi.test.mjs",
-      "bytes": 25790,
-      "sha256": "f3a8bf690931928c7ca5bd37d2e7e539438733e77284f71a3b5e4ae52bc31609"
+      "bytes": 25185,
+      "sha256": "cb01c8ce566babe3351ffb0b0fc3d57d4797ec122ea512dcee1679217378bf59"
     },
     {
       "path": "tests/launchInstallationArtifact.test.mjs",
@@ -1334,16 +1262,6 @@
       "path": "tests/terrainComparisonContract20261003.test.mjs",
       "bytes": 9482,
       "sha256": "4b962db8308a799ade2d884b54f152b04cd94ad4877b5f558a5a9c5ec72c65af"
-    },
-    {
-      "path": "tests/worldViewBillboardLayout.test.mjs",
-      "bytes": 17864,
-      "sha256": "9a52814e27751408267d579ad6c4406cfd1aa4ca1fdd20e79c8b9a239ec04823"
-    },
-    {
-      "path": "tests/worldViewBillboardOwnerLane.test.mjs",
-      "bytes": 16611,
-      "sha256": "4cd830318bf2e747973ee523497e526a757eab67d3ab84f5ccda7a4631aba62e"
     },
     {
       "path": "tests/worldViewTerrainComposition20261003.test.mjs",
