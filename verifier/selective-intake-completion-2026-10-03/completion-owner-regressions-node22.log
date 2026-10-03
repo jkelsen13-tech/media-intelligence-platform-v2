@@ -1,0 +1,343 @@
+TAP version 13
+# Subtest: manifest dry run validates all records without calling a writer
+ok 1 - manifest dry run validates all records without calling a writer
+  ---
+  duration_ms: 1.414307
+  type: 'test'
+  ...
+# Subtest: intake rejects publication flags, credentials in URL, schemes and oversized payloads
+ok 2 - intake rejects publication flags, credentials in URL, schemes and oversized payloads
+  ---
+  duration_ms: 9.409972
+  type: 'test'
+  ...
+# Subtest: idempotent enqueue counts unique jobs while retaining input receipts
+ok 3 - idempotent enqueue counts unique jobs while retaining input receipts
+  ---
+  duration_ms: 0.205501
+  type: 'test'
+  ...
+# Subtest: worker bounds work and records transient failure for durable retry
+ok 4 - worker bounds work and records transient failure for durable retry
+  ---
+  duration_ms: 3.524607
+  type: 'test'
+  ...
+# Subtest: permanent failure is not retried
+ok 5 - permanent failure is not retried
+  ---
+  duration_ms: 0.295437
+  type: 'test'
+  ...
+# Subtest: lost commit response never triggers destructive compensation or reports success
+ok 6 - lost commit response never triggers destructive compensation or reports success
+  ---
+  duration_ms: 0.17831
+  type: 'test'
+  ...
+# Subtest: empty queue stops immediately; unbounded work is rejected
+ok 7 - empty queue stops immediately; unbounded work is rejected
+  ---
+  duration_ms: 0.278952
+  type: 'test'
+  ...
+# Subtest: RPC enforces V2 origin and keeps raw server messages out of errors
+ok 8 - RPC enforces V2 origin and keeps raw server messages out of errors
+  ---
+  duration_ms: 52.932122
+  type: 'test'
+  ...
+# Subtest: manifest validation binds submitted bytes before asynchronous enqueue can change later inputs
+ok 9 - manifest validation binds submitted bytes before asynchronous enqueue can change later inputs
+  ---
+  duration_ms: 0.453075
+  type: 'test'
+  ...
+# Subtest: database queue, exact evidence and append-only history contracts
+    # Subtest: tracking variants reuse one job; meaningful query parameters remain distinct
+    ok 1 - tracking variants reuse one job; meaningful query parameters remain distinct
+      ---
+      duration_ms: 38.865741
+      type: 'test'
+      ...
+    # Subtest: claimed jobs are exclusive; lease mismatch cannot commit; completion is atomic
+    ok 2 - claimed jobs are exclusive; lease mismatch cannot commit; completion is atomic
+      ---
+      duration_ms: 40.677439
+      type: 'test'
+      ...
+    # Subtest: a publisher correction keeps old article and eligibility unchanged
+    ok 3 - a publisher correction keeps old article and eligibility unchanged
+      ---
+      duration_ms: 16.421124
+      type: 'test'
+      ...
+    # Subtest: source spans use code points; invented quotes and invalid links are rejected
+    ok 4 - source spans use code points; invented quotes and invalid links are rejected
+      ---
+      duration_ms: 45.617544
+      type: 'test'
+      ...
+    # Subtest: candidate RPC rejects UTF-16 offsets and accepts Unicode code points
+    ok 5 - candidate RPC rejects UTF-16 offsets and accepts Unicode code points
+      ---
+      duration_ms: 28.705067
+      type: 'test'
+      ...
+    # Subtest: transient failures back off and exhausted leases become dead letters
+    ok 6 - transient failures back off and exhausted leases become dead letters
+      ---
+      duration_ms: 24.121841
+      type: 'test'
+      ...
+    # Subtest: event and assessment edits preserve every version including reversions
+    ok 7 - event and assessment edits preserve every version including reversions
+      ---
+      duration_ms: 15.363045
+      type: 'test'
+      ...
+    # Subtest: browser roles cannot read private evidence or call worker; service worker can ingest
+    ok 8 - browser roles cannot read private evidence or call worker; service worker can ingest
+      ---
+      duration_ms: 14.138835
+      type: 'test'
+      ...
+    1..8
+ok 10 - database queue, exact evidence and append-only history contracts
+  ---
+  duration_ms: 3442.435191
+  type: 'test'
+  ...
+# Subtest: operator facets share the pinned target, credentials and fixed RPC routes
+ok 11 - operator facets share the pinned target, credentials and fixed RPC routes
+  ---
+  duration_ms: 95.541962
+  type: 'test'
+  ...
+# Subtest: transport distinguishes malformed success from an empty claim and sanitizes failures
+ok 12 - transport distinguishes malformed success from an empty claim and sanitizes failures
+  ---
+  duration_ms: 8.7865
+  type: 'test'
+  ...
+# Subtest: unreadable intake completion responses retain the durable retry budget
+ok 13 - unreadable intake completion responses retain the durable retry budget
+  ---
+  duration_ms: 6.392632
+  type: 'test'
+  ...
+# Subtest: bounded runner pauses, resumes and reports only durable completion
+ok 14 - bounded runner pauses, resumes and reports only durable completion
+  ---
+  duration_ms: 0.978769
+  type: 'test'
+  ...
+# Subtest: lost committed page response is recovered through readback without queue compensation
+ok 15 - lost committed page response is recovered through readback without queue compensation
+  ---
+  duration_ms: 0.29826
+  type: 'test'
+  ...
+# Subtest: lost start and unavailable readback remain indeterminate
+ok 16 - lost start and unavailable readback remain indeterminate
+  ---
+  duration_ms: 14.295046
+  type: 'test'
+  ...
+# Subtest: expired lease and misleading receipt never report uncommitted work complete
+ok 17 - expired lease and misleading receipt never report uncommitted work complete
+  ---
+  duration_ms: 0.89931
+  type: 'test'
+  ...
+# Subtest: refresh and refresh resume omit leases while initial runs require them
+ok 18 - refresh and refresh resume omit leases while initial runs require them
+  ---
+  duration_ms: 0.409769
+  type: 'test'
+  ...
+# Subtest: invalid options and missing apply fail before opening the backend
+ok 19 - invalid options and missing apply fail before opening the backend
+  ---
+  duration_ms: 0.688231
+  type: 'test'
+  ...
+# Subtest: operator status combines both queues without taking a lease
+ok 20 - operator status combines both queues without taking a lease
+  ---
+  duration_ms: 5.343827
+  type: 'test'
+  ...
+# Subtest: zero-target completion still calls the database page before reporting completion
+ok 21 - zero-target completion still calls the database page before reporting completion
+  ---
+  duration_ms: 3.693683
+  type: 'test'
+  ...
+# Subtest: approved command validates input before creating a backend and sends no file fields to RPC
+ok 22 - approved command validates input before creating a backend and sends no file fields to RPC
+  ---
+  duration_ms: 4.448083
+  type: 'test'
+  ...
+# Subtest: intervening correction refuses a new registered execution over stale observed analysis
+ok 23 - intervening correction refuses a new registered execution over stale observed analysis
+  ---
+  duration_ms: 3722.146251
+  type: 'test'
+  ...
+# Subtest: committed capture response loss resumes the same native progress with zero refetch
+ok 24 - committed capture response loss resumes the same native progress with zero refetch
+  ---
+  duration_ms: 2255.340241
+  type: 'test'
+  ...
+# Subtest: each committed native response boundary resumes idempotently without a second permit
+    # Subtest: candidate
+    ok 1 - candidate
+      ---
+      duration_ms: 2401.306915
+      type: 'test'
+      ...
+    # Subtest: analyze
+    ok 2 - analyze
+      ---
+      duration_ms: 2373.699791
+      type: 'test'
+      ...
+    # Subtest: observe
+    ok 3 - observe
+      ---
+      duration_ms: 2151.470173
+      type: 'test'
+      ...
+    # Subtest: version
+    ok 4 - version
+      ---
+      duration_ms: 1879.049812
+      type: 'test'
+      ...
+    # Subtest: annotate
+    ok 5 - annotate
+      ---
+      duration_ms: 2024.462485
+      type: 'test'
+      ...
+    1..5
+ok 25 - each committed native response boundary resumes idempotently without a second permit
+  ---
+  duration_ms: 10833.536998
+  type: 'test'
+  ...
+# Subtest: rights revocation at every delegated write rejects in SQL before that native mutation
+    # Subtest: candidate
+    ok 1 - candidate
+      ---
+      duration_ms: 2070.790929
+      type: 'test'
+      ...
+    # Subtest: analyze
+    ok 2 - analyze
+      ---
+      duration_ms: 2223.125282
+      type: 'test'
+      ...
+    # Subtest: observe
+    ok 3 - observe
+      ---
+      duration_ms: 2028.260702
+      type: 'test'
+      ...
+    # Subtest: version
+    ok 4 - version
+      ---
+      duration_ms: 1824.12655
+      type: 'test'
+      ...
+    # Subtest: annotate
+    ok 5 - annotate
+      ---
+      duration_ms: 2016.93788
+      type: 'test'
+      ...
+    1..5
+ok 26 - rights revocation at every delegated write rejects in SQL before that native mutation
+  ---
+  duration_ms: 10165.913882
+  type: 'test'
+  ...
+# Subtest: native head collision preserves partial retained work and refuses resume without refetch
+ok 27 - native head collision preserves partial retained work and refuses resume without refetch
+  ---
+  duration_ms: 1780.621357
+  type: 'test'
+  ...
+# Subtest: canonical receipt head collision preserves the competing receipt and refuses incomplete execution retry
+ok 28 - canonical receipt head collision preserves the competing receipt and refuses incomplete execution retry
+  ---
+  duration_ms: 1711.356631
+  type: 'test'
+  ...
+# Subtest: one-use source capture binds its exact version and rejects changed bytes before another native job
+ok 29 - one-use source capture binds its exact version and rejects changed bytes before another native job
+  ---
+  duration_ms: 1801.040312
+  type: 'test'
+  ...
+# Subtest: failed fetch and expired permit stay consumed; only an explicit successor selection can acquire again
+ok 30 - failed fetch and expired permit stay consumed; only an explicit successor selection can acquire again
+  ---
+  duration_ms: 2154.997974
+  type: 'test'
+  ...
+# Subtest: native capture persistence failure rolls back its job and refuses automatic acquisition retry
+ok 31 - native capture persistence failure rolls back its job and refuses automatic acquisition retry
+  ---
+  duration_ms: 2064.999228
+  type: 'test'
+  ...
+# Subtest: progress payload is producer-scoped and reconsideration refuses revoked authority before observation writes
+ok 32 - progress payload is producer-scoped and reconsideration refuses revoked authority before observation writes
+  ---
+  duration_ms: 1958.148754
+  type: 'test'
+  ...
+# Subtest: completion requires a fresh exact catalogue and guarded restore preserves populated history and all original ACLs
+ok 33 - completion requires a fresh exact catalogue and guarded restore preserves populated history and all original ACLs
+  ---
+  duration_ms: 2381.652322
+  type: 'test'
+  ...
+# Subtest: source authorization expiry during a run refuses the first retained continuation without refetch
+ok 34 - source authorization expiry during a run refuses the first retained continuation without refetch
+  ---
+  duration_ms: 2648.932164
+  type: 'test'
+  ...
+# Subtest: source-rights and criteria successor CAS prevents older pending selection completion
+ok 35 - source-rights and criteria successor CAS prevents older pending selection completion
+  ---
+  duration_ms: 2755.645215
+  type: 'test'
+  ...
+# Subtest: tampered retained spans and foreign capture or observation scope refuse at the native SQL owner
+ok 36 - tampered retained spans and foreign capture or observation scope refuse at the native SQL owner
+  ---
+  duration_ms: 2174.675539
+  type: 'test'
+  ...
+# Subtest: registered contract catalogue preserves shared religion coverage and material sports/entertainment exceptions without scores
+ok 37 - registered contract catalogue preserves shared religion coverage and material sports/entertainment exceptions without scores
+  ---
+  duration_ms: 1833.255049
+  type: 'test'
+  ...
+1..37
+# tests 55
+# suites 0
+# pass 55
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50802.820348

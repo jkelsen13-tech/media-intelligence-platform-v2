@@ -59,22 +59,30 @@ function candidateInput(article, capture_id) {
     source_field: field, span_start: start, span_end: end, excerpt, extractor_version: 'selective-exact-span-1',
     remaining_uncertainty: 'Exact attributed source span only. Meaning, truth, identity and independent corroboration require review.' }
 }
-async function analyze(backend, candidate_id, predecessor_id = null) {
+async function analyze(backend, candidate_id, predecessor_id = null, continuation = null) {
   const context = await backend.assessments('context', { candidate_id })
-  return backend.assessments('append', { candidate_id, algorithm_key: 'selective-exact-span-baseline', algorithm_version: '1',
+  const input = { candidate_id, algorithm_key: 'selective-exact-span-baseline', algorithm_version: '1',
     parents: [], context_positions: context.context_positions, ...(predecessor_id ? { predecessor_id } : {}),
     outcome: 'insufficient_evidence', rationale: 'Executed exact-span extraction and native dependency context analysis; semantic claims remain unqualified.',
-    remaining_uncertainty: 'No independent truth, entailment, source rights for public display or completed corpus coverage is established.' })
+    remaining_uncertainty: 'No independent truth, entailment, source rights for public display or completed corpus coverage is established.' }
+  return continuation('analyze', input)
 }
-async function observeVersion(backend, owner, bundle, scope, key, previousObservation = null) {
+async function observeVersion(backend, owner, bundle, scope, key, previousObservation = null, continuation = null) {
   if (scope.length > 50) fail('explicit investigation scope budget exceeded')
-  const observation = await backend.observations('observe', { observation_id: selectiveExecutionId(key, 'observation'),
-    ...(previousObservation ? { previous_observation_id: previousObservation } : {}), candidate_ids: scope })
-  const version = await backend.workspace('put', { investigation_id: owner.investigation_id, version_id: selectiveExecutionId(key, 'version'),
+  const observeInput = { observation_id: selectiveExecutionId(key, 'observation'),
+    ...(previousObservation ? { previous_observation_id: previousObservation } : {}), candidate_ids: scope }
+  const observation = await continuation('observe', observeInput)
+  const versionInput = { investigation_id: owner.investigation_id, version_id: selectiveExecutionId(key, 'version'),
     previous_version_id: bundle.head_version_id, observation_id: observation.id, state: bundle.version.state,
-    change_reason: 'Registered selective execution; private evidence remains unqualified.' })
+    change_reason: 'Registered selective execution; private evidence remains unqualified.' }
+  const version = await continuation('version', versionInput)
   return { ...bundle, version, head_version_id: version.id, observation }
 }
+// The SQL owner validates current membership, rights, selection/execution/head and retained capture
+// in the SAME transaction as each delegated native write. A consumed permit never grants another fetch.
+const retainedContinuation = (backend, owner, permit_id, expected_version_id, previous_execution_id = null) => (kind, input) =>
+  backend.selectiveExecution('capture', { ...owner, permit_id,
+    continuation: { kind, expected_version_id, previous_execution_id, input } })
 async function annotate(backend, owner, saved, bundle, candidate_id, assessment_id, previousReceipt, priorExecution, reconsiderationReceipt, disposition, key) {
   const observation = nativeObservation(bundle), input = observation.snapshot.inputs.find(row => row.capture?.id === observation.snapshot.candidates.find(c => c.id === candidate_id)?.capture_id)
   if (!input) fail('native capture input unavailable')
@@ -117,34 +125,45 @@ export async function runSelectiveSource(backend, request, { fetchImpl = fetch, 
   if (selected.disposition !== 'analyze_now') return { selection: selected, execution: 'metadata_retained_only', source_requests: 0, publicly_eligible: false }
   const saved = await backend.selectiveExecution('read', owner)
   if (saved.execution) return { selection: selected, execution: saved.execution, source_requests: 0, publicly_eligible: false }
-  const permit = await backend.selectiveExecution('permit', { ...owner, permit_id: selectiveExecutionId(owner.selection_id, 'permit') })
-  if (permit?.selection_id !== owner.selection_id || permit.url !== input.metadata.url || permit.publicly_eligible !== false ||
-    permit.format !== 'mip_article_json_v1' || !Number.isInteger(permit.max_bytes) || permit.max_bytes < 1 || permit.max_bytes > 240000 ||
-    !Number.isFinite(Date.parse(permit.valid_until)) || Date.parse(permit.valid_until) <= now()) fail('invalid or expired source permit')
-  // Timeout bounds both headers AND body consumption, including a noncooperative injected adapter.
-  const controller = new AbortController(); let timer
-  const work = async () => {
-    const response = await fetchImpl(permit.url, { method: 'GET', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal })
-    const article = await boundedArticle(response, permit.max_bytes, controller.signal)
-    if (article.url !== permit.url) fail('acquired article endpoint mismatch')
-    return article
+  const retained = saved.progress?.capture
+  if (saved.progress?.permit && !retained) fail('consumed source permit requires explicit successor acquisition', '40001')
+  let capture = retained, source_requests = 0
+  if (!capture) {
+    const permit = await backend.selectiveExecution('permit', { ...owner, permit_id: selectiveExecutionId(owner.selection_id, 'permit') })
+    if (permit?.selection_id !== owner.selection_id || permit.url !== input.metadata.url || permit.publicly_eligible !== false ||
+      permit.format !== 'mip_article_json_v1' || !Number.isInteger(permit.max_bytes) || permit.max_bytes < 1 || permit.max_bytes > 240000 ||
+      !Number.isFinite(Date.parse(permit.valid_until)) || Date.parse(permit.valid_until) <= now()) fail('invalid or expired source permit')
+    // Timeout bounds both headers AND body consumption, including a noncooperative injected adapter.
+    const controller = new AbortController(); let timer
+    const work = async () => {
+      const response = await fetchImpl(permit.url, { method: 'GET', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal })
+      const article = await boundedArticle(response, permit.max_bytes, controller.signal)
+      if (article.url !== permit.url) fail('acquired article endpoint mismatch')
+      return article
+    }
+    let article
+    try {
+      article = await Promise.race([work(), new Promise((_, reject) => {
+        timer = setTimeout(() => { controller.abort(); reject(Object.assign(new Error('source timeout'), { code: 'source_timeout' })) }, 15000)
+      })])
+    } finally { clearTimeout(timer); controller.abort() }
+    capture = await backend.selectiveExecution('capture', { ...owner, permit_id: permit.permit_id, article })
+    source_requests = 1
   }
-  let article
-  try {
-    article = await Promise.race([work(), new Promise((_, reject) => {
-      timer = setTimeout(() => { controller.abort(); reject(Object.assign(new Error('source timeout'), { code: 'source_timeout' })) }, 15000)
-    })])
-  } finally { clearTimeout(timer); controller.abort() }
-  const capture = await backend.selectiveExecution('capture', { ...owner, permit_id: permit.permit_id, article })
-  const candidate = await backend.intake('candidate', candidateInput(validateArticle(capture.payload), capture.capture_id))
-  const assessment = await analyze(backend, candidate)
   const bundle = await backend.workspace('read', { user_id: owner.user_id, investigation_id: owner.investigation_id })
-  if (bundle.head_version_id !== input.version_id) fail('workspace changed during source execution', '40001')
+  const completedVersion = selectiveExecutionId(owner.selection_id, 'version')
+  if (![input.version_id, completedVersion].includes(bundle.head_version_id)) fail('workspace changed during source execution', '40001')
+  if (bundle.head_version_id === completedVersion && (bundle.version.predecessor_id !== input.version_id ||
+    bundle.version.observation_id !== selectiveExecutionId(owner.selection_id, 'observation'))) fail('retained version identity changed', '40001')
+  const continuation = retainedContinuation(backend, owner, saved.progress?.permit?.permit_id ?? selectiveExecutionId(owner.selection_id, 'permit'), bundle.head_version_id)
+  const candidate = await continuation('candidate', candidateInput(validateArticle(capture.payload), capture.capture_id))
+  const assessment = await analyze(backend, candidate, null, continuation)
   const scope = [...new Set([...bundle.observation.scope_candidate_ids, candidate])].sort()
   const sameScope = JSON.stringify(scope) === JSON.stringify(bundle.observation.scope_candidate_ids)
-  const current = await observeVersion(backend, owner, bundle, scope, owner.selection_id, sameScope ? bundle.observation.id : null)
+  const current = bundle.head_version_id === completedVersion ? bundle :
+    await observeVersion(backend, owner, bundle, scope, owner.selection_id, sameScope ? bundle.observation.id : null, continuation)
   const receipt = await annotate(backend, owner, saved, current, candidate, assessment, null, null, null, selected.disposition, owner.selection_id)
-  return { selection: selected, execution: receipt, source_requests: 1, publicly_eligible: false }
+  return { selection: selected, execution: receipt, source_requests, publicly_eligible: false }
 }
 
 /** Deterministically select newly observed native causes; arrival/age/domain words alone do not trigger. */
@@ -172,16 +191,20 @@ export async function runSelectiveReconsideration(backend, request) {
   if (!saved.execution || !saved.declaration) return { state: 'no_executed_selection', source_requests: 0, publicly_eligible: false }
   const base = await backend.workspace('read', { user_id: owner.user_id, investigation_id: owner.investigation_id, version_id: saved.declaration.version_id })
   let current = await backend.workspace('read', { user_id: owner.user_id, investigation_id: owner.investigation_id })
+  if (!saved.progress?.permit?.permit_id || !saved.progress?.capture || saved.progress.capture.capture_id !== saved.declaration.capture_id)
+    fail('retained selective progress unavailable', '40001')
+  let continuation = retainedContinuation(backend, owner, saved.progress.permit.permit_id, current.head_version_id, saved.execution.execution_id)
   if (JSON.stringify(current.observation.scope_candidate_ids) !== JSON.stringify(base.observation.scope_candidate_ids)) fail('reconsideration explicit scope changed', '40001')
   if (current.observation.id === base.observation.id) {
     // Refresh native evidence without inferring a trigger from a watermark or timer.
-    const observed = await backend.observations('observe', { observation_id: randomUUID(),
+    const observed = await continuation('observe', { observation_id: randomUUID(),
       previous_observation_id: base.observation.id, candidate_ids: base.observation.scope_candidate_ids })
     const trigger = nextSelectiveTrigger(saved.declaration.result, base.observation, observed)
     if (!trigger) return { state: 'no_new_bound_cause', source_requests: 0, publicly_eligible: false }
-    const version = await backend.workspace('put', { investigation_id: owner.investigation_id, version_id: selectiveExecutionId(observed.id, 'version'),
+    const version = await continuation('version', { investigation_id: owner.investigation_id, version_id: selectiveExecutionId(observed.id, 'version'),
       previous_version_id: current.head_version_id, observation_id: observed.id, state: current.version.state, change_reason: 'Observed native selective reconsideration cause.' })
     current = { ...current, observation: observed, version, head_version_id: version.id }
+    continuation = retainedContinuation(backend, owner, saved.progress.permit.permit_id, current.head_version_id, saved.execution.execution_id)
   }
   const trigger = nextSelectiveTrigger(saved.declaration.result, base.observation, current.observation)
   if (!trigger) return { state: 'no_new_bound_cause', source_requests: 0, publicly_eligible: false }
@@ -192,9 +215,9 @@ export async function runSelectiveReconsideration(backend, request) {
     annotation: { user_id: owner.user_id, investigation_id: owner.investigation_id, version_id: current.version.id,
       receipt_id: selectiveExecutionId(key, 'reconsideration'), previous_receipt_id: saved.declaration.receipt_id,
       declaration_receipt_id: saved.declaration.receipt_id, result } })
-  const candidate = saved.declaration.candidate_id, assessment = await analyze(backend, candidate, saved.execution.assessment_id)
+  const candidate = saved.declaration.candidate_id, assessment = await analyze(backend, candidate, saved.execution.assessment_id, continuation)
   // Rebase watched dependencies on a fresh native observation, preserving the original immutable capture/candidate.
-  const rebased = await observeVersion(backend, owner, current, current.observation.scope_candidate_ids, key, current.observation.id)
+  const rebased = await observeVersion(backend, owner, current, current.observation.scope_candidate_ids, key, current.observation.id, continuation)
   const execution = await annotate(backend, owner, saved, rebased, candidate, assessment, reconsidered.receipt.receipt_id,
     saved.execution.execution_id, reconsidered.receipt.receipt_id, reconsidered.decision.disposition, key)
   return { state: 'reconsidered', trigger, execution, source_requests: 0, publicly_eligible: false }
