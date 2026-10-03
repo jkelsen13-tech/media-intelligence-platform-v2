@@ -40,5 +40,10 @@
     "react-test-renderer": "^18.3.1",
     "vite": "7.3.6",
     "vite-plugin-static-copy": "3.4.0"
+  },
+  "overrides": {
+    "vite-plugin-static-copy@3.4.0": {
+      "chokidar": "4.0.3"
+    }
   }
 }
