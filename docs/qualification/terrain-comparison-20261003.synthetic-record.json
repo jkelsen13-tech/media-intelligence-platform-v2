@@ -1,0 +1,1134 @@
+{
+  "schema": "mip.terrain-comparison.v1",
+  "evidenceClass": "SYNTHETIC_TEST_FIXTURE_ONLY",
+  "mode": "LOCAL_COORDINATE_RELATIVE_HEIGHT_RESEARCH",
+  "status": "EXECUTED",
+  "invariants": {
+    "canonicalAnchorUnchanged": true,
+    "precisionFloorUnchanged": true,
+    "noRoofHeightInference": true,
+    "noPhysicalPerformanceClaim": true,
+    "applicationAdmitted": false,
+    "providerActivated": false,
+    "deployed": false
+  },
+  "baseSource": {
+    "commit": "ffd633d4173c859238231b455290b96f36c2f85e",
+    "tree": "d6d14c7cc01a4e65b10eaf69ff75c2859f2696cc",
+    "githubAtPreparation": "422 No commit found; authorized local committed RC"
+  },
+  "sources": {
+    "dem": {
+      "authority": "SYNTHETIC_TEST_FIXTURE_ONLY",
+      "horizontalCrs": "EPSG:26917",
+      "horizontalUnits": "metres",
+      "footprint": [
+        100,
+        200,
+        132,
+        232
+      ],
+      "size": [
+        32,
+        32
+      ],
+      "pixelOrigin": "affine pixel corners; renderer samples pixel centres",
+      "capture": {
+        "exactDay": null,
+        "basis": "synthetic mathematical test fixture; no real capture"
+      },
+      "id": "SYNTHETIC_DEM",
+      "binding": {
+        "status": "BOUND_LOCAL_BYTES",
+        "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/dem.tif",
+        "bytes": 4474,
+        "sha256": "2e9cd692b74dc0364eb26a8ebb5107b2107ebe97f748e17653b59c2f0c64af59"
+      },
+      "geotransform": [
+        100,
+        1,
+        0,
+        232,
+        0,
+        -1
+      ],
+      "samples": {
+        "type": "Float32",
+        "nodata": -999999,
+        "rowMajorLittleEndianSha256": "7e26809be508ccd6bf588e3b5e8678bb9488baed3fee739bb0fc356bd30fd0c6",
+        "minimum": 250.02499389648438,
+        "maximum": 252.23513793945312,
+        "mean": 251.1727388890957
+      },
+      "pixelAreaOrPoint": "Area"
+    },
+    "ortho": {
+      "authority": "SYNTHETIC_TEST_FIXTURE_ONLY",
+      "horizontalCrs": "EPSG:26917",
+      "horizontalUnits": "metres",
+      "footprint": [
+        100,
+        200,
+        132,
+        232
+      ],
+      "size": [
+        32,
+        32
+      ],
+      "pixelOrigin": "affine pixel corners; renderer samples pixel centres",
+      "capture": {
+        "exactDay": null,
+        "basis": "synthetic mathematical test fixture; no real capture"
+      },
+      "id": "SYNTHETIC_RGB",
+      "binding": {
+        "status": "BOUND_LOCAL_BYTES",
+        "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/fixture.zip",
+        "bytes": 2697,
+        "sha256": "236abc39dfb386c93ea962c7337c55f3f160666343f8502107f545566dc4c7cc"
+      },
+      "tiles": [
+        {
+          "name": "tile-0-0.png",
+          "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-0-0.png",
+          "byteLength": 88,
+          "sha256": "b3e54fca4068e8e5e9db5baef323812f07eec179fc149c116ca459b2643f37f4",
+          "rgbSha256": "85739934702cfd5f20a4cd13ae77467de37febf3cf4e7234aacbf8ff5b0b2ae6",
+          "pixelOrder": "planar RGB",
+          "width": 16,
+          "height": 16,
+          "bounds": [
+            100,
+            216,
+            116,
+            232
+          ]
+        },
+        {
+          "name": "tile-0-1.png",
+          "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-0-1.png",
+          "byteLength": 88,
+          "sha256": "366196828328c6f5b798f178b40a173c856afa1d2078985575480b48239f9cef",
+          "rgbSha256": "d1ff85f91f0583773da89a1f66d4f04dd39a6fe078f59b2ba845a7328843ad96",
+          "pixelOrder": "planar RGB",
+          "width": 16,
+          "height": 16,
+          "bounds": [
+            116,
+            216,
+            132,
+            232
+          ]
+        },
+        {
+          "name": "tile-1-0.png",
+          "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-1-0.png",
+          "byteLength": 88,
+          "sha256": "182866cacc5c359f8feaf77678b098a05d5cbe5d75c90d3a67cdf657de46c3c0",
+          "rgbSha256": "2e1b76fd6c6eb44dbb90f9c43f3b197fcf0babee5b4b02d014d5bdcf9ecf2e73",
+          "pixelOrder": "planar RGB",
+          "width": 16,
+          "height": 16,
+          "bounds": [
+            100,
+            200,
+            116,
+            216
+          ]
+        },
+        {
+          "name": "tile-1-1.png",
+          "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-1-1.png",
+          "byteLength": 88,
+          "sha256": "634bad6c8ec1c07439c5edc71997311bdf10892d2ff8e8b7922a16cd4397f994",
+          "rgbSha256": "3262c2c7e5cd1c54a013bec55f394c8b4e21f2e28612be0abd60a906e0d64af2",
+          "pixelOrder": "planar RGB",
+          "width": 16,
+          "height": 16,
+          "bounds": [
+            116,
+            200,
+            132,
+            216
+          ]
+        }
+      ],
+      "runtimeProvenance": {
+        "name": "provenance.json",
+        "byteLength": 1656,
+        "sha256": "abb047ca986438b6aca08434e3e06f7e867fca2acdbce1ed511630d7ac3ca49e"
+      },
+      "metadataXml": {
+        "name": "source-metadata.xml",
+        "byteLength": 47,
+        "sha256": "f9344b35a8098277580fe4fa73c02d38d2b97601ec565eb09e3ab87dba6f6054"
+      }
+    }
+  },
+  "registration": {
+    "status": "RESEARCH_UNQUALIFIED",
+    "sourceCrs": "EPSG:26917",
+    "targetCrs": "EPSG:26917",
+    "operation": {
+      "pipeline": "+proj=noop",
+      "sha256": "d3b7fcd1d63c705867203558cb03505f0dac4fdd2f1cbda0e51602c546ac4dc6",
+      "sourceCrs": "EPSG:26917",
+      "targetCrs": "EPSG:26917",
+      "axisConvention": "easting,northing identity synthetic grid",
+      "gridRequirementBasis": "explicit noop has no grid steps",
+      "grids": [],
+      "networkEnabled": false
+    },
+    "reportedAccuracyMetres": null,
+    "measuredResidualRmseMetres": null,
+    "arbitraryAlignmentOffsetMetres": [
+      0,
+      0
+    ],
+    "globalRegistrationClaim": false,
+    "evidence": [],
+    "exactSourceHorizontalBasis": null,
+    "exactTargetHorizontalBasis": null
+  },
+  "height": {
+    "mode": "SOURCE_RELATIVE_METRES",
+    "originRule": "minimum finite non-nodata DEM value",
+    "verticalExaggeration": 1,
+    "verticalTransform": null,
+    "sourceBasis": "synthetic mathematical source-relative metres; not NAVD88, geoid or surveyed ground",
+    "qualification": "UNRESOLVED",
+    "exactGeoidOrHeightBasis": null,
+    "evidence": []
+  },
+  "shared": {
+    "footprint": [
+      101,
+      200,
+      132,
+      232
+    ],
+    "camera": {
+      "azimuthDegrees": -60,
+      "elevationDegrees": 35,
+      "projection": "orthographic",
+      "boxAspect": [
+        31,
+        32,
+        32
+      ]
+    },
+    "light": {
+      "azimuthDegrees": 315,
+      "altitudeDegrees": 45
+    },
+    "render": {
+      "canvasPixels": [
+        800,
+        600
+      ],
+      "dpi": 144,
+      "meshMaximumEdge": 17,
+      "textureSampling": "face mean of bilinear-warped RGB",
+      "nodataPolicy": "crop largest fully valid common rectangle; never fill/extrapolate"
+    },
+    "requestedNativeFootprint": [
+      100,
+      200,
+      132,
+      232
+    ]
+  },
+  "buildings": {
+    "variant": "C",
+    "status": "UNAVAILABLE",
+    "geometryAvailable": false,
+    "heightAvailable": false,
+    "reason": "Overture 2026-09-23.1 rowgroup97 only id/names/sources provenance acquired; geometry and height/roof bodies absent. No synthetic/extruded roof substitute. Official OSM editing-API feasibility stopped on provider-purpose policy before any map request; not a geometry/heights or data-rights denial.",
+    "twoDimensionalOutlineMetadata": {
+      "libraryFileId": "libfile_fe2e32811c4c8191b1d8ddad6cbc022d",
+      "backingFileId": "file_00000000da8881fb91a378d889b49abc",
+      "bytes": 3117,
+      "sha256": "fe14f6d6472de92c67e34136db9a97a816e9e49e17208354523f683d10872735",
+      "fullRingBoundsLonLat": [
+        -81.6999051,
+        41.4004629,
+        -81.6996735,
+        41.4008596
+      ],
+      "ways": [
+        {
+          "id": 1511440097,
+          "version": 1
+        },
+        {
+          "id": 1511440098,
+          "version": 1
+        }
+      ],
+      "authority": "parent-verified official read-only Overpass response semantic metadata; source=microsoft/BuildingFootprints, building=yes",
+      "consumerRawBytes": "UNBOUND; supported Library helper tools/list transfer blocked; no workaround",
+      "heightsFloorsRoofs": "ABSENT; no verified height basis",
+      "manifest": {
+        "path": "/workspace/mip-oct03-launch-readiness/requirements/building-footprint-manifest-library.read.txt",
+        "bytes": 19659,
+        "sha256": "0dc0e5581c33acf407d900f448f0be7ef3de0caf244cae52bc616dc31c8f0515",
+        "classification": "complete Library manifest semantic extract; no consumer GeoJSON bytes"
+      },
+      "rights": {
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "copyright_url": "https://www.openstreetmap.org/copyright",
+        "attribution": "\u00a9 OpenStreetMap contributors",
+        "commercial_use": "permitted conditionally",
+        "derivatives": "permitted conditionally",
+        "temporary_and_permanent_cache": "permitted conditionally",
+        "redistribution": "permitted conditionally",
+        "conditions": "Retain copyright/licence notices and credit. Public derivative-database use requires share-alike and machine-readable database or alterations offer. Produced Work and collective-database boundaries require design-specific qualification. No small-extract exemption assumed.",
+        "public_compliance_design_qualified": false,
+        "provider_endpoint_is_production_CDN": false,
+        "production_service_SLA": null
+      }
+    }
+  },
+  "observations": [],
+  "execution": {
+    "recordedAt": "2026-10-03T05:21:21.141896+00:00",
+    "harnessSha256": "8d06ef35b95fe0f708311d4297f420089ba01a4812a688a15d1127cfd88d98b9",
+    "contractSha256": "9da2b65b406c3dcd4f0f412dcb2021daa6e09665da52e7b6b50299534b8e1f0a",
+    "sourceVersion": {
+      "commit": "8d021d092c5ddd98c457e9d8f26dfb8c8b21fbb5",
+      "tree": "a890813bd09d7d283521ac003bd066645d09fe08",
+      "dirty": false
+    },
+    "variants": [
+      {
+        "id": "A",
+        "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-render/A.png",
+        "bytes": 78681,
+        "sha256": "cb281c2e2782461ff58755663b7e2de141a91b3121afd49bf8362f1b9fcad4ec",
+        "shared": {
+          "footprint": [
+            101,
+            200,
+            132,
+            232
+          ],
+          "camera": {
+            "azimuthDegrees": -60,
+            "elevationDegrees": 35,
+            "projection": "orthographic",
+            "boxAspect": [
+              31,
+              32,
+              32
+            ]
+          },
+          "light": {
+            "azimuthDegrees": 315,
+            "altitudeDegrees": 45
+          },
+          "render": {
+            "canvasPixels": [
+              800,
+              600
+            ],
+            "dpi": 144,
+            "meshMaximumEdge": 17,
+            "textureSampling": "face mean of bilinear-warped RGB",
+            "nodataPolicy": "crop largest fully valid common rectangle; never fill/extrapolate"
+          },
+          "requestedNativeFootprint": [
+            100,
+            200,
+            132,
+            232
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-render/B.png",
+        "bytes": 86975,
+        "sha256": "701e18faaf40305405bc5122d354bb9b2fce591371081675b5f87d7b18005355",
+        "shared": {
+          "footprint": [
+            101,
+            200,
+            132,
+            232
+          ],
+          "camera": {
+            "azimuthDegrees": -60,
+            "elevationDegrees": 35,
+            "projection": "orthographic",
+            "boxAspect": [
+              31,
+              32,
+              32
+            ]
+          },
+          "light": {
+            "azimuthDegrees": 315,
+            "altitudeDegrees": 45
+          },
+          "render": {
+            "canvasPixels": [
+              800,
+              600
+            ],
+            "dpi": 144,
+            "meshMaximumEdge": 17,
+            "textureSampling": "face mean of bilinear-warped RGB",
+            "nodataPolicy": "crop largest fully valid common rectangle; never fill/extrapolate"
+          },
+          "requestedNativeFootprint": [
+            100,
+            200,
+            132,
+            232
+          ]
+        }
+      }
+    ],
+    "metrics": {
+      "commonWindowPixels": [
+        1,
+        0,
+        31,
+        32
+      ],
+      "commonFootprint": [
+        101,
+        200,
+        132,
+        232
+      ],
+      "commonValidCount": 992,
+      "commonMissingCount": 0,
+      "heightOriginMetres": 250.02499389648438,
+      "effectiveMeshSpacingMetres": [
+        2.0,
+        2.0
+      ],
+      "effectiveOrthoColourCellMetres": [
+        2.0,
+        2.0
+      ],
+      "meshDimensions": [
+        17,
+        17
+      ],
+      "quadCount": 256,
+      "outputCanvasPixels": [
+        800,
+        600
+      ],
+      "sourcePixelsToMesh": "evenly selected pixel centres; face colours average bilinear-warped RGB",
+      "retainedOriginalResolutionClaim": false,
+      "demValidCount": 1023,
+      "demMissingCount": 1,
+      "demNonfiniteCount": 0,
+      "orthoMissingCount": 0,
+      "orthoTotalCount": 1024,
+      "fullGridOverlapCount": 1023
+    },
+    "gdalVersion": "GDAL 3.10.3, released 2025/04/01",
+    "inputReceipts": {
+      "dem": {
+        "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/dem.tif",
+        "sha256": "2e9cd692b74dc0364eb26a8ebb5107b2107ebe97f748e17653b59c2f0c64af59",
+        "pixelSha256": "7e26809be508ccd6bf588e3b5e8678bb9488baed3fee739bb0fc356bd30fd0c6",
+        "gdalInfo": {
+          "description": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/dem.tif",
+          "driverShortName": "GTiff",
+          "driverLongName": "GeoTIFF",
+          "files": [
+            "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/dem.tif"
+          ],
+          "size": [
+            32,
+            32
+          ],
+          "coordinateSystem": {
+            "wkt": "PROJCRS[\"NAD83 / UTM zone 17N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 17N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-81,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.\"],\n        BBOX[23.81,-84,84,-78]],\n    ID[\"EPSG\",26917]]",
+            "dataAxisToSRSAxisMapping": [
+              1,
+              2
+            ]
+          },
+          "geoTransform": [
+            100.0,
+            1.0,
+            0.0,
+            232.0,
+            0.0,
+            -1.0
+          ],
+          "metadata": {
+            "": {
+              "AREA_OR_POINT": "Area"
+            },
+            "IMAGE_STRUCTURE": {
+              "INTERLEAVE": "BAND"
+            }
+          },
+          "cornerCoordinates": {
+            "upperLeft": [
+              100.0,
+              232.0
+            ],
+            "lowerLeft": [
+              100.0,
+              200.0
+            ],
+            "lowerRight": [
+              132.0,
+              200.0
+            ],
+            "upperRight": [
+              132.0,
+              232.0
+            ],
+            "center": [
+              116.0,
+              216.0
+            ]
+          },
+          "wgs84Extent": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -85.487848,
+                  0.0020925
+                ],
+                [
+                  -85.487848,
+                  0.0018039
+                ],
+                [
+                  -85.4875613,
+                  0.0018039
+                ],
+                [
+                  -85.4875613,
+                  0.0020925
+                ],
+                [
+                  -85.487848,
+                  0.0020925
+                ]
+              ]
+            ]
+          },
+          "bands": [
+            {
+              "band": 1,
+              "block": [
+                32,
+                32
+              ],
+              "type": "Float32",
+              "colorInterpretation": "Gray",
+              "noDataValue": -999999.0,
+              "metadata": {}
+            }
+          ],
+          "stac": {
+            "proj:shape": [
+              32,
+              32
+            ],
+            "proj:wkt2": "PROJCRS[\"NAD83 / UTM zone 17N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 17N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-81,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.\"],\n        BBOX[23.81,-84,84,-78]],\n    ID[\"EPSG\",26917]]",
+            "proj:epsg": 26917,
+            "proj:projjson": {
+              "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+              "type": "ProjectedCRS",
+              "name": "NAD83 / UTM zone 17N",
+              "base_crs": {
+                "type": "GeographicCRS",
+                "name": "NAD83",
+                "datum": {
+                  "type": "GeodeticReferenceFrame",
+                  "name": "North American Datum 1983",
+                  "ellipsoid": {
+                    "name": "GRS 1980",
+                    "semi_major_axis": 6378137,
+                    "inverse_flattening": 298.257222101
+                  }
+                },
+                "coordinate_system": {
+                  "subtype": "ellipsoidal",
+                  "axis": [
+                    {
+                      "name": "Geodetic latitude",
+                      "abbreviation": "Lat",
+                      "direction": "north",
+                      "unit": "degree"
+                    },
+                    {
+                      "name": "Geodetic longitude",
+                      "abbreviation": "Lon",
+                      "direction": "east",
+                      "unit": "degree"
+                    }
+                  ]
+                },
+                "id": {
+                  "authority": "EPSG",
+                  "code": 4269
+                }
+              },
+              "conversion": {
+                "name": "UTM zone 17N",
+                "method": {
+                  "name": "Transverse Mercator",
+                  "id": {
+                    "authority": "EPSG",
+                    "code": 9807
+                  }
+                },
+                "parameters": [
+                  {
+                    "name": "Latitude of natural origin",
+                    "value": 0,
+                    "unit": "degree",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8801
+                    }
+                  },
+                  {
+                    "name": "Longitude of natural origin",
+                    "value": -81,
+                    "unit": "degree",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8802
+                    }
+                  },
+                  {
+                    "name": "Scale factor at natural origin",
+                    "value": 0.9996,
+                    "unit": "unity",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8805
+                    }
+                  },
+                  {
+                    "name": "False easting",
+                    "value": 500000,
+                    "unit": "metre",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8806
+                    }
+                  },
+                  {
+                    "name": "False northing",
+                    "value": 0,
+                    "unit": "metre",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8807
+                    }
+                  }
+                ]
+              },
+              "coordinate_system": {
+                "subtype": "Cartesian",
+                "axis": [
+                  {
+                    "name": "Easting",
+                    "abbreviation": "E",
+                    "direction": "east",
+                    "unit": "metre"
+                  },
+                  {
+                    "name": "Northing",
+                    "abbreviation": "N",
+                    "direction": "north",
+                    "unit": "metre"
+                  }
+                ]
+              },
+              "scope": "Engineering survey, topographic mapping.",
+              "area": "North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.",
+              "bbox": {
+                "south_latitude": 23.81,
+                "west_longitude": -84,
+                "north_latitude": 84,
+                "east_longitude": -78
+              },
+              "id": {
+                "authority": "EPSG",
+                "code": 26917
+              }
+            },
+            "proj:transform": [
+              100.0,
+              1.0,
+              0.0,
+              232.0,
+              0.0,
+              -1.0
+            ],
+            "raster:bands": [
+              {
+                "data_type": "float32",
+                "nodata": null
+              }
+            ],
+            "eo:bands": [
+              {
+                "name": "b1",
+                "description": "Gray"
+              }
+            ]
+          }
+        },
+        "validCount": 1023,
+        "missingCount": 1,
+        "nonfiniteCount": 0
+      },
+      "ortho": {
+        "archive": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/fixture.zip",
+        "archiveSha256": "236abc39dfb386c93ea962c7337c55f3f160666343f8502107f545566dc4c7cc",
+        "tiles": [
+          {
+            "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-0-0.png",
+            "sha256": "b3e54fca4068e8e5e9db5baef323812f07eec179fc149c116ca459b2643f37f4",
+            "bytes": 88,
+            "planarRgbSha256": "85739934702cfd5f20a4cd13ae77467de37febf3cf4e7234aacbf8ff5b0b2ae6",
+            "interleavedRgbSha256": "2204dc72cc96c186fc3c2e8360d10eee4097df91300214073241ba29c0f59755",
+            "size": [
+              16,
+              16
+            ],
+            "bounds": [
+              100,
+              216,
+              116,
+              232
+            ]
+          },
+          {
+            "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-0-1.png",
+            "sha256": "366196828328c6f5b798f178b40a173c856afa1d2078985575480b48239f9cef",
+            "bytes": 88,
+            "planarRgbSha256": "d1ff85f91f0583773da89a1f66d4f04dd39a6fe078f59b2ba845a7328843ad96",
+            "interleavedRgbSha256": "dd96c86a2cfd27664812c8ff2825123a18aecffee360bb7834dc2f1da896a6fe",
+            "size": [
+              16,
+              16
+            ],
+            "bounds": [
+              116,
+              216,
+              132,
+              232
+            ]
+          },
+          {
+            "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-1-0.png",
+            "sha256": "182866cacc5c359f8feaf77678b098a05d5cbe5d75c90d3a67cdf657de46c3c0",
+            "bytes": 88,
+            "planarRgbSha256": "2e1b76fd6c6eb44dbb90f9c43f3b197fcf0babee5b4b02d014d5bdcf9ecf2e73",
+            "interleavedRgbSha256": "36e4db190b5262cbea83d819765e99f629a1603fa928e3cfe046bed3bffef927",
+            "size": [
+              16,
+              16
+            ],
+            "bounds": [
+              100,
+              200,
+              116,
+              216
+            ]
+          },
+          {
+            "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-inputs/tile-1-1.png",
+            "sha256": "634bad6c8ec1c07439c5edc71997311bdf10892d2ff8e8b7922a16cd4397f994",
+            "bytes": 88,
+            "planarRgbSha256": "3262c2c7e5cd1c54a013bec55f394c8b4e21f2e28612be0abd60a906e0d64af2",
+            "interleavedRgbSha256": "f9f05dad0bb55b451a5338e9892e43165597829b9ba4de3768545f1e0634eda1",
+            "size": [
+              16,
+              16
+            ],
+            "bounds": [
+              116,
+              200,
+              132,
+              216
+            ]
+          }
+        ],
+        "mosaicInterleavedRgbSha256": "6d360873bab9f788f74418c809e9219b67a9c6d76b7fd985ad9bb63ecfedc809",
+        "layout": "uint8 interleaved RGB",
+        "footprintAuthority": "retained derivative provenance; not new original TIFF verification"
+      },
+      "warp": {
+        "command": [
+          "gdalwarp",
+          "-q",
+          "-overwrite",
+          "-of",
+          "GTiff",
+          "-s_srs",
+          "EPSG:26917",
+          "-t_srs",
+          "EPSG:26917",
+          "-ct",
+          "+proj=noop",
+          "-te",
+          "100",
+          "200",
+          "132",
+          "232",
+          "-ts",
+          "32",
+          "32",
+          "-r",
+          "bilinear",
+          "-et",
+          "0",
+          "-dstalpha",
+          "/tmp/mip-terrain-comparison-55xcs8l1/ortho-provenance-grid.tif",
+          "/tmp/mip-terrain-comparison-55xcs8l1/ortho-on-dem-grid.tif"
+        ],
+        "sourceGridAssignment": "provenance bounds; not new GeoKey or registration qualification",
+        "resampling": "bilinear; warp approximation error 0 pixels",
+        "offline": true,
+        "rgbaSha256": "dde8c63aa9be08460b812aa9b1e8c87360294d0927f9d7614d2d1485da25457e",
+        "gdalInfo": {
+          "description": "/tmp/mip-terrain-comparison-55xcs8l1/ortho-on-dem-grid.tif",
+          "driverShortName": "GTiff",
+          "driverLongName": "GeoTIFF",
+          "files": [
+            "/tmp/mip-terrain-comparison-55xcs8l1/ortho-on-dem-grid.tif"
+          ],
+          "size": [
+            32,
+            32
+          ],
+          "coordinateSystem": {
+            "wkt": "PROJCRS[\"NAD83 / UTM zone 17N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 17N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-81,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.\"],\n        BBOX[23.81,-84,84,-78]],\n    ID[\"EPSG\",26917]]",
+            "dataAxisToSRSAxisMapping": [
+              1,
+              2
+            ]
+          },
+          "geoTransform": [
+            100.0,
+            1.0,
+            0.0,
+            232.0,
+            0.0,
+            -1.0
+          ],
+          "metadata": {
+            "": {
+              "AREA_OR_POINT": "Area"
+            },
+            "IMAGE_STRUCTURE": {
+              "INTERLEAVE": "PIXEL"
+            }
+          },
+          "cornerCoordinates": {
+            "upperLeft": [
+              100.0,
+              232.0
+            ],
+            "lowerLeft": [
+              100.0,
+              200.0
+            ],
+            "lowerRight": [
+              132.0,
+              200.0
+            ],
+            "upperRight": [
+              132.0,
+              232.0
+            ],
+            "center": [
+              116.0,
+              216.0
+            ]
+          },
+          "wgs84Extent": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -85.487848,
+                  0.0020925
+                ],
+                [
+                  -85.487848,
+                  0.0018039
+                ],
+                [
+                  -85.4875613,
+                  0.0018039
+                ],
+                [
+                  -85.4875613,
+                  0.0020925
+                ],
+                [
+                  -85.487848,
+                  0.0020925
+                ]
+              ]
+            ]
+          },
+          "bands": [
+            {
+              "band": 1,
+              "block": [
+                32,
+                32
+              ],
+              "type": "Byte",
+              "colorInterpretation": "Red",
+              "mask": {
+                "flags": [
+                  "PER_DATASET",
+                  "ALPHA"
+                ],
+                "overviews": []
+              },
+              "metadata": {}
+            },
+            {
+              "band": 2,
+              "block": [
+                32,
+                32
+              ],
+              "type": "Byte",
+              "colorInterpretation": "Green",
+              "mask": {
+                "flags": [
+                  "PER_DATASET",
+                  "ALPHA"
+                ],
+                "overviews": []
+              },
+              "metadata": {}
+            },
+            {
+              "band": 3,
+              "block": [
+                32,
+                32
+              ],
+              "type": "Byte",
+              "colorInterpretation": "Blue",
+              "mask": {
+                "flags": [
+                  "PER_DATASET",
+                  "ALPHA"
+                ],
+                "overviews": []
+              },
+              "metadata": {}
+            },
+            {
+              "band": 4,
+              "block": [
+                32,
+                32
+              ],
+              "type": "Byte",
+              "colorInterpretation": "Alpha",
+              "metadata": {}
+            }
+          ],
+          "stac": {
+            "proj:shape": [
+              32,
+              32
+            ],
+            "proj:wkt2": "PROJCRS[\"NAD83 / UTM zone 17N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 17N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-81,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.\"],\n        BBOX[23.81,-84,84,-78]],\n    ID[\"EPSG\",26917]]",
+            "proj:epsg": 26917,
+            "proj:projjson": {
+              "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+              "type": "ProjectedCRS",
+              "name": "NAD83 / UTM zone 17N",
+              "base_crs": {
+                "type": "GeographicCRS",
+                "name": "NAD83",
+                "datum": {
+                  "type": "GeodeticReferenceFrame",
+                  "name": "North American Datum 1983",
+                  "ellipsoid": {
+                    "name": "GRS 1980",
+                    "semi_major_axis": 6378137,
+                    "inverse_flattening": 298.257222101
+                  }
+                },
+                "coordinate_system": {
+                  "subtype": "ellipsoidal",
+                  "axis": [
+                    {
+                      "name": "Geodetic latitude",
+                      "abbreviation": "Lat",
+                      "direction": "north",
+                      "unit": "degree"
+                    },
+                    {
+                      "name": "Geodetic longitude",
+                      "abbreviation": "Lon",
+                      "direction": "east",
+                      "unit": "degree"
+                    }
+                  ]
+                },
+                "id": {
+                  "authority": "EPSG",
+                  "code": 4269
+                }
+              },
+              "conversion": {
+                "name": "UTM zone 17N",
+                "method": {
+                  "name": "Transverse Mercator",
+                  "id": {
+                    "authority": "EPSG",
+                    "code": 9807
+                  }
+                },
+                "parameters": [
+                  {
+                    "name": "Latitude of natural origin",
+                    "value": 0,
+                    "unit": "degree",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8801
+                    }
+                  },
+                  {
+                    "name": "Longitude of natural origin",
+                    "value": -81,
+                    "unit": "degree",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8802
+                    }
+                  },
+                  {
+                    "name": "Scale factor at natural origin",
+                    "value": 0.9996,
+                    "unit": "unity",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8805
+                    }
+                  },
+                  {
+                    "name": "False easting",
+                    "value": 500000,
+                    "unit": "metre",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8806
+                    }
+                  },
+                  {
+                    "name": "False northing",
+                    "value": 0,
+                    "unit": "metre",
+                    "id": {
+                      "authority": "EPSG",
+                      "code": 8807
+                    }
+                  }
+                ]
+              },
+              "coordinate_system": {
+                "subtype": "Cartesian",
+                "axis": [
+                  {
+                    "name": "Easting",
+                    "abbreviation": "E",
+                    "direction": "east",
+                    "unit": "metre"
+                  },
+                  {
+                    "name": "Northing",
+                    "abbreviation": "N",
+                    "direction": "north",
+                    "unit": "metre"
+                  }
+                ]
+              },
+              "scope": "Engineering survey, topographic mapping.",
+              "area": "North America - between 84\u00b0W and 78\u00b0W - onshore and offshore. Canada - Nunavut; Ontario; Quebec. United States (USA) - Florida; Georgia; Kentucky; Maryland; Michigan; New York; North Carolina; Ohio; Pennsylvania; South Carolina; Tennessee; Virginia; West Virginia.",
+              "bbox": {
+                "south_latitude": 23.81,
+                "west_longitude": -84,
+                "north_latitude": 84,
+                "east_longitude": -78
+              },
+              "id": {
+                "authority": "EPSG",
+                "code": 26917
+              }
+            },
+            "proj:transform": [
+              100.0,
+              1.0,
+              0.0,
+              232.0,
+              0.0,
+              -1.0
+            ],
+            "raster:bands": [
+              {
+                "data_type": "uint8"
+              },
+              {
+                "data_type": "uint8"
+              },
+              {
+                "data_type": "uint8"
+              },
+              {
+                "data_type": "uint8"
+              }
+            ],
+            "eo:bands": [
+              {
+                "name": "b1",
+                "description": "Red",
+                "common_name": "red"
+              },
+              {
+                "name": "b2",
+                "description": "Green",
+                "common_name": "green"
+              },
+              {
+                "name": "b3",
+                "description": "Blue",
+                "common_name": "blue"
+              },
+              {
+                "name": "b4",
+                "description": "Alpha"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "network": "PROJ_NETWORK=OFF; local files only",
+    "C": "UNAVAILABLE \u2014 geometry and heights absent; no inferred roofs"
+  }
+}
