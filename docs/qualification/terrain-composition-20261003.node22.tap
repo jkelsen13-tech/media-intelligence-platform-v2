@@ -1,0 +1,364 @@
+TAP version 13
+# Subtest: catalogue metadata never substitutes for actual asset bytes, CRS, decoded pixels or geographic coverage qualification
+ok 1 - catalogue metadata never substitutes for actual asset bytes, CRS, decoded pixels or geographic coverage qualification
+  ---
+  duration_ms: 2.154225
+  type: 'test'
+  ...
+# Subtest: missing rights, admission, attribution or geometry fails closed including facade/3D Tiles rights
+ok 2 - missing rights, admission, attribution or geometry fails closed including facade/3D Tiles rights
+  ---
+  duration_ms: 0.697154
+  type: 'test'
+  ...
+# Subtest: terrain has an explicit datum and cannot fabricate building heights; photographic sources need verified real capture scope
+ok 3 - terrain has an explicit datum and cannot fabricate building heights; photographic sources need verified real capture scope
+  ---
+  duration_ms: 1.187154
+  type: 'test'
+  ...
+# Subtest: cheap/high transitions require explicit preference, existing authority and activation; failures fall back without retry
+ok 4 - cheap/high transitions require explicit preference, existing authority and activation; failures fall back without retry
+  ---
+  duration_ms: 1.148185
+  type: 'test'
+  ...
+# Subtest: bounded LOD uses only a supplied loaded real ancestor whose actual parent bounds remain inside approved coverage
+ok 5 - bounded LOD uses only a supplied loaded real ancestor whose actual parent bounds remain inside approved coverage
+  ---
+  duration_ms: 0.334546
+  type: 'test'
+  ...
+# Subtest: active reports actual source separately from preference; readiness, loading, success counters and unadmitted bytes alone never suffice
+ok 6 - active reports actual source separately from preference; readiness, loading, success counters and unadmitted bytes alone never suffice
+  ---
+  duration_ms: 0.856154
+  type: 'test'
+  ...
+# Subtest: contextual modules use only admitted supplied facts and retain population geography and period; imagery/evidence dates are not population scope
+ok 7 - contextual modules use only admitted supplied facts and retain population geography and period; imagery/evidence dates are not population scope
+  ---
+  duration_ms: 0.614409
+  type: 'test'
+  ...
+# Subtest: terrain units and datum-to-renderer transformation ancestry must be qualified; model height provenance remains exact
+ok 8 - terrain units and datum-to-renderer transformation ancestry must be qualified; model height provenance remains exact
+  ---
+  duration_ms: 0.380465
+  type: 'test'
+  ...
+# Subtest: requested Photoreal and ready renderer do not establish an imagery load or photographic source
+ok 9 - requested Photoreal and ready renderer do not establish an imagery load or photographic source
+  ---
+  duration_ms: 0.816033
+  type: 'test'
+  ...
+# Subtest: explicit runtime imagery success admits only the currently configured cartographic source
+ok 10 - explicit runtime imagery success admits only the currently configured cartographic source
+  ---
+  duration_ms: 0.227975
+  type: 'test'
+  ...
+# Subtest: loading, unavailable and unknown imagery remain unconfirmed, with no guessed failure cause
+ok 11 - loading, unavailable and unknown imagery remain unconfirmed, with no guessed failure cause
+  ---
+  duration_ms: 0.974803
+  type: 'test'
+  ...
+# Subtest: ellipsoid ancestry, attempts and source rejections never qualify active elevation
+ok 12 - ellipsoid ancestry, attempts and source rejections never qualify active elevation
+  ---
+  duration_ms: 0.193553
+  type: 'test'
+  ...
+# Subtest: successful approved tile qualifies the bounded provider, not all visible pixels or dated evidence
+ok 13 - successful approved tile qualifies the bounded provider, not all visible pixels or dated evidence
+  ---
+  duration_ms: 0.22509
+  type: 'test'
+  ...
+# Subtest: unavailable terrain dominates stale success, and fallback stacks never inherit active globe elevation
+ok 14 - unavailable terrain dominates stale success, and fallback stacks never inherit active globe elevation
+  ---
+  duration_ms: 0.208055
+  type: 'test'
+  ...
+# Subtest: unrecognized or unready runtime remains unknown; resolver does not mutate inputs
+ok 15 - unrecognized or unready runtime remains unknown; resolver does not mutate inputs
+  ---
+  duration_ms: 0.70133
+  type: 'test'
+  ...
+# Subtest: terrarium decode matches the documented example and round-trips
+ok 16 - terrarium decode matches the documented example and round-trips
+  ---
+  duration_ms: 0.973221
+  type: 'test'
+  ...
+# Subtest: terrarium decode handles negative/bathymetric values
+ok 17 - terrarium decode handles negative/bathymetric values
+  ---
+  duration_ms: 0.248185
+  type: 'test'
+  ...
+# Subtest: tile rectangles use the 1x1 level-zero slippy tree with north-up rows
+ok 18 - tile rectangles use the 1x1 level-zero slippy tree with north-up rows
+  ---
+  duration_ms: 0.239442
+  type: 'test'
+  ...
+# Subtest: cleveland anchor tile contains the released coordinate at z15
+ok 19 - cleveland anchor tile contains the released coordinate at z15
+  ---
+  duration_ms: 0.133111
+  type: 'test'
+  ...
+# Subtest: position-to-tile lookup is the exact inverse of the tile rectangle
+ok 20 - position-to-tile lookup is the exact inverse of the tile rectangle
+  ---
+  duration_ms: 0.706788
+  type: 'test'
+  ...
+# Subtest: coverage policy approves only fully-inside Ohio tiles at levels 8..15
+ok 21 - coverage policy approves only fully-inside Ohio tiles at levels 8..15
+  ---
+  duration_ms: 0.186872
+  type: 'test'
+  ...
+# Subtest: unapproved in-band and over-zoom tiles return synchronous undefined without any fetch
+ok 22 - unapproved in-band and over-zoom tiles return synchronous undefined without any fetch
+  ---
+  duration_ms: 6.275252
+  type: 'test'
+  ...
+# Subtest: below-band ancestry tiles serve the reference ellipsoid from memory without any fetch
+ok 23 - below-band ancestry tiles serve the reference ellipsoid from memory without any fetch
+  ---
+  duration_ms: 1.351743
+  type: 'test'
+  ...
+# Subtest: provider publishes definitive tile availability so the quadtree can refine
+ok 24 - provider publishes definitive tile availability so the quadtree can refine
+  ---
+  duration_ms: 1.105381
+  type: 'test'
+  ...
+# Subtest: source policy accepts approved public-domain / OGL-C sources only and fails closed
+ok 25 - source policy accepts approved public-domain / OGL-C sources only and fails closed
+  ---
+  duration_ms: 0.506916
+  type: 'test'
+  ...
+# Subtest: fetch failures reject: 404, non-PNG, malformed, decode error, unapproved source
+ok 26 - fetch failures reject: 404, non-PNG, malformed, decode error, unapproved source
+  ---
+  duration_ms: 4.293798
+  type: 'test'
+  ...
+# Subtest: successful fetch decodes terrarium pixels into a 256x256 height grid
+ok 27 - successful fetch decodes terrarium pixels into a 256x256 height grid
+  ---
+  duration_ms: 4.236121
+  type: 'test'
+  ...
+# Subtest: bilinear resample preserves edges and interpolates interior
+ok 28 - bilinear resample preserves edges and interpolates interior
+  ---
+  duration_ms: 2.48195
+  type: 'test'
+  ...
+# Subtest: provider uses a 65x65 heightmap on a 1x1 level-zero mercator tree with required credit
+ok 29 - provider uses a 65x65 heightmap on a 1x1 level-zero mercator tree with required credit
+  ---
+  duration_ms: 0.242637
+  type: 'test'
+  ...
+# Subtest: approved tile callback returns a 65x65 Float32Array and reports active status
+ok 30 - approved tile callback returns a 65x65 Float32Array and reports active status
+  ---
+  duration_ms: 1.869254
+  type: 'test'
+  ...
+# Subtest: sustained approved-fetch failure reports unavailable exactly once and never fabricates
+ok 31 - sustained approved-fetch failure reports unavailable exactly once and never fabricates
+  ---
+  duration_ms: 0.409178
+  type: 'test'
+  ...
+# Subtest: unapproved-source tiles reject and count as source rejections
+ok 32 - unapproved-source tiles reject and count as source rejections
+  ---
+  duration_ms: 0.980792
+  type: 'test'
+  ...
+# Subtest: boundary source-policy rejections never count toward source unavailability
+ok 33 - boundary source-policy rejections never count toward source unavailability
+  ---
+  duration_ms: 1.359845
+  type: 'test'
+  ...
+# Subtest: degradeGlobeToEllipsoid swaps terrain off without touching the camera
+ok 34 - degradeGlobeToEllipsoid swaps terrain off without touching the camera
+  ---
+  duration_ms: 0.285602
+  type: 'test'
+  ...
+# Subtest: camera state is identical through terrain degradation
+ok 35 - camera state is identical through terrain degradation
+  ---
+  duration_ms: 0.528449
+  type: 'test'
+  ...
+# Subtest: the 34,641.016 m city floor carries no terrain term
+ok 36 - the 34,641.016 m city floor carries no terrain term
+  ---
+  duration_ms: 0.669291
+  type: 'test'
+  ...
+# Subtest: terrain module is display-only and governance-clean
+ok 37 - terrain module is display-only and governance-clean
+  ---
+  duration_ms: 0.567777
+  type: 'test'
+  ...
+# Subtest: adapter and dispatcher expose terrain status + probe passthrough; canvas renders disclosure
+ok 38 - adapter and dispatcher expose terrain status + probe passthrough; canvas renders disclosure
+  ---
+  duration_ms: 0.203407
+  type: 'test'
+  ...
+# Subtest: terrain teardown aborts pending fetches and prevents late PNG decoding
+ok 39 - terrain teardown aborts pending fetches and prevents late PNG decoding
+  ---
+  duration_ms: 0.400935
+  type: 'test'
+  ...
+# Subtest: CDEM is in the approved set with attribution; unknown sources stay fail-closed
+ok 40 - CDEM is in the approved set with attribution; unknown sources stay fail-closed
+  ---
+  duration_ms: 1.550763
+  type: 'test'
+  ...
+# Subtest: CDEM-mixed boundary tiles now serve real data instead of a seam
+ok 41 - CDEM-mixed boundary tiles now serve real data instead of a seam
+  ---
+  duration_ms: 8.504841
+  type: 'test'
+  ...
+# Subtest: relief material is a pure function of displayed terrain height
+ok 42 - relief material is a pure function of displayed terrain height
+  ---
+  duration_ms: 0.316458
+  type: 'test'
+  ...
+# Subtest: setGlobeReliefShading swaps only the globe material and requests a render
+ok 43 - setGlobeReliefShading swaps only the globe material and requests a render
+  ---
+  duration_ms: 0.738666
+  type: 'test'
+  ...
+# Subtest: adapter wires relief shading on by default and exposes the toggle
+ok 44 - adapter wires relief shading on by default and exposes the toggle
+  ---
+  duration_ms: 0.358882
+  type: 'test'
+  ...
+# Subtest: city camera floor is exactly 34,641.016151377546 m with no terrain term
+ok 45 - city camera floor is exactly 34,641.016151377546 m with no terrain term
+  ---
+  duration_ms: 0.13255
+  type: 'test'
+  ...
+# Subtest: no vertical exaggeration anywhere in the world-view renderer path
+ok 46 - no vertical exaggeration anywhere in the world-view renderer path
+  ---
+  duration_ms: 0.270919
+  type: 'test'
+  ...
+# Subtest: relief module is display-only and governance-clean
+ok 47 - relief module is display-only and governance-clean
+  ---
+  duration_ms: 0.360735
+  type: 'test'
+  ...
+# Subtest: fully pinned fixture qualifies only a SIMULATED detached plan, never real composition or activation
+ok 48 - fully pinned fixture qualifies only a SIMULATED detached plan, never real composition or activation
+  ---
+  duration_ms: 3.075617
+  type: 'test'
+  ...
+# Subtest: current real USGS descriptor permits research inspection but stays HOLD with parent-reported custody and exact unknowns
+ok 49 - current real USGS descriptor permits research inspection but stays HOLD with parent-reported custody and exact unknowns
+  ---
+  duration_ms: 1.004708
+  type: 'test'
+  ...
+# Subtest: missing, malformed and mismatched byte receipts cannot substitute metadata for custody or admission
+ok 50 - missing, malformed and mismatched byte receipts cannot substitute metadata for custody or admission
+  ---
+  duration_ms: 1.33
+  type: 'test'
+  ...
+# Subtest: native CRS, units, finite bounds, source footprint and raster band semantics fail closed
+ok 51 - native CRS, units, finite bounds, source footprint and raster band semantics fail closed
+  ---
+  duration_ms: 1.930277
+  type: 'test'
+  ...
+# Subtest: nodata remains missing; zero fill, interpolation policy, nonfinite sentinel and ambiguous none are rejected
+ok 52 - nodata remains missing; zero fill, interpolation policy, nonfinite sentinel and ambiguous none are rejected
+  ---
+  duration_ms: 0.378272
+  type: 'test'
+  ...
+# Subtest: no datum/model/units/version or constant-geoid shortcut can stand in for a qualified vertical operation
+ok 53 - no datum/model/units/version or constant-geoid shortcut can stand in for a qualified vertical operation
+  ---
+  duration_ms: 1.272152
+  type: 'test'
+  ...
+# Subtest: a horizontal operation must pin the exact generic source realization, epoch, axis order and target units
+ok 54 - a horizontal operation must pin the exact generic source realization, epoch, axis order and target units
+  ---
+  duration_ms: 0.996355
+  type: 'test'
+  ...
+# Subtest: terrain/ortho registration must bind both exact assets, horizontal bases, QA reference and requested footprint
+ok 55 - terrain/ortho registration must bind both exact assets, horizontal bases, QA reference and requested footprint
+  ---
+  duration_ms: 0.858226
+  type: 'test'
+  ...
+# Subtest: capture clocks preserve day or recorded-offset precision; project/publication/retrieval clocks cannot replace asset capture
+ok 56 - capture clocks preserve day or recorded-offset precision; project/publication/retrieval clocks cannot replace asset capture
+  ---
+  duration_ms: 1.64797
+  type: 'test'
+  ...
+# Subtest: DEM cannot supply roof/facade/building geometry, evidence precision or canonical anchor movements
+ok 57 - DEM cannot supply roof/facade/building geometry, evidence precision or canonical anchor movements
+  ---
+  duration_ms: 1.116337
+  type: 'test'
+  ...
+# Subtest: same-basis identity still needs a pinned model/version/coverage receipt, and object key order is immaterial
+ok 58 - same-basis identity still needs a pinned model/version/coverage receipt, and object key order is immaterial
+  ---
+  duration_ms: 0.448869
+  type: 'test'
+  ...
+# Subtest: unknown or absent top-level inputs return truthful INVALID rather than throwing or inheriting authority
+ok 59 - unknown or absent top-level inputs return truthful INVALID rather than throwing or inheriting authority
+  ---
+  duration_ms: 0.142836
+  type: 'test'
+  ...
+1..59
+# tests 59
+# suites 0
+# pass 59
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 320.967985
