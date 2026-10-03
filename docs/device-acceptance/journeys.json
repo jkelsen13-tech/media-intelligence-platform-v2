@@ -1,0 +1,165 @@
+{
+  "contract": "mip-device-acceptance-journeys-v1",
+  "qualifiedBaseline": {
+    "commit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+    "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+    "ciRun": "37076657031"
+  },
+  "authority": "Source/browser preparation only. Physical operation and owner acceptance are separate.",
+  "profiles": [
+    {
+      "id": "ipad",
+      "deviceClass": "iPad",
+      "viewport": {
+        "width": 834,
+        "height": 1194
+      },
+      "rotatedViewport": {
+        "width": 1194,
+        "height": 834
+      },
+      "hasTouch": true,
+      "isMobile": true,
+      "input": "coarse_touch_emulation"
+    },
+    {
+      "id": "iphone",
+      "deviceClass": "iPhone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "rotatedViewport": {
+        "width": 844,
+        "height": 390
+      },
+      "hasTouch": true,
+      "isMobile": true,
+      "input": "coarse_touch_emulation"
+    },
+    {
+      "id": "narrow",
+      "deviceClass": "narrow_mobile",
+      "viewport": {
+        "width": 500,
+        "height": 360
+      },
+      "rotatedViewport": {
+        "width": 360,
+        "height": 500
+      },
+      "hasTouch": true,
+      "isMobile": true,
+      "input": "coarse_touch_emulation"
+    },
+    {
+      "id": "desktop",
+      "deviceClass": "Desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "rotatedViewport": {
+        "width": 1000,
+        "height": 1440
+      },
+      "hasTouch": false,
+      "isMobile": false,
+      "input": "keyboard_and_mouse"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "news-story",
+      "surface": "News / Story",
+      "expected": "News first; exact reviewed Story/capture/version and separate clocks; no raw/private/latest fallback."
+    },
+    {
+      "id": "following-account",
+      "surface": "Following",
+      "expected": "In-app follow/acknowledge binds displayed version; A\u2192B/logout/readiness withholds old personal data; delayed A response cannot paint B."
+    },
+    {
+      "id": "search-preview",
+      "surface": "Explore / Search",
+      "expected": "Open, type, filter and dismiss retain canonical subject/time/version and return focus; explicit result selection alone commits one subject."
+    },
+    {
+      "id": "navigation-context",
+      "surface": "Graph / Map / Split / browser back",
+      "expected": "Compatible selections retain canonical identity, exact recorded time/range and source version; unsupported selection discloses parent fallback."
+    },
+    {
+      "id": "billboard-reader",
+      "surface": "World View / Inspector",
+      "expected": "Icon\u2192ribbon\u2192precision-honest near plaque\u2192selected tethered screen card\u2192Inspector\u2192close; immutable canonical anchor and unchanged legal floor."
+    },
+    {
+      "id": "orientation",
+      "surface": "Every required surface",
+      "expected": "Both orientations retain context; controls, reader scrolling, attribution and map remain reachable."
+    },
+    {
+      "id": "background-remount",
+      "surface": "World View",
+      "expected": "Background/resume and Map\u2192Graph\u2192Map preserve context/camera, clear stale ACTIVE source disclosure, and release old ownership."
+    },
+    {
+      "id": "network-loss",
+      "surface": "News / Story / World View",
+      "expected": "Offline/failed read is truthful unavailable/unknown; no current substitute or fabricated source state; explicit retry recovers."
+    },
+    {
+      "id": "webgl-fallback",
+      "surface": "World View",
+      "expected": "Unavailable/lost WebGL uses supported cheap fallback with context and precision unchanged; no stale native source publication."
+    },
+    {
+      "id": "publication-failure",
+      "surface": "Story / source evidence",
+      "expected": "Withdrawn/unavailable exact publication clears selected evidence and never substitutes a newer/private source."
+    },
+    {
+      "id": "keyboard-density",
+      "surface": "Desktop + constrained mobile",
+      "expected": "Sequential keyboard navigation, visible focus, escape/return, evidence density and coarse targets remain usable."
+    },
+    {
+      "id": "physical-performance",
+      "surface": "Actual hardware only",
+      "expected": "Owner records exact measurement method/window/cache/network/thermal baseline under recovered original or explicitly approved replacement contract. Historical RED remains."
+    },
+    {
+      "id": "final-visual",
+      "surface": "Actual admitted background + selected record",
+      "expected": "Owner reviews actual iPad/iPhone/Desktop images after exact real imagery/terrain/geometry admission; synthetic pixels stay preliminary."
+    }
+  ],
+  "requirementBindings": [
+    {
+      "libraryId": "libfile_90ebe4e040b48191ac4838f42b0d99dd",
+      "version": "19",
+      "sha256": "f289e392f0a9c163c584d9347270adcd7d1861a74fb6b39f622c15b46bd97776"
+    },
+    {
+      "libraryId": "libfile_953c9013cec08191be2e9bef847b753f",
+      "version": "6",
+      "sha256": "8bfb6ea6910afda1f6aa936b6004b8fb4b0b379d7108612b6ec12a9bed618052"
+    },
+    {
+      "libraryId": "libfile_249b861f9e84819193b8fa1ba925cc7f",
+      "version": "7",
+      "sha256": "e0ae68d2a29ae11a45cad135a9a58b57982efbe9d05113717c1b5c11c9aacf78"
+    },
+    {
+      "libraryId": "libfile_faf64a8bf8608191902d59c249926ffa",
+      "version": "7",
+      "sha256": "df20541aae4046e5d0f8a80a0995bfd516bd71d75c57d6fcd2cdaf44282fc517"
+    },
+    {
+      "libraryId": "libfile_720892b4771c8191a3216a89362f7028",
+      "version": null,
+      "sha256": "d606162742673f898c59b8199c95a8d7a23b77a48b4a5bd2b717a816931699c3"
+    }
+  ]
+}
