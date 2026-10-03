@@ -27,28 +27,8 @@ function fixture(overrides = {}) {
   return { handler, calls }
 }
 
-test('launch source bindings preserve qualified history and bind the integrated current gateway and domain bytes', async () => {
+test('current launch source candidate manifest matches the exact gateway and preserved domain source files', async () => {
   const root = new URL('../', import.meta.url)
-  const integrated = JSON.parse(await readFile(new URL('docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json', root), 'utf8'))
-  assert.equal(integrated.contract, 'mip-launch-rc-source-v1')
-  assert.equal(integrated.status, 'CURRENT_BYTES_BINDING_NOT_A_QUALIFICATION_RECEIPT')
-  assert.equal(integrated.predecessor.head, 'ca72a6df511bbb26c6b9e0a193a3e0baf01aa428')
-  assert.equal(integrated.predecessor.tree, 'cbcfc510a117101fd163f83b3c574dd979085b02')
-  assert.equal(integrated.live_operations, 0)
-  const snapshotKeys = integrated.historical_snapshots.map(entry => `${entry.manifest_path}:${entry.source_path}`)
-  assert.equal(new Set(snapshotKeys).size, snapshotKeys.length)
-  const snapshots = new Map(integrated.historical_snapshots.map(entry => [`${entry.manifest_path}:${entry.source_path}`, entry]))
-  const hash = bytes => createHash('sha256').update(bytes).digest('hex')
-  async function boundBytes(manifestPath, entry, retainedPath = entry.path) {
-    const snapshot = snapshots.get(`${manifestPath}:${entry.path}`)
-    if (snapshot) {
-      assert.equal(snapshot.sha256, entry.sha256)
-      assert.equal(snapshot.path, `docs/qualification/launch-rc-20261003-predecessor/${snapshot.lane}/${entry.path}`)
-      assert.equal(snapshot.source_commit, integrated.qualified_manifests.find(item => item.path === manifestPath).head)
-    }
-    const bytes = await readFile(new URL(snapshot?.path ?? retainedPath, root))
-    assert.equal(hash(bytes), entry.sha256, `${manifestPath}: ${entry.path}`)
-  }
   const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-native-review-corrections-2026-10-02.json', root), 'utf8'))
   assert.equal(manifest.verify_jwt, true); assert.equal(manifest.files.length, 16)
   for (const entry of manifest.files) {
@@ -81,56 +61,8 @@ test('launch source bindings preserve qualified history and bind the integrated 
   }
   const source = JSON.parse(await readFile(new URL('docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json',root),'utf8'))
   assert.equal(source.status,'CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT')
-  const successor = JSON.parse(await readFile(new URL('docs/qualification/release-dependency-20261003-source.json',root),'utf8'))
-  assert.equal(successor.contract, 'mip-release-dependency-source-v1')
-  assert.equal(successor.predecessor.head, 'ca72a6df511bbb26c6b9e0a193a3e0baf01aa428')
-  assert.equal(successor.predecessor.tree, 'cbcfc510a117101fd163f83b3c574dd979085b02')
-  assert.equal(successor.predecessor.manifest.path, 'docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json')
-  assert.equal(successor.predecessor.manifest.sha256, 'c15cba4ea3864c90f0bfbe3dd69308818308c11b431afcb857085252c462e169')
-  assert.equal(successor.predecessor.lockSha256, '73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa')
-  assert.equal(createHash('sha256').update(await readFile(new URL(successor.predecessor.manifest.path, root))).digest('hex'), successor.predecessor.manifest.sha256)
-  const historicalSnapshots = new Map(successor.historicalSourceSnapshots.map(entry => [entry.sourcePath, entry]))
-  assert.deepEqual([...historicalSnapshots.keys()].sort(), ['package-lock.json', 'tests/investigationApi.test.mjs'])
-  assert.equal(successor.historicalSourceSnapshots.length, 2)
-  for (const [path, snapshot] of historicalSnapshots) {
-    assert.equal(snapshot.path, `docs/qualification/release-dependency-20261003-predecessor/${path}`)
-    assert.equal(snapshot.sha256, source.sources.find(entry => entry.path === path).sha256)
-    assert.equal(snapshot.sourceCommit, successor.predecessor.head)
-  }
   for (const entry of [...source.sources,...source.previous_manifests,...source.unchanged_installation_qualification]) {
-    // Keep the exact ca72 pins as history; changed tooling and this assertion
-    // seam have separately bound current bytes in the dated successor.
-    const path = historicalSnapshots.get(entry.path)?.path ?? entry.path
-    await boundBytes('docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json', entry, path)
-  }
-  assert.deepEqual(successor.sources.map(entry => entry.path).sort(), [
-    'package-lock.json', 'package.json', 'tests/investigationApi.test.mjs',
-    'tests/qualification/release-dependency-20261003.test.mjs', 'vite.config.js',
-  ])
-  for (const entry of successor.sources) {
-    await boundBytes('docs/qualification/release-dependency-20261003-source.json', entry)
-  }
-  for (const qualified of integrated.qualified_manifests) {
-    const bytes = await readFile(new URL(qualified.path, root))
-    assert.equal(hash(bytes), qualified.sha256, qualified.path)
-    const historical = JSON.parse(bytes)
-    assert.ok(Array.isArray(qualified.source_keys) && qualified.source_keys.length > 0)
-    for (const key of qualified.source_keys) {
-      assert.ok(['sources', 'candidate_files', 'unchanged_dependencies', 'source_files', 'sourceAndFixtureHashes', 'file_sha256', 'source_artifacts', 'sourceProof.files'].includes(key))
-      const pinned = key.split('.').reduce((value, component) => value[component], historical)
-      const entries = key === 'file_sha256'
-        ? Object.entries(pinned).map(([path, sha256]) => ({ path, sha256 }))
-        : pinned
-      assert.ok(Array.isArray(entries) && entries.length > 0)
-      for (const entry of entries) await boundBytes(qualified.path, entry)
-    }
-  }
-  assert.equal(new Set(integrated.sources.map(entry => entry.path)).size, integrated.sources.length)
-  assert.ok(integrated.sources.some(entry => entry.path === 'tests/investigationApi.test.mjs'))
-  assert.ok(integrated.sources.some(entry => entry.path === 'src/lib/newsStoryState.js'))
-  assert.ok(integrated.sources.some(entry => entry.path === 'scripts/compileLaunchInstallationStage.mjs'))
-  for (const entry of integrated.sources) {
-    assert.equal(hash(await readFile(new URL(entry.path, root))), entry.sha256, entry.path)
+    assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
 })
 
