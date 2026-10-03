@@ -10,7 +10,7 @@ The isolated source repair removes the newly reported vulnerable `braces` depend
 - Receipt directory: `/workspace/mip-launch-receipts/qik-private-client-source/new-advisory`.
 - Tracked changes: `package.json`, `package-lock.json`, `vite.config.js`, this report, and `tests/qualification/qik-new-dependency-advisory-20261003.test.mjs`.
 
-The integration worktree and the frozen `675654b` / `ca72a6d` source and lock files were not edited. Their historical zero-audit receipts describe the database available when those receipts were taken; they do not negate the newly published advisory.
+The implementation worker did not edit the integration worktree or frozen `675654b` / `ca72a6d` source and lock files. The parent subsequently integrates this scoped repair into the original backend successor. Historical zero-audit receipts describe the advisory database available when those receipts were taken; they do not negate the newly observed advisory (published September18 and updated October2, 2026).
 
 ## Upstream facts and installed reachability
 
