@@ -1,0 +1,22 @@
+{
+  "contract":"mip-device-acceptance-record-v1",
+  "recordId":"OWNER_FILL",
+  "evidenceKind":"owner_physical_device",
+  "recordedAt":null,
+  "operator":null,
+  "device":{"class":"iPad","model":null,"os":null,"osVersion":null,"physicalEvidence":[]},
+  "browser":{"engine":null,"name":null,"version":null,"userAgent":null},
+  "orientation":{"name":"unknown","viewportCssPixels":null,"devicePixelRatio":null},
+  "input":{"kind":"unknown","coarsePointer":null,"touchEvidence":[]},
+  "network":{"kind":"unknown","cacheState":"unknown","conditions":null,"evidence":[]},
+  "account":{"kind":"unknown","alias":null,"sessionReady":null,"evidence":[]},
+  "source":{"candidateCommit":null,"candidateTree":null,"dirty":null,"harnessSha256":null,"fixtureAuthority":"none","qualifiedBaselineCommit":"ca72a6df511bbb26c6b9e0a193a3e0baf01aa428","productionFileHashes":{},"requirementBindings":[]},
+  "surfaceCameraBaseline":{"surface":null,"renderer":null,"canonicalSubjectId":null,"recordedTime":null,"selectedTimeRange":null,"sourceVersionId":null,"cameraJson":null,"canonicalAnchor":null,"precisionClass":null,"precisionFloorMeters":null,"selectionCompatibility":"unknown","fallbackDisclosure":null,"evidence":[]},
+  "admissions":{"imagery":{"status":"unknown","sourceVersion":null,"providerProvenance":null,"evidence":[]},"terrain":{"status":"unknown","sourceVersion":null,"providerProvenance":null,"evidence":[]},"geometry":{"status":"unknown","sourceVersion":null,"providerProvenance":null,"evidence":[]}},
+  "functional":{"status":"not_run","checks":[]},
+  "visual":{"status":"pending_real_sources","finalOwnerAccepted":false,"owner":null,"evidence":[]},
+  "performance":{"status":"not_measured","acceptedContractReference":null,"originalBoundaryRecovered":false,"metrics":[],"thermal":{"status":"unknown","state":null,"method":null,"ambientCelsius":null,"evidence":[]}},
+  "historicalColdPortrait":{"status":"RED","originalObservation":"portrait cold 14 to 26; unchanged delta-under-12 budget","originalExecutableBoundary":"unrecovered","rewritesHistoricalResult":false},
+  "limitations":["Owner-fillable template; no physical run or result exists.","Original cold-portrait unit, executable trace, timing window and readiness boundary remain unrecovered. No replacement numerical pass is inferred."],
+  "artifacts":[]
+}
