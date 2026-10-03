@@ -1,0 +1,37 @@
+{
+  "version": "qik-private-host-integration-lock-1",
+  "sources": {
+    "../backend-private-client/libpq17.py": {
+      "bytes": 32808,
+      "sha256": "d2669a2fec291aa12d61e5c4d55be729a785ce91658df363402b43c43498b0d0"
+    },
+    "../backend-private-client/frozen-inventory.json": {
+      "bytes": 118721,
+      "sha256": "09b6e70225313ae00428219ba86cc945c82dccdce29b8b84681caef0aebf959f"
+    },
+    "../backend-private-authority/canonical.mjs": {
+      "bytes": 3875,
+      "sha256": "291199f3526ec9c0011cca517ecf23c2ccde8a4ee80169592c239604674ebfb0"
+    },
+    "../backend-private-authority/contract.mjs": {
+      "bytes": 2325,
+      "sha256": "4651f11146f3fbb868972dca82c67a62c740926e134c0cda0485c46c42acce08"
+    },
+    "../backend-private-authority/verifier.mjs": {
+      "bytes": 15594,
+      "sha256": "2813fd56398e0aa85fd1a66cacb4a48a715f24e9ba0ce6b4735de6be2e4d62d1"
+    },
+    "../backend-private-authority/production.mjs": {
+      "bytes": 2463,
+      "sha256": "4b980cfdede46c3098a1eef73807d4519a05865b7f1cd512fee9afc3ad61a609"
+    },
+    "../backend-private-authority/inspect.mjs": {
+      "bytes": 1323,
+      "sha256": "e361390b507b4fa0e9c3b5d6164e74b419d3b6c18df08a9065d86c7e1c35ef71"
+    },
+    "../backend-private-authority/trust-registry.json": {
+      "bytes": 183,
+      "sha256": "7488be20118e0a0942838f9a45fb97c0dc7fb9cc78aa7e53dda7b97de1456acc"
+    }
+  }
+}

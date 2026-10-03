@@ -1,0 +1,42 @@
+{
+  "version": "qik-private-host-source-1",
+  "frozen675Head": "675654be5a778c3173e682c4013031cb7796ed36",
+  "sources": {
+    "source.mjs": {
+      "bytes": 6534,
+      "sha256": "32f1f91e7214b7cdee7454bd7d968a852bdf6293e60532e7b61941b1d2f8ca1e"
+    },
+    "controller.mjs": {
+      "bytes": 20066,
+      "sha256": "07a3029bfd2fa54d782d105dd850bdd3688b0d9690111c226bda814a0152ffcb"
+    },
+    "closed-fixture.mjs": {
+      "bytes": 18147,
+      "sha256": "80a0f1c1071bec6c4719cc3bbb2950e6798427ab1d94435f638f49b1e7471b34"
+    },
+    "bridge.mjs": {
+      "bytes": 10816,
+      "sha256": "40ef35acdb16234e12781e8c95c7acca4095a506cd032a82aa60b2deae35f939"
+    },
+    "private_worker.py": {
+      "bytes": 8808,
+      "sha256": "14ca37610e17670b3dae8a3a3f93f7466e9f8fa9578baf66071affd97e01b572"
+    },
+    "inspect.mjs": {
+      "bytes": 493,
+      "sha256": "1ba61f456bd088df0f33556060cd99f916fdcbf29facd4470e37d56621e614b7"
+    },
+    "integration-lock.json": {
+      "bytes": 1383,
+      "sha256": "5561931199ef60f1f69f964573dedb47144f86d7c6754bd60583d993bbb02d30"
+    },
+    "inert.mjs": {
+      "bytes": 1386,
+      "sha256": "5bf8884a75407d69c16cf67ae683a0041f019ef3ae33a991e7562f67e2911162"
+    },
+    "private-pipe.mjs": {
+      "bytes": 3633,
+      "sha256": "1926b44f4952f2076a4d8e528373cbb12a83a5b2a6c607aad2fa0b4daa7f9bd8"
+    }
+  }
+}
