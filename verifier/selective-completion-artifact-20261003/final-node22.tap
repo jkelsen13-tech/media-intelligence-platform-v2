@@ -1,0 +1,872 @@
+TAP version 13
+# Subtest: private selective intake uses verified Auth, native snapshots, SDK and durable assigned-owner receipts
+    # Subtest: all dispositions are durable idempotent actor-bound annotations without altering the frozen declaration
+    ok 1 - all dispositions are durable idempotent actor-bound annotations without altering the frozen declaration
+      ---
+      duration_ms: 155.616337
+      type: 'test'
+      ...
+    # Subtest: viewer, outsider, spoofed actor and SDK account race cannot write or acquire private snapshots
+    ok 2 - viewer, outsider, spoofed actor and SDK account race cannot write or acquire private snapshots
+      ---
+      duration_ms: 14.706294
+      type: 'test'
+      ...
+    # Subtest: malformed or phantom bindings and stale receipt baselines reject atomically at the owner
+    ok 3 - malformed or phantom bindings and stale receipt baselines reject atomically at the owner
+      ---
+      duration_ms: 25.796925
+      type: 'test'
+      ...
+    # Subtest: native correction and explicit new relevance create reconsideration receipts without automatic disposition changes
+    ok 4 - native correction and explicit new relevance create reconsideration receipts without automatic disposition changes
+      ---
+      duration_ms: 118.477704
+      type: 'test'
+      ...
+    # Subtest: membership revocation and head advance between trusted read and append refuse writes; old exact retries remain idempotent
+    ok 5 - membership revocation and head advance between trusted read and append refuse writes; old exact retries remain idempotent
+      ---
+      duration_ms: 48.422326
+      type: 'test'
+      ...
+    # Subtest: revocation, browser roles, history rewriting and response-actor mismatch are refused
+    ok 6 - revocation, browser roles, history rewriting and response-actor mismatch are refused
+      ---
+      duration_ms: 9.50886
+      type: 'test'
+      ...
+    1..6
+ok 1 - private selective intake uses verified Auth, native snapshots, SDK and durable assigned-owner receipts
+  ---
+  duration_ms: 4166.430624
+  type: 'test'
+  ...
+# Subtest: catalog readback requires full named security fields and unique object/ACL/membership identities
+ok 2 - catalog readback requires full named security fields and unique object/ACL/membership identities
+  ---
+  duration_ms: 4700.550661
+  type: 'test'
+  ...
+# Subtest: occupied receipt/SQL names and concurrent compilation preserve accepted bytes without an orphan pair
+ok 3 - occupied receipt/SQL names and concurrent compilation preserve accepted bytes without an orphan pair
+  ---
+  duration_ms: 128.372858
+  type: 'test'
+  ...
+# Subtest: read-only artifact verification binds exact catalog file bytes and refuses forged, truncated and mismatched pairs
+ok 4 - read-only artifact verification binds exact catalog file bytes and refuses forged, truncated and mismatched pairs
+  ---
+  duration_ms: 141.452282
+  type: 'test'
+  ...
+# Subtest: current helper and proposal source drift refuse even when SQL/catalog hashes still match
+ok 5 - current helper and proposal source drift refuse even when SQL/catalog hashes still match
+  ---
+  duration_ms: 1374.240489
+  type: 'test'
+  ...
+# Subtest: fresh preflight observes bounded settings before catalog guard, and rollback restores catalog/session settings
+ok 6 - fresh preflight observes bounded settings before catalog guard, and rollback restores catalog/session settings
+  ---
+  duration_ms: 2403.206686
+  type: 'test'
+  ...
+# Subtest: column ACL and RLS drift refuse atomically; accepted occupied package namespace preserves its exact existing owner
+ok 7 - column ACL and RLS drift refuse atomically; accepted occupied package namespace preserves its exact existing owner
+  ---
+  duration_ms: 3229.822995
+  type: 'test'
+  ...
+# Subtest: source-only recovery compiles existing exact empty restore, binds original receipt bytes and refuses cross-stage receipt reuse
+ok 8 - source-only recovery compiles existing exact empty restore, binds original receipt bytes and refuses cross-stage receipt reuse
+  ---
+  duration_ms: 3153.40885
+  type: 'test'
+  ...
+# Subtest: supplied preserve-and-revoke compiles separately and ordinary readers remain denied private/profile/publication authority
+ok 9 - supplied preserve-and-revoke compiles separately and ordinary readers remain denied private/profile/publication authority
+  ---
+  duration_ms: 5397.014036
+  type: 'test'
+  ...
+# Subtest: existing eligible content is withheld by empty immutable ledgers; missing owners never fall back and rollback restores predecessor exposure
+ok 10 - existing eligible content is withheld by empty immutable ledgers; missing owners never fall back and rollback restores predecessor exposure
+  ---
+  duration_ms: 4341.211653
+  type: 'test'
+  ...
+# Subtest: local compiler binds exact bytes, handles literal catalog text and never overwrites an accepted artifact
+ok 11 - local compiler binds exact bytes, handles literal catalog text and never overwrites an accepted artifact
+  ---
+  duration_ms: 2455.69016
+  type: 'test'
+  ...
+# Subtest: all proposals coexist with fresh stage-local baselines and exact supplied empty restores
+    # Subtest: reviewed-public-versions
+    ok 1 - reviewed-public-versions
+      ---
+      duration_ms: 1646.633226
+      type: 'test'
+      ...
+    # Subtest: public-story-following
+    ok 2 - public-story-following
+      ---
+      duration_ms: 1722.554577
+      type: 'test'
+      ...
+    # Subtest: private-relevant-inputs
+    ok 3 - private-relevant-inputs
+      ---
+      duration_ms: 996.31018
+      type: 'test'
+      ...
+    # Subtest: private-postcapture-receipts
+    ok 4 - private-postcapture-receipts
+      ---
+      duration_ms: 955.169459
+      type: 'test'
+      ...
+    # Subtest: selective-execution
+    ok 5 - selective-execution
+      ---
+      duration_ms: 2001.708598
+      type: 'test'
+      ...
+    # Subtest: legacy-atomic-completion
+    ok 6 - legacy-atomic-completion
+      ---
+      duration_ms: 1472.030607
+      type: 'test'
+      ...
+    # Subtest: markets-directory
+    ok 7 - markets-directory
+      ---
+      duration_ms: 2597.261562
+      type: 'test'
+      ...
+    # Subtest: reviewed-comparison
+    ok 8 - reviewed-comparison
+      ---
+      duration_ms: 2340.726718
+      type: 'test'
+      ...
+    1..8
+ok 12 - all proposals coexist with fresh stage-local baselines and exact supplied empty restores
+  ---
+  duration_ms: 16166.355111
+  type: 'test'
+  ...
+# Subtest: whole empty reverse recovery restores final readers then contains retained Legacy and Selective owners
+ok 13 - whole empty reverse recovery restores final readers then contains retained Legacy and Selective owners
+  ---
+  duration_ms: 7124.949021
+  type: 'test'
+  ...
+# Subtest: populated whole-stack history refuses destructive restore and survives exact revoke-only containment
+ok 14 - populated whole-stack history refuses destructive restore and survives exact revoke-only containment
+  ---
+  duration_ms: 8951.144511
+  type: 'test'
+  ...
+# Subtest: frozen source reproduces ownership failure under a distinct non-superuser creator; full rollback restores the catalog
+ok 15 - frozen source reproduces ownership failure under a distinct non-superuser creator; full rollback restores the catalog
+  ---
+  duration_ms: 3706.478206
+  type: 'test'
+  ...
+# Subtest: successor preserves provider/B1 membership, ACLs, policies and overload while installed private read/capture APIs work
+ok 16 - successor preserves provider/B1 membership, ACLs, policies and overload while installed private read/capture APIs work
+  ---
+  duration_ms: 2469.569979
+  type: 'test'
+  ...
+# Subtest: bootstrap role name can differ from postgres; automatic grantor identity and exact restoration remain valid
+ok 17 - bootstrap role name can differ from postgres; automatic grantor identity and exact restoration remain valid
+  ---
+  duration_ms: 2468.078855
+  type: 'test'
+  ...
+# Subtest: superuser installer introduces no role-membership edge and removes temporary schema CREATE
+ok 18 - superuser installer introduces no role-membership edge and removes temporary schema CREATE
+  ---
+  duration_ms: 2526.695832
+  type: 'test'
+  ...
+# Subtest: observed temporary SET window preserves provider edge and exact raw schema ACL after restoration
+ok 19 - observed temporary SET window preserves provider edge and exact raw schema ACL after restoration
+  ---
+  duration_ms: 2390.640782
+  type: 'test'
+  ...
+# Subtest: failure after granting both temporary privileges rolls back ownership, ACLs and every membership
+ok 20 - failure after granting both temporary privileges rolls back ownership, ACLs and every membership
+  ---
+  duration_ms: 2652.395757
+  type: 'test'
+  ...
+# Subtest: nonempty creator self-grant is refused even with a freshly pinned matching catalog
+ok 21 - nonempty creator self-grant is refused even with a freshly pinned matching catalog
+  ---
+  duration_ms: 2131.929788
+  type: 'test'
+  ...
+# Subtest: pinned provider membership option and installer-context drift fail before package authority changes
+ok 22 - pinned provider membership option and installer-context drift fail before package authority changes
+  ---
+  duration_ms: 2760.485102
+  type: 'test'
+  ...
+# Subtest: malformed automatic creator edge is refused without replacing or broadening provider authority
+ok 23 - malformed automatic creator edge is refused without replacing or broadening provider authority
+  ---
+  duration_ms: 2325.205426
+  type: 'test'
+  ...
+# Subtest: a catalog approved in another session identity cannot be replayed under the same article-owner role
+ok 24 - a catalog approved in another session identity cannot be replayed under the same article-owner role
+  ---
+  duration_ms: 2824.849812
+  type: 'test'
+  ...
+# Subtest: revoke-only stop pins installed membership and preserves all roles, provider grants and retained ledgers
+ok 25 - revoke-only stop pins installed membership and preserves all roles, provider grants and retained ledgers
+  ---
+  duration_ms: 2376.591561
+  type: 'test'
+  ...
+# Subtest: failure after private stop revoke restores exact installed ACLs, memberships, histories and installer session
+ok 26 - failure after private stop revoke restores exact installed ACLs, memberships, histories and installer session
+  ---
+  duration_ms: 2708.641297
+  type: 'test'
+  ...
+# Subtest: stop with renamed bootstrap under non-super session restores context; installed membership drift refuses stop
+ok 27 - stop with renamed bootstrap under non-super session restores context; installed membership drift refuses stop
+  ---
+  duration_ms: 2789.456332
+  type: 'test'
+  ...
+# Subtest: superuser stop preserves memberships and schemas without a role switch or membership grant
+ok 28 - superuser stop preserves memberships and schemas without a role switch or membership grant
+  ---
+  duration_ms: 2781.836733
+  type: 'test'
+  ...
+# Subtest: independent post-eight-stage compiler binds two distinct accepted catalogs, paired runner and exact source/import closure
+ok 29 - independent post-eight-stage compiler binds two distinct accepted catalogs, paired runner and exact source/import closure
+  ---
+  duration_ms: 6557.820443
+  type: 'test'
+  ...
+# Subtest: wrong catalog schema, missing security fields, duplicate identities, inconsistent owner and unbound runner refuse before publication
+ok 30 - wrong catalog schema, missing security fields, duplicate identities, inconsistent owner and unbound runner refuse before publication
+  ---
+  duration_ms: 110.956096
+  type: 'test'
+  ...
+# Subtest: exclusive paired writer preserves either occupied name and admits only one concurrent follow-on artifact
+ok 31 - exclusive paired writer preserves either occupied name and admits only one concurrent follow-on artifact
+  ---
+  duration_ms: 405.780278
+  type: 'test'
+  ...
+# Subtest: read-only verification refuses whitespace-only catalog changes, SQL/receipt tampering and current helper/paired-runner source drift
+ok 32 - read-only verification refuses whitespace-only catalog changes, SQL/receipt tampering and current helper/paired-runner source drift
+  ---
+  duration_ms: 1586.331866
+  type: 'test'
+  ...
+# Subtest: actual eight-stage fixture rejects native approval drift, installs follow-on and restores exact whole/native catalogs with populated history intact
+ok 33 - actual eight-stage fixture rejects native approval drift, installs follow-on and restores exact whole/native catalogs with populated history intact
+  ---
+  duration_ms: 8444.75715
+  type: 'test'
+  ...
+# Subtest: missing expected catalog denies before any creation; standalone preflight also requires pinned equality
+ok 34 - missing expected catalog denies before any creation; standalone preflight also requires pinned equality
+  ---
+  duration_ms: 2907.591019
+  type: 'test'
+  ...
+# Subtest: canonical catalog pins every native routine overload and authority/default/RLS/column change
+    # Subtest: native exact body
+    ok 1 - native exact body
+      ---
+      duration_ms: 2634.958469
+      type: 'test'
+      ...
+    # Subtest: native owner
+    ok 2 - native owner
+      ---
+      duration_ms: 2322.088637
+      type: 'test'
+      ...
+    # Subtest: native ACL
+    ok 3 - native ACL
+      ---
+      duration_ms: 2649.160593
+      type: 'test'
+      ...
+    # Subtest: native same-name overload
+    ok 4 - native same-name overload
+      ---
+      duration_ms: 3279.974108
+      type: 'test'
+      ...
+    # Subtest: cross-schema same-name overload
+    ok 5 - cross-schema same-name overload
+      ---
+      duration_ms: 2000.615048
+      type: 'test'
+      ...
+    # Subtest: schema ACL
+    ok 6 - schema ACL
+      ---
+      duration_ms: 2141.38264
+      type: 'test'
+      ...
+    # Subtest: default ACL
+    ok 7 - default ACL
+      ---
+      duration_ms: 2175.197184
+      type: 'test'
+      ...
+    # Subtest: role attributes
+    ok 8 - role attributes
+      ---
+      duration_ms: 2151.379874
+      type: 'test'
+      ...
+    # Subtest: role membership options
+    ok 9 - role membership options
+      ---
+      duration_ms: 2196.489735
+      type: 'test'
+      ...
+    # Subtest: column default
+    ok 10 - column default
+      ---
+      duration_ms: 2880.473631
+      type: 'test'
+      ...
+    # Subtest: column ACL
+    ok 11 - column ACL
+      ---
+      duration_ms: 2550.385929
+      type: 'test'
+      ...
+    # Subtest: RLS
+    ok 12 - RLS
+      ---
+      duration_ms: 2012.042363
+      type: 'test'
+      ...
+    # Subtest: policy
+    ok 13 - policy
+      ---
+      duration_ms: 2412.562902
+      type: 'test'
+      ...
+    1..13
+ok 35 - canonical catalog pins every native routine overload and authority/default/RLS/column change
+  ---
+  duration_ms: 31421.925259
+  type: 'test'
+  ...
+# Subtest: all new target relation/type/index/sequence/exact signature collisions refuse before mutation even when freshly pinned
+    # Subtest: table
+    ok 1 - table
+      ---
+      duration_ms: 2323.155638
+      type: 'test'
+      ...
+    # Subtest: row type
+    ok 2 - row type
+      ---
+      duration_ms: 2098.627892
+      type: 'test'
+      ...
+    # Subtest: array type
+    ok 3 - array type
+      ---
+      duration_ms: 2525.050259
+      type: 'test'
+      ...
+    # Subtest: index
+    ok 4 - index
+      ---
+      duration_ms: 2537.108796
+      type: 'test'
+      ...
+    # Subtest: implicit primary index
+    ok 5 - implicit primary index
+      ---
+      duration_ms: 2332.036207
+      type: 'test'
+      ...
+    # Subtest: sequence
+    ok 6 - sequence
+      ---
+      duration_ms: 2414.63417
+      type: 'test'
+      ...
+    # Subtest: implicit unique index
+    ok 7 - implicit unique index
+      ---
+      duration_ms: 2431.146798
+      type: 'test'
+      ...
+    # Subtest: exact public function
+    ok 8 - exact public function
+      ---
+      duration_ms: 2006.139426
+      type: 'test'
+      ...
+    # Subtest: exact decision function
+    ok 9 - exact decision function
+      ---
+      duration_ms: 2221.697269
+      type: 'test'
+      ...
+    1..9
+ok 36 - all new target relation/type/index/sequence/exact signature collisions refuse before mutation even when freshly pinned
+  ---
+  duration_ms: 20910.413477
+  type: 'test'
+  ...
+# Subtest: guarded install and exact empty rollback preserve unrelated overload definitions/owners/ACL sentinels and restore native catalog
+ok 37 - guarded install and exact empty rollback preserve unrelated overload definitions/owners/ACL sentinels and restore native catalog
+  ---
+  duration_ms: 2937.039732
+  type: 'test'
+  ...
+# Subtest: populated empty rollback refuses atomically; exact revoke-only rollback retains history and overload sentinels
+ok 38 - populated empty rollback refuses atomically; exact revoke-only rollback retains history and overload sentinels
+  ---
+  duration_ms: 3076.019242
+  type: 'test'
+  ...
+# Subtest: freshly pinned unexpected default grants deny before creation; known reader defaults are explicitly removed on new sequences
+ok 39 - freshly pinned unexpected default grants deny before creation; known reader defaults are explicitly removed on new sequences
+  ---
+  duration_ms: 2461.928184
+  type: 'test'
+  ...
+# Subtest: intervening correction refuses a new registered execution over stale observed analysis
+ok 40 - intervening correction refuses a new registered execution over stale observed analysis
+  ---
+  duration_ms: 3410.707726
+  type: 'test'
+  ...
+# Subtest: committed capture response loss resumes the same native progress with zero refetch
+ok 41 - committed capture response loss resumes the same native progress with zero refetch
+  ---
+  duration_ms: 2773.829024
+  type: 'test'
+  ...
+# Subtest: each committed native response boundary resumes idempotently without a second permit
+    # Subtest: candidate
+    ok 1 - candidate
+      ---
+      duration_ms: 2938.268473
+      type: 'test'
+      ...
+    # Subtest: analyze
+    ok 2 - analyze
+      ---
+      duration_ms: 2704.064269
+      type: 'test'
+      ...
+    # Subtest: observe
+    ok 3 - observe
+      ---
+      duration_ms: 2792.197798
+      type: 'test'
+      ...
+    # Subtest: version
+    ok 4 - version
+      ---
+      duration_ms: 2566.511386
+      type: 'test'
+      ...
+    # Subtest: annotate
+    ok 5 - annotate
+      ---
+      duration_ms: 2494.002532
+      type: 'test'
+      ...
+    1..5
+ok 42 - each committed native response boundary resumes idempotently without a second permit
+  ---
+  duration_ms: 13497.636025
+  type: 'test'
+  ...
+# Subtest: rights revocation at every delegated write rejects in SQL before that native mutation
+    # Subtest: candidate
+    ok 1 - candidate
+      ---
+      duration_ms: 2708.630425
+      type: 'test'
+      ...
+    # Subtest: analyze
+    ok 2 - analyze
+      ---
+      duration_ms: 2758.817118
+      type: 'test'
+      ...
+    # Subtest: observe
+    ok 3 - observe
+      ---
+      duration_ms: 2737.404794
+      type: 'test'
+      ...
+    # Subtest: version
+    ok 4 - version
+      ---
+      duration_ms: 2509.319445
+      type: 'test'
+      ...
+    # Subtest: annotate
+    ok 5 - annotate
+      ---
+      duration_ms: 2818.263068
+      type: 'test'
+      ...
+    1..5
+ok 43 - rights revocation at every delegated write rejects in SQL before that native mutation
+  ---
+  duration_ms: 13534.748084
+  type: 'test'
+  ...
+# Subtest: native head collision preserves partial retained work and refuses resume without refetch
+ok 44 - native head collision preserves partial retained work and refuses resume without refetch
+  ---
+  duration_ms: 2391.00015
+  type: 'test'
+  ...
+# Subtest: canonical receipt head collision preserves the competing receipt and refuses incomplete execution retry
+ok 45 - canonical receipt head collision preserves the competing receipt and refuses incomplete execution retry
+  ---
+  duration_ms: 2615.604691
+  type: 'test'
+  ...
+# Subtest: one-use source capture binds its exact version and rejects changed bytes before another native job
+ok 46 - one-use source capture binds its exact version and rejects changed bytes before another native job
+  ---
+  duration_ms: 2878.67417
+  type: 'test'
+  ...
+# Subtest: failed fetch and expired permit stay consumed; only an explicit successor selection can acquire again
+ok 47 - failed fetch and expired permit stay consumed; only an explicit successor selection can acquire again
+  ---
+  duration_ms: 3231.774764
+  type: 'test'
+  ...
+# Subtest: native capture persistence failure rolls back its job and refuses automatic acquisition retry
+ok 48 - native capture persistence failure rolls back its job and refuses automatic acquisition retry
+  ---
+  duration_ms: 3142.385946
+  type: 'test'
+  ...
+# Subtest: progress payload is producer-scoped and reconsideration refuses revoked authority before observation writes
+ok 49 - progress payload is producer-scoped and reconsideration refuses revoked authority before observation writes
+  ---
+  duration_ms: 2928.935919
+  type: 'test'
+  ...
+# Subtest: reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch
+    # Subtest: reconsider
+    ok 1 - reconsider
+      ---
+      duration_ms: 2564.142466
+      type: 'test'
+      ...
+    # Subtest: rebased-version
+    ok 2 - rebased-version
+      ---
+      duration_ms: 2999.280724
+      type: 'test'
+      ...
+    1..2
+ok 50 - reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch
+  ---
+  duration_ms: 5564.502691
+  type: 'test'
+  ...
+# Subtest: completion requires a fresh exact catalogue and guarded restore preserves populated history and all original ACLs
+ok 51 - completion requires a fresh exact catalogue and guarded restore preserves populated history and all original ACLs
+  ---
+  duration_ms: 3305.411541
+  type: 'test'
+  ...
+# Subtest: source authorization expiry during a run refuses the first retained continuation without refetch
+ok 52 - source authorization expiry during a run refuses the first retained continuation without refetch
+  ---
+  duration_ms: 3513.943974
+  type: 'test'
+  ...
+# Subtest: source-rights and criteria successor CAS prevents older pending selection completion
+ok 53 - source-rights and criteria successor CAS prevents older pending selection completion
+  ---
+  duration_ms: 2098.46275
+  type: 'test'
+  ...
+# Subtest: tampered retained spans and foreign capture or observation scope refuse at the native SQL owner
+ok 54 - tampered retained spans and foreign capture or observation scope refuse at the native SQL owner
+  ---
+  duration_ms: 1942.901118
+  type: 'test'
+  ...
+# Subtest: registered contract catalogue preserves shared religion coverage and material sports/entertainment exceptions without scores
+ok 55 - registered contract catalogue preserves shared religion coverage and material sports/entertainment exceptions without scores
+  ---
+  duration_ms: 1834.674064
+  type: 'test'
+  ...
+# Subtest: selective intake declarations bind native immutable intake and investigation owners
+    # Subtest: all three dispositions retain one shared evidence identity, explicit provenance and default-deny admission
+    ok 1 - all three dispositions retain one shared evidence identity, explicit provenance and default-deny admission
+      ---
+      duration_ms: 2.943357
+      type: 'test'
+      ...
+    # Subtest: phantom, stale-version, wrong-candidate/capture and unbound trigger declarations reject
+    ok 2 - phantom, stale-version, wrong-candidate/capture and unbound trigger declarations reject
+      ---
+      duration_ms: 1.514588
+      type: 'test'
+      ...
+    # Subtest: an exact native correction triggers reconsideration while preserving the chosen disposition
+    ok 3 - an exact native correction triggers reconsideration while preserving the chosen disposition
+      ---
+      duration_ms: 21.541983
+      type: 'test'
+      ...
+    # Subtest: reconsideration rejects unobserved causes, wrong subjects and unsupported continuity
+    ok 4 - reconsideration rejects unobserved causes, wrong subjects and unsupported continuity
+      ---
+      duration_ms: 2.551144
+      type: 'test'
+      ...
+    # Subtest: new relevant input requires the actual positive-relevance record, including exact bigint position
+    ok 5 - new relevant input requires the actual positive-relevance record, including exact bigint position
+      ---
+      duration_ms: 42.66306
+      type: 'test'
+      ...
+    # Subtest: native ancestor closure supports scoped declarations without widening declaration scope
+    ok 6 - native ancestor closure supports scoped declarations without widening declaration scope
+      ---
+      duration_ms: 44.880119
+      type: 'test'
+      ...
+    # Subtest: unauthorized and rolled-back native records cannot supply retained declaration inputs
+    ok 7 - unauthorized and rolled-back native records cannot supply retained declaration inputs
+      ---
+      duration_ms: 17.486928
+      type: 'test'
+      ...
+    1..7
+ok 56 - selective intake declarations bind native immutable intake and investigation owners
+  ---
+  duration_ms: 2823.452946
+  type: 'test'
+  ...
+# Subtest: registered criteria execute through actual native SQL and fixed operator transport with pre-fetch denial and reconsideration
+    # Subtest: deterministic fixture matrix preserves explicit religion and important sports/entertainment scope
+    ok 1 - deterministic fixture matrix preserves explicit religion and important sports/entertainment scope
+      ---
+      duration_ms: 10.760996
+      type: 'test'
+      ...
+    # Subtest: skip and defer are durable metadata decisions with ZERO source HTTP/capture/candidate work
+    ok 2 - skip and defer are durable metadata decisions with ZERO source HTTP/capture/candidate work
+      ---
+      duration_ms: 38.476185
+      type: 'test'
+      ...
+    # Subtest: unknown/missing rights, disabled/expired grants and malformed endpoints deny before source HTTP
+    ok 3 - unknown/missing rights, disabled/expired grants and malformed endpoints deny before source HTTP
+      ---
+      duration_ms: 52.40722
+      type: 'test'
+      ...
+    # Subtest: head and membership race before permit causes no acquisition
+    ok 4 - head and membership race before permit causes no acquisition
+      ---
+      duration_ms: 16.576311
+      type: 'test'
+      ...
+    # Subtest: authorized analyze-now executes native owners without publishing and exact retry never refetches
+    ok 5 - authorized analyze-now executes native owners without publishing and exact retry never refetches
+      ---
+      duration_ms: 75.849824
+      type: 'test'
+      ...
+    # Subtest: registered versions and discovery receipt CAS prevent forged policy/source substitution and duplicate permit
+    ok 6 - registered versions and discovery receipt CAS prevent forged policy/source substitution and duplicate permit
+      ---
+      duration_ms: 9.813194
+      type: 'test'
+      ...
+    # Subtest: correction automatically reconsiders native dependency, preserves original evidence and rebases future watches
+    ok 7 - correction automatically reconsiders native dependency, preserves original evidence and rebases future watches
+      ---
+      duration_ms: 99.736949
+      type: 'test'
+      ...
+    # Subtest: new retained input alone does not trigger; positive native relevance does, and a later correction triggers again
+    ok 8 - new retained input alone does not trigger; positive native relevance does, and a later correction triggers again
+      ---
+      duration_ms: 161.6041
+      type: 'test'
+      ...
+    # Subtest: registered receipt CAS refuses stale execution and exact historical retries stay idempotent
+    ok 9 - registered receipt CAS refuses stale execution and exact historical retries stay idempotent
+      ---
+      duration_ms: 4.965792
+      type: 'test'
+      ...
+    # Subtest: revoked operation rights deny both source fetch and further automatic reconsideration
+    ok 10 - revoked operation rights deny both source fetch and further automatic reconsideration
+      ---
+      duration_ms: 18.918519
+      type: 'test'
+      ...
+    # Subtest: stream byte budget aborts before capture, consumed permits never refetch, and grant quota is atomic
+    ok 11 - stream byte budget aborts before capture, consumed permits never refetch, and grant quota is atomic
+      ---
+      duration_ms: 21.371204
+      type: 'test'
+      ...
+    # Subtest: a substituted unregistered criteria version cannot append a canonical annotation
+    ok 12 - a substituted unregistered criteria version cannot append a canonical annotation
+      ---
+      duration_ms: 41.383637
+      type: 'test'
+      ...
+    # Subtest: criteria successor and source authorization revisions are explicit and never overwrite the prior decision
+    ok 13 - criteria successor and source authorization revisions are explicit and never overwrite the prior decision
+      ---
+      duration_ms: 10.586864
+      type: 'test'
+      ...
+    # Subtest: SQL reader and mutation privileges stay default-deny and historical receipts remain immutable
+    ok 14 - SQL reader and mutation privileges stay default-deny and historical receipts remain immutable
+      ---
+      duration_ms: 6.698079
+      type: 'test'
+      ...
+    # Subtest: new source capture never republishes or overwrites an existing eligible article
+    ok 15 - new source capture never republishes or overwrites an existing eligible article
+      ---
+      duration_ms: 54.274581
+      type: 'test'
+      ...
+    # Subtest: automatic extraction uses canonical retained Unicode spans after native title normalization
+    ok 16 - automatic extraction uses canonical retained Unicode spans after native title normalization
+      ---
+      duration_ms: 43.554166
+      type: 'test'
+      ...
+    # Subtest: standalone preflight and rollback pack preserve populated native/private history and stop only the new producer
+    ok 17 - standalone preflight and rollback pack preserve populated native/private history and stop only the new producer
+      ---
+      duration_ms: 267.319446
+      type: 'test'
+      ...
+    1..17
+ok 57 - registered criteria execute through actual native SQL and fixed operator transport with pre-fetch denial and reconsideration
+  ---
+  duration_ms: 3212.573823
+  type: 'test'
+  ...
+# Subtest: operator refuses malformed command or an invalid permit before source HTTP
+ok 58 - operator refuses malformed command or an invalid permit before source HTTP
+  ---
+  duration_ms: 0.617412
+  type: 'test'
+  ...
+# Subtest: clean-install rollback removes only the empty extension and preserves native owners
+ok 59 - clean-install rollback removes only the empty extension and preserves native owners
+  ---
+  duration_ms: 1613.824008
+  type: 'test'
+  ...
+# Subtest: new CLI acquisition and reconsideration writes require apply before backend creation
+ok 60 - new CLI acquisition and reconsideration writes require apply before backend creation
+  ---
+  duration_ms: 97.266828
+  type: 'test'
+  ...
+# Subtest: registered selective intake produces authenticated durable private receipts through the existing owners
+    # Subtest: declare is registered, server-bound, durable and exactly idempotent without execution
+    ok 1 - declare is registered, server-bound, durable and exactly idempotent without execution
+      ---
+      duration_ms: 48.925781
+      type: 'test'
+      ...
+    # Subtest: read and exact receipt resolve native private history via the same registered route
+    ok 2 - read and exact receipt resolve native private history via the same registered route
+      ---
+      duration_ms: 6.033337
+      type: 'test'
+      ...
+    # Subtest: viewer reads but cannot produce, and outsider cannot read
+    ok 3 - viewer reads but cannot produce, and outsider cannot read
+      ---
+      duration_ms: 8.843986
+      type: 'test'
+      ...
+    # Subtest: stale expected actor and expired Auth refuse before any owner RPC or write
+    ok 4 - stale expected actor and expired Auth refuse before any owner RPC or write
+      ---
+      duration_ms: 5.118896
+      type: 'test'
+      ...
+    # Subtest: missing RPC, secret failure and wrong response actor are unavailable with no fallback
+    ok 5 - missing RPC, secret failure and wrong response actor are unavailable with no fallback
+      ---
+      duration_ms: 4.098755
+      type: 'test'
+      ...
+    # Subtest: native correction requires explicit reconsideration and preserves historical draft/disposition
+    ok 6 - native correction requires explicit reconsideration and preserves historical draft/disposition
+      ---
+      duration_ms: 40.160384
+      type: 'test'
+      ...
+    # Subtest: stale head and receipt CAS refuse new writes, while exact old receipt retries remain valid
+    ok 7 - stale head and receipt CAS refuse new writes, while exact old receipt retries remain valid
+      ---
+      duration_ms: 16.571975
+      type: 'test'
+      ...
+    # Subtest: membership and head races between authoritative read and append are checked atomically by SQL
+    ok 8 - membership and head races between authoritative read and append are checked atomically by SQL
+      ---
+      duration_ms: 25.678106
+      type: 'test'
+      ...
+    # Subtest: revocation denies receipt history and forged input cannot reach the gateway
+    ok 9 - revocation denies receipt history and forged input cannot reach the gateway
+      ---
+      duration_ms: 3.218214
+      type: 'test'
+      ...
+    1..9
+ok 61 - registered selective intake produces authenticated durable private receipts through the existing owners
+  ---
+  duration_ms: 1877.050376
+  type: 'test'
+  ...
+1..61
+# tests 142
+# suites 0
+# pass 142
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 131540.925396

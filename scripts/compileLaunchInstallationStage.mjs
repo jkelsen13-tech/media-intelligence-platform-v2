@@ -54,7 +54,7 @@ async function prepareArtifact(stageId,catalogPath,mode,originalReceiptPath){
 // Reserve both names exclusively before writing. On an ordinary failure remove
 // only files opened by this call. A process/storage interruption may leave an
 // incomplete pair: mandatory read-only verification rejects it before review.
-async function writeArtifact(outputPath,{identity,sql}){
+export async function writeArtifact(outputPath,{identity,sql}){
   const owned=[]
   try{
     const receipt=await open(outputPath+'.sha256.json','wx',0o600);owned.push({path:outputPath+'.sha256.json',handle:receipt})
