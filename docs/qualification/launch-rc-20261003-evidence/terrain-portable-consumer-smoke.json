@@ -1,0 +1,22 @@
+{
+  "contract": "mip-terrain-portable-consumer-preparation-smoke-v1",
+  "zip_sha256": "35e2ab96c923fee2b98b8ac712ecab3cd3595105ec75d2f38c6b23ec3ce01008",
+  "zip_bytes": 186080,
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "method": "Complete ZIP extracted into fresh remote /tmp root with exact safe member paths; standalone Node consumer-unbound validation and Python scientific-helper help, no source acquisition/admission/comparison.",
+  "results": [
+    {
+      "label": "unbound-native-consumer-validation",
+      "exit_code": 0,
+      "stdout": "{\n  \"valid\": true,\n  \"ready\": false,\n  \"errors\": [],\n  \"gates\": [\n    \"dem local bytes unbound\",\n    \"ortho local bytes unbound\",\n    \"explicit ortho-to-DEM operation unbound; no implicit best/ballpark selection\",\n    \"comparison mode unbound\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "scientific-helper-command-help",
+      "exit_code": 0,
+      "stdout": "usage: render.py [-h] --record RECORD --output OUTPUT [--node NODE]\n                 [--inspect-ortho-only]\n\nOffline scientific A/B source renderer. Not an app/native/device benchmark.\nRequires existing GDAL CLI, numpy, Pillow and matplotlib, never downloads\ngrids. The Node contract is the execution gate; no implicit datum operation is\nchosen.\n\noptions:\n  -h, --help            show this help message and exit\n  --record RECORD\n  --output OUTPUT\n  --node NODE\n  --inspect-ortho-only\n",
+      "stderr": ""
+    }
+  ],
+  "actual_comparison_executed": false
+}

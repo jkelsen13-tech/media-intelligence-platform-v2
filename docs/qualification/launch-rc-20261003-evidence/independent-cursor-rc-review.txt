@@ -1,0 +1,38 @@
+_CLEAN FOR BOUNDED COHERENT LAUNCH RC SOURCE GATE_
+
+`originalModelName=cursor-grok-4.6-xhigh` (no substitution). Reviewed SHA `58667adcef63dfff56fd14242ed74082490873c9`, tree `66b7aad2cbc6e4909e3a50bb78663c6817dad02b`. Review-only; no edits, install, CI trigger, PR, merge, deploy, SQL, credentials, or spend. Ledger unobservable.
+
+_Pins OBSERVED:_ local=remote `origin/codex/mip-launch-rc-20261003`; clean tree; ca72 `ca72a6df511bbb26c6b9e0a193a3e0baf01aa428` / tree `cbcfc510a117101fd163f83b3c574dd979085b02` is ancestor; 16 linear single-parent commits; 242 changed paths; binding `mip-launch-rc-source-v1` 241 current hashes match (self-hash omitted). Isolated lane heads fetched; all 11 qualified trees match. 197/78541/67/670 are ca72 ancestors. 814 is separate qik/backend lineage, not a native ancestor.
+
+_Public CI OBSERVED_ <https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37100924579|run 37100924579> attempt1 SUCCESS completed `2026-10-03T05:53:30Z`, exact-head checkout `58667adc`. Node22 job `111140136436`: `# tests 2689` `# pass 2689` fail/cancel/skip/todo 0; `Copied 4 items`; `built in 23.18s`; audit skipped (`golden.yml` `matrix.node == 24`). Node24 job `111140136626`: same 2689/2689; `Copied 4 items`; `built in 25.41s`; `vulnerabilities: {}`, info/low/moderate/high/critical/total 0. Local tests _UNRUN_ (`node_modules` absent; no install).
+
+_HISTORICAL 096 remains RED:_ <https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37099754666|run 37099754666> `096693a4` / tree `0fc1637ec8a6d78a006b41ae91892836f2f495f9`: each runtime 2686 tests / 2685 pass / 1 fail; build/audit skipped. `not ok` `tests/investigationApi.test.mjs` ENOENT `/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs`. Three new portability tests explain 2689. Failed 67 `67b638df` and 670 `670efb8e` remain REPAIR REQUIRED at their scopes. a9 remains unavailable.
+_B1 OBSERVED:_ only 3 absolute pins exist, all under markets manifest `3868bbda…`; mapping JSON equals binding; remapped current bytes match those hashes. `scripts/launchRcSourcePath20261003.mjs:7-22` and `scripts/buildLaunchRcSourceBinding20261003.py:35-47` refuse unrelated/absolute/traversal/encoded/symlink-outside paths; relocated reader must use current bytes. Binding is integrity evidence, not execution/review authority (`docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json` status `CURRENT_BYTES_BINDING_NOT_A_QUALIFICATION_RECEIPT`).
+
+_B2 OBSERVED:_ `package.json:44-48` scoped override `vite-plugin-static-copy@3.4.0` → chokidar `4.0.3`; lock installs chokidar `4.0.3` / readdirp `4.1.2` / DOMPurify `3.4.16`; no `braces` package. Plugin metadata still declares `chokidar ^3.6.0` (`package-lock.json:3079`). `vite.config.js:46,59-80,88` keeps `browserKeyBuildGate`, four literal Cesium dirs dest `cesium`, base `/media-intelligence-platform-v2/`, lazy Cesium chunk. Watch add/change/unlink/close in `tests/qualification/release-dependency-20261003.test.mjs:45-117`. 389/503/892 and lighter.css collision are _REPORTED_ isolated-lane measurements, not re-hashed at this HEAD. No wholesale backend merge.
+
+_B3 OBSERVED:_ `src/lib/newsStoryState.js:12-14,72-91` `isCorrection` covers `kind=correction` or `novelty=correction`; kind=update+correction novelty cannot enter Breaking/Developing velocity. Replay filters `declaredMs <= time` (`:150`). Source reports stay `attributed_source_report_only` (`:204`). Synthetic numerical calibration remains an empirical gate, not admission.
+
+_B4 OBSERVED:_ two KEV CSVs match SHA256 and git-blob SHA1; CC0 LICENSE; diff 1 add (`CVE-2024-20439`) / 3 amendments / 0 removed. `scripts/officialKevBenchmark20261003.mjs:99,133` `SIMULATED_OFFLINE_BENCHMARK`, `actual_mip_admissions: 0`. Commit clocks are proxies. NHC 403s retained in `verifier/corpus/2026-10-03/receipts/acquisition-attempts.json`.
+
+_B5 OBSERVED:_ consumed permit needs explicit successor (`scripts/selectiveIntakeExecution.mjs:82,129`); lost rebase HOLD without refetch (`tests/selectiveIntakeCompletion.test.mjs:248-273`); competing head cannot be overridden (`:135-155`); annotation checks current `assessment_causes` after native locks (`selective_intake_completion_v1.sql:331-340`). Proposal/restore hashes match `498a90a5…` / `f11b0c40…`. PGlite 18.3 proofs are not hosted/native17 races.
+
+_B6 OBSERVED:_ eight `INITIAL_STAGES` (`launchInstallationSequence.mjs:21-42`); timeouts set before catalog DO (`:151-155`); exclusive `wx` pair + read-only verify (`compileLaunchInstallationStage.mjs:57-85`); completion compiler binds two distinct catalogs and paired runner `8c29dc70…` (`compileSelectiveIntakeCompletionStage20261003.mjs:15-17,98-104`). Receipts grant no target/live authority. Missing rollback ack stays UNKNOWN.
+
+_B7 OBSERVED:_ `qualifyMarketsProviderRequest` always returns `provider_activation_not_authorized` even with zero cost (`marketsProviderPolicy.mjs:20-28`); credit plans `executionAuthorized:false` (`:89-92`); published offer is not account allowance (`:3-18`).
+
+_B8 OBSERVED:_ detached validator, generic CRS, catalogue-only vertical, no `constantGeoidOffset` (`worldViewTerrainCompositionContract.js:87-88,143-145,188-190`). Current research result `HOLD`, `providerActivated:false`. Fixtures cannot admit data. Existing development terrain unchanged.
+
+_B9 OBSERVED:_ contract forbids nodata fill and hidden offsets; C heights unavailable (`scripts/terrain-comparison/contract.mjs:57,82,91,105`). Evidence `actualComparisonExecuted: false`. Synthetic A/B is mechanics only. Do not reacquire actual DEM.
+
+_B10 OBSERVED:_ local Chromium harness, synthetic backend, nonlocal abort (`scripts/device-acceptance/run-browser.mjs:40-53`); historical cold portrait RED retained (`:36`). f09 receipts are isolated prep at `f09f6989`, not this HEAD. Exact output inventory _PENDING_ (`dist` absent here; CI build has no file-count/largest-asset receipt). No hosting/spend/release authority (`launchReleaseArtifact20261003.mjs:1,55`).
+
+_Consequential source blockers:_ none at this SHA.
+
+_Held remaining gates (not this source verdict):_ integrated browser journeys PENDING; integrated dist inventory PENDING; physical/Safari/native/FPS/thermal/appearance UNRUN; Markets account/TradingView/global reservations HOLD; live Auth/PostgREST/qik CA-TLS HOLD; real imagery/terrain admission HOLD; install/rehearsal/COMMIT/merge/deploy/release HOLD.
+
+No independent verdict extends to private pixels, physical devices, source admission, native races, live security, or release.
+
+_STOP._ Installation, live, backend, rehearsal, COMMIT, merge, deploy, release, and spend gates remain held.
+<https://cursor.com/agents/bc-09b34092-f1c1-5168-a47c-bdbc434ebb3a|Open in Cursor> · Grok 4.6
+

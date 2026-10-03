@@ -1,0 +1,233 @@
+{
+  "contract": "mip-integrated-browser-artifact-readback-v1",
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "source_tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b",
+  "engine": "chromium",
+  "browser_version": "151.0.7922.173",
+  "fixture_authority": "SYNTHETIC_BACKEND_AND_SESSION_ONLY",
+  "profiles": [
+    {
+      "id": "ipad",
+      "status": "partial",
+      "screenshots": 22,
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "page_errors": [],
+      "receipt_sha256": "142f151769f43301309ad197c29b7225ea75eeaf5d644ac80045540b1857f08c"
+    },
+    {
+      "id": "iphone",
+      "status": "partial",
+      "screenshots": 22,
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "page_errors": [],
+      "receipt_sha256": "1b4a7df164c79ca07f2c42ea3f55c9b1cd5993cc9bfe4baf96a3c1e0261f0c53"
+    },
+    {
+      "id": "narrow",
+      "status": "partial",
+      "screenshots": 22,
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "page_errors": [],
+      "receipt_sha256": "f1469a7708c3af1da49ac85717013e14a80467c4582cc4c29463ec4dc2ab7350"
+    },
+    {
+      "id": "desktop",
+      "status": "partial",
+      "screenshots": 22,
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "page_errors": [],
+      "receipt_sha256": "d7f78a5c1480d8edb4cd5e6e592a573a1072cb1316bd38bd2a92e96423551d9e"
+    }
+  ],
+  "counts": {
+    "passed": 40,
+    "failed": 0,
+    "blocked": 4
+  },
+  "screenshots_verified": 88,
+  "geolocation_calls_each": 0,
+  "physical_evidence": false,
+  "qualification": "Actual full App development transform, actual native software browser when available; synthetic backend/session/geometry, all nonlocal network blocked. No physical-device, live Auth/SQL, final appearance, FPS or thermal acceptance.",
+  "summary_sha256": "e43805888bdb34f717585b4fc22bb143b26af5540d633942e75f28c0f4ef8156",
+  "historical_cold_portrait": "RED: unchanged; original executable measurement boundary unrecovered"
+}

@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-03T06:16:10.205Z",
+  "authoritative_source": "GitHub compare API",
+  "base": "814cb6500265144c36a91730f16c7982866d3f49",
+  "head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "status": "ahead",
+  "ahead_by": 91,
+  "behind_by": 0,
+  "total_commits": 91,
+  "merge_base_commit": "814cb6500265144c36a91730f16c7982866d3f49",
+  "base_commit": "814cb6500265144c36a91730f16c7982866d3f49",
+  "html_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/compare/814cb6500265144c36a91730f16c7982866d3f49...58667adcef63dfff56fd14242ed74082490873c9"
+}

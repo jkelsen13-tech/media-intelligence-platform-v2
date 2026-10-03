@@ -1,0 +1,124 @@
+{
+  "contract": "mip-launch-rc-evidence-file-binding-v1",
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "source_tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b",
+  "branch_role": "ARTIFACTS_ONLY_COMPANION_NOT_RELEASE_CANDIDATE",
+  "binding_note": "Own hash omitted to avoid circularity; exact evidence commit/tree supplied externally after push. All original archived source/test/review histories preserved.",
+  "files": [
+    {
+      "path": "MIP_LAUNCH_RC_DRAFT_PR_BODY_2026-10-03.md",
+      "bytes": 1789,
+      "sha256": "167c2004d7b09876eddf554118c8dce7d0ceb9f1f7ac3e23d4f83cb674d13a9c"
+    },
+    {
+      "path": "MIP_LAUNCH_RC_QUALIFICATION_2026-10-03.md",
+      "bytes": 11584,
+      "sha256": "946190db5ed5f0f9fd182b27cac53b6268c83d9784e0e785d09bb42335729aad"
+    },
+    {
+      "path": "MIP_Launch_RC_Browser_Receipts_2026-10-03.zip",
+      "bytes": 9734836,
+      "sha256": "cc376b9ce57e58232c598a853ed555fa4b355dc7cf4f45db4b928f67dddb0736"
+    },
+    {
+      "path": "MIP_Launch_RC_Runtime_Receipts_2026-10-03.zip",
+      "bytes": 1360730,
+      "sha256": "4f1c9ccf6a2962e8c4892f906c3efdeeea7db4ac0691529e0369f2686e42a36c"
+    },
+    {
+      "path": "MIP_OCT03_LAUNCH_EXECUTION_STATUS.md",
+      "bytes": 14654,
+      "sha256": "98f13079c70e1b316e74bf2fab48021342bba73139b0ee81716c4a631bd045d6"
+    },
+    {
+      "path": "MIP_OCT03_LAUNCH_PROGRESS_2026-10-03.md",
+      "bytes": 34898,
+      "sha256": "4d5363ba2095d377ff7c4a18a26f722bc1cf84bf562740486eebb49a1d8aceed"
+    },
+    {
+      "path": "MIP_Terrain_Comparison_Portable_Source_2026-10-03.zip",
+      "bytes": 186080,
+      "sha256": "35e2ab96c923fee2b98b8ac712ecab3cd3595105ec75d2f38c6b23ec3ce01008"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1960,
+      "sha256": "ea634eacd2fa843779cc39422786a8da64e27adb8ab1f1d0abba8cca4bd6df89"
+    },
+    {
+      "path": "browser-schema-readback.json",
+      "bytes": 1094,
+      "sha256": "1120588b2a70f843b5f25a79f5b9bbaee72efc3daa06387adf9f30fd632ac77c"
+    },
+    {
+      "path": "browser-summary.json",
+      "bytes": 6110,
+      "sha256": "e43805888bdb34f717585b4fc22bb143b26af5540d633942e75f28c0f4ef8156"
+    },
+    {
+      "path": "browser-verified-readback.json",
+      "bytes": 5595,
+      "sha256": "3b5ea0d63ae71ade1ff61b8e6a724e39b9c125abcdc0006bceee583111b7d710"
+    },
+    {
+      "path": "export-receipt.json",
+      "bytes": 29340,
+      "sha256": "d38a0d137820aa446df2ecaceb20d2f82e10458fa3f690ad3a19b717a7d8391d"
+    },
+    {
+      "path": "github-ci-completed.json",
+      "bytes": 24734,
+      "sha256": "9a806abdef7831e36fb478b4e44416c7b020fcd0bc98fa9b8b656f20f5d8cd8b"
+    },
+    {
+      "path": "github-qualified-814-ancestry.json",
+      "bytes": 586,
+      "sha256": "1e31f7dafa20f12278675f5bf1ae77169587f6f7341d7c9c1c58f0e611181200"
+    },
+    {
+      "path": "independent-cursor-original-qik-a9-review.txt",
+      "bytes": 9913,
+      "sha256": "44117269e8f2c7f6c85ce7f4856bd95e02c0d3cccc082cd57b0650695c6b18b9"
+    },
+    {
+      "path": "independent-cursor-rc-review.txt",
+      "bytes": 6761,
+      "sha256": "36bf9f5410d52346749981b1aab0e58b93cd6bd7fba68e1e66bcab01ec9a2fd0"
+    },
+    {
+      "path": "local-qualification.json",
+      "bytes": 43276,
+      "sha256": "8f2396458f16fc8780cfc08269f6099b1170833a8bf2b3df9040d2e1a1093cdc"
+    },
+    {
+      "path": "qualification-envelope.json",
+      "bytes": 61252,
+      "sha256": "83c5c378c6548468776bc0f72347a7c710a99a8e1bb304070ef296df6eec3763"
+    },
+    {
+      "path": "qualified-history-ancestry-readback.json",
+      "bytes": 1239,
+      "sha256": "f2907d26846955734cd42860c29844a5f9093a09c13c0749582cee2f3a09af79"
+    },
+    {
+      "path": "release-artifact-node22.json",
+      "bytes": 185169,
+      "sha256": "29d533379edbeb8f010ece9a2f3bf7dd8e696e4b475f87e1558c07c686e6b0db"
+    },
+    {
+      "path": "release-artifact-node24.json",
+      "bytes": 185168,
+      "sha256": "5f94ceb9d8ad70e11c7e9cb6f432f4fa73edaa2b3ad81387f4913112726ed822"
+    },
+    {
+      "path": "terrain-portable-consumer-smoke.json",
+      "bytes": 1542,
+      "sha256": "513c5a65c1dd288083eedac2be94357e1df0220961079cbc0d934ab5c7f0875d"
+    },
+    {
+      "path": "terrain-portable-export-receipt.json",
+      "bytes": 474,
+      "sha256": "4b0e2be07d13a26cb03966df2e761fcaa3257971badfe932a3b1a775fd4556db"
+    }
+  ]
+}

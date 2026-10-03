@@ -1,0 +1,37 @@
+{
+  "observed_at_utc": "2026-10-03T06:15:12.318612+00:00",
+  "qualification": "Full local Git object graph read-only; parent independently verifies remote GitHub ancestry. Not a new source review verdict.",
+  "descendant": "58667adcef63dfff56fd14242ed74082490873c9",
+  "rows": [
+    {
+      "head": "814cb6500265144c36a91730f16c7982866d3f49",
+      "tree": "8d5225cdd8429f42c47c19f4bda67b98c57c180e",
+      "is_ancestor": true,
+      "merge_base_command_exit": 0
+    },
+    {
+      "head": "78541e522bae4b0db0256c5941f70f2ea6cfbede",
+      "tree": "51534293647771438c02dd623b305947ac0568d6",
+      "is_ancestor": true,
+      "merge_base_command_exit": 0
+    },
+    {
+      "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+      "is_ancestor": true,
+      "merge_base_command_exit": 0
+    },
+    {
+      "head": "b8ac1663fa75c4c7a26d653a288f745070bafcae",
+      "tree": "5b70829fe94ea4704a1779a378cc09e96b002ab0",
+      "is_ancestor": true,
+      "merge_base_command_exit": 0
+    },
+    {
+      "head": "6fd450ee29168554157d3c91dee955e7f3c4b028",
+      "tree": "397b271ab7ef0e13c68f68f45e6b0c759eab53c3",
+      "is_ancestor": true,
+      "merge_base_command_exit": 0
+    }
+  ]
+}

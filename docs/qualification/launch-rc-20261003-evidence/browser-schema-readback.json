@@ -1,0 +1,31 @@
+{
+  "contract": "mip-integrated-device-record-schema-readback-v1",
+  "source_head": "58667adcef63dfff56fd14242ed74082490873c9",
+  "schema_path": "docs/device-acceptance/record.schema.json",
+  "schema_sha256": "b3e998984485c61769f05f7b0cc4b90c10193895a67b9d4ed26f8a612ef2a10c",
+  "validator": "Python jsonschema Draft202012Validator",
+  "records": [
+    {
+      "profile": "ipad",
+      "valid": true,
+      "receipt_sha256": "142f151769f43301309ad197c29b7225ea75eeaf5d644ac80045540b1857f08c"
+    },
+    {
+      "profile": "iphone",
+      "valid": true,
+      "receipt_sha256": "1b4a7df164c79ca07f2c42ea3f55c9b1cd5993cc9bfe4baf96a3c1e0261f0c53"
+    },
+    {
+      "profile": "narrow",
+      "valid": true,
+      "receipt_sha256": "f1469a7708c3af1da49ac85717013e14a80467c4582cc4c29463ec4dc2ab7350"
+    },
+    {
+      "profile": "desktop",
+      "valid": true,
+      "receipt_sha256": "d7f78a5c1480d8edb4cd5e6e592a573a1072cb1316bd38bd2a92e96423551d9e"
+    }
+  ],
+  "independent_schema_validation": true,
+  "scope": "Record structure only; no physical/live/source or functional verdict inferred"
+}
