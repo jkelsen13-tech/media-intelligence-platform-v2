@@ -61,33 +61,7 @@ test('current launch source candidate manifest matches the exact gateway and pre
   }
   const source = JSON.parse(await readFile(new URL('docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json',root),'utf8'))
   assert.equal(source.status,'CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT')
-  const successor = JSON.parse(await readFile(new URL('docs/qualification/release-dependency-20261003-source.json',root),'utf8'))
-  assert.equal(successor.contract, 'mip-release-dependency-source-v1')
-  assert.equal(successor.predecessor.head, 'ca72a6df511bbb26c6b9e0a193a3e0baf01aa428')
-  assert.equal(successor.predecessor.tree, 'cbcfc510a117101fd163f83b3c574dd979085b02')
-  assert.equal(successor.predecessor.manifest.path, 'docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json')
-  assert.equal(successor.predecessor.manifest.sha256, 'c15cba4ea3864c90f0bfbe3dd69308818308c11b431afcb857085252c462e169')
-  assert.equal(successor.predecessor.lockSha256, '73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa')
-  assert.equal(createHash('sha256').update(await readFile(new URL(successor.predecessor.manifest.path, root))).digest('hex'), successor.predecessor.manifest.sha256)
-  const historicalSnapshots = new Map(successor.historicalSourceSnapshots.map(entry => [entry.sourcePath, entry]))
-  assert.deepEqual([...historicalSnapshots.keys()].sort(), ['package-lock.json', 'tests/investigationApi.test.mjs'])
-  assert.equal(successor.historicalSourceSnapshots.length, 2)
-  for (const [path, snapshot] of historicalSnapshots) {
-    assert.equal(snapshot.path, `docs/qualification/release-dependency-20261003-predecessor/${path}`)
-    assert.equal(snapshot.sha256, source.sources.find(entry => entry.path === path).sha256)
-    assert.equal(snapshot.sourceCommit, successor.predecessor.head)
-  }
   for (const entry of [...source.sources,...source.previous_manifests,...source.unchanged_installation_qualification]) {
-    // Keep the exact ca72 pins as history; changed tooling and this assertion
-    // seam have separately bound current bytes in the dated successor.
-    const path = historicalSnapshots.get(entry.path)?.path ?? entry.path
-    assert.equal(createHash('sha256').update(await readFile(new URL(path,root))).digest('hex'),entry.sha256,entry.path)
-  }
-  assert.deepEqual(successor.sources.map(entry => entry.path).sort(), [
-    'package-lock.json', 'package.json', 'tests/investigationApi.test.mjs',
-    'tests/qualification/release-dependency-20261003.test.mjs', 'vite.config.js',
-  ])
-  for (const entry of successor.sources) {
     assert.equal(createHash('sha256').update(await readFile(new URL(entry.path,root))).digest('hex'),entry.sha256,entry.path)
   }
 })

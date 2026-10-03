@@ -54,23 +54,25 @@ export default defineConfig({
     },
     // Copy CesiumJS static assets (Workers + Assets) into the build output
     // so they are served under the GitHub Pages base path.
+    // Chokidar 4 watches literal directories; static-copy preserves each
+    // directory name and nested paths below the same cesium/ deployment URL.
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/cesium/Build/Cesium/Workers/**/*',
-          dest: 'cesium/Workers',
+          src: 'node_modules/cesium/Build/Cesium/Workers',
+          dest: 'cesium',
         },
         {
-          src: 'node_modules/cesium/Build/Cesium/ThirdParty/**/*',
-          dest: 'cesium/ThirdParty',
+          src: 'node_modules/cesium/Build/Cesium/ThirdParty',
+          dest: 'cesium',
         },
         {
-          src: 'node_modules/cesium/Build/Cesium/Assets/**/*',
-          dest: 'cesium/Assets',
+          src: 'node_modules/cesium/Build/Cesium/Assets',
+          dest: 'cesium',
         },
         {
-          src: 'node_modules/cesium/Build/Cesium/Widgets/**/*',
-          dest: 'cesium/Widgets',
+          src: 'node_modules/cesium/Build/Cesium/Widgets',
+          dest: 'cesium',
         },
       ],
     }),

@@ -1,0 +1,784 @@
+{
+  "date": "2026-10-03",
+  "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+  "nativePredecessor": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+  "backendSuccessor": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+  "mergeBase": "39fdab77fc75736c57f2eb3a9b8500456ea27eae",
+  "nativeOnlyCommits": 148,
+  "backendOnlyCommits": 20,
+  "endpointChangedFileCount": 698,
+  "identities": [
+    {
+      "head": "39fdab77fc75736c57f2eb3a9b8500456ea27eae",
+      "tree": "bd15aa6e508efbda911cc1987e7acb7a6fafc2b5",
+      "parents": [
+        "1a9f7bbe99676ca535c21dd6e68d3de7da62e69e",
+        "58a39c245390fe963346c17da06f419bb870f853"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "78541e522bae4b0db0256c5941f70f2ea6cfbede",
+      "tree": "51534293647771438c02dd623b305947ac0568d6",
+      "parents": [
+        "e272cb99baeacf581c29bddc5232032b17b400cb"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+      "tree": "de8b46f03beba9ec3d7d2424f292c5ff0580e6b4",
+      "parents": [
+        "39e5a863c1cee9aca01ca61c6116b3d907899935"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "19700658c54de69e2540b2e97bda743158f9d0dc",
+      "tree": "8bab9ff302015a90edfc659c7268dca141fd20cc",
+      "parents": [
+        "79c83cd0ca48f5046d08886e4ae3e36157dbfaa1"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "67b638df3e1f8afe690368e4765604f454da6961",
+      "tree": "36d3ad4d7eb1f397c4001a3dd5e6e2f5d686c7c3",
+      "parents": [
+        "37f78e92acbb7154ed899da98548d5e2463c032d"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+      "parents": [
+        "bf8de4acd7d1e880f45f69db9fe018e3a25d2fb1"
+      ],
+      "nativeAncestor": true
+    },
+    {
+      "head": "93adb523910172b53e96d2b5f5b160974c6af519",
+      "tree": "9a430b86a1a5f381eeb6168eef529ea794b6f256",
+      "parents": [
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa"
+      ],
+      "nativeAncestor": false
+    },
+    {
+      "head": "675654be5a778c3173e682c4013031cb7796ed36",
+      "tree": "c2b1e0cd6bdf2777fb035a060abe81970a2f8358",
+      "parents": [
+        "8147e2ae1806a12a401a746551975125f03b0d75"
+      ],
+      "nativeAncestor": false
+    },
+    {
+      "head": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+      "tree": "a44cabcecfb55b0f9da0921e6c7538ff3c640c64",
+      "parents": [
+        "4028f957bd51c10e5da748f7f6559433173bf798"
+      ],
+      "nativeAncestor": false
+    },
+    {
+      "head": "e4b66c1778f76aaffb569dad6c1d3c8ae012df86",
+      "tree": "7b55deffb83b7c709051825897d1dedd8aa6c02e",
+      "parents": [
+        "0ddbed3319989d98788045a35cdc508e43ce902e"
+      ],
+      "nativeAncestor": false
+    }
+  ],
+  "localOctoberBranches": [
+    {
+      "branch": "codex/mip-500-responsive-followon-20261002",
+      "head": "53663a55ca3a4a5981305d8f7b1ea91f14b10286",
+      "tree": "987273f051212be6e57ec34ee30e28111e3f4df6",
+      "classification": "superseded-supplemental-receipt",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "1b4a6301e375f27335cb847548125595e349e6ab",
+        "531ac84d758184eec15504f3491576d339f3d61b",
+        "c3750a7a2883d9ee9ab74a559549c8081920de16",
+        "49809d44c8fa4b21ae6b1a9b000e59906d3ea41d",
+        "f336a557ebb58884bd19ae636c55c878f9e5ebda"
+      ],
+      "uniqueCommits": [
+        "53663a55ca3a4a5981305d8f7b1ea91f14b10286"
+      ]
+    },
+    {
+      "branch": "codex/mip-card-scroll-corrections-20261002",
+      "head": "30d09f107135fbaaeb6a7f5b30d08ce4e3b28e78",
+      "tree": "40c12ffb6ba858313735f042c08eefe188f07626",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "583df1326ac1e7c616248a8c77c1fe46d4ef1aea",
+        "31cfeb7113acdf058358b29895fd4e2f953ef01f",
+        "338b1204c2feb991d95590e9d6f743a78dfdda84",
+        "30d09f107135fbaaeb6a7f5b30d08ce4e3b28e78"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-auth-journeys-20261002",
+      "head": "43a9b6c1c8bc0567407e2b0c380e964cc5b6f21c",
+      "tree": "ff0c49bad14271a4b0189d98a2220437cdefdeb0",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "76603f7f19375fb5816f37d4620158efe45e02a2",
+        "e2c0a7c2c1a33c278a7d4bc95ce552a71dda82d0",
+        "d1ddb39d9e68830a0abb978b2ae7f3b86173eb0e",
+        "057fd56c23dd441046dc679c3c2a94e1cbdaedc5",
+        "9f7dd891a267fcda968a154c30ae12fa7ebd9494",
+        "43a9b6c1c8bc0567407e2b0c380e964cc5b6f21c"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-comparison-binding-20261002",
+      "head": "22b3ecdf7b1ae06982b752724f4660829cebc629",
+      "tree": "604b19ed6fd58d0eea609b669814e10b3c427147",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "c10f80574f31240336a9e96a21baa5d965e97912",
+        "22b3ecdf7b1ae06982b752724f4660829cebc629"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-comparison-navigation-20261002",
+      "head": "a38505f54252c28221adf795099d871d5ce648a6",
+      "tree": "6f9daab8a319d6415961cbb5ec960b593ef5bae5",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "a38505f54252c28221adf795099d871d5ce648a6"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-following-corrections-20261002",
+      "head": "617603bc0600230a71c23af64288b5b710552a40",
+      "tree": "abd30ad372463223f1577b3381d98274c56a343c",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "617603bc0600230a71c23af64288b5b710552a40"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-gate-review-corrections-20261002",
+      "head": "19700658c54de69e2540b2e97bda743158f9d0dc",
+      "tree": "8bab9ff302015a90edfc659c7268dca141fd20cc",
+      "classification": "incorporated",
+      "ancestorOfNative": true,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-gates-20261002",
+      "head": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+      "tree": "de8b46f03beba9ec3d7d2424f292c5ff0580e6b4",
+      "classification": "incorporated",
+      "ancestorOfNative": true,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-install-sequence-20261002",
+      "head": "970cf07a26106c7f1d44f410acd2474f73d8f7fa",
+      "tree": "c285474b9724438130325a8a2a2d0103487ba94b",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "efa0bde7931b9c2138eddf969feee828eb75f127",
+        "52cdd184030b238160b72d938001fe3681099140",
+        "3bf4d835a4ca5976bf0158b8938eefa4da11b7a4",
+        "4b6c30db234cef2aeca8d879a426b92eadf54bf3",
+        "6ffd66c83dda9c75d6efd3ffe02b9f551098bd15",
+        "be27712c2dd13efcb26d5cc616cb9060972660cc",
+        "970cf07a26106c7f1d44f410acd2474f73d8f7fa"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-landscape-touch-20261002",
+      "head": "b6ee57005fe596a7c3791b21312582048244aa63",
+      "tree": "180504527e73b87a3aa85e22417d950625bfbf85",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "df65ffdab8102dc0d64616e1b19c5c52a326d703",
+        "7b5cf5479069a56da1d6fdd6e1fe81c7eeac9c65",
+        "b6ee57005fe596a7c3791b21312582048244aa63"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-legacy-atomic-20261002",
+      "head": "9b119e0d88501e090c82f0aefa1e0ac0b73d0de9",
+      "tree": "dad90f004017cc2af7b83c0349bf261a7b82c2f4",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "9b119e0d88501e090c82f0aefa1e0ac0b73d0de9"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-markets-20261002",
+      "head": "c43d2e952372d878e4aefe5cc07ad8499906dd84",
+      "tree": "2beeccc44cd6ddee4a763594d04ee7ce5dbd74de",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "3453ec46b14f1e48ff41a54325a034933f67a6a6",
+        "ace1e779504602930a59d24afcac78b3be510141",
+        "c43d2e952372d878e4aefe5cc07ad8499906dd84"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-news-states-20261002",
+      "head": "11f1fde60ec0b48845288c9527d7dfc1bd395ec4",
+      "tree": "78ef97fd1a1e228376b7b2844daae7f46e2da302",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "53df3bb38c8a9f505fe0236ba05327942725e987",
+        "b5627bf24b9953a8d6d597cb08aebdb930abd1a6",
+        "2df25ffe50671d9bfad9d749c102a74fe2f916ac",
+        "eecdc9f16d715a98ede7b0cfddcaf1ad23542060",
+        "e881bd61502b5ed02e64a466b5d8d72e6f2ac212",
+        "2a08aa6aeadb7caea21145b367e2edf7722be574",
+        "c7fc5ce584a11a3ff6e8a70f1bc1f1584fd428f3",
+        "46b77c104f9fcb412d9cd671674f3157976ff5bb",
+        "1fa501435f596abcc2b7d250849402b456f0c15b",
+        "62ded3d8a120cc85bdabf66df5ce566ef227bae5",
+        "69811c3a59cf64025309d970645fd974e34c46f7",
+        "97ebd324f8c353b174eed1373dca073ced5d60b1",
+        "daa37901fb117080524bf7a062ecda9a1c503375",
+        "11f1fde60ec0b48845288c9527d7dfc1bd395ec4"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-plaque-20261002",
+      "head": "f28cec621a2fa58e71c5e0c7185c4e83fca8bbf6",
+      "tree": "976fe3e82e65bca880f43ba02c6a49788da5431d",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "f28cec621a2fa58e71c5e0c7185c4e83fca8bbf6"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-plaque-depth-20261002",
+      "head": "1d3f4850e4ddf3753513bdc04d66a06f826a92b3",
+      "tree": "540eb4aa02a7f89cb419ba252cd8e9436e3439ce",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "1d3f4850e4ddf3753513bdc04d66a06f826a92b3"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-plaque-keyboard-20261002",
+      "head": "434610f1093e70887574aa4d6e811de9d7fb27cf",
+      "tree": "ffbff642e7aa00e9b882173c14570d8bc3f315dc",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "434610f1093e70887574aa4d6e811de9d7fb27cf"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-public-versions-20261002",
+      "head": "d1c62ec13b2327be7b2cf7c2f965c70fc8935616",
+      "tree": "8edb342ed54f5a64f62d72d317bdd38dfdd68c97",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "6958c575a7d7919a3963ce4d695da3225c3c7bce",
+        "2a88728c8d3bcf33d007915a21d911585496107d",
+        "609cd556921e700050b7813a516f8389b0e72fa8",
+        "78b8fab2060754a8c60760ab5c0f5916883ed793",
+        "d1c62ec13b2327be7b2cf7c2f965c70fc8935616"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-real-imagery-20261002",
+      "head": "785e18e11474ac4c6d744ded6d88f7c5e5d29f56",
+      "tree": "0706bdaf84a0f204f5ced96b20657e977e34bc7e",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "da20b42785b9bb16d29546418ecb08cf164db9b5",
+        "a909ca868b1c4d748ce17f961609f939a059e923",
+        "785e18e11474ac4c6d744ded6d88f7c5e5d29f56"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-selective-20261002",
+      "head": "1969a3fd05344235594d4b0c9471991b3d290a44",
+      "tree": "fad0408c5e8351f4b9bd9b56ed74d3c5d9e8bfea",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "1969a3fd05344235594d4b0c9471991b3d290a44"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-selective-guards-20261002",
+      "head": "bb8ff6ae2a7e9c3fe3758d0902f74b57fcfb5acc",
+      "tree": "d6662183201cbe6d216e02925d4147edc3ef90d4",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "bb8ff6ae2a7e9c3fe3758d0902f74b57fcfb5acc"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-story-following-20261002",
+      "head": "655cf4105deba9c2407d0162d6dcc99971a7609b",
+      "tree": "08f349fe1713ecf12c36e308d3c8f3f90f2323ba",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "a6589c735087e18650dbb2f7d16d1a40887958a1",
+        "5485fa282627d3ff1743e172917ef6389b6c5d4b",
+        "d9baf4840399c16f7b453898a847b7733c471a1b",
+        "655cf4105deba9c2407d0162d6dcc99971a7609b"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-launch-weather-20261002",
+      "head": "f737b46501366c43d9602fb5b190252aefcaf704",
+      "tree": "4d166df8e49a34fffc172a077489b9119b37a5a2",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "f737b46501366c43d9602fb5b190252aefcaf704"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-legacy-owner-corrections-20261002",
+      "head": "2f3723ee8cba29ca8dbf74d090d32d902b14724f",
+      "tree": "727c00eff984cb62d023d511f327c5b015ac5696",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "2f3723ee8cba29ca8dbf74d090d32d902b14724f"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-disclosure-clear-20261002",
+      "head": "77cde5bf463effdb67739c4eefde720f4de9d86f",
+      "tree": "aca890fb2f90811dc6d253360f73e6ad23bf171d",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "d9c14abdfe481f2689494764933d91ccbcd81384",
+        "77cde5bf463effdb67739c4eefde720f4de9d86f"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-fence-fallback-20261002",
+      "head": "ba51792d4a67d2cee0b047fb1379e55856b517ac",
+      "tree": "5a0276b81419e3fed840acad893a546f1b31e689",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "ba51792d4a67d2cee0b047fb1379e55856b517ac"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-imagery-attachment-20261002",
+      "head": "7ba31a992d88f0a64ae73435324728eadb4b501b",
+      "tree": "7f0d31cf80640a53752bd96b6dded4479cfcc4e9",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "3a02d6715df2582f91c3d090020eeb61fddc4387",
+        "7ba31a992d88f0a64ae73435324728eadb4b501b"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-inherited-fixture-contracts-20261002",
+      "head": "9c5e6bbb73485736b708a4eaf735ae1c03192a7c",
+      "tree": "2a19781bc2077f08bb656c5d5e12e53a8fef2aa4",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "9c5e6bbb73485736b708a4eaf735ae1c03192a7c"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-outer-teardown-repair-20261002",
+      "head": "583d9c18a976486e808a5074240bfcf7dd727ede",
+      "tree": "cf3b79a20c2f69dad7c2d518a0c92eddb2cf531c",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "583d9c18a976486e808a5074240bfcf7dd727ede"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-owner-exception-repair-20261002",
+      "head": "599c59df7eadf2b7a595022c96810eca033d1c48",
+      "tree": "fdab9f23f7a2646be005c61a67a32733f9129e7f",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "583d9c18a976486e808a5074240bfcf7dd727ede",
+        "599c59df7eadf2b7a595022c96810eca033d1c48"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-responsive-integration-20261002",
+      "head": "67b638df3e1f8afe690368e4765604f454da6961",
+      "tree": "36d3ad4d7eb1f397c4001a3dd5e6e2f5d686c7c3",
+      "classification": "incorporated",
+      "ancestorOfNative": true,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-native-review-corrections-20261002",
+      "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+      "classification": "incorporated",
+      "ancestorOfNative": true,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-original-qik-rollback-package-20261002",
+      "head": "675654be5a778c3173e682c4013031cb7796ed36",
+      "tree": "c2b1e0cd6bdf2777fb035a060abe81970a2f8358",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36"
+      ]
+    },
+    {
+      "branch": "codex/mip-qik-authority-source-20261003",
+      "head": "9cc46a5c536cdd0c8a4709e795c67aa79919cd49",
+      "tree": "7373a61b1d6552fd23adc25ecaf41003fbcb5059",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36",
+        "9cc46a5c536cdd0c8a4709e795c67aa79919cd49"
+      ]
+    },
+    {
+      "branch": "codex/mip-qik-native-client-source-20261003",
+      "head": "a39e901ede2111a311ff610bfd25d208052a52dd",
+      "tree": "4423a53acaa3d4ba1105cd2fffda774935acaa12",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36",
+        "a39e901ede2111a311ff610bfd25d208052a52dd"
+      ]
+    },
+    {
+      "branch": "codex/mip-qik-new-dependency-advisory-20261003",
+      "head": "e4b66c1778f76aaffb569dad6c1d3c8ae012df86",
+      "tree": "7b55deffb83b7c709051825897d1dedd8aa6c02e",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36",
+        "bc3d2f1b3de6c6ab40d2118ba905a5f97c120c3c",
+        "2f143dd6e3e35fc80449e163a613a03395da4026",
+        "a3851a38d8887473ee3e0ace9b48fd928b636c06",
+        "0ddbed3319989d98788045a35cdc508e43ce902e",
+        "e4b66c1778f76aaffb569dad6c1d3c8ae012df86"
+      ]
+    },
+    {
+      "branch": "codex/mip-qik-private-client-integration-20261003",
+      "head": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+      "tree": "a44cabcecfb55b0f9da0921e6c7538ff3c640c64",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36",
+        "bc3d2f1b3de6c6ab40d2118ba905a5f97c120c3c",
+        "2f143dd6e3e35fc80449e163a613a03395da4026",
+        "a3851a38d8887473ee3e0ace9b48fd928b636c06",
+        "0ddbed3319989d98788045a35cdc508e43ce902e",
+        "4028f957bd51c10e5da748f7f6559433173bf798",
+        "a9ce6b29f46cc965fd45c9edefcb7428f3493c69"
+      ]
+    },
+    {
+      "branch": "codex/mip-qik-private-host-source-20261003",
+      "head": "916d6259c2faf775b7b8270548968b49c833a9b4",
+      "tree": "4141a7c8ab289330d8acbbebcaed69ef800d408d",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "4973db8913b0623f58a269054d5b9048d6ae61c6",
+        "baf1c45e7558cae2b9ee5751e69b1ece0d348b8a",
+        "8147e2ae1806a12a401a746551975125f03b0d75",
+        "675654be5a778c3173e682c4013031cb7796ed36",
+        "916d6259c2faf775b7b8270548968b49c833a9b4"
+      ]
+    },
+    {
+      "branch": "codex/mip-review-role-frozen-fixture-20261002",
+      "head": "3a9c19287b5e4589d1c594b2f53fad3e240d2198",
+      "tree": "893c26154317279f58cfae8e94ba9508f1d98489",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "3a9c19287b5e4589d1c594b2f53fad3e240d2198"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-review-story-frozen-fixture-20261002",
+      "head": "a4822e8a7f7e178bd33fa0bc7c5b6bc32c2d3658",
+      "tree": "e8eaae2e656aab72324e93f111ad5b9f348c946e",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "a4822e8a7f7e178bd33fa0bc7c5b6bc32c2d3658"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-search-corrections-20261002",
+      "head": "670efb8ebd6b4d7fb09368d399fe5a2afbc03a77",
+      "tree": "de8b46f03beba9ec3d7d2424f292c5ff0580e6b4",
+      "classification": "incorporated",
+      "ancestorOfNative": true,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-story-article-corrections-20261002",
+      "head": "0907459564023e0c0a78e24c3e04343297261bff",
+      "tree": "72da420d1790fb68b111829e9a2b6445b6dde94c",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "0907459564023e0c0a78e24c3e04343297261bff"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/mip-story-history-corrections-20261002",
+      "head": "79564eca0aaf1971964617f3f98018c02ba04689",
+      "tree": "d1ff3ecb4087f838e76113a627f7b29df940d8ba",
+      "classification": "incorporated",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [
+        "79564eca0aaf1971964617f3f98018c02ba04689"
+      ],
+      "uniqueCommits": []
+    },
+    {
+      "branch": "codex/qik-rollback-client-package-20261002",
+      "head": "acb0f0ad1927f11434e4e50baac8233dd7252e3b",
+      "tree": "903dd99b9fa70fdab881710ca0b9056071a0737b",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "acb0f0ad1927f11434e4e50baac8233dd7252e3b"
+      ]
+    },
+    {
+      "branch": "codex/qik-rollback-sql-boundary-20261002",
+      "head": "ac72fbb7c27e98ebf2e9a51e174f22d28e5f749f",
+      "tree": "c5e56d2a721fc3ac85c369ba2a594cddfd5b2956",
+      "classification": "unique-conflicting-backend-lineage",
+      "ancestorOfNative": false,
+      "patchEquivalentCommits": [],
+      "uniqueCommits": [
+        "dca531787e5497452844a7673ab553109ac33c57",
+        "b0c30df3889e4ba074376db3a735ca08ec3e57be",
+        "36cefdf7dc6d82deda20914893b9416551ec1290",
+        "77ae2211282af1b609c30bd5fe0fd5868f7a7738",
+        "a8cd2d22bcaf49edff7a39f73418dcd93216730e",
+        "8316cf6742693402ca36b4b6a8a558801d0c9fb7",
+        "1021d5c8dd6114907981994ce15d38a1daac1f4a",
+        "2f8e999045ce1c43e791554edabbc98df0d9238f",
+        "0fe17e338359a123f98048fb34e3cb71c78d25fa",
+        "93adb523910172b53e96d2b5f5b160974c6af519",
+        "ac72fbb7c27e98ebf2e9a51e174f22d28e5f749f"
+      ]
+    }
+  ],
+  "authorityVerification": {
+    "GitHubConnectorBranchHeads": [
+      "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "a9ce6b29f46cc965fd45c9edefcb7428f3493c69"
+    ],
+    "GitHubCIExactCheckoutAndResultsVerified": {
+      "37076657031": {
+        "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+        "testsEachRuntime": 2578,
+        "Node22Job": 111067975489,
+        "Node24Job": 111067975262
+      },
+      "37087452319": {
+        "head": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+        "testsEachRuntime": 1789,
+        "Node22Job": 111100580317,
+        "Node24Job": 111100580150
+      }
+    },
+    "otherLocalBranches": "Local git patch/ancestry classification only; do not infer publication or independent qualification",
+    "treeSource": "Local cryptographically bound git objects for exact GitHub-resolved commit SHAs"
+  },
+  "currentPort": "Explicit scoped watcher override and four static-copy targets; no backend commit merged",
+  "preservedFailures": [
+    "670efb8 overall review REPAIR_REQUIRED",
+    "67b638d overall review REPAIR_REQUIRED",
+    "b829 CI37075731275 four obsolete fixture failures"
+  ],
+  "ancestryAfterQualified197": [
+    "268e53ba75b0fe773070b699aa332cb0886e3b05",
+    "f71b9c30070f01c8b7261a2f85a46c40ed9ddd3d",
+    "34fd7396ccd9d098e4bb4043a858b0b5f70c3b36",
+    "716698be56f05148fae71ffb4a14156745baa545",
+    "e508c25bcda46da5196f1ce7155e036da430daf8",
+    "cf7395873ea67a974e09009a8c8b1d223f69dadc",
+    "1ef8208ca2e920efa67f0c1ce195e9770d83615a",
+    "37f78e92acbb7154ed899da98548d5e2463c032d",
+    "67b638df3e1f8afe690368e4765604f454da6961",
+    "47daa584953e5d67dfd246286c75d68cc21d51df",
+    "c215e3213ffecb7bc9252a5cfb60127aa7aea822",
+    "cb091f3c75529204aa70081f8ab8759edf7da6ab",
+    "ead1dbc0cbbc798b051b153f086f7b745c706e4b",
+    "b829d0fe9f92ebe47d8572da817d22f5a92f3843",
+    "bf8de4acd7d1e880f45f69db9fe018e3a25d2fb1",
+    "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428"
+  ],
+  "excludedConcurrentLanes": [
+    "codex/mip-device-acceptance-20261003",
+    "codex/mip-install-packages-20261003",
+    "codex/mip-launch-rc-20261003",
+    "codex/mip-news-calibration-20261003",
+    "codex/mip-selective-intake-20261003"
+  ]
+}
