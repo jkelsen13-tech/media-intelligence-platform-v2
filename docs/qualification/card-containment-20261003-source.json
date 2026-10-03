@@ -1,0 +1,327 @@
+{
+  "contract": "mip-world-view-card-containment-20261003-v1",
+  "qualified_commit": "b220edfd5a219f92649571c6ce1727a5fc8f3ccd",
+  "qualified_tree": "2e892e486d8b6855b56273d229aac1d73622cb7f",
+  "baseline_commit": "58667adcef63dfff56fd14242ed74082490873c9",
+  "baseline_tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b",
+  "status": "FOCUSED_SOURCE_AND_CLEAN_BROWSER_QUALIFIED",
+  "source_files": [
+    {
+      "path": "scripts/device-acceptance/run-browser.mjs",
+      "sha256": "eff2b3a5612bcb77c27fa731b3a72afec24af1ef8198175d76105fafec84cd91",
+      "bytes": 38957
+    },
+    {
+      "path": "src/components/WorldViewBillboardOverlay.jsx",
+      "sha256": "30d45418ceb3e19651c2296cd7b1ae4589df94d564eb20b3a6819ef6786c2c44",
+      "bytes": 17013
+    },
+    {
+      "path": "src/lib/worldViewBillboardLayout.js",
+      "sha256": "7030dacac8067cdf10fe4b780547a8a440eccd12a80f55acbc07ddba1c843cc5",
+      "bytes": 11192
+    },
+    {
+      "path": "src/styles/world-view-billboard-prototype.css",
+      "sha256": "ef21ff47ecf05dd34a613761ffb8056feba0e82a537b6a61cb2add209e80bd02",
+      "bytes": 13484
+    },
+    {
+      "path": "tests/worldViewBillboardLayout.test.mjs",
+      "sha256": "9a52814e27751408267d579ad6c4406cfd1aa4ca1fdd20e79c8b9a239ec04823",
+      "bytes": 17864
+    },
+    {
+      "path": "tests/worldViewBillboardOwnerLane.test.mjs",
+      "sha256": "4cd830318bf2e747973ee523497e526a757eab67d3ab84f5ccda7a4631aba62e",
+      "bytes": 16611
+    }
+  ],
+  "focused_tests": {
+    "node22": {
+      "runtime": "22.23.3",
+      "pass": 64,
+      "fail": 0,
+      "receipt": {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/focused/final-node22.tap",
+        "sha256": "a8b5ca2b0b149de1f694350932432da23a3dfd2b95f02c862eddcb1bea179c6f",
+        "bytes": 17314
+      }
+    },
+    "node24": {
+      "runtime": "24.19.0",
+      "pass": 64,
+      "fail": 0,
+      "receipt": {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/focused/final-node24.tap",
+        "sha256": "83fbe27c72772e34276e1acc5ce39a9b4051dbf015a3a30c723350c4411c60ad",
+        "bytes": 7563
+      }
+    },
+    "execution_binding": "Executed before source commit against the identical production/test bytes pinned above; no full integrated suite/build/audit assertion."
+  },
+  "limitations": [
+    "Actual full App development transform and native software Chromium; synthetic backend/session/geometry and all nonlocal requests blocked.",
+    "Ordinary iPhone landscape workspace scrollport is shorter than the entire reader. Close and Inspector are individually reachable through recorded ordinary page scrolling; simultaneous full-card visibility is not claimed.",
+    "120-character title is preserved fully in DOM with an independently keyboard-scrollable compact title area; no title or precision/status cue is removed.",
+    "Focused tests and clean browser executions bindb220. The later documentation-only receipt seal does not relabel them as execution of that later head.",
+    "Full integrated Node22/24/build/audit/public CI and fresh targeted independent review belong to root/parent and are not claimed by this lane.",
+    "No physical-device, Safari, native-app, provider activation/source admission, live Auth/SQL, final appearance, FPS/thermal or release/deployment acceptance."
+  ],
+  "browser_runs": [
+    {
+      "case": "clean-normal",
+      "candidate_commit": "b220edfd5a219f92649571c6ce1727a5fc8f3ccd",
+      "candidate_tree": "2e892e486d8b6855b56273d229aac1d73622cb7f",
+      "dirty": false,
+      "node": "v24.19.0",
+      "engine": "chromium",
+      "browser_version": "151.0.7922.173",
+      "summary": {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-normal/summary.json",
+        "sha256": "fc043ff03d88043abe0bcf68540abe53c5925ff7c2cbc1937d6050984cab0e3f",
+        "bytes": 6342
+      },
+      "profiles": [
+        {
+          "id": "ipad",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 45,
+          "orientation_states": 5,
+          "geometry_observations": 50,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-normal/ipad-receipt.json",
+            "sha256": "3ee18ddc0a553cdd896a77b9d5135668bf0e208fe42843f13a3e11d5eef62dce",
+            "bytes": 1145715
+          }
+        },
+        {
+          "id": "iphone",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 45,
+          "orientation_states": 5,
+          "geometry_observations": 50,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-normal/iphone-receipt.json",
+            "sha256": "ecd095e084f19451b0fe647a189e80cd8eb1020ed91aee96d84d493acda0be4f",
+            "bytes": 1116023
+          }
+        },
+        {
+          "id": "narrow",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 45,
+          "orientation_states": 5,
+          "geometry_observations": 50,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-normal/narrow-receipt.json",
+            "sha256": "f0d38be5b31583931a38531dd369a26395f8cffcfd588b0e4e2b149a4cb1a264",
+            "bytes": 1104969
+          }
+        },
+        {
+          "id": "desktop",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 45,
+          "orientation_states": 5,
+          "geometry_observations": 50,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-normal/desktop-receipt.json",
+            "sha256": "3a8f7d399ed684ff697065664278630a6620d25e0d5a224faaaf1c28582ee1f9",
+            "bytes": 1149410
+          }
+        }
+      ],
+      "png_count": 180,
+      "distinct_png_hashes": 129,
+      "png_hashes_independently_recomputed": true,
+      "synthetic_title_override": null
+    },
+    {
+      "case": "clean-title-stress",
+      "candidate_commit": "b220edfd5a219f92649571c6ce1727a5fc8f3ccd",
+      "candidate_tree": "2e892e486d8b6855b56273d229aac1d73622cb7f",
+      "dirty": false,
+      "node": "v24.19.0",
+      "engine": "chromium",
+      "browser_version": "151.0.7922.173",
+      "summary": {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-title-stress/summary.json",
+        "sha256": "79e3a774d9727fec8b721b12e2febe68eb55c645377d3b48a4f95360c10cbe6e",
+        "bytes": 4375
+      },
+      "profiles": [
+        {
+          "id": "iphone",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 47,
+          "orientation_states": 5,
+          "geometry_observations": 52,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-title-stress/iphone-receipt.json",
+            "sha256": "89f7b42f4a1fa78657aa49c4db1987479b0af2ee3cfaac37ef11d990cfc83523",
+            "bytes": 1165705
+          }
+        },
+        {
+          "id": "narrow",
+          "passed_journeys": 10,
+          "blocked_owner_judgments": 1,
+          "failed_journeys": 0,
+          "page_errors": 0,
+          "screenshots": 47,
+          "orientation_states": 5,
+          "geometry_observations": 52,
+          "control_scroll_preparations": 20,
+          "receipt": {
+            "path": "/workspace/mip-launch-receipts/oct03-card-containment/clean-title-stress/narrow-receipt.json",
+            "sha256": "a6b855b92c047562ef3c5f7571a1144bffcd10dfa70db3109eb963bc6ab67b56",
+            "bytes": 1150827
+          }
+        }
+      ],
+      "png_count": 94,
+      "distinct_png_hashes": 58,
+      "png_hashes_independently_recomputed": true,
+      "synthetic_title_override": {
+        "title": "DEVICE_ACCEPTANCE_SYNTHETIC retained facility inspection source describing its published evidence and geographic context",
+        "characters": 120,
+        "authority": "SYNTHETIC_BACKEND_AND_SESSION_ONLY"
+      }
+    }
+  ],
+  "red_evidence": {
+    "baseline_commit": "58667adcef63dfff56fd14242ed74082490873c9",
+    "baseline_tree": "66b7aad2cbc6e4909e3a50bb78663c6817dad02b",
+    "instrumented_dirty_development_runs": [
+      "red-diagnostic",
+      "red-assertions"
+    ],
+    "original_historical_artifacts": [
+      {
+        "path": "/workspace/mip-launch-receipts/oct03-integrated-58667adcef63/device-browser/narrow-selected-card-rotated.png",
+        "sha256": "f78fca8354f49247443cbd29301125c4fd721e1eacbf245e1f43b0b3b7001431",
+        "bytes": 37121
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/oct03-integrated-58667adcef63/device-browser/desktop-selected-card-rotated.png",
+        "sha256": "ac77fc9d4e11e6310559bc4fc7a8d019b2505d8e305d08d803b82c769c7236d6",
+        "bytes": 260720
+      }
+    ],
+    "measured_findings": [
+      {
+        "case": "narrow rotating360x500",
+        "canvas_right": 317,
+        "card_right": 328.03125,
+        "mechanism": "CSS geometry transition interpolated prior viewport coordinates despite renderer rebase"
+      },
+      {
+        "case": "desktop rotating1000x1440",
+        "canvas_right": 681,
+        "card_right": 761.328125,
+        "mechanism": "same redundant geometry transition",
+        "close_hits": 0,
+        "close_hit_points": 9
+      },
+      {
+        "case": "narrow settled360x500",
+        "card_height": 183,
+        "card_bottom": 463.1875,
+        "inspector_bottom": 504.0625,
+        "inspector_hits": 0,
+        "inspector_hit_points": 9,
+        "mechanism": "fixed header/tabs/footer plus minimum module extent exceeded75% preferred reader height"
+      },
+      {
+        "case": "120-character source title with canonical occlusion",
+        "card_height": 231.796875,
+        "inspector_extension_below_card": 54.640625,
+        "mechanism": "unbounded fixed header displaced Inspector even after first height repair"
+      }
+    ],
+    "title_overflow_red_receipts": [
+      {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/long-title-red/narrow-receipt.json",
+        "sha256": "0d290292c84017ad5a3984b20b1d89d3be4b0b0c59bda48b941c0c58e3be37f0",
+        "bytes": 84922
+      },
+      {
+        "path": "/workspace/mip-launch-receipts/oct03-card-containment/long-title-red/iphone-receipt.json",
+        "sha256": "6c92bb83a6017d987f46b6245270e9831d125b17310e5e3d2ada208e838c292e",
+        "bytes": 84285
+      }
+    ]
+  },
+  "retained_development_attempts": [
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/red-diagnostic",
+      "classification": "Unasserted geometry diagnostic; production bytes baseline586, instrumentation explicitly dirty."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/red-assertions",
+      "classification": "Objective card containment failure on both narrow and desktop rotated."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/green-draft",
+      "classification": "Harness incorrectly required a nonexistent Close spatial inspector control; current inspector actually receives focus."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/green-draft-2",
+      "classification": "Two-profile development pass, before120-character title stress and enhanced clipping-ancestor preparation."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/green-draft-3",
+      "classification": "iPhone combined control visibility assertion failed because ordinary workspace scrollport was shorter than card."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/long-title-red",
+      "classification": "120-character title reproduced consequential persistent narrow portrait footer clipping."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/long-title-draft-green",
+      "classification": "Title/header repair passed containment and title scrolling; subsequent focus check incorrectly used an opener removed by the synthetic occlusion diagnostic."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/long-title-draft-green-2",
+      "classification": "Narrow passed; iPhone preparation ignored auto/hidden clipping ancestors and chose global viewport center."
+    },
+    {
+      "directory": "/workspace/mip-launch-receipts/oct03-card-containment/iphone-scroll-draft-final",
+      "classification": "Development iPhone proof with actual clipping-ancestor intersection and ordinary control-specific scrolling."
+    }
+  ],
+  "preservation": {
+    "canonical_anchor": [
+      -81.7,
+      41.4
+    ],
+    "precision_class": "facility",
+    "precision_floor_meters": 8660.254037844386,
+    "exact_camera_and_canonical_time_context_retained_by_each_orientation_control_state": true,
+    "historical586_public_ci": "37100924579; each Node22/24 2689tests passed, build/audit0 remain historical source evidence",
+    "historical586_cursor_source_review": "Fresh cursor-grok-4.6-xhigh source CLEAN remains a historical source verdict; new visual failures appended separately.",
+    "historical586_browser": "Original functional counts/screenshots remain unchanged and do not assert rotated control containment or reachability.",
+    "historical_cold_portrait": "RED14\u219226, delta-under12 unchanged; original measurement boundary unrecovered."
+  }
+}
