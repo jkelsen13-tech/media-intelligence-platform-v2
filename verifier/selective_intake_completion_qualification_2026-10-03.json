@@ -1,0 +1,221 @@
+{
+  "contract_version": "selective-intake-completion-source-qualification-1",
+  "recorded_at": "2026-10-03T04:40:13.682760+00:00",
+  "scope": "unapplied_same_rpc_follow_on_and_paired_operator_runner",
+  "source_parent": {
+    "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+    "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+    "branch": "codex/mip-native-review-corrections-20261002",
+    "remote_exact_head_verified_before_edits": true
+  },
+  "candidate_branch": "codex/mip-selective-intake-20261003",
+  "execution_worktree": "/workspace/mip-oct03-selective-intake",
+  "execution_git_head_is_source_parent_with_bounded_uncommitted_changes": true,
+  "database": {
+    "engine": "PGlite 0.5.8",
+    "postgres_version": "18.3",
+    "server_version_num": "180003",
+    "wasm": true,
+    "single_session": true,
+    "native_postgresql17": false,
+    "hosted_or_jwt_postgrest_proof": false
+  },
+  "source_files": [
+    {
+      "path": "scripts/selectiveIntakeExecution.mjs",
+      "bytes": 19621,
+      "sha256": "8c29dc703566c50bc1ff18637db72a8cc1d1fe754bcda0362271e42f440e322a"
+    },
+    {
+      "path": "scripts/selectiveIntakeCompletionPackage.mjs",
+      "bytes": 1347,
+      "sha256": "bbfed9b754f40c31d18a4a2df7b83192c34adfac93b62174074b290eef0663de"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_completion_v1.sql",
+      "bytes": 39890,
+      "sha256": "498a90a5d193d4140c97be965120294617e8adbf634381a2af00f5b814e209b1"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_completion_restore_v1.sql",
+      "bytes": 35894,
+      "sha256": "f11b0c40cc968324dfd0b04ae955b9a7350614a176d18d448f1bc693c4d93077"
+    },
+    {
+      "path": "tests/selectiveIntakeCompletion.test.mjs",
+      "bytes": 28684,
+      "sha256": "b37692fb5ac6b960ea194479ef11e178b389fc1fed10abf6d418187c1280ff80"
+    },
+    {
+      "path": "tests/selectiveIntakeExecution.test.mjs",
+      "bytes": 31498,
+      "sha256": "9522aada7d864d0fd22d5560abef0ed7e68074ec1f879e829ccf2561e99db2c8"
+    },
+    {
+      "path": "tests/fixtures/selectiveIntakeContractCatalog.mjs",
+      "bytes": 3091,
+      "sha256": "534b7fe9e17c6b73186d4ea815d219dc2d8e50b89d28368b81d6348de64dcdc7"
+    },
+    {
+      "path": "docs/MIP_SELECTIVE_INTAKE_COMPLETION_2026-10-03.md",
+      "bytes": 6930,
+      "sha256": "3d418a124fb1255d55870b2626cb7e146e7700db52373c0245db039cb7c68bde"
+    }
+  ],
+  "red": {
+    "runtime": "Node 24.19.0",
+    "baseline_production_owners": "source parent ca72a6d; new two-case regression harness",
+    "command": "node --test tests/selectiveIntakeCompletion.test.mjs",
+    "tests": 2,
+    "pass": 0,
+    "fail": 2,
+    "failures": [
+      "intervening correction appended a stale registered execution instead of expected 40001",
+      "committed capture response loss retry refused consumed permit instead of completing retained progress"
+    ],
+    "log": "verifier/selective-intake-completion-2026-10-03/red-node24.log",
+    "sha256": "fc38ec53445fab685088e12b33c7b753564bd5fd0533507376504209252fba70"
+  },
+  "green_groups": [
+    {
+      "group": "registered-native-regressions",
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test tests/selectiveIntakeCompletion.test.mjs tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeDeclaration.test.mjs tests/selectiveIntakeGatewayIntegration.test.mjs tests/investigationSelectiveIntakeBinding.test.mjs tests/selectiveExecutionPackage.test.mjs",
+      "result": {
+        "tests": 98,
+        "pass": 98,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 79138.510922
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/registered-native-regressions-node22.log",
+      "sha256": "386696ccadfab1cb493c06295acefcd8e3bba517f5124ad2d278877141701ea2"
+    },
+    {
+      "group": "registered-native-regressions",
+      "runtime": "Node 24.19.0",
+      "command": "node --test tests/selectiveIntakeCompletion.test.mjs tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeDeclaration.test.mjs tests/selectiveIntakeGatewayIntegration.test.mjs tests/investigationSelectiveIntakeBinding.test.mjs tests/selectiveExecutionPackage.test.mjs",
+      "result": {
+        "tests": 98,
+        "pass": 98,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 74185.484721
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/registered-native-regressions-node24.log",
+      "sha256": "974a7710bc2a477283a2f05a5a779cbdb6a281563a89849faa9e85e273d6374f"
+    },
+    {
+      "group": "completion-owner-regressions",
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test tests/selectiveIntakeCompletion.test.mjs tests/evidencePipeline.test.mjs tests/evidencePipelineDatabase.test.mjs tests/operatorBackend.test.mjs",
+      "result": {
+        "tests": 55,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 50802.820348
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/completion-owner-regressions-node22.log",
+      "sha256": "3306a3140d0057ea0fdc78753aeed52bcdc8dd3c67743fbd3876bd6fabb64276"
+    },
+    {
+      "group": "completion-owner-regressions",
+      "runtime": "Node 24.19.0",
+      "command": "node --test tests/selectiveIntakeCompletion.test.mjs tests/evidencePipeline.test.mjs tests/evidencePipelineDatabase.test.mjs tests/operatorBackend.test.mjs",
+      "result": {
+        "tests": 55,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 49687.01131
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/completion-owner-regressions-node24.log",
+      "sha256": "78477e26676eec8dabdc3ad061a301fa861bd54c3e2d7fd5f14b230ff61c0779"
+    },
+    {
+      "group": "reconsideration-loss",
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-name-pattern='reconsideration response loss' tests/selectiveIntakeCompletion.test.mjs",
+      "result": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 4619.607022
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/reconsideration-loss-node22.log",
+      "sha256": "5124fb26b1f90595b527c0235a4f25144ba3cc10b86cdb444cf2790dfe72d582"
+    },
+    {
+      "group": "reconsideration-loss",
+      "runtime": "Node 24.19.0",
+      "command": "node --test --test-name-pattern='reconsideration response loss' tests/selectiveIntakeCompletion.test.mjs",
+      "result": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 4222.652261
+      },
+      "log": "verifier/selective-intake-completion-2026-10-03/reconsideration-loss-node24.log",
+      "sha256": "7991e527ce14f905ff6acfe6d409f7931217a46094c4fcbc5d49d912c74a4fa1"
+    }
+  ],
+  "groups_overlap_do_not_sum_as_unique_tests": true,
+  "case_catalogue": {
+    "kind": "32 authored synthetic contract cases",
+    "retained_corpus_calibration": false,
+    "coverage_measurement": false,
+    "new_numeric_thresholds_or_model_scores": false,
+    "religion_shared_stack": true,
+    "material_sports_entertainment_eligible": true
+  },
+  "existing_rpc_signature": "public.mip_selective_execution_v1(text,jsonb)",
+  "future_protected_package": {
+    "proposal": "supabase/source-proposals/selective_intake_completion_v1.sql",
+    "restore": "supabase/source-proposals/selective_intake_completion_restore_v1.sql",
+    "fresh_guard_setting": "mip.selective_completion_expected_catalog",
+    "fresh_recovery_guard_setting": "mip.selective_completion_rollback_expected_catalog",
+    "original_guard_setting": "mip.selective_completion_original_catalog",
+    "historical_eight_stage_sequence_modified": false,
+    "new_roles_grants_tables": false,
+    "applied": false
+  },
+  "continuation_semantics": {
+    "same_native_owners": true,
+    "rights_criteria_heads_rechecked_in_each_native_write_transaction": true,
+    "original_one_use_permit_reopened": false,
+    "automatic_reacquisition": false,
+    "committed_source_native_response_loss_resumes_without_fetch": true,
+    "ambiguous_or_stale_partial_work": "retained and held for explicit native-owner reconciliation",
+    "rebased_reconsideration_version_response_loss": "non-direct-successor retry holds; no lineage rewrite"
+  },
+  "authority": {
+    "actual_source_or_provider_requests": 0,
+    "protected_installs_mutations_grants_roles": 0,
+    "collector_provider_activation": false,
+    "public_admission": false,
+    "merge_deploy_release": false,
+    "physical_device": false
+  },
+  "remaining_gates": [
+    "parent coherent candidate integration/full CI and independent review",
+    "fresh independently accepted post-dependency installed catalogue and exact protected follow-on/recovery approval",
+    "native PostgreSQL 17.6 and independent-connection/hosted authority qualification",
+    "lawful admitted source bytes/rights, real retained-corpus calibration and religious-institution coverage",
+    "live collector/provider activation and release remain separately authorized"
+  ]
+}

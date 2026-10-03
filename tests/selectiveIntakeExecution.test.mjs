@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { installSelectiveExecutionFixture } from '../scripts/selectiveExecutionPackage.mjs'
+import { installSelectiveCompletionFixture, SELECTIVE_COMPLETION_RESTORE } from '../scripts/selectiveIntakeCompletionPackage.mjs'
 import { PGlite } from '@electric-sql/pglite'
 import { createOperatorBackend, PIPELINE_TARGET } from '../scripts/operatorBackend.mjs'
 import { runSelectiveSource, runSelectiveReconsideration, selectiveExecutionId } from '../scripts/selectiveIntakeExecution.mjs'
@@ -27,6 +28,7 @@ test('registered criteria execute through actual native SQL and fixed operator t
   for (const proposal of ['assessment_relevant_inputs_v1', 'investigation_selective_intake_v1'])
     await db.exec(await read(`../supabase/source-proposals/${proposal}.sql`))
   await installSelectiveExecutionFixture(db)
+  await installSelectiveCompletionFixture(db)
   await db.exec('alter table evidence_pipeline.evidence_changes alter column position restart with 9007199254740993')
   const rpc = name => async (action, input = {}) => (await db.query(`select public.${name}($1,$2::jsonb) r`, [action, JSON.stringify(input)])).rows[0].r
   const intake = rpc('mip_pipeline_v1'), workspace = rpc('mip_investigation_workspace_v1'), observe = rpc('mip_investigation_briefings_v1'), assessment = rpc('mip_assessments_v1')
@@ -266,6 +268,8 @@ test('registered criteria execute through actual native SQL and fixed operator t
     assert.equal(candidate.span_end, Array.from(candidate.excerpt).length)
   })
   await t.test('standalone preflight and rollback pack preserve populated native/private history and stop only the new producer', async () => {
+    // The original install/stop catalogue is historical; restore the bounded follow-on first.
+    await db.exec(await readFile(SELECTIVE_COMPLETION_RESTORE, 'utf8'))
     const before = await count('article_captures'), executions = await count('selective_execution_receipts')
     await db.exec(await read('../supabase/source-proposals/selective-intake-pack/preflight.sql'))
     await assert.rejects(db.exec(await read('../supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql')), /populated selective history/)

@@ -1,0 +1,29 @@
+TAP version 13
+# Subtest: reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch
+    # Subtest: reconsider
+    ok 1 - reconsider
+      ---
+      duration_ms: 2690.982352
+      type: 'test'
+      ...
+    # Subtest: rebased-version
+    ok 2 - rebased-version
+      ---
+      duration_ms: 1809.780623
+      type: 'test'
+      ...
+    1..2
+ok 1 - reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch
+  ---
+  duration_ms: 4502.932645
+  type: 'test'
+  ...
+1..1
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4619.607022
