@@ -1,0 +1,64 @@
+{
+  "contract": "mip-release-dependency-source-v1",
+  "date": "2026-10-03",
+  "status": "CURRENT_SOURCE_BINDING_NOT_A_QUALIFICATION_RECEIPT",
+  "predecessor": {
+    "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+    "tree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+    "manifest": {
+      "path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
+      "sha256": "c15cba4ea3864c90f0bfbe3dd69308818308c11b431afcb857085252c462e169"
+    },
+    "lockSha256": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
+  },
+  "repairSource": {
+    "head": "e4b66c1778f76aaffb569dad6c1d3c8ae012df86",
+    "tree": "7b55deffb83b7c709051825897d1dedd8aa6c02e",
+    "backendSuccessor": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+    "integration": "Explicit scoped override and four target changes; no backend commits merged",
+    "independentReview": "Backend successor has no independent verdict; native ca72 verdict applies to predecessor scope only"
+  },
+  "historicalSourceSnapshots": [
+    {
+      "sourcePath": "package-lock.json",
+      "path": "docs/qualification/release-dependency-20261003-predecessor/package-lock.json",
+      "sha256": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa",
+      "sourceCommit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428"
+    },
+    {
+      "sourcePath": "tests/investigationApi.test.mjs",
+      "path": "docs/qualification/release-dependency-20261003-predecessor/tests/investigationApi.test.mjs",
+      "sha256": "fc9a3475c78b130869c3bf1672196db0ad0511793c0f079bd80d4cc7d1fa1748",
+      "sourceCommit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428"
+    }
+  ],
+  "sources": [
+    {
+      "path": "package-lock.json",
+      "sha256": "db79ad5397419116931baaae4ad0dd3aaa14752e990415473aea74189ad18d36"
+    },
+    {
+      "path": "package.json",
+      "sha256": "70dffb0db54b52489b2450e8ed6d52ad66ef56dc824504a2deeaad5666588dd2"
+    },
+    {
+      "path": "tests/investigationApi.test.mjs",
+      "sha256": "e1e7e90a9e58d3b426f24b62e1917a986e87d4495fe9ff6b8736b4e7dffa2ec7"
+    },
+    {
+      "path": "tests/qualification/release-dependency-20261003.test.mjs",
+      "sha256": "e40056c8be609fd35c9fae2518425d24f5959190ab36912f9dd97d8c8d9b4f5b"
+    },
+    {
+      "path": "vite.config.js",
+      "sha256": "0c80ac59e749dce72c42bc323e5fa8bb62907134dea65c90a9c1eca95f171d3a"
+    }
+  ],
+  "preservedSafeguards": {
+    "dompurifyOverride": "3.4.16",
+    "browserKeyBuildGate": true,
+    "historicalManifestsUnchanged": true
+  },
+  "changedScope": "Cesium static-copy tooling dependency, literal directory targets, actual-plugin regression and exact historical/current source binding only",
+  "authority": "Source-only; no live installation, provider activation, credentials, merge to main, deployment or release"
+}
