@@ -1,0 +1,57 @@
+{
+  "contractVersion": "qik-private-pg17-client-binding-1",
+  "implementationPresent": false,
+  "qualificationPresent": false,
+  "requiredServerMajor": 17,
+  "requiredClient": "reviewed private libpq17 client or separately qualified equivalent",
+  "execution": {
+    "attempts": 1,
+    "transactions": 1,
+    "allowedFinalCommand": "ROLLBACK",
+    "pipelineAllowed": false,
+    "combinedDeadlineAndOperationSubmissionAllowed": false,
+    "unboundAdapterCallbacksAllowed": false,
+    "automaticRetryAllowed": false,
+    "defaultMode": "offline-inspection",
+    "connectionInput": "approved private handoff; never command line, environment autodiscovery, receipt, or URL option",
+    "sourceBytes": "checked-in exact bundle only; no caller SQL or caller-selected module",
+    "window": "exact executor/client/target/source/approval-bound start and end; independently verified before connection and each dependent submission",
+    "windowOverrun": "stop forward work; rollback recovery and independent verification remain mandatory under explicitly approved recovery scope"
+  },
+  "authority": {
+    "bindingCount": 11,
+    "stringsAndPopulatedJsonAreTrusted": false,
+    "verification": "trusted authority implementation must authenticate issuer, audience, approved executor/client, exact target/source/bundle/manifest, scope, freshness, revocation, and exact execution window before any dependent live action",
+    "consequentialAmbiguity": "REFUSED",
+    "privateBaseline": "server-side exact source/unrelated-row comparison; no stored credential or secret-derived digest returned",
+    "membership": "only absent postgres-grantor owner membership: ADMIN false, INHERIT false, SET true; preserve all original grantors/options",
+    "columnPrivilege": "only missing UPDATE(connection_string) granted by owner; existing SELECT required; no new SELECT",
+    "cleanup": "remove only introduced grants using original grantors/options; exact raw relation and all-column ACL comparison including NULL versus empty array; refuse unsupported baseline"
+  },
+  "acknowledgments": {
+    "completion": "send accepted is not completion; require one exact command result, expected command tag/result shape, all results consumed, and matching transaction state before next command",
+    "begin": "BEGIN submission starts uncertainty tracking even if its acknowledgment is lost",
+    "operation": "one unchanged guarded DO completion with expected DO command tag and no result rows; the DO's internal ROW_COUNT guard proves update one on completion (do not pretend DO emits a rowCount=1 result). Separately pinned private postcondition phase requires selected once, credential equality, exact target/three parameters and all unrelated rows stable; unchanged DO's probe guard establishes distinct auditor/TLS only under genuine external CA/logging bindings",
+    "deadlines": "separate completed SET LOCAL commands 7000ms and 500ms; observe effective values before the unchanged DO",
+    "rollback": "exact ROLLBACK command completion and transaction idle; never infer success from socket close or watchdog",
+    "cancel": "libpq17 encrypted PQcancelCreate/PQcancelStart/PQcancelPoll transport completion is not proof the original command canceled; connect_timeout is ignored during Poll so client observation deadline is mandatory; consume original results to terminal completion before recovery; deprecated plaintext PQcancel/PQgetCancel forbidden",
+    "drain": "PQconsumeInput/PQisBusy/PQgetResult to final null, freeing each result; no new command while the previous command is outstanding",
+    "timeouts": "bounded observation budgets trigger cancellation/recovery; event loop, transport, and server scheduling may exceed nominal limits; no strict wall deadline promise"
+  },
+  "recovery": {
+    "errorOrAbortedTransaction": "skip success cleanup; explicit ROLLBACK once primary protocol is drained; independent verifier required",
+    "unknownOutstandingCommand": "cancel and drain; if unconfirmed, do not enqueue ROLLBACK behind uncertain work; use approved connection termination/recovery and independent verifier",
+    "disconnect": "UNKNOWN; independent read-only verifier on distinct connection required regardless of primary connectivity",
+    "lostRollbackAcknowledgment": "UNKNOWN even when independent baseline comparison matches; no automatic retry or replay",
+    "independentVerifier": "distinct authenticated read-only postgres session with matching approved nonlocal schema/role/logging/CA context; compareSecurity(restored) excludes only verifier-local deadlines. Primary same-session compareSecurity(rollback) after acknowledged rollback separately establishes original primary settings; independent PID/backend_start checks establish original transaction/operation-lock completion. Unavailable, mismatched, or failed checks stay UNKNOWN",
+    "baseline": "exact data/all ACLs/all membership grantors and options/role flags/owner/RLS/policy/settings restoration; previous legitimate UPDATE retained when initially present",
+    "generalReceipt": "allowlisted public identifiers, public source hashes, counts/booleans, timestamps, configured and separately measured times, fixed refusal codes, rollback acknowledgment, independent verification; suppress raw errors, URI, credential, secret-derived hash, sensitive logs"
+  },
+  "primaryReferences": [
+    "https://www.postgresql.org/docs/17/libpq-async.html",
+    "https://www.postgresql.org/docs/17/libpq-cancel.html",
+    "https://www.postgresql.org/docs/17/libpq-status.html",
+    "https://www.postgresql.org/docs/17/sql-grant.html",
+    "https://www.postgresql.org/docs/17/sql-revoke.html"
+  ]
+}

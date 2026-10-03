@@ -1,0 +1,29 @@
+{
+  "packageVersion": "qik-rollback-client-package-1",
+  "mode": "source-only-offline",
+  "liveImplementation": "absent-unqualified",
+  "authorityVerifier": "absent-unqualified",
+  "target": {
+    "project": "qikvmopbtijoebdqosyq",
+    "database": "postgres",
+    "table": "mip_factual.audit_connection",
+    "predicate": "id IS TRUE",
+    "column": "connection_string",
+    "operationId": "a382dcdbf2924852b711b6a8b0c713eb",
+    "installManifestSha256": "221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320"
+  },
+  "executionWindow": null,
+  "liveRequiredInputs": {
+    "trustedEvidenceAuthorityBinding": null,
+    "freshManagedIdentityAndAllGrantorBaseline": null,
+    "exactSourceValueAndUnrelatedRowsPrivateBaseline": null,
+    "preciseProviderSetAndMissingColumnUpdatePermission": null,
+    "caPathDigestReadability": null,
+    "certificateChainHostnameAndDistinctAuditorTls": null,
+    "dblinkDetailAndServerLogSecrecyEvidence": null,
+    "secureCaptureAndExecutorClientWindow": null,
+    "boundedRollbackOnlyOwnerAuthorization": null,
+    "independentPostRollbackVerifier": null,
+    "exactReviewedSourceClientAndManifestHashes": null
+  }
+}

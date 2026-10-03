@@ -1,0 +1,97 @@
+{
+  "lockVersion": "qik-rollback-source-lock-1",
+  "frozenSourceHead": "93adb523910172b53e96d2b5f5b160974c6af519",
+  "frozenSourceTree": "9a430b86a1a5f381eeb6168eef529ea794b6f256",
+  "sources": {
+    "guardedOperation": {
+      "path": "../qik-audit-route-transform-proposal-20261002.sql",
+      "bytes": 7101,
+      "sha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    "preSubmitDeadlines": {
+      "path": "../qik-audit-route-pre-submit-deadlines-20261002.sql",
+      "bytes": 324,
+      "sha256": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d"
+    },
+    "inheritedContract": {
+      "path": "../backend-client-contract/contract.mjs",
+      "bytes": 24099,
+      "sha256": "209102c3a77015ab53d34718e499d5568243d7eb6a7471c3035875b115b704f9"
+    },
+    "inheritedInputs": {
+      "path": "../backend-client-contract/required-inputs.json",
+      "bytes": 1136,
+      "sha256": "f7f33a1f5a391c3ee2148ae9a4b1bd3701e04f4e0467fe00fbc6ee10d84750c6"
+    },
+    "package": {
+      "path": "./package.mjs",
+      "bytes": 19837,
+      "sha256": "0051f2d1b2b219ced57e1590c88a64c2ac18cd2b9a2a26bb39f5394543dc40a4"
+    },
+    "inert": {
+      "path": "./inert.mjs",
+      "bytes": 1408,
+      "sha256": "a827785291d4e136f17c2a1e6352241213b5024ad086d8cce01e8f0b74ce825d"
+    },
+    "cli": {
+      "path": "./inspect.mjs",
+      "bytes": 1169,
+      "sha256": "ffc97f7f4de06f2986ee83d4b6976d63aeabad32f0beb0e13a24478cb807daa3"
+    },
+    "inputs": {
+      "path": "./required-inputs.json",
+      "bytes": 1161,
+      "sha256": "303791820407872a7ab1296607f83afc05aea8ec0c988cb297d2202da8f72146"
+    },
+    "clientBinding": {
+      "path": "./client-binding-contract.json",
+      "bytes": 5654,
+      "sha256": "4ba4c09a7d96281efc579e38ee5d2080ea4f0882dc274ed05a798be383d4b841"
+    },
+    "protocol": {
+      "path": "./submission-protocol.json",
+      "bytes": 9759,
+      "sha256": "71eba36030f172fc642d52cf676eb98e8421309f191d0c31b9848e362b6e1e94"
+    },
+    "auxiliary": {
+      "path": "./auxiliary-commands.json",
+      "bytes": 2967,
+      "sha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+    },
+    "sqlBoundary": {
+      "path": "../backend-rollback-sql/boundary.mjs",
+      "bytes": 10951,
+      "sha256": "dacff35888b623465ab406714e253c139f199150dc7afcd38bfe38b474604a0b"
+    },
+    "sqlSnapshot": {
+      "path": "../backend-rollback-sql/snapshot-public.sql",
+      "bytes": 7352,
+      "sha256": "adf179a0dffbf042801e84caadea92da56165c2118a42bfe263c2ed46da76b47"
+    },
+    "sqlRowGuards": {
+      "path": "../backend-rollback-sql/inspect-rows-public.sql",
+      "bytes": 261,
+      "sha256": "fcef821e4b3bf324a41880061f6d234c6561161b5fae04ab0f5d3e1c01b5e0bf"
+    },
+    "sqlPrivateRowGuards": {
+      "path": "../backend-rollback-sql/inspect-rows-private-booleans.sql",
+      "bytes": 2081,
+      "sha256": "90ff1fc36827dd2767b86a625d19d4ef97a7e8121936b0696201788179d7c6d6"
+    },
+    "sqlPrivateCapture": {
+      "path": "../backend-rollback-sql/capture-rows-private.sql",
+      "bytes": 508,
+      "sha256": "4aa06e049b12eb7edba96ce029e3e0fbb377ca60d17280200fa95c3d3278c314"
+    },
+    "sqlPrivateCompare": {
+      "path": "../backend-rollback-sql/compare-rows-private.sql",
+      "bytes": 3568,
+      "sha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141"
+    },
+    "sqlAuthority": {
+      "path": "../backend-rollback-sql/authority-commands.json",
+      "bytes": 809,
+      "sha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+    }
+  }
+}
