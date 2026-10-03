@@ -162,6 +162,49 @@ test('selection close, invalidation and unmount release every attachment frame a
  }finally{if(tree)act(()=>tree.unmount());fake.restore()}
 })
 
+test('full title overflow stays keyboard reachable through resize and hidden return; invalidation/remount releases its observer',()=>{
+ const fake=dom(),prior=Object.getOwnPropertyDescriptor(globalThis,'ResizeObserver'),observers=[]
+ globalThis.ResizeObserver=class{
+  constructor(callback){this.callback=callback;this.nodes=[];this.disconnected=false;observers.push(this)}
+  observe(node){this.nodes.push(node)}
+  disconnect(){this.disconnected=true;this.nodes=[]}
+ }
+ let tree,titleNode
+ const fullTitle='DEVICE_ACCEPTANCE_SYNTHETIC retained facility inspection source describing its published evidence and geographic context'
+ const props={layout:layoutFor({width:304,height:360}),selectedKey:'admitted',model:model({label:fullTitle})}
+ const createNodeMock=element=>{
+  const node=fake.createNodeMock(element)
+  if(element.type==='h3'){node.clientHeight=36;node.scrollHeight=91;titleNode=node}
+  return node
+ }
+ try{
+  act(()=>{tree=TestRenderer.create(React.createElement(Overlay,props),{createNodeMock})})
+  const heading=()=>tree.root.findByType('h3')
+  assert.equal(heading().children.join(''),fullTitle)
+  assert.equal(heading().props.tabIndex,0)
+  titleNode.scrollHeight=36;act(()=>observers.at(-1).callback())
+  assert.equal(heading().props.tabIndex,undefined,'fitting title adds no extra keyboard stop')
+  fake.doc.hidden=true;titleNode.scrollHeight=120
+  fake.doc.hidden=false;act(()=>observers.at(-1).callback())
+  assert.equal(heading().props.tabIndex,0,'latest measured overflow is reachable after visibility returns')
+  const old=observers.at(-1)
+  act(()=>tree.update(React.createElement(Overlay,{...props,layout:layoutFor({width:844,height:390})})))
+  assert.equal(old.disconnected,true,'a viewport rebase releases the old observer')
+  act(()=>tree.update(React.createElement(Overlay,{...props,model:model({key:'stale'})})))
+  assert.ok(observers.every(observer=>observer.disconnected),'invalid selected reader releases every title observer')
+  act(()=>tree.update(React.createElement(Overlay,props)))
+  assert.equal(heading().children.join(''),fullTitle)
+  assert.equal(heading().props.tabIndex,0)
+  act(()=>tree.unmount());tree=null
+  assert.ok(observers.every(observer=>observer.disconnected),'remounted reader releases its observer on unmount')
+  assert.equal(fake.listeners.size,0)
+ }finally{
+  if(tree)act(()=>tree.unmount())
+  if(prior)Object.defineProperty(globalThis,'ResizeObserver',prior);else delete globalThis.ResizeObserver
+  fake.restore()
+ }
+})
+
 test('actual WorldView native tap, close/reopen, Inspector and Atlas binding retain canonical selection and recorded time',async()=>{
  const fake=dom(),tables=spatialTables(),selections=[];let tree
  const row=tables.spatial_projection_v1[0],canonical=JSON.stringify(row)

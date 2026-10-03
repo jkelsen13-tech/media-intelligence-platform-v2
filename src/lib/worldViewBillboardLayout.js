@@ -39,7 +39,10 @@ function selectedEnvelope(item, rect, viewport) {
   }
   const availableWidth = rect.right - rect.left, availableHeight = rect.bottom - rect.top
   if(availableWidth<=0||availableHeight<=0)return null
-  const width = Math.min(360, availableWidth), height = Math.min(240, availableHeight * (narrowLandscape ? 1 : 0.75))
+  // The full-App coarse controls and precision disclosures need the same
+  // reading allowance as the presentation bounds; 75% clips the fixed footer
+  // on a 360px canvas even after all relocation motion has finished.
+  const width = Math.min(360, availableWidth), height = Math.min(240, availableHeight * (narrowLandscape ? 1 : 0.95))
   // A viewer-relative comfortable envelope is reserved for one explicit
   // selection. Every other marker remains attached to its projected anchor.
   const card = {x:rect.right-width, y:rect.bottom-height, width, height}

@@ -54,7 +54,9 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   const entrance = useRef({ key: null, origin: null })
   const overlayRef = useRef(null), cardRef = useRef(null), tetherRef = useRef(null), attachmentRef = useRef(null), gradientRef = useRef(null)
   const closeRef = useRef(null)
+  const titleRef = useRef(null)
   const latestPaint = useRef(null), paintAttachment = useRef(null)
+  const [titleScrollable, setTitleScrollable] = useState(false)
   const [tabState, setTabState] = useState({ key: selectedKey, tab: 'evidence' })
   const tabs = worldBillboardModuleTabs(model).map(entry => ({ ...entry, key:entry.id, Icon:MODULE_ICONS[entry.id] ?? Stack }))
   const tabScope = tabs.map(entry => entry.id).join('|')
@@ -97,6 +99,15 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
   // Anchor/frame updates get one synchronous paint without restarting motion.
   useLayoutEffect(() => { paintAttachment.current?.() })
   useLayoutEffect(() => {
+    const node = titleRef.current
+    const measure = () => setTitleScrollable(Boolean(node && node.scrollHeight > node.clientHeight + 1))
+    measure()
+    if (!node || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [readingScope, model?.title, card?.width, card?.height])
+  useLayoutEffect(() => {
     if ((!selected?.card && !cluster) || typeof document === 'undefined') return
     const previous = document.activeElement
     closeRef.current?.focus?.({preventScroll:true})
@@ -122,7 +133,7 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
       frame=null
       if (stopped || document.hidden) return
       paintAttachment.current?.()
-      // Visibility may interrupt the 220ms entrance or 160ms relocation.
+      // Visibility may interrupt the 220ms entrance or renderer relocation.
       // Resume attachment sampling for one fresh bounded window, never idle.
       deadline=performance.now()+260
       if (!reduced()) frame=requestAnimationFrame(paint)
@@ -198,7 +209,7 @@ export default function WorldViewBillboardOverlay({ layout, items = [], selected
     </aside> : <aside ref={cardRef} key={readingScope} className="wv-billboard-card" style={{ left: card.x, top: card.y, width: card.width, maxHeight: card.height,
       transformOrigin: entrance.current.origin ? `${entrance.current.origin.x}px ${entrance.current.origin.y}px` : undefined }}
       aria-labelledby={`${prefix}-title`} data-selected-key={selectedKey} data-compact={compact} data-anchor-entrance={Boolean(entrance.current.origin)}>
-      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 id={`${prefix}-title`}>{title}</h3>{suppliedText(model.locationScope) && <span className="wv-billboard-scope-cue" title={suppliedText(model.scopeCue) ?? undefined}>{suppliedText(model.locationScope)}</span>}{selected.occluded && <span className="wv-billboard-occlusion-cue" title="The canonical anchor is occluded. The selected reader retains its geographic tether.">Canonical anchor occluded</span>}{typeof selected.displayOccluded === 'boolean' && <span className="wv-billboard-stem-cue">{selected.displayOccluded ? 'Display marker occluded' : 'Display marker visible'}</span>}</div>
+      <header><div>{suppliedText(model.chip) && <span className="wv-billboard-eyebrow">{suppliedText(model.chip)}</span>}<h3 ref={titleRef} id={`${prefix}-title`} tabIndex={titleScrollable ? 0 : undefined}>{title}</h3>{suppliedText(model.locationScope) && <span className="wv-billboard-scope-cue" title={suppliedText(model.scopeCue) ?? undefined}>{suppliedText(model.locationScope)}</span>}{selected.occluded && <span className="wv-billboard-occlusion-cue" title="The canonical anchor is occluded. The selected reader retains its geographic tether.">Canonical anchor occluded</span>}{typeof selected.displayOccluded === 'boolean' && <span className="wv-billboard-stem-cue">{selected.displayOccluded ? 'Display marker occluded' : 'Display marker visible'}</span>}</div>
         <button ref={closeRef} type="button" className="wv-billboard-icon-button" aria-label="Close selected card" onClick={() => activate(onClose)}><X aria-hidden="true" size={18} /></button></header>
       {!compact && summary}
       <div className="wv-billboard-tabs" role="tablist" aria-label="Selected record modules">{tabs.map(({ key, label, Icon }) => <button key={key} ref={element => { tabRefs.current[key] = element }}

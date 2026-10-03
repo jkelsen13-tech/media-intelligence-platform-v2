@@ -75,6 +75,23 @@ test('invalid viewports/identities fail closed; explicit safe insets and null se
  assert.ok(selected.card.x+selected.card.width<=366 && selected.card.y+selected.card.height<=764)
 })
 
+test('full-App narrow portrait canvas reserves reading height for wrapped precision disclosure and coarse controls',()=>{
+ const row=deepFreeze(item('scope',{label:'DEVICE_ACCEPTANCE_SYNTHETIC row 1',precision:'facility',anchor:{x:152,y:180}}))
+ const original=JSON.stringify(row)
+ // The 360×500 page has a 304×360 native canvas after the actual workspace
+ // rails and margins. The former 183px card clipped its fixed Inspector.
+ for(const width of [304,334]){
+  const viewport={width,height:360}
+  const {selected}=layoutWorldBillboards({items:[row],viewport,selectedKey:'scope'})
+  assert.ok(selected.card.height>=230,'leave the supported compact reader room for its fixed header/tabs/footer')
+  assert.ok(selected.card.y>=72&&selected.card.y+selected.card.height<=316)
+  assert.ok(selected.card.x>=16&&selected.card.x+selected.card.width<=width-16)
+  assert.deepEqual(selected.anchor,row.anchor)
+  assert.equal(selected.canonicalCoordinates,row.canonicalCoordinates)
+  assert.equal(JSON.stringify(row),original)
+ }
+})
+
 
 test('icon-to-group promotion rechecks earlier neighbors instead of leaving a new overlap',()=>{
  const rows=[item('a',{distanceMeters:50000,importance:1}),item('b',{distanceMeters:50000,importance:1,anchor:{x:232,y:200}}),item('c',{distanceMeters:50000,importance:1,anchor:{x:240,y:200}})]
