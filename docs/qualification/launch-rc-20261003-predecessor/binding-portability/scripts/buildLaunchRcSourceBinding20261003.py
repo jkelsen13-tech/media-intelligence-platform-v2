@@ -18,7 +18,6 @@ QUALIFIED = [
     ('markets-contract', '5eae5c69c26099dd3566f40210398f8b30357831', 'docs/qualification/markets-provider-contract-20261003.json', ['sourceAndFixtureHashes']),
     ('terrain-v1', '7ec5e6235fc0a562a0a6c302dcdd6dbc6ca310dc', 'docs/qualification/terrain-composition-20261003.json', ['file_sha256']),
     ('terrain-comparison', 'd1827d23f2f8f97011b10671dbdde6cb4b5a5be0', 'docs/qualification/terrain-comparison-20261003.evidence.json', ['sourceProof.files']),
-    ('binding-portability', '5bd71b362e46049cbe66da6a23506da333d51235', 'docs/qualification/markets-provider-contract-portability-20261003.json', ['source_files']),
     ('terrain-v2', '70aad6bbb91f38537dcd5ca394c43d60a4772045', 'docs/qualification/terrain-composition-20261003.operation-grid.json', ['file_sha256']),
 ]
 

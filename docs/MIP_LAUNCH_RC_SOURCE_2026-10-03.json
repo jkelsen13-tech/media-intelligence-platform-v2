@@ -100,6 +100,16 @@
       ]
     },
     {
+      "lane": "binding-portability",
+      "head": "5bd71b362e46049cbe66da6a23506da333d51235",
+      "tree": "2cabbe95c119c58f9efb2fbbac2918d80af106cd",
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.json",
+      "sha256": "8b2d66c4b04662d004cfb0317ffa83f427a09dde6cb5e5583bb60a4a4a609d33",
+      "source_keys": [
+        "source_files"
+      ]
+    },
+    {
       "lane": "terrain-v2",
       "head": "70aad6bbb91f38537dcd5ca394c43d60a4772045",
       "tree": "af2905006bd8cf83d9ce4a4172d1f48c5c3baf43",
@@ -236,6 +246,15 @@
       "source_commit": "7ec5e6235fc0a562a0a6c302dcdd6dbc6ca310dc",
       "sha256": "a969d3ba168412deb834bd586042869c45d50782fab550eb664599d4e74b3a16",
       "bytes": 16564
+    },
+    {
+      "manifest_path": "docs/qualification/markets-provider-contract-portability-20261003.json",
+      "source_path": "scripts/buildLaunchRcSourceBinding20261003.py",
+      "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/scripts/buildLaunchRcSourceBinding20261003.py",
+      "lane": "binding-portability",
+      "source_commit": "5bd71b362e46049cbe66da6a23506da333d51235",
+      "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026",
+      "bytes": 6410
     }
   ],
   "sources": [
@@ -251,8 +270,8 @@
     },
     {
       "path": "docs/MIP_LAUNCH_RC_REVIEW_PACKET_2026-10-03.md",
-      "bytes": 13915,
-      "sha256": "7b2ec34126ef5f8a390131e2d7bf2c6f460d442f8747c292246fa6bcea7dfb14"
+      "bytes": 14697,
+      "sha256": "840e55482929265cc2192ebd3827446a0248463d8ed2f615a5778c06b5396eb5"
     },
     {
       "path": "docs/MIP_RETAINED_NEWS_CALIBRATION_2026-10-03.md",
@@ -785,6 +804,11 @@
       "sha256": "b3e998984485c61769f05f7b0cc4b90c10193895a67b9d4ed26f8a612ef2a10c"
     },
     {
+      "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/scripts/buildLaunchRcSourceBinding20261003.py",
+      "bytes": 6410,
+      "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
+    },
+    {
       "path": "docs/qualification/launch-rc-20261003-predecessor/ca72/package-lock.json",
       "bytes": 118411,
       "sha256": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
@@ -1031,8 +1055,8 @@
     },
     {
       "path": "scripts/buildLaunchRcSourceBinding20261003.py",
-      "bytes": 6410,
-      "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
+      "bytes": 6575,
+      "sha256": "1cce283fd3b5f6972cc551d0b6d1e33d86b7e81d2578d5b40ac23b8b6b7b253c"
     },
     {
       "path": "scripts/compileLaunchInstallationStage.mjs",
