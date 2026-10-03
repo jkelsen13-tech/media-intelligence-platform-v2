@@ -118,6 +118,16 @@
       "source_keys": [
         "file_sha256"
       ]
+    },
+    {
+      "lane": "card-containment",
+      "head": "f65610b25d35489e5c707de6d8f0af201ab0184e",
+      "tree": "5486bd7ed019c569d2fb56056951e9649ab8dd0d",
+      "path": "docs/qualification/card-containment-20261003-source.json",
+      "sha256": "66820ced7fb71a150917d8623a8fc0847dad8117442de93dad8f885ecab0635c",
+      "source_keys": [
+        "source_files"
+      ]
     }
   ],
   "qualified_source_path_mappings": {
@@ -846,6 +856,16 @@
       "sha256": "7aa5166c5ca4f08aa364e27c77e8e39530b3ada745870c6a4b15932f321957d8"
     },
     {
+      "path": "docs/qualification/card-containment-20261003-source.json",
+      "bytes": 14023,
+      "sha256": "66820ced7fb71a150917d8623a8fc0847dad8117442de93dad8f885ecab0635c"
+    },
+    {
+      "path": "docs/qualification/card-containment-20261003.md",
+      "bytes": 5807,
+      "sha256": "fcbe485cc2518c4bc28a4536ea3d2167f79c97138777df7d9159e9f44690e2be"
+    },
+    {
       "path": "docs/qualification/launch-rc-20261003-predecessor/binding-portability/scripts/buildLaunchRcSourceBinding20261003.py",
       "bytes": 6410,
       "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
@@ -1112,8 +1132,8 @@
     },
     {
       "path": "scripts/buildLaunchRcSourceBinding20261003.py",
-      "bytes": 6575,
-      "sha256": "1cce283fd3b5f6972cc551d0b6d1e33d86b7e81d2578d5b40ac23b8b6b7b253c"
+      "bytes": 6723,
+      "sha256": "00e1b47a5158939d9839fb4d9b857ff3fd651593753d3e467fb7cfaa849fe6a4"
     },
     {
       "path": "scripts/compileLaunchInstallationStage.mjs",
