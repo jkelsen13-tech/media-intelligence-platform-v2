@@ -1,7 +1,7 @@
 // Detached declaration validator only: no fetch/decode/transform, admission,
 // provider hook, rendering, geometry synthesis or canonical-coordinate write.
 // Receipt truth and production authority remain the caller's responsibility.
-export const WORLD_VIEW_TERRAIN_COMPOSITION_CONTRACT = 'mip-terrain-composition-v1'
+export const WORLD_VIEW_TERRAIN_COMPOSITION_CONTRACT = 'mip-terrain-composition-v2'
 
 const text = value => typeof value === 'string' && value.trim().length > 0
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value)
@@ -58,17 +58,44 @@ const heightValid = value => ['orthometric', 'ellipsoidal'].includes(value?.basi
   && text(value.datum) && units.includes(value.units)
   && ['catalogue-only', 'qualified'].includes(value.evidence?.basis) && text(value.evidence?.reference)
 
-function transformValid(transform, from, to, coverage, axis) {
+function operationAndGridsValid(transform, coverage) {
+  const operation = transform.operation, accuracy = operation?.accuracy
+  if (!text(operation?.id) || !text(operation.reference) || accuracy?.status !== 'qualified'
+    || Object.keys(operation).some(key => !['id', 'reference', 'accuracy'].includes(key))
+    || accuracy.basis !== 'operation-error' || !Number.isFinite(accuracy.value) || accuracy.value < 0
+    || accuracy.units !== 'metre' || !text(accuracy.reference)
+    || Object.keys(accuracy).some(key => !['status', 'basis', 'value', 'units', 'reference'].includes(key))) return false
+  const grids = transform.gridRequirement
+  if (grids?.qualified !== true || !text(grids.reference) || !Array.isArray(grids.inventory)) return false
+  if (grids.kind === 'none') return grids.inventory.length === 0
+  if (grids.kind !== 'required' || grids.inventory.length === 0) return false
+  const ids = new Set()
+  return grids.inventory.every(grid => {
+    if (!text(grid?.id) || ids.has(grid.id) || !text(grid.version) || !hash(grid.sha256)
+      || grid.availability?.status !== 'available' || grid.availability.verified !== true
+      || !text(grid.availability.reference) || grid.coverage?.crs !== coverage.crs
+      || !contains(grid.coverage.bounds, coverage.bounds)) return false
+    ids.add(grid.id)
+    return true
+  })
+}
+
+function transformValid(transform, from, to, coverage) {
   if (transform?.approved !== true || !text(transform.reference)
     || !text(transform.model) || !text(transform.version)
     || !['identity', 'model-operation'].includes(transform.kind)
     // A point offset is never a substitute for a qualified geoid operation.
     || Object.hasOwn(transform, 'constantOffset') || Object.hasOwn(transform, 'constantGeoidOffset')
+    || Object.keys(transform).some(key => !['approved', 'reference', 'model', 'version', 'kind',
+      'from', 'to', 'coverage', 'operation', 'gridRequirement'].includes(key))
     || !same(transform.from, from) || !same(transform.to, to)
     || transform.coverage?.crs !== coverage.crs
-    || !contains(transform.coverage.bounds, coverage.bounds)) return false
-  if (transform.kind === 'identity' && !same(from, to)) return false
-  return axis !== 'vertical' || !Object.hasOwn(transform, 'offsetMeters')
+    || !contains(transform.coverage.bounds, coverage.bounds)
+    || !operationAndGridsValid(transform, coverage)) return false
+  // This describes operation error only. No datum/source measurement accuracy
+  // is manufactured from a zero-error, exactly same-basis identity operation.
+  return transform.kind !== 'identity' || same(from, to)
+    && transform.gridRequirement.kind === 'none' && transform.operation.accuracy.value === 0
 }
 
 /**
@@ -129,9 +156,9 @@ export function evaluateWorldViewTerrainComposition({ source, composition } = {}
     || target.height.evidence.basis !== 'qualified' || target.height.basis !== 'ellipsoidal'
     || target.height.datum !== 'WGS84-ellipsoid' || target.height.units !== 'metre') hold('target-reference-unqualified')
   if (!transformValid(composition?.horizontalTransform, horizontalBasis(source?.horizontal),
-    horizontalBasis(target?.horizontal), requested ?? {}, 'horizontal')) hold('horizontal-transform-unqualified')
+    horizontalBasis(target?.horizontal), requested ?? {})) hold('horizontal-transform-unqualified')
   if (!transformValid(composition?.verticalTransform, heightBasis(source?.height),
-    heightBasis(target?.height), requested ?? {}, 'vertical')) hold('vertical-transform-unqualified')
+    heightBasis(target?.height), requested ?? {})) hold('vertical-transform-unqualified')
   const registration = composition?.orthoRegistration
   if (registration?.approved !== true || !text(registration.reference) || !hash(registration.orthoAssetSha256)
     || registration.terrainAssetSha256 !== bytes?.sha256 || registration.coverage?.crs !== requested?.crs

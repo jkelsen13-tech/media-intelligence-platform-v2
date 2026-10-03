@@ -1,0 +1,123 @@
+{
+  "schema": "mip.terrain-composition-operation-grid-correction.v1",
+  "qualified_at_utc": "2026-10-03T04:59:49.747688+00:00",
+  "original_scope_commit": "7ec5e6235fc0a562a0a6c302dcdd6dbc6ca310dc",
+  "original_scope_tree": "6f7b56bd15f7f053658a2c9f0ed568625841dda5",
+  "branch": "codex/mip-terrain-contract-20261003",
+  "contract_version": "mip-terrain-composition-v2",
+  "correction": "Nonidentity operation plans require explicit operation identity/reference, qualified stated operation-error accuracy in metres, and verified available version/hash/coverage grid inventory or a qualified explicit no-grid requirement. Identity also requires exact equal bases, qualified no-grid and stated zero operation error.",
+  "authority": "All positive test operation/grid/accuracy/admission receipts are SIMULATED; no genuine USGS operation/model/grid is selected or inferred. Pure declarations remain caller-owned, not a security boundary.",
+  "runtimes": [
+    {
+      "node": "v22.23.3",
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "receipt": "docs/qualification/terrain-composition-20261003.operation-grid.node22.tap"
+    },
+    {
+      "node": "v24.19.0",
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "receipt": "docs/qualification/terrain-composition-20261003.operation-grid.node24.tap"
+    }
+  ],
+  "test_arguments": [
+    "--test",
+    "--test-concurrency=1",
+    "tests/worldViewTerrainComposition20261003.test.mjs",
+    "tests/worldViewStageDTerrain.test.mjs",
+    "tests/worldViewStageDTerrainVisualRepair.test.mjs",
+    "tests/worldViewSourceStatus.test.mjs",
+    "tests/worldViewRealismAdmission.test.mjs"
+  ],
+  "additional_regressions": [
+    "missing operation identifier/reference",
+    "unknown/absent/nonfinite/negative accuracy",
+    "wrong operation accuracy units and datum-accuracy basis",
+    "missing/unqualified/empty grid inventory",
+    "unavailable/unknown/unverified grids",
+    "missing grid hash/version/reference",
+    "grid coverage or CRS mismatch",
+    "duplicate grid identifiers",
+    "qualified explicit no-grid requirement",
+    "exact identity zero operation error preserves unknown datum accuracy",
+    "constant offsets/arbitrary inline shifts rejected on both axes"
+  ],
+  "original_receipts_preserved": [
+    {
+      "path": "docs/qualification/terrain-composition-20261003.candidate-result.json",
+      "sha256": "0256ce81e9fe282b195582db6cc76f847e8173d283816d09e82cf22266aea0ef",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.candidate.json",
+      "sha256": "77febd11b7d330a782279aadf87cc7ceedd656eca5f7098483a810ad101dd6da",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.json",
+      "sha256": "25e94bc5fffc16d796561eabe404b37e9446d767c97549e8e36d1e2a2fc0df08",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.md",
+      "sha256": "38a16b6b2749702283bac6fe296912ee4ce2143466f0926b8865269421198bc7",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.node22.tap",
+      "sha256": "6b898b7860ee452765d4084509fa37ebe8aee1266e50aa02978b20f0e44ff240",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.node24.tap",
+      "sha256": "f50f1af4d71cc6e3792efc089fd74584590173d63df41a66f5ef804f49652f8d",
+      "byte_identical_to_original_commit": true
+    }
+  ],
+  "active_source_files_preserved": [
+    {
+      "path": "src/lib/worldViewCesiumTerrariumTerrainProvider.js",
+      "sha256": "ce58af0f7f848bf14da124b683c8bc84619e904e0a82e2478a788e333c0f0c9c",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "src/lib/worldViewSourceStatus.js",
+      "sha256": "44c07737c98c72e6167dcb6781c646aac651dd862398696c3844c618e9bbb098",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "src/lib/worldViewRealismAdmission.js",
+      "sha256": "73c5ab5f2fc33f800c553644f9bbe16a5f1040a9d5297225cacf1aacd4bf4486",
+      "byte_identical_to_original_commit": true
+    },
+    {
+      "path": "src/lib/worldViewMapStack.js",
+      "sha256": "bde4425469c2e0baed31d3b072af07cb44cf8d4a02c095f9765987433e7779ba",
+      "byte_identical_to_original_commit": true
+    }
+  ],
+  "current_real_candidate_result": {
+    "path": "docs/qualification/terrain-composition-20261003.operation-grid.candidate-result.json",
+    "status": "HOLD",
+    "research_inspection_allowed": true,
+    "production_composition_qualified": false,
+    "consumer_TIFF_custody_or_pixels_claimed": false,
+    "new_actual_grid_model_transform_inferred": false
+  },
+  "file_sha256": {
+    "src/lib/worldViewTerrainCompositionContract.js": "ce26a0c872c7bc5a920c2053ddb4c0b8d58fd4ea3d6be8c896ee1418bccb0884",
+    "tests/worldViewTerrainComposition20261003.test.mjs": "8a3e7707d69bd8fbef9fc62caaed339b24a24f016ee696aa0fd6c1ebe9830031",
+    "docs/qualification/terrain-composition-20261003.operation-grid.node22.tap": "7d939711af7c9a6affdf3666a372b47972b20e15defdb36483584f2cccacf5fd",
+    "docs/qualification/terrain-composition-20261003.operation-grid.node24.tap": "260937d7181bc25ef354a35a29c9413c81312be97f4b39a9c4cc9b74d9eba11a",
+    "docs/qualification/terrain-composition-20261003.operation-grid.candidate-result.json": "e55e0ab413bf45ece3727f3bae2a0ec69cf8e30a54fc6e9e0a384c62270edfbe"
+  },
+  "diff_check": "PASS",
+  "source_activation_or_transform_execution": false,
+  "pixel_conversion_or_camera_visual_qualification": false,
+  "parent_integration_and_Cursor_review": "SEPARATE_PENDING"
+}
