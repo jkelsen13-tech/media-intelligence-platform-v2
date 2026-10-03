@@ -1,0 +1,38 @@
+{
+  "fetch_url": "https://api.github.com/repos/cisagov/kev-data/commits?path=known_exploited_vulnerabilities.csv&until=2025-04-01T00:00:00Z&per_page=2",
+  "clock": {
+    "started": {
+      "current_time": "2026-10-03 04:19:32 UTC"
+    },
+    "ended": {
+      "current_time": "2026-10-03 04:19:33 UTC"
+    }
+  },
+  "capture_kind": "PROVIDER_JSON_TEXT_RETURNED_UNCHANGED_BY_GITHUB_CONNECTOR",
+  "selected_commits": [
+    {
+      "sha": "b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "author_date": "2025-03-27T18:34:36Z",
+      "committer_date": "2025-03-27T18:34:36Z",
+      "message": "Add updated KEV files for 2025-03-26\n\nAdded CVE-2025-2783",
+      "url": "https://github.com/cisagov/kev-data/commit/b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "parent_shas": [
+        "cf9ebe95c679e9ea23c72d55525f09fcea8b7570"
+      ],
+      "github_reported_verification": true,
+      "verification_reason": "valid"
+    },
+    {
+      "sha": "6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+      "author_date": "2025-03-31T18:47:50Z",
+      "committer_date": "2025-03-31T18:47:50Z",
+      "message": "Add updated KEV files for 2025-03-31\n\nCVE-2024-20439",
+      "url": "https://github.com/cisagov/kev-data/commit/6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+      "parent_shas": [
+        "b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1"
+      ],
+      "github_reported_verification": true,
+      "verification_reason": "valid"
+    }
+  ]
+}

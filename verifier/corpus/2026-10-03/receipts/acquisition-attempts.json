@@ -1,0 +1,192 @@
+{
+  "schema_version": "bounded-acquisition-v1",
+  "scope": "manual source retention; 20 logical external request attempts; no collector activation",
+  "request_cap": 20,
+  "byte_cap": 2097152,
+  "requests": [
+    {
+      "request_index": 1,
+      "tool": "WEB_SEARCH",
+      "url_or_query": "site.nhc.noaa.gov archive 2022 Ian public advisory 22 29 September 2022",
+      "status": "SEARCH_ONLY_NO_USABLE_CORPUS_BYTES",
+      "evidence": "Unrelated broad search results; no retained advisory bytes.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 2,
+      "tool": "WEB_SEARCH",
+      "url_or_query": "site.weather.gov disclaimer public domain NOAA weather data",
+      "status": "SEARCH_ONLY_NO_USABLE_CORPUS_BYTES",
+      "evidence": "Search results are not rights admission or source-byte custody.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 3,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.nhc.noaa.gov/archive/2022/IAN.shtml",
+      "status": "DENIED_ROUTE_STOPPED",
+      "evidence": "Failed to fetch https://www.nhc.noaa.gov/archive/2022/IAN.shtml: (403) Forbidden",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 4,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.weather.gov/disclaimer",
+      "status": "RIGHTS_RESEARCH_SUCCEEDED_PARSED_WEB_TEXT",
+      "evidence": "Official NWS rights page parsed; public domain except specifically noted material; retained source-advisory bytes remain zero.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 5,
+      "tool": "EXEC_URLOPEN",
+      "url_or_query": "https://www.nhc.noaa.gov/archive/2022/al09/al092022.public.012.shtml",
+      "status": "DENIED_ROUTE_STOPPED",
+      "evidence": "URLError <urlopen error Tunnel connection failed: 403 Forbidden>",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 6,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.wpc.ncep.noaa.gov/tropical/archive/",
+      "status": "UNAVAILABLE_ROUTE_STOPPED",
+      "evidence": "URL https://www.wpc.ncep.noaa.gov/tropical/archive/ is not accessible via this tool.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 7,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.wpc.ncep.noaa.gov/tropical/tropical_advisories.php",
+      "status": "UNAVAILABLE_ROUTE_STOPPED",
+      "evidence": "URL https://www.wpc.ncep.noaa.gov/tropical/tropical_advisories.php is not accessible via this tool.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 8,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson_detail.php",
+      "status": "DOCS_RESEARCH_SUCCEEDED_PARSED_WEB_TEXT",
+      "evidence": "Official source documents detailed event output and contributed products/updateTime.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 9,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "status": "RIGHTS_RESEARCH_SUCCEEDED_PARSED_WEB_TEXT",
+      "evidence": "USGS-authored data public domain; third-party material excluded.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 10,
+      "tool": "EXEC_URLOPEN",
+      "url_or_query": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us7000dflf.geojson",
+      "status": "DENIED_ROUTE_STOPPED",
+      "evidence": "URLError <urlopen error Tunnel connection failed: 403 Forbidden>",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 11,
+      "tool": "WEB_OPEN",
+      "url_or_query": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "status": "DENIED_ROUTE_STOPPED",
+      "evidence": "Failed to fetch https://www.cisa.gov/known-exploited-vulnerabilities-catalog: (403) Forbidden",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 12,
+      "tool": "GITHUB_FETCH",
+      "url_or_query": "https://api.github.com/repos/cisagov/kev-data/readme",
+      "status": "INVALID_ARGUMENT_ENDPOINT_NOT_USED_AGAIN",
+      "evidence": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 13,
+      "tool": "GITHUB_FETCH",
+      "url_or_query": "https://api.github.com/repos/cisagov/kev-data/commits?path=known_exploited_vulnerabilities.csv&until=2024-01-01T00:00:00Z&per_page=8",
+      "status": "EMPTY_HISTORY_RESULT",
+      "evidence": "[]",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 14,
+      "tool": "GITHUB_FETCH",
+      "url_or_query": "https://api.github.com/repos/cisagov/kev-data/contents",
+      "status": "PROVIDER_DISTRIBUTION_METADATA_SUCCEEDED",
+      "evidence": "Repository contains LICENSE, README.md and CSV/JSON catalog data.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 15,
+      "tool": "GITHUB_FETCH",
+      "url_or_query": "https://api.github.com/repos/cisagov/kev-data/commits?path=known_exploited_vulnerabilities.csv&per_page=4",
+      "status": "COMMIT_METADATA_SUCCEEDED",
+      "evidence": "Four current commits observed; current CSV too large for multiple versions within 2MiB cap.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 16,
+      "tool": "GITHUB_FETCH",
+      "url_or_query": "https://api.github.com/repos/cisagov/kev-data/commits?path=known_exploited_vulnerabilities.csv&until=2025-04-01T00:00:00Z&per_page=2",
+      "status": "IMMUTABLE_HISTORICAL_COMMIT_METADATA_SUCCEEDED",
+      "evidence": "Two consecutive historical CSV revisions; response and timing retained.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 17,
+      "tool": "GITHUB_FETCH_FILE",
+      "url_or_query": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/LICENSE",
+      "status": "EXACT_REPOSITORY_BLOB_SUCCEEDED",
+      "evidence": "Base64 decoded; Git blob SHA1 verified.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 18,
+      "tool": "GITHUB_FETCH_FILE",
+      "url_or_query": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/README.md",
+      "status": "EXACT_REPOSITORY_BLOB_SUCCEEDED",
+      "evidence": "Base64 decoded; Git blob SHA1 verified.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 19,
+      "tool": "GITHUB_FETCH_FILE",
+      "url_or_query": "https://github.com/cisagov/kev-data/blob/b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1/known_exploited_vulnerabilities.csv",
+      "status": "EXACT_REPOSITORY_BLOB_SUCCEEDED",
+      "evidence": "Base64 decoded; Git blob SHA1 verified.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    },
+    {
+      "request_index": 20,
+      "tool": "GITHUB_FETCH_FILE",
+      "url_or_query": "https://github.com/cisagov/kev-data/blob/6ff2cc19002acfb5d9214f4ee9bc428640c5084a/known_exploited_vulnerabilities.csv",
+      "status": "EXACT_REPOSITORY_BLOB_SUCCEEDED",
+      "evidence": "Base64 decoded; Git blob SHA1 verified.",
+      "request_timestamp_utc": null,
+      "timestamp_note": "Individual pre-clock request times were not recorded; all occurred in observed session window beginning 2026-10-03T04:15:41Z. Exact connector acquisition intervals for retained files/selected commit response are recorded separately."
+    }
+  ],
+  "denied_routes_retried": false,
+  "denied_route_bypasses": false,
+  "nhc_parallel_first_probes_note": "Archive web read and single advisory urllib read were launched independently together before their 403 outcomes were known. Both stopped after those first results.",
+  "alternate_provider_supported_distribution": "CISA README explicitly identifies this GitHub repository as a catalog distribution with revision history. CISA security catalog is a different product/event type from denied NOAA advisories/USGS event feed."
+}

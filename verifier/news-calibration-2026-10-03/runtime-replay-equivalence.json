@@ -1,0 +1,16 @@
+{
+  "contract": "mip-news-runtime-replay-equivalence-2026-10-03-v1",
+  "node22": "22.23.3",
+  "node24": "24.19.0",
+  "targeted_tests_each": 55,
+  "failure_cancel_skip_todo_each": 0,
+  "replay_sha256_each": "0b15b9315a1ad06af0a39d1b45d99109d649c1ccf629d4a6a67c8d547b124321",
+  "replay_bytes_each": 487818,
+  "exact_byte_equality": true,
+  "canonical_receipt": "verifier/retainedNewsCalibration20261003.json",
+  "test_logs": [
+    "verifier/news-calibration-2026-10-03/tests-node22.log",
+    "verifier/news-calibration-2026-10-03/tests-node24.log"
+  ],
+  "scope": "bounded policy/owner-normalizer/retained-byte/harness/mounted News tests only; not the frozen full frontend qualification or real accuracy"
+}

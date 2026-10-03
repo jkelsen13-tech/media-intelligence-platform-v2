@@ -1,0 +1,201 @@
+{
+  "schema_version": "retained-official-corpus-v1",
+  "acquisition_method_version": "bounded-cisa-github-contents-base64-v1",
+  "records": [
+    {
+      "id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "event_id": "cisa-kev-catalog",
+      "provider": "CISA KEV repository cisagov/kev-data",
+      "source_version": "b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "source_url": "https://github.com/cisagov/kev-data/blob/b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1/known_exploited_vulnerabilities.csv",
+      "canonical_provider_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "retrieved_at_utc": "2026-10-03T04:19:48Z",
+      "retrieval_clock_precision": "1 second",
+      "issued_at_utc": null,
+      "valid_at_utc": null,
+      "repository_committed_at_utc": "2025-03-27T18:34:36Z",
+      "repository_author_at_utc": "2025-03-27T18:34:36Z",
+      "canonical_source_publication_available_at_utc": null,
+      "source_clock_kind": "GITHUB_COMMITTER_CLOCK_ONLY",
+      "retained_relative_path": "provider/kev-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1.csv",
+      "content_sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+      "byte_length": 651543,
+      "git_blob_sha1": "9d4e9e2dce8390a0a414ecad0729ef71fe7ac3da",
+      "git_blob_hash_verified": true,
+      "capture_kind": "EXACT_PUBLISHER_REPOSITORY_BLOB_BYTES_VIA_GITHUB_CONTENTS_BASE64",
+      "raw_http_entity_capture": false,
+      "content_type": "text/csv",
+      "row_count": 1311,
+      "source_status": "CATALOG_SOURCE_REPORT_ONLY",
+      "correction_history": {
+        "status": "UNKNOWN_NOT_DESIGNATED_BY_PROVIDER",
+        "observed_changes_recorded_in": "derived-material-diff.json",
+        "note": "Changed fields are observed source revisions; provider has not labeled them corrections in captured metadata. No omitted historical versions are invented."
+      },
+      "rights": {
+        "license": "CC0-1.0",
+        "rights_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/LICENSE",
+        "rights_retained_relative_path": "provider/LICENSE",
+        "rights_sha256": "8dfcf2d0cba33bede386eb470daf2ac08caf6540fc2516baab10dd546f90938a",
+        "basis": "Retained CISA KEV repository LICENSE explicitly distributes the KEV database under Creative Commons 0 1.0. README declares this repository hosts CISA-produced KEV data and explicitly supports GitHub distribution and history. Rights captured at immutable 2026-10-02 commit; separate historical license-version audit was not performed. Linked third-party content is excluded; no linked third-party assets were fetched. No logo/seal endorsement right claimed.",
+        "credit": "Cybersecurity and Infrastructure Security Agency (CISA), Known Exploited Vulnerabilities catalog",
+        "provider_readme_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/README.md",
+        "provider_readme_relative_path": "provider/README.md",
+        "provider_readme_sha256": "7d18e1fc40185acc90128fcceb18f016e010c8d0cf4125c3311c9381cbafcfe2"
+      },
+      "review_authority": "SIMULATED_ADAPTER_ONLY",
+      "mip_story_admission": "NOT_ADMITTED",
+      "ground_truth": "SOURCE_REPORT_STATE_ONLY",
+      "extracted_fields": {
+        "key": "cveID",
+        "column_names": [
+          "cveID",
+          "vendorProject",
+          "product",
+          "vulnerabilityName",
+          "dateAdded",
+          "shortDescription",
+          "requiredAction",
+          "dueDate",
+          "knownRansomwareCampaignUse",
+          "notes",
+          "cwes"
+        ],
+        "dateAdded_semantics": "Day-only source field; no precise exploitation/event/update time inferred."
+      },
+      "commit_message": "Add updated KEV files for 2025-03-26\n\nAdded CVE-2025-2783",
+      "parent_commit_sha": "cf9ebe95c679e9ea23c72d55525f09fcea8b7570",
+      "provider_reported_signature_verification": {
+        "verified": true,
+        "reason": "valid",
+        "independent_crypto_verification": false
+      }
+    },
+    {
+      "id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+      "event_id": "cisa-kev-catalog",
+      "provider": "CISA KEV repository cisagov/kev-data",
+      "source_version": "6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+      "source_url": "https://github.com/cisagov/kev-data/blob/6ff2cc19002acfb5d9214f4ee9bc428640c5084a/known_exploited_vulnerabilities.csv",
+      "canonical_provider_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "retrieved_at_utc": "2026-10-03T04:19:48Z",
+      "retrieval_clock_precision": "1 second",
+      "issued_at_utc": null,
+      "valid_at_utc": null,
+      "repository_committed_at_utc": "2025-03-31T18:47:50Z",
+      "repository_author_at_utc": "2025-03-31T18:47:50Z",
+      "canonical_source_publication_available_at_utc": null,
+      "source_clock_kind": "GITHUB_COMMITTER_CLOCK_ONLY",
+      "retained_relative_path": "provider/kev-6ff2cc19002acfb5d9214f4ee9bc428640c5084a.csv",
+      "content_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+      "byte_length": 652343,
+      "git_blob_sha1": "9f6cb8e972316bdca8490365148b9eb8012abb72",
+      "git_blob_hash_verified": true,
+      "capture_kind": "EXACT_PUBLISHER_REPOSITORY_BLOB_BYTES_VIA_GITHUB_CONTENTS_BASE64",
+      "raw_http_entity_capture": false,
+      "content_type": "text/csv",
+      "row_count": 1312,
+      "source_status": "CATALOG_SOURCE_REPORT_ONLY",
+      "correction_history": {
+        "status": "UNKNOWN_NOT_DESIGNATED_BY_PROVIDER",
+        "observed_changes_recorded_in": "derived-material-diff.json",
+        "note": "Changed fields are observed source revisions; provider has not labeled them corrections in captured metadata. No omitted historical versions are invented."
+      },
+      "rights": {
+        "license": "CC0-1.0",
+        "rights_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/LICENSE",
+        "rights_retained_relative_path": "provider/LICENSE",
+        "rights_sha256": "8dfcf2d0cba33bede386eb470daf2ac08caf6540fc2516baab10dd546f90938a",
+        "basis": "Retained CISA KEV repository LICENSE explicitly distributes the KEV database under Creative Commons 0 1.0. README declares this repository hosts CISA-produced KEV data and explicitly supports GitHub distribution and history. Rights captured at immutable 2026-10-02 commit; separate historical license-version audit was not performed. Linked third-party content is excluded; no linked third-party assets were fetched. No logo/seal endorsement right claimed.",
+        "credit": "Cybersecurity and Infrastructure Security Agency (CISA), Known Exploited Vulnerabilities catalog",
+        "provider_readme_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/README.md",
+        "provider_readme_relative_path": "provider/README.md",
+        "provider_readme_sha256": "7d18e1fc40185acc90128fcceb18f016e010c8d0cf4125c3311c9381cbafcfe2"
+      },
+      "review_authority": "SIMULATED_ADAPTER_ONLY",
+      "mip_story_admission": "NOT_ADMITTED",
+      "ground_truth": "SOURCE_REPORT_STATE_ONLY",
+      "extracted_fields": {
+        "key": "cveID",
+        "column_names": [
+          "cveID",
+          "vendorProject",
+          "product",
+          "vulnerabilityName",
+          "dateAdded",
+          "shortDescription",
+          "requiredAction",
+          "dueDate",
+          "knownRansomwareCampaignUse",
+          "notes",
+          "cwes"
+        ],
+        "dateAdded_semantics": "Day-only source field; no precise exploitation/event/update time inferred."
+      },
+      "commit_message": "Add updated KEV files for 2025-03-31\n\nCVE-2024-20439",
+      "parent_commit_sha": "b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "provider_reported_signature_verification": {
+        "verified": true,
+        "reason": "valid",
+        "independent_crypto_verification": false
+      }
+    }
+  ],
+  "rights": {
+    "license": "CC0-1.0",
+    "rights_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/LICENSE",
+    "rights_retained_relative_path": "provider/LICENSE",
+    "rights_sha256": "8dfcf2d0cba33bede386eb470daf2ac08caf6540fc2516baab10dd546f90938a",
+    "basis": "Retained CISA KEV repository LICENSE explicitly distributes the KEV database under Creative Commons 0 1.0. README declares this repository hosts CISA-produced KEV data and explicitly supports GitHub distribution and history. Rights captured at immutable 2026-10-02 commit; separate historical license-version audit was not performed. Linked third-party content is excluded; no linked third-party assets were fetched. No logo/seal endorsement right claimed.",
+    "credit": "Cybersecurity and Infrastructure Security Agency (CISA), Known Exploited Vulnerabilities catalog",
+    "provider_readme_url": "https://github.com/cisagov/kev-data/blob/7009facc2019306d41f6d6df6c8a057b99b4b468/README.md",
+    "provider_readme_relative_path": "provider/README.md",
+    "provider_readme_sha256": "7d18e1fc40185acc90128fcceb18f016e010c8d0cf4125c3311c9381cbafcfe2"
+  },
+  "source_byte_count": 1303886,
+  "provider_byte_count_including_rights": 1314673,
+  "external_logical_requests": 20,
+  "external_request_cap": 20,
+  "byte_cap": 2097152,
+  "event_type_coverage": [
+    "official cybersecurity vulnerability catalog source-report revisions"
+  ],
+  "date_coverage": {
+    "repository_clock_start_utc": "2025-03-27T18:34:36Z",
+    "repository_clock_end_utc": "2025-03-31T18:47:50Z",
+    "source_row_added_dates": "Per-entry dates span older catalog entries; material addition in compared pair is 2025-03-31. Underlying vulnerability occurrence/exploitation chronology unknown."
+  },
+  "chronology": {
+    "records_chronological": true,
+    "consecutive_repository_commit_versions": true,
+    "repository_revision_interval_seconds": 346394.0,
+    "issuer_revision_interval_hours": 96.22055555555555,
+    "repository_update_absence_bound": "Only no intervening commits between directly linked parent/child repository revisions is established. This does not establish a quiet factual event interval or canonical CISA availability time.",
+    "material_diff_relative_path": "derived-material-diff.json",
+    "material_diff_method_version": "cisa-kev-csv-rowdiff-v1"
+  },
+  "status": "ACTUAL_RETAINED_OFFICIAL_SOURCE_BYTES_FOR_NARROW_SIMULATED_SOURCE_REPORT_REPLAY",
+  "closed_claims": [
+    "actual exact immutable repository source bytes retained",
+    "SHA256 and repository Git blob SHA1 verified",
+    "actual consecutive revision metadata retained",
+    "current explicit catalog CC0 license and provider-supported GitHub distribution retained",
+    "deterministic additions/field changes derived from raw retained source pair"
+  ],
+  "open_or_excluded_claims": [
+    "rapid multi-update hurricane corpus not obtained; NHC route denied",
+    "hurricane quiet/decay calibration not established",
+    "only two catalog versions; no 8-16-version calibration set",
+    "one catalog/event type is not representative of news domains",
+    "precise original canonical CISA publication availability unknown",
+    "no underlying vulnerability factual truth or exploitation-time ground truth",
+    "no genuine MIP reviewer/owner context/admission",
+    "no full false-positive/false-negative materiality labels",
+    "provider update interval does not determine empirical Story decay thresholds",
+    "source clocks are not automatic material/review clocks",
+    "no source collector/model/provider activation or live publication",
+    "no new credentials/account/trial/spend"
+  ],
+  "negative_acquisition_receipts": "receipts/acquisition-attempts.json",
+  "documentation_capture_limit": "USGS/WPC web snapshots are DERIVED_WEBTEXT, not raw publisher bytes and not retained real event corpus."
+}
