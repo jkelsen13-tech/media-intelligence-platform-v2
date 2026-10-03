@@ -1,0 +1,523 @@
+{
+  "contract": "mip-device-acceptance-qualification-v1",
+  "candidateCommit": "f09f6989f727d65c23581ae26d2f5cd03d18300d",
+  "candidateTree": "68a170c7b9ace3b76b0ca968aea3eeba4f568b38",
+  "sourceScope": "11 new acceptance preparation files; production bytes unchanged from ca72 baseline",
+  "node22": {
+    "version": "22.23.3",
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "node24": {
+    "version": "24.19.0",
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "engine": "Chromium",
+    "profiles": 4,
+    "orientationsPerProfile": 2,
+    "passedFunctionalJourneysPerProfile": 10,
+    "ownerKeyboardDensityBlockedPerProfile": 1,
+    "pageErrors": 0,
+    "pngs": 88,
+    "recordSchema": "Independently validated with Python jsonschema Draft2020-12; every PNG hash recomputed"
+  },
+  "webkit": {
+    "available": false,
+    "reason": "Already installed Playwright WebKit executable absent; no installation or substitution"
+  },
+  "historicalColdPortrait": "RED retained; portrait cold 14 to 26 failed unchanged delta-under-12 budget; unit/trace/timing/readiness unrecovered",
+  "scopeLimits": [
+    "Synthetic backend, account/session and geometry authority only",
+    "Scripted visibility/network/startup-WebGL refusal; no physical OS/radio/GPU failure qualification",
+    "Actual responsive web browser emulation, not a native application",
+    "Physical iPad/iPhone/Desktop, live Auth/backend, final appearance, hardware FPS/thermal, source rights/admission and release remain separate"
+  ],
+  "artifacts": [
+    {
+      "path": "browser-run.log",
+      "sha256": "9fc3e22564d6ce70db81766fa68194cd978174b60aa69797b98da1eed6d231d7",
+      "bytes": 4747
+    },
+    {
+      "path": "clean-f09-node22.tap",
+      "sha256": "49510c943891e2e91e93148d9494cd60ac4cf9146260fdc5838464ef7779b72b",
+      "bytes": 1885
+    },
+    {
+      "path": "clean-f09-node24.log",
+      "sha256": "4af05a6d9e0ce93a23f4241cefdcdf4fbce59010b5b982e834ad1c1e3c60c615",
+      "bytes": 858
+    },
+    {
+      "path": "desktop-background-remount-6.png",
+      "sha256": "e65258e4d644ac6cd5af9874e2556060cb56b3b6cd64b244b53352dbb71943e2",
+      "bytes": 172655
+    },
+    {
+      "path": "desktop-background-remount-rotated-6.png",
+      "sha256": "8558103dec9bbbb0624618c81f1f67a79b39663c9cc6a2b22d8ffbd413c1aa8b",
+      "bytes": 219914
+    },
+    {
+      "path": "desktop-billboard-reader-4.png",
+      "sha256": "b6cf512934ce5d656dc650ceb011b495708ef5da057cc31e097990462822ca98",
+      "bytes": 172111
+    },
+    {
+      "path": "desktop-billboard-reader-rotated-4.png",
+      "sha256": "d93603355c95215e7e8dc0fbefd79f8b2933495a7ae93edec91ee906b7a0f442",
+      "bytes": 230161
+    },
+    {
+      "path": "desktop-following-account-1.png",
+      "sha256": "4eca3769d7665c04047a4af02cb7b2f1475104dd22a76766b91001af6c3f57e7",
+      "bytes": 190614
+    },
+    {
+      "path": "desktop-following-account-rotated-1.png",
+      "sha256": "d426afab4d53b54e6a5d272f48a76e6387d98b8e4702bff67b6b86956c0a3eb6",
+      "bytes": 191646
+    },
+    {
+      "path": "desktop-navigation-context-3.png",
+      "sha256": "291659f871178f78e553a73945749d919ae95029593272c1f13295fb93012352",
+      "bytes": 262671
+    },
+    {
+      "path": "desktop-navigation-context-rotated-3.png",
+      "sha256": "cb86effd012a82410eb1b74cb22a572b649e1e85fc2b9a7604dfcdd219a935f7",
+      "bytes": 323186
+    },
+    {
+      "path": "desktop-network-loss-7.png",
+      "sha256": "5188417e8e035206b989ce108e6a37dad33a4badbf014146a6c948c4d4566e79",
+      "bytes": 177943
+    },
+    {
+      "path": "desktop-network-loss-rotated-7.png",
+      "sha256": "e5836b8f43fefaf5c53f898d7964c0455fe287ee360f03717b6c200f576533f0",
+      "bytes": 172118
+    },
+    {
+      "path": "desktop-news-story-0.png",
+      "sha256": "676137dab85dc1387f79bafe9b74d01d9a167d057050787b4385a2ae72d31e31",
+      "bytes": 190515
+    },
+    {
+      "path": "desktop-news-story-rotated-0.png",
+      "sha256": "edd3a6b6397a76cd517383858c07d9dbb12111feaf13a57d1fda14e0f184704d",
+      "bytes": 190710
+    },
+    {
+      "path": "desktop-no-webgl-atlas.png",
+      "sha256": "be435dc6c1a32b72f5a5492b004ccab7918fae7e248185b9317bf60a756a2cf1",
+      "bytes": 202542
+    },
+    {
+      "path": "desktop-orientation-5.png",
+      "sha256": "ac92d68655d44f3481af7b5841f153acc1a0156a0d3c2d87bfec1e3134040b44",
+      "bytes": 172080
+    },
+    {
+      "path": "desktop-orientation-rotated-5.png",
+      "sha256": "d93603355c95215e7e8dc0fbefd79f8b2933495a7ae93edec91ee906b7a0f442",
+      "bytes": 230161
+    },
+    {
+      "path": "desktop-publication-failure-8.png",
+      "sha256": "5188417e8e035206b989ce108e6a37dad33a4badbf014146a6c948c4d4566e79",
+      "bytes": 177943
+    },
+    {
+      "path": "desktop-publication-failure-rotated-8.png",
+      "sha256": "e5836b8f43fefaf5c53f898d7964c0455fe287ee360f03717b6c200f576533f0",
+      "bytes": 172118
+    },
+    {
+      "path": "desktop-receipt.json",
+      "sha256": "01c236941773a9dfd92f797e6dbb2b800e98d1ea19dc210fbd9ba41e3d9c4a5e",
+      "bytes": 55586
+    },
+    {
+      "path": "desktop-rotated-world.png",
+      "sha256": "d93603355c95215e7e8dc0fbefd79f8b2933495a7ae93edec91ee906b7a0f442",
+      "bytes": 230161
+    },
+    {
+      "path": "desktop-search-preview-2.png",
+      "sha256": "e5ef1cf4479dbb03fbddc953b0b9133d384ff9f8135ad1d962a0ab74c62e8b53",
+      "bytes": 191823
+    },
+    {
+      "path": "desktop-search-preview-rotated-2.png",
+      "sha256": "7a8175a5d0a57ed3bf6e8aaaa865c0506ff806934b36dca241c38d784a8d3968",
+      "bytes": 192868
+    },
+    {
+      "path": "desktop-selected-card-rotated.png",
+      "sha256": "4ede1d7b416923220f1da3f70fab2e661feb8b48b6ca96902341286b77bf1805",
+      "bytes": 259697
+    },
+    {
+      "path": "desktop-selected-card.png",
+      "sha256": "9df5b8d74edc47c56946d25f6345979840ef09e478f053a85651c356a882f864",
+      "bytes": 190931
+    },
+    {
+      "path": "ipad-background-remount-6.png",
+      "sha256": "67f2ca8895f887fe7eb9806b62c102b8c3bac72613026d60dddb177c8ac0a8d8",
+      "bytes": 131980
+    },
+    {
+      "path": "ipad-background-remount-rotated-6.png",
+      "sha256": "238bc9105c715fdf35eb070226c7591d8f6783207f762c104a21eca8a65cffc1",
+      "bytes": 146360
+    },
+    {
+      "path": "ipad-billboard-reader-4.png",
+      "sha256": "a5cf33a71f830eb5dd3fa0ea933f86f842c4d3d9574b7beca99227fe793efd5a",
+      "bytes": 139846
+    },
+    {
+      "path": "ipad-billboard-reader-rotated-4.png",
+      "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+      "bytes": 146920
+    },
+    {
+      "path": "ipad-following-account-1.png",
+      "sha256": "5297a1f951dc8d9faef6d6afe3178fa94cb56a12aca7c21550e717b825c3097c",
+      "bytes": 151117
+    },
+    {
+      "path": "ipad-following-account-rotated-1.png",
+      "sha256": "eeb2d293e6db8c69cb0877490134d418453846b3995ff66028350279f02101f1",
+      "bytes": 162098
+    },
+    {
+      "path": "ipad-navigation-context-3.png",
+      "sha256": "97389a5dc987338c65acceda413a966b589a3274f2573c664094d91b7361a5a6",
+      "bytes": 141546
+    },
+    {
+      "path": "ipad-navigation-context-rotated-3.png",
+      "sha256": "c400055932e7cc58d7bf571915d7ad72122facaefb40722fbd6fee38d1147ac5",
+      "bytes": 146504
+    },
+    {
+      "path": "ipad-network-loss-7.png",
+      "sha256": "c7fee61fd95fcd9e8e99720c724153fcb2f939025bd980a725a578460d7e4309",
+      "bytes": 143769
+    },
+    {
+      "path": "ipad-network-loss-rotated-7.png",
+      "sha256": "069d1d64d5af8f02d10dae9e96ace040463f0ec0d34c3ec1f830036faf2e3ec6",
+      "bytes": 147488
+    },
+    {
+      "path": "ipad-news-story-0.png",
+      "sha256": "1c5ff16c4d973856ceb86715c146de774de4a2e6d727bb6aefc652f119be0182",
+      "bytes": 154091
+    },
+    {
+      "path": "ipad-news-story-rotated-0.png",
+      "sha256": "0973ee6121621e2333a1e2647bb079b5373e7737643b5ac067c6af19d813a8f1",
+      "bytes": 161258
+    },
+    {
+      "path": "ipad-no-webgl-atlas.png",
+      "sha256": "3467d79f60e2f134795baeddffb675ea133e767bb79b08a8a89c21a3cec38f09",
+      "bytes": 155507
+    },
+    {
+      "path": "ipad-orientation-5.png",
+      "sha256": "a5cf33a71f830eb5dd3fa0ea933f86f842c4d3d9574b7beca99227fe793efd5a",
+      "bytes": 139846
+    },
+    {
+      "path": "ipad-orientation-rotated-5.png",
+      "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+      "bytes": 146920
+    },
+    {
+      "path": "ipad-publication-failure-8.png",
+      "sha256": "637bae9dcd4e1ddbcac07c074b0716bf82150310b1900850d8d3fd76c97057f9",
+      "bytes": 143771
+    },
+    {
+      "path": "ipad-publication-failure-rotated-8.png",
+      "sha256": "069d1d64d5af8f02d10dae9e96ace040463f0ec0d34c3ec1f830036faf2e3ec6",
+      "bytes": 147488
+    },
+    {
+      "path": "ipad-receipt.json",
+      "sha256": "46f21b06ffb66347efbbcf7154dd5b1d031a3fd4d959beb9e66df81a1aef6256",
+      "bytes": 52248
+    },
+    {
+      "path": "ipad-rotated-world.png",
+      "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+      "bytes": 146920
+    },
+    {
+      "path": "ipad-search-preview-2.png",
+      "sha256": "b18facba243b013f10695f9520f1b3c2faa6bd4c6f84de427bb68f79477f3b71",
+      "bytes": 152292
+    },
+    {
+      "path": "ipad-search-preview-rotated-2.png",
+      "sha256": "89c271c4936968b807e3009f4d784e6b67520dd053ce705ea4701f786daa56c5",
+      "bytes": 163326
+    },
+    {
+      "path": "ipad-selected-card-rotated.png",
+      "sha256": "97db44853ac134061ba80d2c843ba847b6d0d44242525ebc8ce5f6b8e51a85d3",
+      "bytes": 158890
+    },
+    {
+      "path": "ipad-selected-card.png",
+      "sha256": "603ad059ec93f77a0d39b0671dd26f7181d4e631a0a93199f7f5d40177d6a329",
+      "bytes": 143407
+    },
+    {
+      "path": "iphone-background-remount-6.png",
+      "sha256": "f1606f76d7b22c8ec8a79deaf5b263012105daa9103739fe61037600f5f354bc",
+      "bytes": 65817
+    },
+    {
+      "path": "iphone-background-remount-rotated-6.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-billboard-reader-4.png",
+      "sha256": "5e1f5af675d355708dd471a7a9233fea5c85556ad3779cb974f5d84c034f8190",
+      "bytes": 66400
+    },
+    {
+      "path": "iphone-billboard-reader-rotated-4.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-following-account-1.png",
+      "sha256": "06de701014839a7f4b4dbc0a1aa3abab1eda804275e2227cfdc192f01fdc21b8",
+      "bytes": 74288
+    },
+    {
+      "path": "iphone-following-account-rotated-1.png",
+      "sha256": "bde0890062e97b80ae37eceab00c47fe1b957d1d2a5667bbf3735f2c54d4e518",
+      "bytes": 62469
+    },
+    {
+      "path": "iphone-navigation-context-3.png",
+      "sha256": "4401b671c216a2af1baf6aa25e9c56171d8c2bd1c6381cf4caf9a27579ffbcbd",
+      "bytes": 66884
+    },
+    {
+      "path": "iphone-navigation-context-rotated-3.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-network-loss-7.png",
+      "sha256": "7fb800f6bbb25072be39c5780e638bb1d029d965c2a7db18e73e8ef2c14ccaa7",
+      "bytes": 52152
+    },
+    {
+      "path": "iphone-network-loss-rotated-7.png",
+      "sha256": "1337f3fde04c0dea1e0a7d83ccf70306a078e4ff85bf0f148e1fd99cc4a2df67",
+      "bytes": 63767
+    },
+    {
+      "path": "iphone-news-story-0.png",
+      "sha256": "9318b1129d8788cb9fbdf0fd5841b267c51842cbbda577ba92ad7941dbb0b6b3",
+      "bytes": 80214
+    },
+    {
+      "path": "iphone-news-story-rotated-0.png",
+      "sha256": "bde0890062e97b80ae37eceab00c47fe1b957d1d2a5667bbf3735f2c54d4e518",
+      "bytes": 62469
+    },
+    {
+      "path": "iphone-no-webgl-atlas.png",
+      "sha256": "052d17880f59cf827e41b78ff29fb3171771aef9de28dbb3647f154594a5dc74",
+      "bytes": 66140
+    },
+    {
+      "path": "iphone-orientation-5.png",
+      "sha256": "9b89aabb2b0553d8d952fd89c71524772561e57e2bac29d40751eface58429fa",
+      "bytes": 65784
+    },
+    {
+      "path": "iphone-orientation-rotated-5.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-publication-failure-8.png",
+      "sha256": "dc2bc1febb27379d5dbfd2b7761c26daff54f594802eac714f0243e97e9b7506",
+      "bytes": 67853
+    },
+    {
+      "path": "iphone-publication-failure-rotated-8.png",
+      "sha256": "1337f3fde04c0dea1e0a7d83ccf70306a078e4ff85bf0f148e1fd99cc4a2df67",
+      "bytes": 63767
+    },
+    {
+      "path": "iphone-receipt.json",
+      "sha256": "ff8a5b919c9d59c4d0423170b50d91a80668cb8dfea10e51035a1c264df87d1f",
+      "bytes": 54527
+    },
+    {
+      "path": "iphone-rotated-world.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-search-preview-2.png",
+      "sha256": "c169d00c0007182137fdfeae7e0c825623d97ed0c1f04d640b265ba354fdade5",
+      "bytes": 66870
+    },
+    {
+      "path": "iphone-search-preview-rotated-2.png",
+      "sha256": "abcbb52392ff872c467eda2c2f50c310c5b0cde7d6129ff431f6ee877892c93b",
+      "bytes": 63676
+    },
+    {
+      "path": "iphone-selected-card-rotated.png",
+      "sha256": "9c9cf9c0dbba60618b3b39f592c41b6a5ce09cae071093d1f9d5332ccccf3d0d",
+      "bytes": 65401
+    },
+    {
+      "path": "iphone-selected-card.png",
+      "sha256": "8a39301768aaeac210c11e73024b1565787e760ac9d77fc5c32cdd3b217f1158",
+      "bytes": 70338
+    },
+    {
+      "path": "narrow-background-remount-6.png",
+      "sha256": "d6bf7fcb0f4aa7ccf146c794479bcf4ca3af1037787868af5419e93d9ca9ef1a",
+      "bytes": 36143
+    },
+    {
+      "path": "narrow-background-remount-rotated-6.png",
+      "sha256": "a96a73ed3a5b574eaab76ab6dca673d2aab0dedc7a1f51de113580344049879d",
+      "bytes": 39092
+    },
+    {
+      "path": "narrow-billboard-reader-4.png",
+      "sha256": "9e1dcd0da26c214b7aa9af1a682d93245423e487a18877cf1c4599215ed126e3",
+      "bytes": 32985
+    },
+    {
+      "path": "narrow-billboard-reader-rotated-4.png",
+      "sha256": "6978494c6ead558675fd9cb2cc7d6cd12ee7915481fc45c094748f394edfc661",
+      "bytes": 21528
+    },
+    {
+      "path": "narrow-following-account-1.png",
+      "sha256": "60546c4297daada18d82e4a9f4628deadda2a4f57fbef3f2d23bd507e439c785",
+      "bytes": 34100
+    },
+    {
+      "path": "narrow-following-account-rotated-1.png",
+      "sha256": "d30dca1cbec41f1793c1b00d7050f1fa11c4490926458617f5b2693322a57a68",
+      "bytes": 41737
+    },
+    {
+      "path": "narrow-navigation-context-3.png",
+      "sha256": "4c8af53b147f1666ee51d4c3964f91b4968bd63eb1b892835e19ab19a5835e76",
+      "bytes": 29920
+    },
+    {
+      "path": "narrow-navigation-context-rotated-3.png",
+      "sha256": "4ea0403fbd0dcbcdcd833cdf72442e754b3a119f8f7708fd5963f69fdcc19a8e",
+      "bytes": 44591
+    },
+    {
+      "path": "narrow-network-loss-7.png",
+      "sha256": "4c63915928923aff191afae5fd2de504c488b6973ba41f3efeda761773ae4b89",
+      "bytes": 24823
+    },
+    {
+      "path": "narrow-network-loss-rotated-7.png",
+      "sha256": "58a5397aef70baa14d50fe7abe0f80dc67d8c569994f9d6795c4df36b221b4de",
+      "bytes": 39743
+    },
+    {
+      "path": "narrow-news-story-0.png",
+      "sha256": "fb06be57de16b54f24c160fb6cab7a7bd1c91eeadadf39d55615f12798fff2be",
+      "bytes": 33694
+    },
+    {
+      "path": "narrow-news-story-rotated-0.png",
+      "sha256": "56a7207d1cbf6121b069c008df8d073ce18f237c1032511f25dd5dea076c8a67",
+      "bytes": 44189
+    },
+    {
+      "path": "narrow-no-webgl-atlas.png",
+      "sha256": "af0092a76fdab0a9d01a642b38f2204d8cc5741f80a436e694d7c63f4a750077",
+      "bytes": 32209
+    },
+    {
+      "path": "narrow-orientation-5.png",
+      "sha256": "4d5a9f1cf164818c5832b44c107886af97f5886a8da2d7a4a59c6e38976f13d2",
+      "bytes": 32992
+    },
+    {
+      "path": "narrow-orientation-rotated-5.png",
+      "sha256": "6978494c6ead558675fd9cb2cc7d6cd12ee7915481fc45c094748f394edfc661",
+      "bytes": 21528
+    },
+    {
+      "path": "narrow-publication-failure-8.png",
+      "sha256": "12c5d9ac8ead57080a43c3774b07f0c71b336024c56a72c3dd3cccf80686b5e3",
+      "bytes": 33948
+    },
+    {
+      "path": "narrow-publication-failure-rotated-8.png",
+      "sha256": "99ee05e156a814d73cca1354105efe44c2938a35d6305de0f7b433355bd57514",
+      "bytes": 41804
+    },
+    {
+      "path": "narrow-receipt.json",
+      "sha256": "13e3e60a3b4d3e116ba117e52c1e6a7265141d8d0e6981766899aa8a3cae818d",
+      "bytes": 48371
+    },
+    {
+      "path": "narrow-rotated-world.png",
+      "sha256": "6978494c6ead558675fd9cb2cc7d6cd12ee7915481fc45c094748f394edfc661",
+      "bytes": 21528
+    },
+    {
+      "path": "narrow-search-preview-2.png",
+      "sha256": "d86d65462ba822640e65bbe5e3113c56afa0984d579e91e5a8d749c21da2b06d",
+      "bytes": 30275
+    },
+    {
+      "path": "narrow-search-preview-rotated-2.png",
+      "sha256": "0c29a33ede290d987e11ab8644a2643f0364ed43acdef412d0ddaa79b7f6f205",
+      "bytes": 39620
+    },
+    {
+      "path": "narrow-selected-card-rotated.png",
+      "sha256": "b4c2ad36ae37f6fbb0bde77132b895370cc4231b1e746b9e6c21b3d229628b5d",
+      "bytes": 37975
+    },
+    {
+      "path": "narrow-selected-card.png",
+      "sha256": "0a95dff24a9b6dcd397991f400bbe73ff78e6995db6e80263346788c95ba97d7",
+      "bytes": 33099
+    },
+    {
+      "path": "summary.json",
+      "sha256": "11dea9b40716f5357c93634f150ba7f8ebdd3b2e26bd14e866e7b8fdfa8de084",
+      "bytes": 6110
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "contract": "mip-device-browser-preparation-v1",
+  "candidateCommit": "f09f6989f727d65c23581ae26d2f5cd03d18300d",
+  "candidateTree": "68a170c7b9ace3b76b0ca968aea3eeba4f568b38",
+  "dirty": false,
+  "node": "v24.19.0",
+  "engine": "chromium",
+  "browserVersion": "151.0.7922.173",
+  "fixtureAuthority": "SYNTHETIC_BACKEND_AND_SESSION_ONLY",
+  "productionFileHashes": {
+    "src/App.jsx": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00",
+    "src/views/NewsView.jsx": "55b1e953b3edeb99c7b74f89bd38294b24fc249f580f070772082b2c56a50ab4",
+    "src/views/NewsStoryReader.jsx": "5702ffa893db68f0168b98fe1c4a0a1b2618eda837e30ca41cbb2a23a4b3916a",
+    "src/views/WorldView.jsx": "d78e7db8894b2b5408993efc414c2ce9f5d6296546cd13a64ad002f7b1c61384",
+    "src/views/WorldMapCanvas.jsx": "244f020946a7023951e162972d9c4398fa947e772436cc7e71ec350460a1f652",
+    "src/components/WorldViewBillboardOverlay.jsx": "2e5de3bf1b675f99006afa36692511b8f03b87cd93de411c6283d79947f5221f",
+    "src/lib/worldViewBillboardPresentation.js": "32a7e91b9f7408c7181f85e12f079188bb87b2ae73b387c6a5af07f0e5356e3b",
+    "src/lib/worldViewCameraState.js": "e007acec698dcaf3dd3060e3977523f63c68775e8dff7ae1902374a7222a67b5",
+    "package-lock.json": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
+  },
+  "qualification": "Actual full App development transform, actual native software browser when available; synthetic backend/session/geometry, all nonlocal network blocked. No physical-device, live Auth/SQL, final appearance, FPS or thermal acceptance.",
+  "profiles": [
+    {
+      "id": "ipad",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "ipad-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "iphone",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "iphone-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "narrow",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "narrow-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "desktop",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "desktop-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    }
+  ],
+  "historicalColdPortrait": "RED: unchanged; original executable measurement boundary unrecovered"
+}

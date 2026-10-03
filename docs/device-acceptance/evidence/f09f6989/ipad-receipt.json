@@ -1,0 +1,1675 @@
+{
+  "profile": {
+    "id": "ipad",
+    "deviceClass": "iPad",
+    "viewport": {
+      "width": 834,
+      "height": 1194
+    },
+    "rotatedViewport": {
+      "width": 1194,
+      "height": 834
+    },
+    "hasTouch": true,
+    "isMobile": true,
+    "input": "coarse_touch_emulation"
+  },
+  "record": {
+    "contract": "mip-device-acceptance-record-v1",
+    "recordId": "f09f6989-chromium-ipad",
+    "evidenceKind": "browser_emulation",
+    "recordedAt": "2026-10-03T04:38:41.557Z",
+    "operator": "automated local browser harness",
+    "device": {
+      "class": "iPad",
+      "model": "browser viewport emulation",
+      "os": "linux",
+      "osVersion": null,
+      "physicalEvidence": []
+    },
+    "browser": {
+      "engine": "chromium",
+      "name": "chromium",
+      "version": "151.0.7922.173",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+    },
+    "orientation": {
+      "name": "portrait",
+      "viewportCssPixels": {
+        "width": 834,
+        "height": 1194
+      },
+      "devicePixelRatio": 1
+    },
+    "input": {
+      "kind": "coarse_touch_emulation",
+      "coarsePointer": true,
+      "touchEvidence": [
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim",
+        "Playwright touchscreen delivery; no physical touch claim"
+      ]
+    },
+    "network": {
+      "kind": "local_only_synthetic",
+      "cacheState": "fresh_browser_context",
+      "conditions": "All nonlocal HTTP(S) blocked; synthetic backend methods run inside browser.",
+      "evidence": [
+        "browser-network-block"
+      ]
+    },
+    "account": {
+      "kind": "synthetic_session",
+      "alias": "A/B disposable fixture aliases",
+      "sessionReady": true,
+      "evidence": [
+        "fixture-actor-readiness-and-logout"
+      ]
+    },
+    "source": {
+      "candidateCommit": "f09f6989f727d65c23581ae26d2f5cd03d18300d",
+      "candidateTree": "68a170c7b9ace3b76b0ca968aea3eeba4f568b38",
+      "dirty": false,
+      "harnessSha256": "796b05022c2f6978f943eb48a6c6ff916bcc3b1b4b9839210f3a1f8fd29cfc70",
+      "fixtureAuthority": "SYNTHETIC_BACKEND_AND_SESSION_ONLY",
+      "qualifiedBaselineCommit": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "productionFileHashes": {
+        "src/App.jsx": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00",
+        "src/views/NewsView.jsx": "55b1e953b3edeb99c7b74f89bd38294b24fc249f580f070772082b2c56a50ab4",
+        "src/views/NewsStoryReader.jsx": "5702ffa893db68f0168b98fe1c4a0a1b2618eda837e30ca41cbb2a23a4b3916a",
+        "src/views/WorldView.jsx": "d78e7db8894b2b5408993efc414c2ce9f5d6296546cd13a64ad002f7b1c61384",
+        "src/views/WorldMapCanvas.jsx": "244f020946a7023951e162972d9c4398fa947e772436cc7e71ec350460a1f652",
+        "src/components/WorldViewBillboardOverlay.jsx": "2e5de3bf1b675f99006afa36692511b8f03b87cd93de411c6283d79947f5221f",
+        "src/lib/worldViewBillboardPresentation.js": "32a7e91b9f7408c7181f85e12f079188bb87b2ae73b387c6a5af07f0e5356e3b",
+        "src/lib/worldViewCameraState.js": "e007acec698dcaf3dd3060e3977523f63c68775e8dff7ae1902374a7222a67b5",
+        "package-lock.json": "73bb2ac5f829a987d05fbf26cce161f2c66a453ad914f02fd657033232b895aa"
+      },
+      "requirementBindings": [
+        {
+          "libraryId": "libfile_90ebe4e040b48191ac4838f42b0d99dd",
+          "version": "19",
+          "sha256": "f289e392f0a9c163c584d9347270adcd7d1861a74fb6b39f622c15b46bd97776"
+        },
+        {
+          "libraryId": "libfile_953c9013cec08191be2e9bef847b753f",
+          "version": "6",
+          "sha256": "8bfb6ea6910afda1f6aa936b6004b8fb4b0b379d7108612b6ec12a9bed618052"
+        },
+        {
+          "libraryId": "libfile_249b861f9e84819193b8fa1ba925cc7f",
+          "version": "7",
+          "sha256": "e0ae68d2a29ae11a45cad135a9a58b57982efbe9d05113717c1b5c11c9aacf78"
+        },
+        {
+          "libraryId": "libfile_faf64a8bf8608191902d59c249926ffa",
+          "version": "7",
+          "sha256": "df20541aae4046e5d0f8a80a0995bfd516bd71d75c57d6fcd2cdaf44282fc517"
+        },
+        {
+          "libraryId": "libfile_720892b4771c8191a3216a89362f7028",
+          "version": null,
+          "sha256": "d606162742673f898c59b8199c95a8d7a23b77a48b4a5bd2b717a816931699c3"
+        }
+      ]
+    },
+    "surfaceCameraBaseline": {
+      "surface": "World View",
+      "renderer": "native software browser",
+      "canonicalSubjectId": "00000000-0000-4000-8000-000000000001",
+      "recordedTime": "2026-01-01T00:00:00.000Z",
+      "selectedTimeRange": null,
+      "sourceVersionId": "00000000-0000-4000-8000-000000001001",
+      "cameraJson": "{\"version\":1,\"lon\":-81.69999999999999,\"lat\":41.39999999999999,\"heightMeters\":8660.254037844386,\"headingDegrees\":0,\"pitchDegrees\":-90,\"rollDegrees\":0}",
+      "canonicalAnchor": [
+        -81.7,
+        41.4
+      ],
+      "precisionClass": "facility",
+      "precisionFloorMeters": 8660.254037844386,
+      "selectionCompatibility": "compatible",
+      "fallbackDisclosure": null,
+      "evidence": [
+        "synthetic-original-row-and-camera-observations"
+      ]
+    },
+    "admissions": {
+      "imagery": {
+        "status": "synthetic",
+        "sourceVersion": null,
+        "providerProvenance": null,
+        "evidence": []
+      },
+      "terrain": {
+        "status": "synthetic",
+        "sourceVersion": null,
+        "providerProvenance": null,
+        "evidence": []
+      },
+      "geometry": {
+        "status": "synthetic",
+        "sourceVersion": null,
+        "providerProvenance": null,
+        "evidence": []
+      }
+    },
+    "functional": {
+      "status": "partial",
+      "checks": [
+        {
+          "journeyId": "news-story",
+          "status": "passed",
+          "observation": "Actual Story reader displays exact normalized fixture collection/version and separate recorded clocks. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-news-story-0.png",
+            "ipad-news-story-rotated-0.png"
+          ]
+        },
+        {
+          "journeyId": "following-account",
+          "status": "passed",
+          "observation": "Displayed-version follow/acknowledge, Following list, delayed A read→B, logout and readiness exercised through production hooks; session changes are synthetic. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-following-account-1.png",
+            "ipad-following-account-rotated-1.png"
+          ]
+        },
+        {
+          "journeyId": "search-preview",
+          "status": "passed",
+          "observation": "Production global discovery query and Escape retain investigation context and return keyboard focus to trigger. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-search-preview-2.png",
+            "ipad-search-preview-rotated-2.png"
+          ]
+        },
+        {
+          "journeyId": "navigation-context",
+          "status": "passed",
+          "observation": "Actual Graph→World View Graph/Map/Split preserves selected canonical identity; explicit recorded-time slider selects a recorded stamp inside source validity. Unsupported selection is separately observed on startup fallback. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-navigation-context-3.png",
+            "ipad-navigation-context-rotated-3.png"
+          ]
+        },
+        {
+          "journeyId": "billboard-reader",
+          "status": "passed",
+          "observation": "Actual native scope reader/tether/tabs/Inspector at unchanged facility floor; physical 1,200m near band remains unsupported. Far/ribbon observations are recorded, not fabricated stage claims. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-billboard-reader-4.png",
+            "ipad-billboard-reader-rotated-4.png"
+          ]
+        },
+        {
+          "journeyId": "orientation",
+          "status": "passed",
+          "observation": "Both CSS viewport orientations preserve exact canonical/time attributes. This is browser viewport resize, not physical rotation. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-orientation-5.png",
+            "ipad-orientation-rotated-5.png"
+          ]
+        },
+        {
+          "journeyId": "background-remount",
+          "status": "passed",
+          "observation": "Scripted hidden/resume and actual Map→Graph→Map remount retain context; before/after camera recorded. Physical background suspension remains unmeasured. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-background-remount-6.png",
+            "ipad-background-remount-rotated-6.png"
+          ]
+        },
+        {
+          "journeyId": "network-loss",
+          "status": "passed",
+          "observation": "Synthetic local transport failure clears current personal payload, discloses unavailable and explicitly reloads. Actual radio/network loss is owner checklist scope. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-network-loss-7.png",
+            "ipad-network-loss-rotated-7.png"
+          ]
+        },
+        {
+          "journeyId": "publication-failure",
+          "status": "passed",
+          "observation": "Unavailable explicit Story version withholds prior source and latest/private fallback; actual browser Back returns to exact original collection version. Both viewport orientations retain context.",
+          "evidence": [
+            "ipad-publication-failure-8.png",
+            "ipad-publication-failure-rotated-8.png"
+          ]
+        },
+        {
+          "journeyId": "keyboard-density",
+          "status": "blocked",
+          "observation": "Owner assesses information density and physical keyboard/accessibility; browser focus checks occur in Search and selected-card paths.",
+          "evidence": []
+        },
+        {
+          "journeyId": "webgl-fallback",
+          "status": "passed",
+          "observation": "Actual startup without WebGL renders Atlas; unsupported entity deep link discloses parent fallback with canonical subject retained. Physical GPU/context loss not asserted.",
+          "evidence": [
+            "startup-no-webgl-atlas"
+          ]
+        }
+      ]
+    },
+    "visual": {
+      "status": "preliminary_browser_only",
+      "finalOwnerAccepted": false,
+      "owner": null,
+      "evidence": []
+    },
+    "performance": {
+      "status": "not_measured",
+      "acceptedContractReference": null,
+      "originalBoundaryRecovered": false,
+      "metrics": [],
+      "thermal": {
+        "status": "unknown",
+        "state": null,
+        "method": null,
+        "ambientCelsius": null,
+        "evidence": []
+      }
+    },
+    "historicalColdPortrait": {
+      "status": "RED",
+      "originalObservation": "portrait cold 14 to 26; unchanged delta-under-12 budget",
+      "originalExecutableBoundary": "unrecovered",
+      "rewritesHistoricalResult": false
+    },
+    "limitations": [
+      "Actual full App development transform, actual native software browser when available; synthetic backend/session/geometry, all nonlocal network blocked. No physical-device, live Auth/SQL, final appearance, FPS or thermal acceptance.",
+      "Background is scripted visibilitychange, not physical app-switch or OS suspension.",
+      "Original portrait cold 14 to 26 and unchanged delta-under-12 budget remain RED; unit/trace/window/readiness unrecovered.",
+      "Actual installed source/backend and original hardware acceptance are separate gates."
+    ],
+    "artifacts": [
+      {
+        "path": "ipad-news-story-0.png",
+        "sha256": "1c5ff16c4d973856ceb86715c146de774de4a2e6d727bb6aefc652f119be0182",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-news-story-rotated-0.png",
+        "sha256": "0973ee6121621e2333a1e2647bb079b5373e7737643b5ac067c6af19d813a8f1",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-following-account-1.png",
+        "sha256": "5297a1f951dc8d9faef6d6afe3178fa94cb56a12aca7c21550e717b825c3097c",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-following-account-rotated-1.png",
+        "sha256": "eeb2d293e6db8c69cb0877490134d418453846b3995ff66028350279f02101f1",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-search-preview-2.png",
+        "sha256": "b18facba243b013f10695f9520f1b3c2faa6bd4c6f84de427bb68f79477f3b71",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-search-preview-rotated-2.png",
+        "sha256": "89c271c4936968b807e3009f4d784e6b67520dd053ce705ea4701f786daa56c5",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-navigation-context-3.png",
+        "sha256": "97389a5dc987338c65acceda413a966b589a3274f2573c664094d91b7361a5a6",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-navigation-context-rotated-3.png",
+        "sha256": "c400055932e7cc58d7bf571915d7ad72122facaefb40722fbd6fee38d1147ac5",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-selected-card.png",
+        "sha256": "603ad059ec93f77a0d39b0671dd26f7181d4e631a0a93199f7f5d40177d6a329",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-selected-card-rotated.png",
+        "sha256": "97db44853ac134061ba80d2c843ba847b6d0d44242525ebc8ce5f6b8e51a85d3",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-billboard-reader-4.png",
+        "sha256": "a5cf33a71f830eb5dd3fa0ea933f86f842c4d3d9574b7beca99227fe793efd5a",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-billboard-reader-rotated-4.png",
+        "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-rotated-world.png",
+        "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-orientation-5.png",
+        "sha256": "a5cf33a71f830eb5dd3fa0ea933f86f842c4d3d9574b7beca99227fe793efd5a",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-orientation-rotated-5.png",
+        "sha256": "f1104ad7485bb437379885639b7671683d88bbb0297d3b3954045f74c4932e56",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-background-remount-6.png",
+        "sha256": "67f2ca8895f887fe7eb9806b62c102b8c3bac72613026d60dddb177c8ac0a8d8",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-background-remount-rotated-6.png",
+        "sha256": "238bc9105c715fdf35eb070226c7591d8f6783207f762c104a21eca8a65cffc1",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-network-loss-7.png",
+        "sha256": "c7fee61fd95fcd9e8e99720c724153fcb2f939025bd980a725a578460d7e4309",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-network-loss-rotated-7.png",
+        "sha256": "069d1d64d5af8f02d10dae9e96ace040463f0ec0d34c3ec1f830036faf2e3ec6",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-publication-failure-8.png",
+        "sha256": "637bae9dcd4e1ddbcac07c074b0716bf82150310b1900850d8d3fd76c97057f9",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-publication-failure-rotated-8.png",
+        "sha256": "069d1d64d5af8f02d10dae9e96ace040463f0ec0d34c3ec1f830036faf2e3ec6",
+        "kind": "screenshot"
+      },
+      {
+        "path": "ipad-no-webgl-atlas.png",
+        "sha256": "3467d79f60e2f134795baeddffb675ea133e767bb79b08a8a89c21a3cec38f09",
+        "kind": "screenshot"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "kind": "selected-fixture-projection-count",
+      "state": {
+        "rendererKind": "ellipsoid-globe",
+        "layout": {
+          "singles": [
+            {
+              "id": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+              "rowKey": "[\"v1\",\"00000000-0000-4000-8000-000000000001\",\"revision\",\"00000000-0000-4000-8000-000000001001\"]",
+              "x": 317.5862554944474,
+              "y": 162.42129813018983,
+              "selected": true
+            }
+          ],
+          "clusters": [],
+          "stats": {
+            "inputLocations": 1,
+            "filteredLocations": 0,
+            "duplicateLocations": 0,
+            "admittedLocations": 1,
+            "admittedRows": 1,
+            "singleCount": 1,
+            "clusterCount": 0,
+            "displayCount": 1,
+            "distanceChecks": 0,
+            "radiusPx": 192,
+            "inputCount": 1,
+            "visibleCount": 1,
+            "targetCount": 1,
+            "labelCount": 0,
+            "passes": 1,
+            "lastMs": 1.1000000014901161,
+            "maxMs": 1.1000000014901161,
+            "entityCount": 1
+          }
+        },
+        "markers": [
+          {
+            "id": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "rowKey": "[\"v1\",\"00000000-0000-4000-8000-000000000001\",\"revision\",\"00000000-0000-4000-8000-000000001001\"]",
+            "x": 317.5862554944474,
+            "y": 162.42129813018983,
+            "eligible": true,
+            "visible": true,
+            "displayed": true,
+            "selected": true
+          }
+        ],
+        "relationshipSummary": {
+          "total": 11,
+          "displayed": 0,
+          "hidden": 11,
+          "counts": {
+            "unmapped": 11,
+            "hiddenEndpoints": 0,
+            "groupedEndpoints": 0,
+            "budget": 0,
+            "hypothesis": 0,
+            "coincidentEndpoints": 0,
+            "invalidEdge": 0
+          },
+          "temporalValidity": "not_supplied_by_graph_reader"
+        },
+        "selectedRowKey": "[\"v1\",\"00000000-0000-4000-8000-000000000001\",\"revision\",\"00000000-0000-4000-8000-000000001001\"]"
+      }
+    },
+    {
+      "kind": "explicit_recorded_slider_selection",
+      "before": {
+        "data-investigation-context": "true",
+        "data-canonical-subject-type": "event",
+        "data-canonical-subject-id": "00000000-0000-4000-8000-000000000001",
+        "data-parent-event-id": "",
+        "data-as-of-time": "",
+        "data-selected-time-range": "",
+        "data-selected-arc-or-stage-id": "",
+        "data-active-view": "world",
+        "data-temporal-assessment-reference": "temporal.assessment.v0.1.00000000-0000-4000-8000-000000000001"
+      },
+      "after": {
+        "data-investigation-context": "true",
+        "data-canonical-subject-type": "event",
+        "data-canonical-subject-id": "00000000-0000-4000-8000-000000000001",
+        "data-parent-event-id": "",
+        "data-as-of-time": "2026-01-01T00:00:00.000Z",
+        "data-selected-time-range": "",
+        "data-selected-arc-or-stage-id": "",
+        "data-active-view": "world",
+        "data-temporal-assessment-reference": "temporal.assessment.v0.1.00000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "kind": "far-native-observation",
+      "probe": {
+        "native": {
+          "enabled": true,
+          "selected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.9999999999943,
+              "y": 178.97179602245808
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.9999999999943,
+              "y1": 178.97179602245808,
+              "x2": 232,
+              "y2": 178.97179602245808
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "markers": [
+            {
+              "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+              "declaredWorldPosition": {
+                "x": 689504.4016377709,
+                "y": -4726380.871525868,
+                "z": 4182693.956206112
+              },
+              "eyeOffset": {
+                "x": 0,
+                "y": 0,
+                "z": -0.5
+              },
+              "screen": {
+                "x": 315.9999999999953,
+                "y": 178.9717959048353
+              },
+              "width": 24,
+              "height": 24,
+              "heightReference": 0,
+              "disableDepthTestDistance": 0
+            }
+          ]
+        },
+        "publishedAnchor": {
+          "visible": true,
+          "x": 315.9999999999943,
+          "y": 178.97179602245808,
+          "width": 632,
+          "height": 358,
+          "billboardSelected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.9999999999943,
+              "y": 178.97179602245808
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.9999999999943,
+              "y1": 178.97179602245808,
+              "x2": 232,
+              "y2": 178.97179602245808
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "billboardMarkerVisible": true
+        }
+      }
+    },
+    {
+      "kind": "approach-native-observation",
+      "probe": {
+        "native": {
+          "enabled": true,
+          "selected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.9999999999427,
+              "y": 178.99713980808036
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.9999999999427,
+              "y1": 178.99713980808036,
+              "x2": 232,
+              "y2": 178.99713980808036
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "markers": [
+            {
+              "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+              "declaredWorldPosition": {
+                "x": 689504.4016377709,
+                "y": -4726380.871525868,
+                "z": 4182693.956206112
+              },
+              "eyeOffset": {
+                "x": 0,
+                "y": 0,
+                "z": -0.5
+              },
+              "screen": {
+                "x": 315.9999999999809,
+                "y": 178.9971397602566
+              },
+              "width": 132,
+              "height": 32,
+              "heightReference": 0,
+              "disableDepthTestDistance": 0
+            }
+          ]
+        },
+        "publishedAnchor": {
+          "visible": true,
+          "x": 315.9999999999427,
+          "y": 178.99713980808036,
+          "width": 632,
+          "height": 358,
+          "billboardSelected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.9999999999427,
+              "y": 178.99713980808036
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.9999999999427,
+              "y1": 178.99713980808036,
+              "x2": 232,
+              "y2": 178.99713980808036
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "billboardMarkerVisible": true
+        }
+      }
+    },
+    {
+      "kind": "original-row-binding",
+      "row": {
+        "projection_contract_version": "v1",
+        "mip_object_id": "00000000-0000-4000-8000-000000000001",
+        "object_type": "event",
+        "subject_graph_node_id": "00000000-0000-4000-8000-000000000001",
+        "subject_snapshot_hash": null,
+        "revision_id": "00000000-0000-4000-8000-000000001001",
+        "revision_ordinal": 1,
+        "superseded_by_revision_id": null,
+        "spatial_role": "event",
+        "relationship_qualifier": null,
+        "canonical_place_id": null,
+        "place_snapshot_hash": null,
+        "precision_class": "facility",
+        "valid_time_precision": null,
+        "source_native_time": null,
+        "valid_from_utc": "2026-01-01T00:00:00Z",
+        "valid_to_utc": "2026-01-02T00:00:00Z",
+        "revision_known_at_utc": "2025-12-01T00:00:00Z",
+        "review_effective_at_utc": "2026-01-01T12:00:00.000Z",
+        "release_effective_at_utc": "2025-12-01T00:00:00Z",
+        "review_state": "reviewed",
+        "release_state": "released",
+        "uncertainty_class": null,
+        "uncertainty_note": null,
+        "confidence": null,
+        "confidence_status": null,
+        "display_hint": "DEVICE_ACCEPTANCE_SYNTHETIC row 1",
+        "display_geometry": {
+          "type": "Point",
+          "coordinates": [
+            -81.7,
+            41.4
+          ]
+        },
+        "geometry_status": "coarsened_to_precision_class",
+        "evidence_refs": []
+      },
+      "authority": "SYNTHETIC_BACKEND_AND_SESSION_ONLY"
+    },
+    {
+      "kind": "near-scope-observation",
+      "probe": {
+        "native": {
+          "enabled": true,
+          "selected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.99999999993383,
+              "y": 178.99752248071616
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.99999999993383,
+              "y1": 178.99752248071616,
+              "x2": 232,
+              "y2": 178.99752248071616
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "nearDetailKind": "scope",
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "markers": [
+            {
+              "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+              "declaredWorldPosition": {
+                "x": 691658.2019945999,
+                "y": -4741144.636316089,
+                "z": 4195847.741257619
+              },
+              "eyeOffset": {
+                "x": 0,
+                "y": 0,
+                "z": -0.5
+              },
+              "screen": {
+                "x": 315.99999999993383,
+                "y": 178.9975223376768
+              },
+              "width": 180,
+              "height": 56,
+              "heightReference": 0,
+              "disableDepthTestDistance": 0
+            }
+          ]
+        },
+        "publishedAnchor": {
+          "visible": true,
+          "x": 315.99999999993383,
+          "y": 178.99752248071616,
+          "width": 632,
+          "height": 358,
+          "billboardSelected": {
+            "key": "[\"[\\\"v1\\\",\\\"00000000-0000-4000-8000-000000000001\\\",\\\"revision\\\",\\\"00000000-0000-4000-8000-000000001001\\\"]\",0]",
+            "anchor": {
+              "x": 315.99999999993383,
+              "y": 178.99752248071616
+            },
+            "card": {
+              "x": 232,
+              "y": 74,
+              "width": 360,
+              "height": 240
+            },
+            "tether": {
+              "x1": 315.99999999993383,
+              "y1": 178.99752248071616,
+              "x2": 232,
+              "y2": 178.99752248071616
+            },
+            "occluded": false,
+            "canonicalCoordinates": [
+              -81.7,
+              41.4
+            ],
+            "nearDetailKind": "scope",
+            "precision": "facility",
+            "displayOccluded": false,
+            "occlusionBasis": "ellipsoid-and-observed-terrain-center"
+          },
+          "billboardMarkerVisible": true
+        }
+      }
+    },
+    {
+      "kind": "remount-camera",
+      "before": "{\"version\":1,\"lon\":-81.69999999999999,\"lat\":41.39999999999999,\"heightMeters\":8660.254037844386,\"headingDegrees\":0,\"pitchDegrees\":-90,\"rollDegrees\":0}",
+      "after": "{\"version\":1,\"lon\":-81.69999999999999,\"lat\":41.39999999999999,\"heightMeters\":8660.254037844386,\"headingDegrees\":0,\"pitchDegrees\":-90,\"rollDegrees\":0}"
+    },
+    {
+      "kind": "browser-back-url",
+      "url": "http://127.0.0.1:5173/media-intelligence-platform-v2/?worldViewPrototype=1#/story/00000000-0000-4000-8000-000000000002?version=00000000-0000-4000-8000-000000000203"
+    },
+    {
+      "kind": "geolocation-policy",
+      "deviceGeolocationCalls": 0,
+      "userDeclaredCoarseLocation": "Owner checklist only where existing App supports it; no new UI or location inference."
+    },
+    {
+      "kind": "unsupported-selection",
+      "selectionCompatibility": "unsupported",
+      "fallbackDisclosure": "Sub-selection entity 00000000-0000-4000-8000-000000009999 is not valid on this subject. Showing the parent investigation context.",
+      "retainedCanonicalSubjectId": "00000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "pageErrors": [],
+  "blockedRequests": [
+    {
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/0/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/0/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/23.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/24.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/16/23.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/18/23.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/16/24.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/18/24.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/11.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/12.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/2/1/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/9/11.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/5.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/6.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/9/12.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/3.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/2.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/139/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/140/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/139/190.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/140/190.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/138/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/138/190.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/8/69/95.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/0/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/1/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/1/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/0/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/2/1/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/2/1/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/2.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/3.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/5.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/6.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/11.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/12.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/23.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/24.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/7/34/47.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/7/34/48.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/94.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/95.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/96.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/9/139/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/9/139/192.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/10/279/382.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/10/279/383.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/559/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/559/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/558/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/558/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3056.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3057.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3056.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3057.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3056.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3057.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/0/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2236/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2237/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2236/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2237/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2236/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2237/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2235/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2235/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2238/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2235/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2238/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/13/2238/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1118/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/10/279/382.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/11/559/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1118/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1117/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1119/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1117/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/11/559/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/12/1119/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/11/558/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/11/558/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/9/139/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://s3.amazonaws.com",
+      "path": "/elevation-tiles-prod/terrarium/8/69/95.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/0/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/1/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/1/1/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/0/0/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/2/1/0.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/2/1/1.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/2.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/3/2/3.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/5.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/4/4/6.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/11.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/5/8/12.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/23.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/6/17/24.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/7/34/47.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/7/34/48.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/94.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/95.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/8/69/96.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/9/139/191.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/9/139/192.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/10/279/382.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/10/279/383.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/559/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/559/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/558/764.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/11/558/765.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1118/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1117/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1528.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1529.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2236/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2237/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2235/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3058.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3059.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/13/2238/3060.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1530.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://tile.openstreetmap.org",
+      "path": "/12/1119/1531.png",
+      "method": "GET"
+    },
+    {
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2",
+      "method": "GET"
+    }
+  ],
+  "cleanup": "Browser context closed after receipt snapshot; server/browser closed in outer finally."
+}
