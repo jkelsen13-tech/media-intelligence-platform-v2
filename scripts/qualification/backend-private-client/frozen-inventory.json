@@ -1,0 +1,798 @@
+{
+  "packageVersion": "qik-rollback-client-package-1",
+  "purpose": "SOURCE-ONLY SUBMISSION INVENTORY",
+  "executableLivePackage": false,
+  "sqlSourceInventoryComplete": true,
+  "runtimeParameterBindingsComplete": false,
+  "genuineAuthorityBindingsComplete": false,
+  "sourceLockSha256": "be46812c3154b58162037d93a755b544e8862d81eb26738369db6887bdf8f18c",
+  "noLiveExecutionAPI": true,
+  "clientBindingSha256": "4ba4c09a7d96281efc579e38ee5d2080ea4f0882dc274ed05a798be383d4b841",
+  "successPath": [
+    {
+      "commandId": "begin",
+      "kind": "sql",
+      "text": "BEGIN;",
+      "requires": "genuine eleven bindings, exact approved window, and qualified private client",
+      "submission": {
+        "text": "BEGIN;\n",
+        "bytes": 7,
+        "sha256": "b3c34a6baecf4bc98f21f56f9f1fc003051b61aaec14fcd8d7e80b6341f2ecce",
+        "importedSourceSha256": null
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "capture_baseline",
+      "kind": "catalog-source",
+      "sourceKey": "snapshotPublic",
+      "requires": "fresh exact all-grantor/ACL/security/settings baseline; reject absent SELECT, unsupported ACL, or ambiguous authority",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot;\n",
+        "bytes": 7352,
+        "sha256": "adf179a0dffbf042801e84caadea92da56165c2118a42bfe263c2ed46da76b47",
+        "importedSourceSha256": "adf179a0dffbf042801e84caadea92da56165c2118a42bfe263c2ed46da76b47"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "capture_primary_backend",
+      "kind": "auxiliary-source",
+      "sourceKey": "capture_primary_backend",
+      "requires": "capture primary backend pid/start for independent transaction completion verification",
+      "submission": {
+        "text": "SELECT pg_backend_pid() AS primary_backend_pid, (SELECT backend_start::text FROM pg_catalog.pg_stat_activity WHERE pid=pg_backend_pid()) AS primary_backend_start;",
+        "bytes": 162,
+        "sha256": "634250d49c7642514f81c5beef10f47a99d873cf71ef90bd24535fc33ba6e221",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "inspect_public_row_counts",
+      "kind": "catalog-source",
+      "sourceKey": "inspectRowsPublic",
+      "requires": "exactly one boolean true row; this source never reads connection_string",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. SELECT counts/boolean-id metadata; never reads connection_string.\nSELECT pg_catalog.count(*) FILTER (WHERE id IS TRUE) AS selected_count,\n pg_catalog.count(*) FILTER (WHERE id IS NOT TRUE) AS unrelated_count\nFROM mip_factual.audit_connection;\n",
+        "bytes": 261,
+        "sha256": "fcef821e4b3bf324a41880061f6d234c6561161b5fae04ab0f5d3e1c01b5e0bf",
+        "importedSourceSha256": "fcef821e4b3bf324a41880061f6d234c6561161b5fae04ab0f5d3e1c01b5e0bf"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_private_logging_guard",
+      "kind": "auxiliary-source",
+      "sourceKey": "verify_private_logging_guard",
+      "requires": "source logging guard all true AND genuine provider dblink/detail/collector secrecy evidence before secret-bearing read or parameter submission",
+      "submission": {
+        "text": "SELECT (current_setting('log_statement') IN ('none','ddl','mod') AND current_setting('log_min_duration_statement')='-1' AND current_setting('log_min_duration_sample')='-1' AND current_setting('log_transaction_sample_rate')::numeric=0 AND current_setting('log_parameter_max_length_on_error')='0' AND coalesce(current_setting('pgaudit.log',true),'none') IN ('none','') AND coalesce(current_setting('pgaudit.log_parameter',true),'off')='off' AND coalesce(current_setting('auto_explain.log_nested_statements',true),'off')='off' AND coalesce(current_setting('pg_stat_statements.track',true),'top')<>'all' AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_settings WHERE name='auto_explain.log_min_duration' AND setting::integer>=0 AND setting::integer<7000)) AS source_logging_guard_matches;",
+        "bytes": 779,
+        "sha256": "1e21c9ac909571912d4e8d9b139dba52783b70b355de67316b898ecaeaa6d0bb",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "source_logging_guard_matches"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "capture_private_security",
+      "kind": "catalog-source",
+      "sourceKey": "captureSecurityPrivate",
+      "requires": "approved private memory only; exact role/dblink configurations and dblink bodies may contain secrets; strip only private_security_details and require equality to public catalog baseline; retain outside rollback scope",
+      "submission": {
+        "text": "WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot;",
+        "bytes": 8155,
+        "sha256": "29792ab215035372ff179803f1186dfd0ecf5691fc6498c66a0fe20cceff24f2",
+        "importedSourceSha256": "29792ab215035372ff179803f1186dfd0ecf5691fc6498c66a0fe20cceff24f2"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "PRIVATE SECRET-BEARING MEMORY ONLY; NEVER RECEIPT/ERROR OUTPUT",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "inspect_private_row_guards",
+      "kind": "catalog-source",
+      "sourceKey": "inspectRowsPrivateBooleans",
+      "requires": "future approved private lane only; exact selected source boolean and installed-disabled guards; no secret/hash returned",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. PRIVATE EXECUTION LANE ONLY after approved logging/privacy gates.\n-- Boolean outputs do not authorize secret-dependent observations through general MCP.\nSELECT\n (SELECT pg_catalog.count(*) FROM mip_factual.audit_connection WHERE id IS TRUE) AS selected_count,\n (SELECT pg_catalog.count(*) FROM mip_factual.audit_connection WHERE id IS NOT TRUE) AS unrelated_count,\n (SELECT coalesce(pg_catalog.bool_and(connection_string IS NOT NULL),false)\n  FROM mip_factual.audit_connection WHERE id IS TRUE) AS selected_nonnull,\n (SELECT coalesce(pg_catalog.bool_and(connection_string IS NOT NULL\n   AND connection_string ~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'\n   AND pg_catalog.regexp_count(connection_string,'@')=1 AND pg_catalog.regexp_count(connection_string,'[?]')=1\n   AND pg_catalog.cardinality(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))=3\n   AND pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&')\n       @> ARRAY['sslrootcert=system','sslmode=verify-full','connect_timeout=5']),false)\n  FROM mip_factual.audit_connection WHERE id IS TRUE) AS selected_source_matches,\n (SELECT pg_catalog.count(*) FROM mip_comparison_install.receipts WHERE\n  operation_id='a382dcdbf2924852b711b6a8b0c713eb'\n  AND manifest_sha256='221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320'\n  AND state='installed_disabled_audit_pending' AND installer='postgres'\n  AND audit_login='mip_native_audit_v1') AS receipt_count,\n (SELECT pg_catalog.count(*) FROM mip_native_activation.bootstrap WHERE singleton IS TRUE\n  AND operation_id='a382dcdbf2924852b711b6a8b0c713eb'\n  AND install_manifest='221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320'\n  AND installer='postgres') AS bootstrap_count,\n (SELECT pg_catalog.count(*) FROM mip_native_activation.head WHERE singleton IS TRUE AND revision IS NULL) AS head_count,\n (SELECT pg_catalog.count(*) FROM mip_comparison_install.audit_qualifications) AS qualification_count;\n",
+        "bytes": 2081,
+        "sha256": "90ff1fc36827dd2767b86a625d19d4ef97a7e8121936b0696201788179d7c6d6",
+        "importedSourceSha256": "90ff1fc36827dd2767b86a625d19d4ef97a7e8121936b0696201788179d7c6d6"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "capture_private_rows",
+      "kind": "catalog-source",
+      "sourceKey": "captureRowsPrivate",
+      "requires": "genuine source/secret-handling/CA/TLS/logging bindings already complete; private executor memory only, retained outside rollback scope",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. SECRET-BEARING RESULT: approved private executor memory only.\n-- Never call through general MCP, console output, public receipts or error serialization.\n-- Capture only AFTER logging gates; keep outside transaction for post-ROLLBACK comparison.\nSELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('id',id,'connection_string',connection_string)\n ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS private_rows\nFROM mip_factual.audit_connection;\n",
+        "bytes": 508,
+        "sha256": "4aa06e049b12eb7edba96ce029e3e0fbb377ca60d17280200fa95c3d3278c314",
+        "importedSourceSha256": "4aa06e049b12eb7edba96ce029e3e0fbb377ca60d17280200fa95c3d3278c314"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "PRIVATE SECRET-BEARING MEMORY ONLY; NEVER RECEIPT/ERROR OUTPUT",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "grant_set_membership",
+      "kind": "private-phase",
+      "condition": "missing UPDATE and absent approved postgres-grantor SET-only membership",
+      "requires": "only separate ADMIN=false INHERIT=false SET=true membership; all original grantors/options preserved",
+      "submission": {
+        "text": "GRANT mip_cutover_schema_owner_v1 TO postgres WITH ADMIN FALSE, INHERIT FALSE, SET TRUE GRANTED BY postgres;",
+        "bytes": 108,
+        "sha256": "4a133d85c23973c3a4657c8c75ecb25500c6265702bd2605c41ab145f7318e9b",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "set_owner_for_grant",
+      "kind": "private-phase",
+      "condition": "missing UPDATE",
+      "requires": "SET ROLE owner solely for missing column grant",
+      "submission": {
+        "text": "SET LOCAL ROLE mip_cutover_schema_owner_v1;",
+        "bytes": 43,
+        "sha256": "957e55970e9165c6a79b2e50747161eb58ac55b83b0ac57a7446d025d7c018f9",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "grant_column_update",
+      "kind": "private-phase",
+      "condition": "missing UPDATE",
+      "requires": "only UPDATE(connection_string), correct owner grantor; no extra SELECT or grant option",
+      "submission": {
+        "text": "GRANT UPDATE(connection_string) ON mip_factual.audit_connection TO postgres GRANTED BY mip_cutover_schema_owner_v1;",
+        "bytes": 115,
+        "sha256": "f33b764d31b279df61520f955ed246766f1417135cf6f74a539c7772a1466f9d",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "reset_role_for_operation",
+      "kind": "private-phase",
+      "requires": "RESET ROLE authenticated postgres NOSUPERUSER with already-existing BYPASSRLS; verify identity",
+      "submission": {
+        "text": "RESET ROLE;",
+        "bytes": 11,
+        "sha256": "b907ba32c16f3c1d0f9e93c379f9713d3a1b6aa095b02646760e230d77b7166d",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "set_statement_deadline",
+      "kind": "deadline-source",
+      "setting": "statement_timeout",
+      "requires": "completed command before any next submission",
+      "submission": {
+        "text": "SET LOCAL statement_timeout = '7000ms';\n",
+        "bytes": 40,
+        "sha256": "47d900c6e7bbd4bfc2840e7b0e84d4bbfeff3d4f5267f374c1b0412468112b24",
+        "importedSourceSha256": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "set_lock_deadline",
+      "kind": "deadline-source",
+      "setting": "lock_timeout",
+      "requires": "completed command before any next submission",
+      "submission": {
+        "text": "SET LOCAL lock_timeout = '500ms';\n",
+        "bytes": 34,
+        "sha256": "b46a99dd4e6f572329bfa74f49cadb502484958233398fcb5d311e51c36375fe",
+        "importedSourceSha256": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "observe_operation_context",
+      "kind": "auxiliary-source",
+      "sourceKey": "observe_operation_context",
+      "requires": "one-row all-true identity/flags/privileges/deadline result acknowledged before DO",
+      "submission": {
+        "text": "SELECT current_user='postgres' AND session_user='postgres' AND current_database()='postgres' AS installer_identity_matches, (SELECT NOT rolsuper AND rolbypassrls FROM pg_catalog.pg_roles WHERE rolname=current_user) AS installer_flags_match, has_column_privilege(current_user,'mip_factual.audit_connection','id','SELECT') AND has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','SELECT') AND has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE') AS operation_privileges_match, (SELECT setting::integer=7000 FROM pg_catalog.pg_settings WHERE name='statement_timeout') AS statement_deadline_observed, (SELECT setting::integer=500 FROM pg_catalog.pg_settings WHERE name='lock_timeout') AS lock_deadline_observed;",
+        "bytes": 782,
+        "sha256": "bfb179dbfafa0fcfab930daa801aa1b12cc352cb6813c16f5dac6f30b17f1e61",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "installer_identity_matches",
+          "installer_flags_match",
+          "operation_privileges_match",
+          "statement_deadline_observed",
+          "lock_deadline_observed"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "guarded_operation",
+      "kind": "guarded-source",
+      "requires": "both deadline acknowledgments and observed values, all security gates, exact original DO bytes; one completion only",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. Never execute without new exact-head review and bounded live authorization.\n-- Historical source 948f83d / blob28ef18e; only transformation assignment changed.\n-- One-time, held qik audit-route maintenance successor. SOURCE ONLY until independently\n-- qualified/reviewed and the provider temporarily grants UPDATE(connection_string)\n-- to the existing postgres installer. Never run as part of installation.\n-- No credential literal, Auth row, article material, or returned connection string.\ndo $qik_audit_route_v1$\ndeclare\n old_uri text;\n new_uri text;\n ca_path text;\n changed_rows integer;\nbegin\n if current_user <> 'postgres' or session_user <> 'postgres' or current_database() <> 'postgres'\n  or (select rolsuper from pg_catalog.pg_roles where rolname=current_user) is distinct from false\n then raise exception 'qik_audit_route_identity_refused'; end if;\n if not pg_catalog.pg_try_advisory_xact_lock(pg_catalog.hashtextextended('qik-comparison-audit-v1',0))\n then raise exception 'qik_audit_route_inflight'; end if;\n if (select count(*) from mip_comparison_install.receipts\n     where operation_id='a382dcdbf2924852b711b6a8b0c713eb'\n       and manifest_sha256='221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320'\n       and state='installed_disabled_audit_pending' and installer='postgres'\n       and audit_login='mip_native_audit_v1') <> 1\n   or (select count(*) from mip_native_activation.bootstrap\n       where singleton and operation_id='a382dcdbf2924852b711b6a8b0c713eb'\n       and install_manifest='221fb2f848b1bbea11e80057b0ad21e5349c8370a35531e2bdc48b6f95449320'\n       and installer='postgres') <> 1\n   or (select count(*) from mip_native_activation.head where singleton and revision is null) <> 1\n   or exists(select 1 from mip_comparison_install.audit_qualifications)\n then raise exception 'qik_audit_route_state_refused'; end if;\n -- The DO body is static but dblink takes a password-bearing variable. Refuse\n -- unsafe server logging before reading the stored value; bound duration below\n -- the representative auto_explain threshold and the URI's 5s connect timeout.\n perform pg_catalog.set_config('statement_timeout','7000ms',true);\n perform pg_catalog.set_config('lock_timeout','500ms',true);\n if pg_catalog.current_setting('log_statement') not in ('none','ddl','mod')\n    or pg_catalog.current_setting('log_min_duration_statement') <> '-1'\n    or pg_catalog.current_setting('log_min_duration_sample') <> '-1'\n    or pg_catalog.current_setting('log_transaction_sample_rate')::numeric <> 0\n    or pg_catalog.current_setting('log_parameter_max_length_on_error') <> '0'\n    or coalesce(pg_catalog.current_setting('pgaudit.log',true),'none') not in ('none','')\n    or coalesce(pg_catalog.current_setting('pgaudit.log_parameter',true),'off') <> 'off'\n    or coalesce(pg_catalog.current_setting('auto_explain.log_nested_statements',true),'off') <> 'off'\n    or coalesce(pg_catalog.current_setting('pg_stat_statements.track',true),'top') = 'all'\n    or exists(select 1 from pg_catalog.pg_settings\n       where name='auto_explain.log_min_duration' and setting::integer >= 0\n         and setting::integer < 7000)\n then raise exception 'qik_audit_route_logging_refused'; end if;\n if not pg_catalog.has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','SELECT')\n    or not pg_catalog.has_column_privilege(current_user,'mip_factual.audit_connection','connection_string','UPDATE')\n then raise exception 'qik_audit_route_grant_missing'; end if;\n ca_path := pg_catalog.current_setting('ssl_ca_file',true);\n if ca_path is null or ca_path !~ '^/[A-Za-z0-9_./-]+$'\n then raise exception 'qik_audit_route_ca_refused'; end if;\n select connection_string into strict old_uri\n from mip_factual.audit_connection where id for update;\n if old_uri ~ '^postgresql://mip_native_audit_v1:[^@]+@db[.]qikvmopbtijoebdqosyq[.]supabase[.]co:5432/postgres[?]'\n   and pg_catalog.regexp_count(old_uri,'@')=1\n   and pg_catalog.regexp_count(old_uri,'[?]')=1\n   and pg_catalog.array_length(pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&'),1)=3\n   and pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&')\n       @> array['sslrootcert='||pg_catalog.replace(ca_path,'/','%2F'),'sslmode=verify-full','connect_timeout=5']\n then raise exception 'qik_audit_route_already_applied'; end if;\n if old_uri !~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'\n   or pg_catalog.regexp_count(old_uri,'@') <> 1\n   or pg_catalog.regexp_count(old_uri,'[?]') <> 1\n   or pg_catalog.array_length(pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&'),1) <> 3\n   or not pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&')\n      @> array['sslrootcert=system','sslmode=verify-full','connect_timeout=5']\n then raise exception 'qik_audit_route_source_refused'; end if;\n new_uri := 'postgresql://mip_native_audit_v1:'\n  || pg_catalog.substr(pg_catalog.split_part(old_uri,'@',1),\n       pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n  || '@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres?'\n  || (select pg_catalog.string_agg(\n       case when parameter = 'sslrootcert=system'\n         then 'sslrootcert='||pg_catalog.replace(ca_path,'/','%2F')\n         else parameter end, '&' order by ordinal)\n      from pg_catalog.unnest(pg_catalog.string_to_array(pg_catalog.split_part(old_uri,'?',2),'&'))\n      with ordinality as parameters(parameter,ordinal));\n if new_uri = old_uri\n   or new_uri !~ '^postgresql://mip_native_audit_v1:[^@]+@db[.]qikvmopbtijoebdqosyq[.]supabase[.]co:5432/postgres[?]'\n   or pg_catalog.regexp_count(new_uri,'@') <> 1\n   or pg_catalog.regexp_count(new_uri,'[?]') <> 1\n   or pg_catalog.array_length(pg_catalog.string_to_array(pg_catalog.split_part(new_uri,'?',2),'&'),1) <> 3\n   or not pg_catalog.string_to_array(pg_catalog.split_part(new_uri,'?',2),'&')\n      @> array['sslrootcert='||pg_catalog.replace(ca_path,'/','%2F'),'sslmode=verify-full','connect_timeout=5']\n then raise exception 'qik_audit_route_target_refused'; end if;\n -- Authenticate the distinct auditor over the exact target before changing the row.\n begin\n  if not exists(\n    select 1 from mip_factual_transport_raw.dblink(\n     new_uri,\n     'select current_user::text,(select ssl from pg_catalog.pg_stat_ssl where pid=pg_catalog.pg_backend_pid())'\n    ) as t(auditor text,tls boolean)\n    where auditor='mip_native_audit_v1' and tls\n  ) then raise exception 'qik_audit_route_probe_refused'; end if;\n exception when query_canceled or assert_failure then\n  raise exception 'qik_audit_route_probe_refused';\n when others then\n  raise exception 'qik_audit_route_probe_refused';\n end;\n update mip_factual.audit_connection\n set connection_string=new_uri where id and connection_string=old_uri;\n get diagnostics changed_rows = row_count;\n if changed_rows <> 1 then raise exception 'qik_audit_route_write_refused'; end if;\n -- No result or stored secret leaves this fixed, single-statement transaction.\nend\n$qik_audit_route_v1$;\n",
+        "bytes": 7101,
+        "sha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46",
+        "importedSourceSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "commandTag": "DO",
+        "resultRows": 0,
+        "updateOneEstablishedByInternalGuard": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_private_transformed_rows",
+      "kind": "catalog-source",
+      "sourceKey": "compareRowsPrivate",
+      "parameters": [
+        "privateRowsBaseline",
+        "approvedCaPath",
+        "true"
+      ],
+      "requires": "all private comparison booleans true; exactly one selected row, exact target transformation/credential equality/all unrelated rows; unchanged DO completion established update one and auditor/TLS",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. $1 private baseline JSON; $2 approved CA path; $3 expected transformed.\n-- Bind parameters, never interpolate secrets. Result contains only private equality booleans.\nWITH baseline AS (\n SELECT id,connection_string FROM pg_catalog.jsonb_to_recordset($1::jsonb) AS b(id boolean,connection_string text)\n), expected AS (\n SELECT id,CASE WHEN $3::boolean AND id IS TRUE THEN\n   'postgresql://mip_native_audit_v1:'\n   || pg_catalog.substr(pg_catalog.split_part(connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n   || '@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres?'\n   || (SELECT pg_catalog.string_agg(CASE WHEN parameter='sslrootcert=system'\n       THEN 'sslrootcert='||pg_catalog.replace($2::text,'/','%2F') ELSE parameter END,'&' ORDER BY ordinal)\n       FROM pg_catalog.unnest(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))\n       WITH ORDINALITY AS params(parameter,ordinal))\n   ELSE connection_string END AS connection_string FROM baseline\n), actual AS (\n SELECT id,connection_string FROM mip_factual.audit_connection\n), expected_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(e) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM expected e\n), actual_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM actual a\n)\nSELECT\n ($3::boolean IS NOT NULL AND $2::text ~ '^/[A-Za-z0-9_./-]+$') AS comparison_inputs_valid,\n (SELECT pg_catalog.count(*)=1 FROM baseline WHERE id IS TRUE) AS baseline_selected_once,\n (SELECT pg_catalog.count(*)=1 FROM actual WHERE id IS TRUE) AS current_selected_once,\n (SELECT coalesce(pg_catalog.bool_and(connection_string IS NOT NULL\n   AND connection_string ~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'\n   AND pg_catalog.regexp_count(connection_string,'@')=1 AND pg_catalog.regexp_count(connection_string,'[?]')=1\n   AND pg_catalog.cardinality(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))=3\n   AND pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&') @> ARRAY['sslrootcert=system','sslmode=verify-full','connect_timeout=5']),false)\n FROM baseline WHERE id IS TRUE) AS baseline_source_valid,\n (SELECT rows FROM expected_json) IS NOT DISTINCT FROM (SELECT rows FROM actual_json) AS all_rows_match,\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(b) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM baseline b WHERE id IS NOT TRUE)\n IS NOT DISTINCT FROM\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM actual a WHERE id IS NOT TRUE) AS unrelated_rows_match,\n (SELECT coalesce(pg_catalog.bool_and(a.connection_string IS NOT NULL AND b.connection_string IS NOT NULL\n  AND CASE WHEN $3::boolean THEN\n    pg_catalog.substr(pg_catalog.split_part(a.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1:')+1)\n    IS NOT DISTINCT FROM\n    pg_catalog.substr(pg_catalog.split_part(b.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n  ELSE a.connection_string IS NOT DISTINCT FROM b.connection_string END),false)\n  FROM actual a JOIN baseline b ON a.id IS TRUE AND b.id IS TRUE) AS opaque_credential_match;\n",
+        "bytes": 3568,
+        "sha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141",
+        "importedSourceSha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "comparison_inputs_valid",
+          "baseline_selected_once",
+          "current_selected_once",
+          "baseline_source_valid",
+          "all_rows_match",
+          "unrelated_rows_match",
+          "opaque_credential_match"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "set_owner_for_cleanup",
+      "kind": "private-phase",
+      "condition": "introduced column UPDATE",
+      "requires": "private verification of update one/target/password-equality/auditor/TLS/unrelated rows before cleanup; SET ROLE original owner",
+      "submission": {
+        "text": "SET LOCAL ROLE mip_cutover_schema_owner_v1;",
+        "bytes": 43,
+        "sha256": "957e55970e9165c6a79b2e50747161eb58ac55b83b0ac57a7446d025d7c018f9",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "revoke_introduced_column_update",
+      "kind": "private-phase",
+      "condition": "introduced column UPDATE",
+      "requires": "remove only introduced privilege from correct grantor; preserve every original ACL entry",
+      "submission": {
+        "text": "REVOKE UPDATE(connection_string) ON mip_factual.audit_connection FROM postgres GRANTED BY mip_cutover_schema_owner_v1 RESTRICT;",
+        "bytes": 127,
+        "sha256": "d612c12504dcc50b72a9b64b984973af2ca3ad8cfae78d383174b466e8b1630f",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "reset_role_after_cleanup",
+      "kind": "private-phase",
+      "condition": "introduced column UPDATE",
+      "requires": "RESET ROLE authenticated postgres",
+      "submission": {
+        "text": "RESET ROLE;",
+        "bytes": 11,
+        "sha256": "b907ba32c16f3c1d0f9e93c379f9713d3a1b6aa095b02646760e230d77b7166d",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "revoke_introduced_set_membership",
+      "kind": "private-phase",
+      "condition": "introduced SET-only membership",
+      "requires": "remove only postgres-grantor introduced membership; preserve all original grantor rows/options",
+      "submission": {
+        "text": "REVOKE mip_cutover_schema_owner_v1 FROM postgres GRANTED BY postgres RESTRICT;",
+        "bytes": 78,
+        "sha256": "694921ba12c3952fce90e2bc1e186b2d401383c0c6ac19518c3d1697726f0595",
+        "importedSourceSha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "restore_statement_deadline",
+      "kind": "auxiliary-source",
+      "sourceKey": "restore_statement_deadline",
+      "parameters": [
+        "publicCatalogBaseline.deadlines.statement_timeout"
+      ],
+      "requires": "restore original local statement setting after cleanup; fixed client recovery budget still applies",
+      "submission": {
+        "text": "SELECT pg_catalog.set_config('statement_timeout',$1::text,true) IS NOT DISTINCT FROM $1::text AS statement_deadline_restored;",
+        "bytes": 125,
+        "sha256": "4bef608c26bd8441ae8a110f44e7c42d1cf6793cabf79688d4d5cc6dea47085a",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "statement_deadline_restored"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "restore_lock_deadline",
+      "kind": "auxiliary-source",
+      "sourceKey": "restore_lock_deadline",
+      "parameters": [
+        "publicCatalogBaseline.deadlines.lock_timeout"
+      ],
+      "requires": "restore original local lock setting after cleanup",
+      "submission": {
+        "text": "SELECT pg_catalog.set_config('lock_timeout',$1::text,true) IS NOT DISTINCT FROM $1::text AS lock_deadline_restored;",
+        "bytes": 115,
+        "sha256": "2d6f35a8b9baf4b52c10963b3b74d87a911c14ca79ec0e098ec515c8dfc7fa16",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "lock_deadline_restored"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_authority_restored",
+      "kind": "catalog-source",
+      "sourceKey": "compareSecurityPrivate",
+      "parameters": [
+        "privateSecurityBaseline",
+        "rollback"
+      ],
+      "requires": "exact all ACL/membership/role/owner/RLS/policy/settings and private role/dblink configuration/body restoration; UPDATE denied again; precise missing-privilege baseline only",
+      "submission": {
+        "text": "WITH current_snapshot AS (WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot)\nSELECT ($2::text IN ('restored','rollback')) AS phase_valid,\n CASE WHEN $2::text='restored' THEN (private_snapshot-'deadlines') IS NOT DISTINCT FROM ($1::jsonb-'deadlines')\n WHEN $2::text='rollback' THEN private_snapshot IS NOT DISTINCT FROM $1::jsonb ELSE false END AS security_matches,\n coalesce((private_snapshot->'effective'->>'update_connection')::boolean=false,false) AS update_denied,\n coalesce((private_snapshot->'relation'->>'rls')::boolean AND (private_snapshot->'relation'->>'force_rls')::boolean,false) AS force_rls_preserved\nFROM current_snapshot;",
+        "bytes": 8742,
+        "sha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf",
+        "importedSourceSha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "phase_valid",
+          "security_matches",
+          "update_denied",
+          "force_rls_preserved"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "rollback",
+      "kind": "sql",
+      "text": "ROLLBACK;",
+      "requires": "mandatory, never conditional on success; exact completion and transaction idle",
+      "submission": {
+        "text": "ROLLBACK;\n",
+        "bytes": 10,
+        "sha256": "3c41bb5fdf19c0e14c34a58b7dd7ee6c6a1ee9fb70b77b5ce0fe2788a689c8a8",
+        "importedSourceSha256": null
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_primary_session_rollback",
+      "kind": "catalog-source",
+      "sourceKey": "compareSecurityPrivate",
+      "parameters": [
+        "privateSecurityBaseline",
+        "rollback"
+      ],
+      "requires": "same primary session after acknowledged rollback; exact original settings/role/security/private configuration and body baseline; unavailable observation stays UNKNOWN",
+      "submission": {
+        "text": "WITH current_snapshot AS (WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot)\nSELECT ($2::text IN ('restored','rollback')) AS phase_valid,\n CASE WHEN $2::text='restored' THEN (private_snapshot-'deadlines') IS NOT DISTINCT FROM ($1::jsonb-'deadlines')\n WHEN $2::text='rollback' THEN private_snapshot IS NOT DISTINCT FROM $1::jsonb ELSE false END AS security_matches,\n coalesce((private_snapshot->'effective'->>'update_connection')::boolean=false,false) AS update_denied,\n coalesce((private_snapshot->'relation'->>'rls')::boolean AND (private_snapshot->'relation'->>'force_rls')::boolean,false) AS force_rls_preserved\nFROM current_snapshot;",
+        "bytes": 8742,
+        "sha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf",
+        "importedSourceSha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "phase_valid",
+          "security_matches",
+          "update_denied",
+          "force_rls_preserved"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_private_rollback_rows",
+      "kind": "independent-source",
+      "sourceKey": "compareRowsPrivate",
+      "parameters": [
+        "privateRowsBaseline",
+        "approvedCaPath",
+        "false"
+      ],
+      "requires": "distinct approved read-only verifier; all private baseline equality booleans true",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. $1 private baseline JSON; $2 approved CA path; $3 expected transformed.\n-- Bind parameters, never interpolate secrets. Result contains only private equality booleans.\nWITH baseline AS (\n SELECT id,connection_string FROM pg_catalog.jsonb_to_recordset($1::jsonb) AS b(id boolean,connection_string text)\n), expected AS (\n SELECT id,CASE WHEN $3::boolean AND id IS TRUE THEN\n   'postgresql://mip_native_audit_v1:'\n   || pg_catalog.substr(pg_catalog.split_part(connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n   || '@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres?'\n   || (SELECT pg_catalog.string_agg(CASE WHEN parameter='sslrootcert=system'\n       THEN 'sslrootcert='||pg_catalog.replace($2::text,'/','%2F') ELSE parameter END,'&' ORDER BY ordinal)\n       FROM pg_catalog.unnest(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))\n       WITH ORDINALITY AS params(parameter,ordinal))\n   ELSE connection_string END AS connection_string FROM baseline\n), actual AS (\n SELECT id,connection_string FROM mip_factual.audit_connection\n), expected_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(e) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM expected e\n), actual_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM actual a\n)\nSELECT\n ($3::boolean IS NOT NULL AND $2::text ~ '^/[A-Za-z0-9_./-]+$') AS comparison_inputs_valid,\n (SELECT pg_catalog.count(*)=1 FROM baseline WHERE id IS TRUE) AS baseline_selected_once,\n (SELECT pg_catalog.count(*)=1 FROM actual WHERE id IS TRUE) AS current_selected_once,\n (SELECT coalesce(pg_catalog.bool_and(connection_string IS NOT NULL\n   AND connection_string ~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'\n   AND pg_catalog.regexp_count(connection_string,'@')=1 AND pg_catalog.regexp_count(connection_string,'[?]')=1\n   AND pg_catalog.cardinality(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))=3\n   AND pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&') @> ARRAY['sslrootcert=system','sslmode=verify-full','connect_timeout=5']),false)\n FROM baseline WHERE id IS TRUE) AS baseline_source_valid,\n (SELECT rows FROM expected_json) IS NOT DISTINCT FROM (SELECT rows FROM actual_json) AS all_rows_match,\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(b) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM baseline b WHERE id IS NOT TRUE)\n IS NOT DISTINCT FROM\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM actual a WHERE id IS NOT TRUE) AS unrelated_rows_match,\n (SELECT coalesce(pg_catalog.bool_and(a.connection_string IS NOT NULL AND b.connection_string IS NOT NULL\n  AND CASE WHEN $3::boolean THEN\n    pg_catalog.substr(pg_catalog.split_part(a.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1:')+1)\n    IS NOT DISTINCT FROM\n    pg_catalog.substr(pg_catalog.split_part(b.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n  ELSE a.connection_string IS NOT DISTINCT FROM b.connection_string END),false)\n  FROM actual a JOIN baseline b ON a.id IS TRUE AND b.id IS TRUE) AS opaque_credential_match;\n",
+        "bytes": 3568,
+        "sha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141",
+        "importedSourceSha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "comparison_inputs_valid",
+          "baseline_selected_once",
+          "current_selected_once",
+          "baseline_source_valid",
+          "all_rows_match",
+          "unrelated_rows_match",
+          "opaque_credential_match"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_security_rollback",
+      "kind": "independent-source",
+      "sourceKey": "compareSecurityPrivate",
+      "parameters": [
+        "privateSecurityBaseline",
+        "restored"
+      ],
+      "requires": "distinct verifier exact catalog/identity/private configuration and body baseline, excluding only verifier-local deadlines; primary settings require separate same-session observation",
+      "submission": {
+        "text": "WITH current_snapshot AS (WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot)\nSELECT ($2::text IN ('restored','rollback')) AS phase_valid,\n CASE WHEN $2::text='restored' THEN (private_snapshot-'deadlines') IS NOT DISTINCT FROM ($1::jsonb-'deadlines')\n WHEN $2::text='rollback' THEN private_snapshot IS NOT DISTINCT FROM $1::jsonb ELSE false END AS security_matches,\n coalesce((private_snapshot->'effective'->>'update_connection')::boolean=false,false) AS update_denied,\n coalesce((private_snapshot->'relation'->>'rls')::boolean AND (private_snapshot->'relation'->>'force_rls')::boolean,false) AS force_rls_preserved\nFROM current_snapshot;",
+        "bytes": 8742,
+        "sha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf",
+        "importedSourceSha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "phase_valid",
+          "security_matches",
+          "update_denied",
+          "force_rls_preserved"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_primary_completion",
+      "kind": "independent-auxiliary-source",
+      "sourceKey": "verify_primary_completion",
+      "parameters": [
+        "primaryBackendPid",
+        "primaryBackendStart"
+      ],
+      "requires": "distinct verifier observes original primary transaction ended and operation advisory lock released; no assertion from socket close",
+      "submission": {
+        "text": "WITH original_backend AS (SELECT pid,xact_start,state FROM pg_catalog.pg_stat_activity WHERE pid=$1::integer AND backend_start=$2::timestamptz) SELECT $1::integer>0 AND $2::timestamptz IS NOT NULL AS verifier_input_valid, NOT EXISTS(SELECT 1 FROM original_backend WHERE state IS NULL) AS original_backend_observable, NOT EXISTS(SELECT 1 FROM original_backend WHERE xact_start IS NOT NULL OR state LIKE 'idle in transaction%') AS primary_transaction_ended, NOT EXISTS(SELECT 1 FROM pg_catalog.pg_locks l JOIN original_backend b USING(pid) WHERE l.locktype='advisory' AND l.classid::bigint=((hashtextextended('qik-comparison-audit-v1',0)>>32)&4294967295::bigint) AND l.objid::bigint=(hashtextextended('qik-comparison-audit-v1',0)&4294967295::bigint) AND l.objsubid=1) AS operation_lock_released;",
+        "bytes": 793,
+        "sha256": "5f3e7e760e23e1804987e42e52e33136e2dc526fee8b9f6e1d10eb99c408bb91",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "verifier_input_valid",
+          "original_backend_observable",
+          "primary_transaction_ended",
+          "operation_lock_released"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_independently",
+      "kind": "independent-control",
+      "requires": "all distinct-connection checks authenticated and complete; missing rollback acknowledgment remains UNKNOWN even if equality passes",
+      "submission": null,
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    }
+  ],
+  "failurePath": [
+    {
+      "commandId": "cancel_and_drain",
+      "kind": "client-control",
+      "condition": "command completion uncertain",
+      "requires": "encrypted cancel transport and original result drain; no pipelining behind uncertain work",
+      "submission": null,
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "rollback",
+      "kind": "sql",
+      "text": "ROLLBACK;",
+      "condition": "primary connected and outstanding command drained",
+      "requires": "always attempted once after any begun transaction; never infer rollback or retry lost acknowledgment",
+      "submission": {
+        "text": "ROLLBACK;\n",
+        "bytes": 10,
+        "sha256": "3c41bb5fdf19c0e14c34a58b7dd7ee6c6a1ee9fb70b77b5ce0fe2788a689c8a8",
+        "importedSourceSha256": null
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_private_rollback_rows",
+      "kind": "independent-source",
+      "sourceKey": "compareRowsPrivate",
+      "parameters": [
+        "privateRowsBaseline",
+        "approvedCaPath",
+        "false"
+      ],
+      "requires": "required despite disconnected primary or failed cancel; absent private baseline or unavailable comparison stays UNKNOWN",
+      "submission": {
+        "text": "-- PROPOSAL ONLY. $1 private baseline JSON; $2 approved CA path; $3 expected transformed.\n-- Bind parameters, never interpolate secrets. Result contains only private equality booleans.\nWITH baseline AS (\n SELECT id,connection_string FROM pg_catalog.jsonb_to_recordset($1::jsonb) AS b(id boolean,connection_string text)\n), expected AS (\n SELECT id,CASE WHEN $3::boolean AND id IS TRUE THEN\n   'postgresql://mip_native_audit_v1:'\n   || pg_catalog.substr(pg_catalog.split_part(connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n   || '@db.qikvmopbtijoebdqosyq.supabase.co:5432/postgres?'\n   || (SELECT pg_catalog.string_agg(CASE WHEN parameter='sslrootcert=system'\n       THEN 'sslrootcert='||pg_catalog.replace($2::text,'/','%2F') ELSE parameter END,'&' ORDER BY ordinal)\n       FROM pg_catalog.unnest(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))\n       WITH ORDINALITY AS params(parameter,ordinal))\n   ELSE connection_string END AS connection_string FROM baseline\n), actual AS (\n SELECT id,connection_string FROM mip_factual.audit_connection\n), expected_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(e) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM expected e\n), actual_json AS (\n SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) AS rows FROM actual a\n)\nSELECT\n ($3::boolean IS NOT NULL AND $2::text ~ '^/[A-Za-z0-9_./-]+$') AS comparison_inputs_valid,\n (SELECT pg_catalog.count(*)=1 FROM baseline WHERE id IS TRUE) AS baseline_selected_once,\n (SELECT pg_catalog.count(*)=1 FROM actual WHERE id IS TRUE) AS current_selected_once,\n (SELECT coalesce(pg_catalog.bool_and(connection_string IS NOT NULL\n   AND connection_string ~ '^postgresql://mip_native_audit_v1[.]qikvmopbtijoebdqosyq:[^@]+@aws-0-us-west-1[.]pooler[.]supabase[.]com:5432/postgres[?]'\n   AND pg_catalog.regexp_count(connection_string,'@')=1 AND pg_catalog.regexp_count(connection_string,'[?]')=1\n   AND pg_catalog.cardinality(pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&'))=3\n   AND pg_catalog.string_to_array(pg_catalog.split_part(connection_string,'?',2),'&') @> ARRAY['sslrootcert=system','sslmode=verify-full','connect_timeout=5']),false)\n FROM baseline WHERE id IS TRUE) AS baseline_source_valid,\n (SELECT rows FROM expected_json) IS NOT DISTINCT FROM (SELECT rows FROM actual_json) AS all_rows_match,\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(b) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM baseline b WHERE id IS NOT TRUE)\n IS NOT DISTINCT FROM\n (SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(a) ORDER BY id NULLS LAST,connection_string COLLATE \"C\" NULLS FIRST),'[]'::jsonb) FROM actual a WHERE id IS NOT TRUE) AS unrelated_rows_match,\n (SELECT coalesce(pg_catalog.bool_and(a.connection_string IS NOT NULL AND b.connection_string IS NOT NULL\n  AND CASE WHEN $3::boolean THEN\n    pg_catalog.substr(pg_catalog.split_part(a.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1:')+1)\n    IS NOT DISTINCT FROM\n    pg_catalog.substr(pg_catalog.split_part(b.connection_string,'@',1),pg_catalog.length('postgresql://mip_native_audit_v1.qikvmopbtijoebdqosyq:')+1)\n  ELSE a.connection_string IS NOT DISTINCT FROM b.connection_string END),false)\n  FROM actual a JOIN baseline b ON a.id IS TRUE AND b.id IS TRUE) AS opaque_credential_match;\n",
+        "bytes": 3568,
+        "sha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141",
+        "importedSourceSha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "comparison_inputs_valid",
+          "baseline_selected_once",
+          "current_selected_once",
+          "baseline_source_valid",
+          "all_rows_match",
+          "unrelated_rows_match",
+          "opaque_credential_match"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_primary_session_rollback",
+      "kind": "catalog-source",
+      "sourceKey": "compareSecurityPrivate",
+      "parameters": [
+        "privateSecurityBaseline",
+        "rollback"
+      ],
+      "condition": "primary usable after acknowledged rollback",
+      "requires": "same primary exact settings/role/security/private configuration and body restoration; unavailable observation stays UNKNOWN",
+      "submission": {
+        "text": "WITH current_snapshot AS (WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot)\nSELECT ($2::text IN ('restored','rollback')) AS phase_valid,\n CASE WHEN $2::text='restored' THEN (private_snapshot-'deadlines') IS NOT DISTINCT FROM ($1::jsonb-'deadlines')\n WHEN $2::text='rollback' THEN private_snapshot IS NOT DISTINCT FROM $1::jsonb ELSE false END AS security_matches,\n coalesce((private_snapshot->'effective'->>'update_connection')::boolean=false,false) AS update_denied,\n coalesce((private_snapshot->'relation'->>'rls')::boolean AND (private_snapshot->'relation'->>'force_rls')::boolean,false) AS force_rls_preserved\nFROM current_snapshot;",
+        "bytes": 8742,
+        "sha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf",
+        "importedSourceSha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf"
+      },
+      "session": "primary-approved-private-executor",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "phase_valid",
+          "security_matches",
+          "update_denied",
+          "force_rls_preserved"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_security_rollback",
+      "kind": "independent-source",
+      "sourceKey": "compareSecurityPrivate",
+      "parameters": [
+        "privateSecurityBaseline",
+        "restored"
+      ],
+      "requires": "distinct verifier catalog/identity/private configuration and body baseline excludes only verifier-local deadlines; absent baseline or unavailable comparison stays UNKNOWN",
+      "submission": {
+        "text": "WITH current_snapshot AS (WITH current_snapshot AS (-- PROPOSAL ONLY. SELECT-only nonsecret catalog baseline. No stored URI is read.\nWITH RECURSIVE actors(oid) AS (\n SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN\n ('postgres','mip_cutover_schema_owner_v1','mip_factual_owner_v3','mip_native_audit_v1')\n UNION SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname IN\n ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')\n UNION SELECT proowner FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink'\n UNION SELECT pg_catalog.unnest(polroles) FROM pg_catalog.pg_policy WHERE polrelid=pg_catalog.to_regclass('mip_factual.audit_connection')\n), reachable(oid) AS (\n SELECT oid FROM actors\n UNION SELECT dependency.oid FROM pg_catalog.pg_auth_members m JOIN reachable r ON m.member=r.oid\n CROSS JOIN LATERAL (VALUES (m.roleid),(m.grantor)) AS dependency(oid)\n), memberships AS (\n SELECT m.roleid, m.member, m.grantor, r.rolname AS role, u.rolname AS member_name,\n        g.rolname AS grantor_name, m.admin_option AS admin, m.inherit_option AS inherit, m.set_option AS set\n FROM pg_catalog.pg_auth_members m JOIN pg_catalog.pg_roles r ON r.oid=m.roleid\n JOIN pg_catalog.pg_roles u ON u.oid=m.member JOIN pg_catalog.pg_roles g ON g.oid=m.grantor\n WHERE m.member IN (SELECT oid FROM reachable)\n), relevant_roles AS (\n SELECT oid FROM reachable UNION SELECT grantor FROM memberships\n), relation AS (\n SELECT c.oid, c.relowner, r.rolname AS owner, c.relkind,\n        c.relrowsecurity AS rls, c.relforcerowsecurity AS force_rls,\n        c.relacl::text[] AS acl_raw\n FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace\n JOIN pg_catalog.pg_roles r ON r.oid=c.relowner\n WHERE n.nspname='mip_factual' AND c.relname='audit_connection'\n)\nSELECT pg_catalog.jsonb_build_object(\n 'version','qik-rollback-sql-boundary-1',\n 'identity',pg_catalog.jsonb_build_object('session_user',session_user,'current_user',current_user,\n   'database',pg_catalog.current_database(),'server_version_num',pg_catalog.current_setting('server_version_num'),\n   'role_setting',pg_catalog.current_setting('role'),'createrole_self_grant',pg_catalog.current_setting('createrole_self_grant')),\n 'deadlines',pg_catalog.jsonb_build_object('statement_timeout',pg_catalog.current_setting('statement_timeout'),\n   'lock_timeout',pg_catalog.current_setting('lock_timeout')),\n 'roles',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'name',r.rolname,\n   'superuser',r.rolsuper,'inherit',r.rolinherit,'createrole',r.rolcreaterole,\n   'createdb',r.rolcreatedb,'login',r.rolcanlogin,'replication',r.rolreplication,\n   'bypass_rls',r.rolbypassrls,'connection_limit',r.rolconnlimit,'valid_until',r.rolvaliduntil,\n   'config_present',r.rolconfig IS NOT NULL) ORDER BY r.oid),'[]'::jsonb) FROM pg_catalog.pg_roles r\n   WHERE r.oid IN (SELECT oid FROM relevant_roles)),\n 'memberships',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(m) ORDER BY roleid,member,grantor),'[]'::jsonb) FROM memberships m),\n 'relation',(SELECT pg_catalog.to_jsonb(r) FROM relation r),\n 'columns',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('attnum',a.attnum,'name',a.attname,\n   'type_oid',a.atttypid,'not_null',a.attnotnull,'acl_raw',a.attacl::text[]) ORDER BY a.attnum),'[]'::jsonb)\n   FROM pg_catalog.pg_attribute a WHERE a.attrelid=(SELECT oid FROM relation) AND a.attnum>0 AND NOT a.attisdropped),\n 'policies',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'name',p.polname,\n   'command',p.polcmd,'permissive',p.polpermissive,'role_oids',p.polroles,\n   'using',pg_catalog.pg_get_expr(p.polqual,p.polrelid),'check',pg_catalog.pg_get_expr(p.polwithcheck,p.polrelid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_policy p WHERE p.polrelid=(SELECT oid FROM relation)),\n 'schemas',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',n.oid,'name',n.nspname,\n   'owner_oid',n.nspowner,'acl_raw',n.nspacl::text[],\n   'postgres_usage',pg_catalog.has_schema_privilege('postgres',n.oid,'USAGE')) ORDER BY n.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_namespace n WHERE n.nspname IN\n   ('mip_factual','mip_comparison_install','mip_native_activation','mip_factual_transport_raw')),\n 'publications',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(p) ORDER BY p.pubname),'[]'::jsonb)\n   FROM pg_catalog.pg_publication_tables p WHERE p.schemaname='mip_factual' AND p.tablename='audit_connection'),\n 'effective',pg_catalog.jsonb_build_object('select_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','SELECT'),\n   'select_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','SELECT'),\n   'update_id',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','id','UPDATE'),\n   'update_connection',pg_catalog.has_column_privilege('postgres','mip_factual.audit_connection','connection_string','UPDATE'),\n   'table_update',pg_catalog.has_table_privilege('postgres','mip_factual.audit_connection','UPDATE'),\n   'dblink_execute',CASE WHEN pg_catalog.to_regprocedure('mip_factual_transport_raw.dblink(text,text)') IS NULL THEN false\n     ELSE pg_catalog.has_function_privilege('postgres','mip_factual_transport_raw.dblink(text,text)','EXECUTE') END,\n   'owner_set',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','SET'),\n   'owner_usage',pg_catalog.pg_has_role('postgres','mip_cutover_schema_owner_v1','USAGE')),\n 'logging',(SELECT pg_catalog.jsonb_object_agg(s.name,s.setting ORDER BY s.name) FROM pg_catalog.pg_settings s\n   WHERE s.name IN ('log_statement','log_min_duration_statement','log_min_duration_sample',\n   'log_transaction_sample_rate','log_parameter_max_length_on_error','log_parameter_max_length',\n   'log_min_error_statement','log_error_verbosity','pgaudit.log','pgaudit.log_parameter',\n   'auto_explain.log_nested_statements','auto_explain.log_min_duration','pg_stat_statements.track',\n   'shared_preload_libraries','session_preload_libraries','local_preload_libraries')),\n 'optional_logging',pg_catalog.jsonb_build_object('pgaudit.log',pg_catalog.current_setting('pgaudit.log',true),\n   'pgaudit.log_parameter',pg_catalog.current_setting('pgaudit.log_parameter',true),\n   'auto_explain.log_nested_statements',pg_catalog.current_setting('auto_explain.log_nested_statements',true),\n   'auto_explain.log_min_duration',pg_catalog.current_setting('auto_explain.log_min_duration',true),\n   'pg_stat_statements.track',pg_catalog.current_setting('pg_stat_statements.track',true)),\n 'ca_path',pg_catalog.current_setting('ssl_ca_file',true),\n 'dblink',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'owner_oid',p.proowner,\n   'security_definer',p.prosecdef,'strict',p.proisstrict,'acl_raw',p.proacl::text[],\n   'kind',p.prokind,'argument_type_oids',p.proargtypes::oid[],'result_type_oid',p.prorettype,\n   'returns_set',p.proretset,'config_present',p.proconfig IS NOT NULL,\n   'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n   FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace\n   WHERE n.nspname='mip_factual_transport_raw' AND p.proname='dblink')\n) AS snapshot)\nSELECT snapshot || pg_catalog.jsonb_build_object('private_security_details',pg_catalog.jsonb_build_object(\n 'role_configs',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',r.oid,'config',r.rolconfig) ORDER BY r.oid),'[]'::jsonb)\n FROM pg_catalog.pg_roles r WHERE r.oid IN (SELECT (actor->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'roles') AS actor)),\n 'dblink_definitions',(SELECT coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('oid',p.oid,'config',p.proconfig,\n 'definition',pg_catalog.pg_get_functiondef(p.oid)) ORDER BY p.oid),'[]'::jsonb)\n FROM pg_catalog.pg_proc p WHERE p.oid IN (SELECT (fn->>'oid')::oid FROM pg_catalog.jsonb_array_elements(snapshot->'dblink') AS fn))\n)) AS private_snapshot FROM current_snapshot)\nSELECT ($2::text IN ('restored','rollback')) AS phase_valid,\n CASE WHEN $2::text='restored' THEN (private_snapshot-'deadlines') IS NOT DISTINCT FROM ($1::jsonb-'deadlines')\n WHEN $2::text='rollback' THEN private_snapshot IS NOT DISTINCT FROM $1::jsonb ELSE false END AS security_matches,\n coalesce((private_snapshot->'effective'->>'update_connection')::boolean=false,false) AS update_denied,\n coalesce((private_snapshot->'relation'->>'rls')::boolean AND (private_snapshot->'relation'->>'force_rls')::boolean,false) AS force_rls_preserved\nFROM current_snapshot;",
+        "bytes": 8742,
+        "sha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf",
+        "importedSourceSha256": "17789a9e03deabcad7efc99a7519515cb2faf41442b26338a79e802c35e156bf"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "phase_valid",
+          "security_matches",
+          "update_denied",
+          "force_rls_preserved"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_primary_completion",
+      "kind": "independent-auxiliary-source",
+      "sourceKey": "verify_primary_completion",
+      "parameters": [
+        "primaryBackendPid",
+        "primaryBackendStart"
+      ],
+      "requires": "distinct verifier original backend transaction/operation-lock completion; unverifiable completion stays UNKNOWN",
+      "submission": {
+        "text": "WITH original_backend AS (SELECT pid,xact_start,state FROM pg_catalog.pg_stat_activity WHERE pid=$1::integer AND backend_start=$2::timestamptz) SELECT $1::integer>0 AND $2::timestamptz IS NOT NULL AS verifier_input_valid, NOT EXISTS(SELECT 1 FROM original_backend WHERE state IS NULL) AS original_backend_observable, NOT EXISTS(SELECT 1 FROM original_backend WHERE xact_start IS NOT NULL OR state LIKE 'idle in transaction%') AS primary_transaction_ended, NOT EXISTS(SELECT 1 FROM pg_catalog.pg_locks l JOIN original_backend b USING(pid) WHERE l.locktype='advisory' AND l.classid::bigint=((hashtextextended('qik-comparison-audit-v1',0)>>32)&4294967295::bigint) AND l.objid::bigint=(hashtextextended('qik-comparison-audit-v1',0)&4294967295::bigint) AND l.objsubid=1) AS operation_lock_released;",
+        "bytes": 793,
+        "sha256": "5f3e7e760e23e1804987e42e52e33136e2dc526fee8b9f6e1d10eb99c408bb91",
+        "importedSourceSha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+      },
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": {
+        "rowCount": 1,
+        "exactColumnNames": [
+          "verifier_input_valid",
+          "original_backend_observable",
+          "primary_transaction_ended",
+          "operation_lock_released"
+        ],
+        "everyBooleanMustBeTrue": true,
+        "extraMissingNullOrFalseColumnsRefused": true
+      },
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    },
+    {
+      "commandId": "verify_independently",
+      "kind": "independent-control",
+      "requires": "required after every begun attempt, including disconnected primary/failed cancel/missing rollback acknowledgment; any unavailable or failed check stays UNKNOWN",
+      "submission": null,
+      "session": "distinct-approved-read-only-verifier",
+      "resultPolicy": "allowlisted counts/booleans or nonsecret catalog; no raw errors",
+      "expectedResult": null,
+      "completedAcknowledgmentRequiredBeforeNextSubmission": true
+    }
+  ],
+  "unimplementedClientControlIds": [
+    "cancel_and_drain",
+    "verify_independently"
+  ],
+  "parameterizedPhaseCommandIds": [
+    "verify_private_transformed_rows",
+    "restore_statement_deadline",
+    "restore_lock_deadline",
+    "verify_authority_restored",
+    "verify_primary_session_rollback",
+    "verify_private_rollback_rows",
+    "verify_security_rollback",
+    "verify_primary_completion"
+  ]
+}
