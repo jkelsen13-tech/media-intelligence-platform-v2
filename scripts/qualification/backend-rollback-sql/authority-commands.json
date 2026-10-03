@@ -1,0 +1,10 @@
+{
+  "grant_set_membership": "GRANT mip_cutover_schema_owner_v1 TO postgres WITH ADMIN FALSE, INHERIT FALSE, SET TRUE GRANTED BY postgres;",
+  "set_owner_for_grant": "SET LOCAL ROLE mip_cutover_schema_owner_v1;",
+  "grant_column_update": "GRANT UPDATE(connection_string) ON mip_factual.audit_connection TO postgres GRANTED BY mip_cutover_schema_owner_v1;",
+  "reset_role_for_operation": "RESET ROLE;",
+  "set_owner_for_cleanup": "SET LOCAL ROLE mip_cutover_schema_owner_v1;",
+  "revoke_introduced_column_update": "REVOKE UPDATE(connection_string) ON mip_factual.audit_connection FROM postgres GRANTED BY mip_cutover_schema_owner_v1 RESTRICT;",
+  "reset_role_after_cleanup": "RESET ROLE;",
+  "revoke_introduced_set_membership": "REVOKE mip_cutover_schema_owner_v1 FROM postgres GRANTED BY postgres RESTRICT;"
+}
