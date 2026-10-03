@@ -1,0 +1,128 @@
+{
+  "contractVersion": "mip-terrain-composition-v2",
+  "status": "HOLD",
+  "researchInspection": {
+    "allowed": true,
+    "custodyKind": "parent-reported",
+    "reasons": [],
+    "pixelsInspectedByThisValidator": false
+  },
+  "productionComposition": {
+    "qualified": false,
+    "simulatedPlanQualified": false,
+    "authorityKind": "REAL",
+    "reasons": [
+      "consumer-byte-verification-missing",
+      "source-lineage-unresolved",
+      "horizontal-realization-or-epoch-unresolved",
+      "vertical-datum-catalogue-only",
+      "source-geoid-unresolved",
+      "asset-capture-unresolved",
+      "composition-admission-unbound",
+      "composition-outside-native-footprint",
+      "target-reference-unqualified",
+      "horizontal-transform-unqualified",
+      "vertical-transform-unqualified",
+      "ortho-registration-unqualified",
+      "canonical-anchor-operation-forbidden",
+      "dem-geometry-or-evidence-precision-claim-forbidden"
+    ]
+  },
+  "sourceFacts": {
+    "id": "usgs-standard1m-native512-research-20261003",
+    "bytes": {
+      "sha256": "cd684d9d5311092ef90d4e8c34a1b5de8b842ccf03633b6858424dbf8b652f3a",
+      "byteLength": 591155,
+      "retainedReference": "Parent Library libfile_3c089027ec9c81918d0bdea00df4880d/file_00000000f09081f5afec92ac203a6cf3; worker TIFF unavailable",
+      "verification": {
+        "kind": "parent-reported",
+        "reference": "Current parent source-byte and numeric inspection manifest; no worker TIFF hash or pixel inspection",
+        "sha256": "cd684d9d5311092ef90d4e8c34a1b5de8b842ccf03633b6858424dbf8b652f3a",
+        "byteLength": 591155
+      }
+    },
+    "provenance": {
+      "provider": "USGS 3DEP",
+      "sourceUrl": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1m/Projects/OH_Statewide_Phase1_2019_B19/TIFF/USGS_1M_17_x44y459_OH_Statewide_Phase1_2019_B19.tif",
+      "sourceVersion": "standard1m-research-native512.tif",
+      "reference": "Library libfile_a5e615e386fc8191919c274a5429b71f; complete semantic text read; unchanged original manifest bytes not materialized",
+      "conflicts": [
+        "TNM vendorMetaUrl points OH_Statewide_Phase1_8_2019 directory. NOAA69581 describes Phase1_8 as a0.2mi2 LorainBlock3 re-flight; Cuyahoga belongs Phase1_1/Block1. Do not bind theCleveland pixels to Lorainre-flight dates or assume that directory supplies exacttile lineage."
+      ]
+    },
+    "horizontal": {
+      "kind": "projected",
+      "crs": "EPSG:26917",
+      "datum": "NAD83",
+      "realization": null,
+      "epoch": null,
+      "units": "metre",
+      "axes": [
+        "easting",
+        "northing"
+      ],
+      "evidence": {
+        "basis": "asset-header",
+        "reference": "Parent-reported actual standard1m TIFF header, generic NAD83/UTM17N only"
+      }
+    },
+    "height": {
+      "basis": "orthometric",
+      "datum": "NAVD88",
+      "units": "metre",
+      "geoid": null,
+      "evidence": {
+        "basis": "catalogue-only",
+        "reference": "Exact standard1m catalog description; acquired TIFF has no vertical GeoKey or band UnitType"
+      }
+    },
+    "coverage": {
+      "crs": "EPSG:26917",
+      "bounds": [
+        441017.99997115403,
+        4583350.000010459,
+        441529.99997115403,
+        4583862.000010459
+      ]
+    },
+    "raster": {
+      "width": 512,
+      "height": 512,
+      "bandCount": 1,
+      "sampleType": "Float32",
+      "resolution": [
+        1,
+        1
+      ],
+      "resolutionUnits": "metre",
+      "nodata": {
+        "kind": "sentinel",
+        "value": -999999,
+        "policy": "preserve-as-missing"
+      }
+    },
+    "capture": {
+      "status": "unknown",
+      "precision": null,
+      "start": null,
+      "end": null,
+      "reference": "https://www.fisheries.noaa.gov/inport/item/69581",
+      "projectWindow": {
+        "start": "2019-11-09",
+        "end": "2020-05-02",
+        "boundToExactAsset": false
+      }
+    }
+  },
+  "plan": null,
+  "displayOnly": true,
+  "permissionGrant": false,
+  "sourceAdmittedByThisValidator": false,
+  "providerActivated": false,
+  "transformExecuted": false,
+  "increasesEvidencePrecision": false,
+  "modifiesCanonicalAnchors": false,
+  "suppliesBuildingHeights": false,
+  "suppliesRoofGeometry": false,
+  "suppliesFacades": false
+}

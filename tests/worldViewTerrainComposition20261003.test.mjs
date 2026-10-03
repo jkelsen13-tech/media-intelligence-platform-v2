@@ -28,7 +28,12 @@ const fixture = () => {
     height:{basis:'ellipsoidal', datum:'WGS84-ellipsoid', units:'metre', evidence:{basis:'qualified', reference:'SIMULATED target vertical receipt'}}}
   const coverage = {crs:source.coverage.crs, bounds:[...bounds]}
   const transform = (from, to, model) => ({approved:true, reference:'SIMULATED transform qualification',
-    kind:'model-operation', model, version:'SIMULATED-v1', from, to, coverage:structuredClone(coverage)})
+    kind:'model-operation', model, version:'SIMULATED-v1', from, to, coverage:structuredClone(coverage),
+    operation:{id:`SIMULATED:${model}`, reference:'SIMULATED exact operation receipt',
+      accuracy:{status:'qualified', basis:'operation-error', value:0.25, units:'metre', reference:'SIMULATED stated operation accuracy'}},
+    gridRequirement:{kind:'required', qualified:true, reference:'SIMULATED operation grid inventory',
+      inventory:[{id:`SIMULATED:${model}:grid`, version:'SIMULATED-grid-v1', sha256:'c'.repeat(64),
+        availability:{status:'available', verified:true, reference:'SIMULATED grid custody receipt'}, coverage:structuredClone(coverage)}]}})
   const composition = {coverage, target, anchorPolicy:'preserve',
     claims:{buildingHeights:false, roofGeometry:false, facades:false, evidencePrecisionPromotion:false},
     horizontalTransform:transform(horizontalBasis(source.horizontal), horizontalBasis(target.horizontal), 'SIMULATED horizontal operation'),
@@ -44,6 +49,7 @@ const hasHold = (result, reason) => {assert.equal(result.plan, null); assert.ok(
 test('fully pinned fixture qualifies only a SIMULATED detached plan, never real composition or activation', () => {
   const input = freeze(fixture()), before = JSON.stringify(input), result = evaluateWorldViewTerrainComposition(input)
   assert.equal(result.status, 'SIMULATED_PLAN_QUALIFIED')
+  assert.equal(result.contractVersion, 'mip-terrain-composition-v2')
   assert.equal(result.productionComposition.simulatedPlanQualified, true)
   assert.equal(result.productionComposition.qualified, false)
   assert.equal(result.productionComposition.authorityKind, 'SIMULATED')
@@ -179,6 +185,8 @@ test('same-basis identity still needs a pinned model/version/coverage receipt, a
   input.composition.verticalTransform.from = heightBasis(input.source.height)
   input.composition.verticalTransform.kind = 'identity'
   input.composition.verticalTransform.model = 'SIMULATED explicit identity operation'
+  input.composition.verticalTransform.operation.accuracy.value = 0
+  input.composition.verticalTransform.gridRequirement = {kind:'none', qualified:true, reference:'SIMULATED identity requires no grid', inventory:[]}
   input.composition.horizontalTransform.from = Object.fromEntries(Object.entries(input.composition.horizontalTransform.from).reverse())
   assert.equal(evaluateWorldViewTerrainComposition(input).status, 'SIMULATED_PLAN_QUALIFIED')
   input.composition.verticalTransform.version = null
@@ -190,5 +198,79 @@ test('unknown or absent top-level inputs return truthful INVALID rather than thr
     const result = evaluateWorldViewTerrainComposition(input)
     assert.equal(result.status, 'INVALID'); assert.equal(result.plan, null)
     assert.equal(result.productionComposition.qualified, false)
+  }
+})
+
+test('both operations require explicit identity/reference and qualified stated operation accuracy in metres', () => {
+  for (const axis of ['horizontalTransform','verticalTransform']) {
+    for (const change of [transform => transform.operation = null, transform => transform.operation.id = null,
+      transform => transform.operation.reference = null, transform => transform.operation.accuracy = null,
+      transform => transform.operation.accuracy.status = 'unknown', transform => transform.operation.accuracy.value = null,
+      transform => transform.operation.accuracy.value = NaN, transform => transform.operation.accuracy.value = -1,
+      transform => transform.operation.accuracy.units = 'degree', transform => transform.operation.accuracy.units = 'US-survey-foot',
+      transform => transform.operation.accuracy.reference = null, transform => transform.operation.accuracy.basis = 'datum-accuracy']) {
+      hasHold(resultAfter(input => change(input.composition[axis])), `${axis === 'horizontalTransform' ? 'horizontal' : 'vertical'}-transform-unqualified`)
+    }
+  }
+})
+
+test('required grid inventory must bind available verified assets, hashes, versions and complete native footprint', () => {
+  for (const axis of ['horizontalTransform','verticalTransform']) {
+    for (const change of [transform => transform.gridRequirement = null, transform => transform.gridRequirement.qualified = false,
+      transform => transform.gridRequirement.reference = null, transform => transform.gridRequirement.inventory = [],
+      transform => transform.gridRequirement.inventory[0].availability.status = 'unavailable',
+      transform => transform.gridRequirement.inventory[0].availability.status = 'unknown',
+      transform => transform.gridRequirement.inventory[0].availability.verified = false,
+      transform => transform.gridRequirement.inventory[0].availability.reference = null,
+      transform => transform.gridRequirement.inventory[0].sha256 = 'metadata-only',
+      transform => transform.gridRequirement.inventory[0].version = null,
+      transform => transform.gridRequirement.inventory[0].coverage.bounds[0] += 1,
+      transform => transform.gridRequirement.inventory[0].coverage.crs = 'EPSG:4326',
+      transform => transform.gridRequirement.inventory.push(structuredClone(transform.gridRequirement.inventory[0]))]) {
+      hasHold(resultAfter(input => change(input.composition[axis])), `${axis === 'horizontalTransform' ? 'horizontal' : 'vertical'}-transform-unqualified`)
+    }
+  }
+})
+
+test('qualified no-grid operations are explicit; missing qualification or contradictory inventories fail', () => {
+  const input = fixture()
+  for (const axis of ['horizontalTransform','verticalTransform']) {
+    input.composition[axis].gridRequirement = {kind:'none', qualified:true, reference:'SIMULATED approved operation requires no grids', inventory:[]}
+  }
+  const result = evaluateWorldViewTerrainComposition(input)
+  assert.equal(result.status, 'SIMULATED_PLAN_QUALIFIED')
+  assert.equal(result.productionComposition.qualified, false)
+  input.composition.horizontalTransform.gridRequirement.qualified = false
+  hasHold(evaluateWorldViewTerrainComposition(input), 'horizontal-transform-unqualified')
+  input.composition.horizontalTransform.gridRequirement.qualified = true
+  input.composition.verticalTransform.gridRequirement.inventory = fixture().composition.verticalTransform.gridRequirement.inventory
+  hasHold(evaluateWorldViewTerrainComposition(input), 'vertical-transform-unqualified')
+})
+
+test('identity records zero operation error and no grids only for exactly equal bases; datum accuracy stays unknown', () => {
+  const input = fixture()
+  input.source.height = {...structuredClone(input.composition.target.height), datumAccuracy:null}
+  const transform = input.composition.verticalTransform
+  transform.from = heightBasis(input.source.height); transform.kind = 'identity'
+  transform.operation.accuracy.value = 0
+  transform.gridRequirement = {kind:'none', qualified:true, reference:'SIMULATED identity no-grid qualification', inventory:[]}
+  const result = evaluateWorldViewTerrainComposition(input)
+  assert.equal(result.status, 'SIMULATED_PLAN_QUALIFIED')
+  assert.equal(result.sourceFacts.height.datumAccuracy, null)
+  assert.equal(result.plan.verticalTransform.operation.accuracy.value, 0)
+  transform.to.units = 'US-survey-foot'
+  hasHold(evaluateWorldViewTerrainComposition(input), 'vertical-transform-unqualified')
+  transform.to.units = 'metre'; transform.operation.accuracy.value = 0.25
+  hasHold(evaluateWorldViewTerrainComposition(input), 'vertical-transform-unqualified')
+})
+
+test('qualified operation metadata never permits constant point offsets or arbitrary inline shifts', () => {
+  for (const axis of ['horizontalTransform','verticalTransform']) {
+    for (const field of ['constantOffset','constantGeoidOffset','offsetMeters','offsetX','shift']) {
+      hasHold(resultAfter(input => input.composition[axis][field] = field === 'shift' ? [1,2,3] : -34.111),
+        `${axis === 'horizontalTransform' ? 'horizontal' : 'vertical'}-transform-unqualified`)
+    }
+    hasHold(resultAfter(input => input.composition[axis].operation.shift = [1,2,3]),
+      `${axis === 'horizontalTransform' ? 'horizontal' : 'vertical'}-transform-unqualified`)
   }
 })
