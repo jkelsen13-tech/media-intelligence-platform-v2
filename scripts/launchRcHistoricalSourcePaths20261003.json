@@ -1,0 +1,18 @@
+{
+  "manifest_path": "docs/qualification/markets-provider-contract-20261003.json",
+  "manifest_sha256": "3868bbda45bdf46b2990db9f293f7363540dbb794dfd5c091bf8ec2d6fedf8d2",
+  "entries": [
+    {
+      "source_path": "/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs",
+      "path": "supabase/functions/_shared/marketsProviderPolicy.mjs"
+    },
+    {
+      "source_path": "/workspace/mip-oct03-market-contract/tests/marketsProviderPolicy20261003.test.mjs",
+      "path": "tests/marketsProviderPolicy20261003.test.mjs"
+    },
+    {
+      "source_path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.md",
+      "path": "docs/qualification/markets-provider-contract-20261003.md"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+TAP version 13
+# Subtest: launch source bindings preserve qualified history and bind the integrated current gateway and domain bytes
+ok 1 - launch source bindings preserve qualified history and bind the integrated current gateway and domain bytes
+  ---
+  duration_ms: 252.440506
+  type: 'test'
+  ...
+# Subtest: one API routes all five domains directly with existing response envelopes and verified identity
+ok 2 - one API routes all five domains directly with existing response envelopes and verified identity
+  ---
+  duration_ms: 27.200541
+  type: 'test'
+  ...
+# Subtest: gateway retains route, origin, method, JSON and per-domain request limits without downstream calls
+ok 3 - gateway retains route, origin, method, JSON and per-domain request limits without downstream calls
+  ---
+  duration_ms: 8.83499
+  type: 'test'
+  ...
+# Subtest: Auth and database failures stay sanitized; denied or anonymous sessions cannot reach any RPC
+ok 4 - Auth and database failures stay sanitized; denied or anonymous sessions cannot reach any RPC
+  ---
+  duration_ms: 2.833171
+  type: 'test'
+  ...
+# Subtest: shared server transport keeps credentials in their proper boundary and makes no function-to-function calls
+ok 5 - shared server transport keeps credentials in their proper boundary and makes no function-to-function calls
+  ---
+  duration_ms: 1.858558
+  type: 'test'
+  ...
+# Subtest: frontend composition uses only unified routes and never retries or falls back to an old endpoint
+ok 6 - frontend composition uses only unified routes and never retries or falls back to an old endpoint
+  ---
+  duration_ms: 1.249738
+  type: 'test'
+  ...
+# Subtest: opaque server RPC credentials never replace or remove the user Auth token
+ok 7 - opaque server RPC credentials never replace or remove the user Auth token
+  ---
+  duration_ms: 0.941283
+  type: 'test'
+  ...
+# Subtest: legacy server JWT transport remains unchanged for all unified private RPCs
+ok 8 - legacy server JWT transport remains unchanged for all unified private RPCs
+  ---
+  duration_ms: 0.470421
+  type: 'test'
+  ...
+# Subtest: private following route reuses verified Auth and refuses trusted-only commands and identity injection
+ok 9 - private following route reuses verified Auth and refuses trusted-only commands and identity injection
+  ---
+  duration_ms: 1.367106
+  type: 'test'
+  ...
+# Subtest: following server call stays on the existing validated origin and opaque-key credential boundary
+ok 10 - following server call stays on the existing validated origin and opaque-key credential boundary
+  ---
+  duration_ms: 0.484723
+  type: 'test'
+  ...
+# Subtest: Following actor expectation only refuses stale sessions and Auth stamps success before a client can accept it
+ok 11 - Following actor expectation only refuses stale sessions and Auth stamps success before a client can accept it
+  ---
+  duration_ms: 1.438083
+  type: 'test'
+  ...
+# Subtest: selective intake is registered with the existing verified gateway and mapped SDK boundary
+ok 12 - selective intake is registered with the existing verified gateway and mapped SDK boundary
+  ---
+  duration_ms: 1.823336
+  type: 'test'
+  ...
+# Subtest: selective intake server transport preserves fixed target and both current credential formats
+ok 13 - selective intake server transport preserves fixed target and both current credential formats
+  ---
+  duration_ms: 0.517773
+  type: 'test'
+  ...
+# Subtest: only the three exact pinned historical Markets paths map to repository paths
+ok 14 - only the three exact pinned historical Markets paths map to repository paths
+  ---
+  duration_ms: 2.359375
+  type: 'test'
+  ...
+# Subtest: repository reader refuses a symlink outside its actual root
+ok 15 - repository reader refuses a symlink outside its actual root
+  ---
+  duration_ms: 9.612295
+  type: 'test'
+  ...
+# Subtest: actual relocated binding reader uses its current bytes without the original checkout, and the Python resolver has the same boundary
+ok 16 - actual relocated binding reader uses its current bytes without the original checkout, and the Python resolver has the same boundary
+  ---
+  duration_ms: 1806.915897
+  type: 'test'
+  ...
+# Subtest: current published offer resolves only the pricing observation, preserving unresolved actual rights and disabled activation
+ok 17 - current published offer resolves only the pricing observation, preserving unresolved actual rights and disabled activation
+  ---
+  duration_ms: 2.014674
+  type: 'test'
+  ...
+# Subtest: each capability needs separately scoped retained evidence; transport success cannot grant rights or history
+ok 18 - each capability needs separately scoped retained evidence; transport success cannot grant rights or history
+  ---
+  duration_ms: 2.548611
+  type: 'test'
+  ...
+# Subtest: endpoint-version batching and additive conversions use returned bounds, including inclusive seven-day history
+ok 19 - endpoint-version batching and additive conversions use returned bounds, including inclusive seven-day history
+  ---
+  duration_ms: 1.196679
+  type: 'test'
+  ...
+# Subtest: published quotas, another endpoint and an adjacent observation cannot substitute for exact account allowance
+ok 20 - published quotas, another endpoint and an adjacent observation cannot substitute for exact account allowance
+  ---
+  duration_ms: 2.264201
+  type: 'test'
+  ...
+# Subtest: unknown endpoints, missing bounds and arithmetic overflow fail closed without integer rounding drift
+ok 21 - unknown endpoints, missing bounds and arithmetic overflow fail closed without integer rounding drift
+  ---
+  duration_ms: 0.287585
+  type: 'test'
+  ...
+# Subtest: credential, payment, forbidden, exhaustion and data failures cannot enter the retry path
+ok 22 - credential, payment, forbidden, exhaustion and data failures cannot enter the retry path
+  ---
+  duration_ms: 0.316458
+  type: 'test'
+  ...
+# Subtest: only typed minute/IP throttles and known transient outages get finite, budgeted retry plans
+ok 23 - only typed minute/IP throttles and known transient outages get finite, budgeted retry plans
+  ---
+  duration_ms: 0.266743
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1880.379199

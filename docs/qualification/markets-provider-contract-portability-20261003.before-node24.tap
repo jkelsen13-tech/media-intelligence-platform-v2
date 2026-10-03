@@ -1,0 +1,26 @@
+TAP version 13
+# Subtest: launch source bindings preserve qualified history and bind the integrated current gateway and domain bytes
+not ok 1 - launch source bindings preserve qualified history and bind the integrated current gateway and domain bytes
+  ---
+  duration_ms: 103.616781
+  type: 'test'
+  location: '/tmp/mip-market-portability-3hx0dpt1/tests/investigationApi.test.mjs:30:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: original checkout unavailable, open '/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs'"
+  code: 'ENOENT'
+  stack: |-
+    fs.readFile (file:///tmp/mip-market-portability-3hx0dpt1/deny-external-workspace.mjs:8:19)
+    boundBytes (file:///tmp/mip-market-portability-3hx0dpt1/tests/investigationApi.test.mjs:49:25)
+    TestContext.<anonymous> (file:///tmp/mip-market-portability-3hx0dpt1/tests/investigationApi.test.mjs:125:42)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 170.400644
