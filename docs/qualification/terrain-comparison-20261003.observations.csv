@@ -1,0 +1,5 @@
+observation_id,feature_type,artifact_A_sha256,artifact_B_sha256,source_dem_sha256,source_ortho_sha256,control_x,control_y,coordinate_basis,dem_pixel_column,dem_pixel_row,ortho_pixel_column,ortho_pixel_row,residual,units,residual_direction,uncertainty,uncertainty_method,observed_at_utc,capture_temporal_difference,missingness,deck_or_bare_earth_limitation,evidence_reference,observation
+bank-001,bank,,,,,,,,,,,,,,,,,,,,,,
+road-001,road,,,,,,,,,,,,,,,,,,,,,,
+grade-001,grade,,,,,,,,,,,,,,,,,,,,,,
+bridge-001,bridge,,,,,,,,,,,,,,,,,,,,,,
