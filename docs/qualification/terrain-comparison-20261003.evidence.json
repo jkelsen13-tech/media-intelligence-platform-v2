@@ -198,5 +198,162 @@
     },
     "consumerRawGeometry": "UNBOUND; semantic metadata only",
     "stageC": "UNAVAILABLE true3D; no verified heights/floors/roofs"
+  },
+  "sourceProof": {
+    "commit": "8d021d092c5ddd98c457e9d8f26dfb8c8b21fbb5",
+    "tree": "a890813bd09d7d283521ac003bd066645d09fe08",
+    "clean": true,
+    "files": [
+      {
+        "path": "scripts/terrain-comparison/contract.mjs",
+        "bytes": 15771,
+        "sha256": "9da2b65b406c3dcd4f0f412dcb2021daa6e09665da52e7b6b50299534b8e1f0a",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "scripts/terrain-comparison/render.py",
+        "bytes": 18572,
+        "sha256": "8d06ef35b95fe0f708311d4297f420089ba01a4812a688a15d1127cfd88d98b9",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "scripts/terrain-comparison/synthetic-proof.py",
+        "bytes": 5634,
+        "sha256": "1d4bf6c2fadf3b6a804c1e1b41a7c7b579ab4837f170e68a5039342455062638",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "scripts/terrain-comparison/validate.mjs",
+        "bytes": 1628,
+        "sha256": "3dedee9d7d6c7cb3fde9f24b504a4f1b0c35e731ad35d4475a3ed2a73f7c0696",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "tests/terrainComparisonContract20261003.test.mjs",
+        "bytes": 9482,
+        "sha256": "4b962db8308a799ade2d884b54f152b04cd94ad4877b5f558a5a9c5ec72c65af",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.template.json",
+        "bytes": 21592,
+        "sha256": "dc0c9b245ca76bf54c589142965d690b52ee58d55e1ab0ed8bcf7739c14f537b",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.md",
+        "bytes": 10407,
+        "sha256": "6429ac419c8b73ca2e1a433630868ca677c4d7692a52549e994d550780af0d61",
+        "role": "executed source or exact preparation input"
+      },
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.observations.csv",
+        "bytes": 537,
+        "sha256": "fd4ef4964379c07a3cd799c23398d26952aebcad09e4a4da479be154de7a80cd",
+        "role": "executed source or exact preparation input"
+      }
+    ],
+    "bindingKey": "sourceProof.files",
+    "selfHashExcluded": "This evidence JSON seals receipts and intentionally does not hash itself."
+  },
+  "artifactProof": {
+    "evidenceClass": "SYNTHETIC_TEST_FIXTURE_ONLY",
+    "files": [
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.synthetic-A.png",
+        "bytes": 78681,
+        "sha256": "cb281c2e2782461ff58755663b7e2de141a91b3121afd49bf8362f1b9fcad4ec",
+        "role": "synthetic fixture output; no real Cleveland data"
+      },
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.synthetic-B.png",
+        "bytes": 86975,
+        "sha256": "701e18faaf40305405bc5122d354bb9b2fce591371081675b5f87d7b18005355",
+        "role": "synthetic fixture output; no real Cleveland data"
+      },
+      {
+        "path": "docs/qualification/terrain-comparison-20261003.synthetic-record.json",
+        "bytes": 41647,
+        "sha256": "40bdbeec92bafe73a67636b7b54ef1748327b1e80921044bc7489cd95d658d1f",
+        "role": "exact original clean source execution record; original producer paths retained"
+      }
+    ],
+    "syntheticLabelVisuallyInspected": "SYNTHETIC TEST FIXTURE ONLY \u2014 NO REAL CLEVELAND DATA visible in both PNG headers",
+    "sharedCameraLightFootprintVerified": true,
+    "commonValidPixels": 992,
+    "commonMissingPixels": 0,
+    "effectiveMeshAndColourMetres": [
+      2,
+      2
+    ]
+  },
+  "qualificationReceipts": [
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-node22.tap",
+      "bytes": 4260,
+      "sha256": "7d5cb905e0ebaa77ca40f6f0ffe7983843ac1921b0bfe29aedfc6308fd07542c",
+      "role": "Node22.23.3 18/18 focused contract tests",
+      "capturedText": "TAP version 13\n# Subtest: retained real manifest is valid preparation, unready and never executed\nok 1 - retained real manifest is valid preparation, unready and never executed\n  ---\n  duration_ms: 1.990678\n  type: 'test'\n  ...\n# Subtest: explicit local source-relative research can be ready while registration remains unqualified\nok 2 - explicit local source-relative research can be ready while registration remains unqualified\n  ---\n  duration_ms: 0.950687\n  type: 'test'\n  ...\n# Subtest: arbitrary visual alignment offsets are rejected\nok 3 - arbitrary visual alignment offsets are rejected\n  ---\n  duration_ms: 1.225571\n  type: 'test'\n  ...\n# Subtest: operation pipeline hash, axes, offline setting and exact input CRS are bound\nok 4 - operation pipeline hash, axes, offline setting and exact input CRS are bound\n  ---\n  duration_ms: 1.231471\n  type: 'test'\n  ...\n# Subtest: unavailable grid cannot silently fall back to ballpark transform\nok 5 - unavailable grid cannot silently fall back to ballpark transform\n  ---\n  duration_ms: 0.335227\n  type: 'test'\n  ...\n# Subtest: literal pipeline cannot conceal nonzero presentation offsets or unqualified affine scale\nok 6 - literal pipeline cannot conceal nonzero presentation offsets or unqualified affine scale\n  ---\n  duration_ms: 1.599426\n  type: 'test'\n  ...\n# Subtest: authoritative datum parameters require reviewed method evidence but are not cosmetic offsets\nok 7 - authoritative datum parameters require reviewed method evidence but are not cosmetic offsets\n  ---\n  duration_ms: 0.34423\n  type: 'test'\n  ...\n# Subtest: source hash and native footprint are immutable for this actual DEM candidate\nok 8 - source hash and native footprint are immutable for this actual DEM candidate\n  ---\n  duration_ms: 1.150568\n  type: 'test'\n  ...\n# Subtest: geographic composition cannot borrow detached imagery operation or catalogue-only height basis\nok 9 - geographic composition cannot borrow detached imagery operation or catalogue-only height basis\n  ---\n  duration_ms: 0.43012\n  type: 'test'\n  ...\n# Subtest: local research and synthetic fixture cannot claim global registration\nok 10 - local research and synthetic fixture cannot claim global registration\n  ---\n  duration_ms: 0.498593\n  type: 'test'\n  ...\n# Subtest: no guessed constant geoid correction, vertical exaggeration or ellipsoidal relabeling\nok 11 - no guessed constant geoid correction, vertical exaggeration or ellipsoidal relabeling\n  ---\n  duration_ms: 0.669582\n  type: 'test'\n  ...\n# Subtest: C remains unavailable without verified geometry and height bodies\nok 12 - C remains unavailable without verified geometry and height bodies\n  ---\n  duration_ms: 0.638665\n  type: 'test'\n  ...\n# Subtest: recorded A/B require identical camera, footprint, lighting and source sampling\nok 13 - recorded A/B require identical camera, footprint, lighting and source sampling\n  ---\n  duration_ms: 1.50199\n  type: 'test'\n  ...\n# Subtest: actual overlap and missingness must be recorded without extrapolation\nok 14 - actual overlap and missingness must be recorded without extrapolation\n  ---\n  duration_ms: 1.174184\n  type: 'test'\n  ...\n# Subtest: rendered effective resolution cannot claim original 7.6cm imagery or finer than DEM\nok 15 - rendered effective resolution cannot claim original 7.6cm imagery or finer than DEM\n  ---\n  duration_ms: 0.669241\n  type: 'test'\n  ...\n# Subtest: residual observations require measured control coordinates, units and uncertainty\nok 16 - residual observations require measured control coordinates, units and uncertainty\n  ---\n  duration_ms: 0.29791\n  type: 'test'\n  ...\n# Subtest: research cannot promote source admission, canonical anchor, precision floor or physical performance\nok 17 - research cannot promote source admission, canonical anchor, precision floor or physical performance\n  ---\n  duration_ms: 1.077838\n  type: 'test'\n  ...\n# Subtest: execution needs actual time and exact harness/artifact hashes; preparation cannot fabricate receipts\nok 18 - execution needs actual time and exact harness/artifact hashes; preparation cannot fabricate receipts\n  ---\n  duration_ms: 0.461257\n  type: 'test'\n  ...\n1..18\n# tests 18\n# suites 0\n# pass 18\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 71.675394\n"
+    },
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-node24.tap",
+      "bytes": 1868,
+      "sha256": "dedfb74309f569ff0d7cfbd497ded21cefe8a67474994eef9f56e570548afe58",
+      "role": "Node24.19.0 18/18 focused contract tests",
+      "capturedText": "\u2714 retained real manifest is valid preparation, unready and never executed (3.026573ms)\n\u2714 explicit local source-relative research can be ready while registration remains unqualified (1.363701ms)\n\u2714 arbitrary visual alignment offsets are rejected (0.491342ms)\n\u2714 operation pipeline hash, axes, offline setting and exact input CRS are bound (1.279433ms)\n\u2714 unavailable grid cannot silently fall back to ballpark transform (0.440516ms)\n\u2714 literal pipeline cannot conceal nonzero presentation offsets or unqualified affine scale (1.569801ms)\n\u2714 authoritative datum parameters require reviewed method evidence but are not cosmetic offsets (0.353704ms)\n\u2714 source hash and native footprint are immutable for this actual DEM candidate (1.046942ms)\n\u2714 geographic composition cannot borrow detached imagery operation or catalogue-only height basis (0.482128ms)\n\u2714 local research and synthetic fixture cannot claim global registration (0.550391ms)\n\u2714 no guessed constant geoid correction, vertical exaggeration or ellipsoidal relabeling (0.772768ms)\n\u2714 C remains unavailable without verified geometry and height bodies (0.842102ms)\n\u2714 recorded A/B require identical camera, footprint, lighting and source sampling (3.012171ms)\n\u2714 actual overlap and missingness must be recorded without extrapolation (1.108545ms)\n\u2714 rendered effective resolution cannot claim original 7.6cm imagery or finer than DEM (0.401006ms)\n\u2714 residual observations require measured control coordinates, units and uncertainty (0.345352ms)\n\u2714 research cannot promote source admission, canonical anchor, precision floor or physical performance (0.706437ms)\n\u2714 execution needs actual time and exact harness/artifact hashes; preparation cannot fabricate receipts (0.440877ms)\n\u2139 tests 18\n\u2139 suites 0\n\u2139 pass 18\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 85.302143\n"
+    },
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic.log",
+      "bytes": 312,
+      "sha256": "9422027ffcbae1c8df59aaea29b6d282a25a24db765d8f8ab1576b9f7c77d429",
+      "role": "synthetic renderer+artifact validator exit0",
+      "capturedText": "{\"status\": \"EXECUTED\", \"evidenceClass\": \"SYNTHETIC_TEST_FIXTURE_ONLY\", \"mode\": \"LOCAL_COORDINATE_RELATIVE_HEIGHT_RESEARCH\", \"output\": \"/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-synthetic/synthetic-render\", \"C\": \"UNAVAILABLE\"}\n{\n  \"valid\": true,\n  \"ready\": true,\n  \"errors\": [],\n  \"gates\": []\n}\n"
+    },
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-ortho.log",
+      "bytes": 142,
+      "sha256": "2a23219f3425ed337b1d0e9660d1d4fa05cd004c6863d957c1ca17df9684c0c0",
+      "role": "actual resident ortho custody only exit0",
+      "capturedText": "{\"status\": \"ORTHO_CUSTODY_ONLY\", \"comparison\": \"NOT_EXECUTED\", \"output\": \"/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-ortho\"}\n"
+    },
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-real-ready-blocked.json",
+      "bytes": 366,
+      "sha256": "f84f9961258b1c0ab9f8b405e84cce6e001641ce35d30bc9b88e816fe1acd17c",
+      "role": "actual-data ready gate expected exit1; not executed",
+      "capturedText": "{\n  \"valid\": false,\n  \"ready\": false,\n  \"errors\": [\n    \"dem local bytes unbound\",\n    \"explicit ortho-to-DEM operation unbound; no implicit best/ballpark selection\",\n    \"comparison mode unbound\"\n  ],\n  \"gates\": [\n    \"dem local bytes unbound\",\n    \"explicit ortho-to-DEM operation unbound; no implicit best/ballpark selection\",\n    \"comparison mode unbound\"\n  ]\n}\n"
+    },
+    {
+      "path": "/workspace/mip-oct03-terrain-comparison-evidence/clean-8d02-ortho/ortho-custody.json",
+      "bytes": 2960,
+      "sha256": "1130f4a940def10691fdde537e49f2c42e52d649d0769417a17551c2b02d5b09",
+      "role": "actual resident input custody; A/B NOT_EXECUTED"
+    }
+  ],
+  "qualification": {
+    "sealedAtUtc": "2026-10-03T05:22:38.873774+00:00",
+    "executedSourceCommit": "8d021d092c5ddd98c457e9d8f26dfb8c8b21fbb5",
+    "executedSourceTree": "a890813bd09d7d283521ac003bd066645d09fe08",
+    "node22": {
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "PythonSyntax": "both helpers parsed",
+    "syntheticOfflineRender": "passed; A/B PNG bytes and hashes verified; no actual Cleveland data",
+    "residentOrthoCustody": "passed all4 encoded/dimensions/planar pixel hashes",
+    "realReadyGate": "correctly rejected unbound terrain, operation and mode",
+    "actualDataComparison": "NOT_EXECUTED",
+    "geographicComposition": "UNQUALIFIED",
+    "CTrue3D": "UNAVAILABLE",
+    "sourceFilesChangedAfterExecution": false,
+    "scope": "new research scripts/tests/docs only; no App/UI/canonical/provider/backend edits"
   }
 }
