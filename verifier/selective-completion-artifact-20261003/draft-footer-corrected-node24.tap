@@ -1,0 +1,13 @@
+✔ independent post-eight-stage compiler binds two distinct accepted catalogs, paired runner and exact source/import closure (4871.778182ms)
+✔ wrong catalog schema, missing security fields, duplicate identities, inconsistent owner and unbound runner refuse before publication (105.6317ms)
+✔ exclusive paired writer preserves either occupied name and admits only one concurrent follow-on artifact (231.148764ms)
+✔ read-only verification refuses whitespace-only catalog changes, SQL/receipt tampering and current helper/paired-runner source drift (1027.634026ms)
+✔ actual eight-stage fixture rejects native approval drift, installs follow-on and restores exact whole/native catalogs with populated history intact (5479.316622ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11834.269917

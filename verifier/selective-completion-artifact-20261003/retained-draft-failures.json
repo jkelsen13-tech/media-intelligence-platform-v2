@@ -1,0 +1,32 @@
+{
+  "source_only": true,
+  "live_operations": 0,
+  "drafts": [
+    {
+      "status": "FAIL",
+      "runtime": "v24.19.0",
+      "tests": 5,
+      "pass": 3,
+      "fail": 2,
+      "tool_output_chunk_id": "081b05",
+      "causes": [
+        "CLI emitted full capture objects and exceeded child stdout buffer",
+        "original/current native target version mismatch needed explicit source refusal"
+      ],
+      "exact_intermediate_source_bytes_preserved": false
+    },
+    {
+      "status": "FAIL",
+      "runtime": "v24.19.0",
+      "tests": 5,
+      "pass": 4,
+      "fail": 1,
+      "log": "draft-corrected-node24.tap.gz",
+      "decoded_bytes": 12610,
+      "decoded_sha256": "1b1535b7ad4c444763916cfd3f76df0374d66ef9d63c99d7975b375883909119",
+      "cause": "JS replacement string interpreted dollar sequences in catalog literal; callback replacement fixed before final qualification",
+      "exact_intermediate_source_bytes_preserved": false
+    }
+  ],
+  "historical_qualified_sources_unattributed_to_draft_failures": true
+}
