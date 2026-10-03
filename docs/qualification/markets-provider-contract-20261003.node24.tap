@@ -1,0 +1,341 @@
+TAP version 13
+# Subtest: stock and crypto retain canonical reporting when all providers and prices are unavailable
+ok 1 - stock and crypto retain canonical reporting when all providers and prices are unavailable
+  ---
+  duration_ms: 4.624739
+  type: 'test'
+  ...
+# Subtest: same ticker cannot authorize a different selected asset, version or historical clock
+ok 2 - same ticker cannot authorize a different selected asset, version or historical clock
+  ---
+  duration_ms: 0.565784
+  type: 'test'
+  ...
+# Subtest: corrections, rights loss and unsupported relationships remove reporting without replacing prices
+ok 3 - corrections, rights loss and unsupported relationships remove reporting without replacing prices
+  ---
+  duration_ms: 6.161299
+  type: 'test'
+  ...
+# Subtest: direct, one-hop connected and supplied broader relevance preserve explanation sources and lineage
+ok 4 - direct, one-hop connected and supplied broader relevance preserve explanation sources and lineage
+  ---
+  duration_ms: 0.704222
+  type: 'test'
+  ...
+# Subtest: stock sessions cannot become calendar windows and crypto range labels never create samples
+ok 5 - stock sessions cannot become calendar windows and crypto range labels never create samples
+  ---
+  duration_ms: 5.323554
+  type: 'test'
+  ...
+# Subtest: missing directory is unavailable, and literal symbol search presents distinct typed choices
+ok 6 - missing directory is unavailable, and literal symbol search presents distinct typed choices
+  ---
+  duration_ms: 14.117005
+  type: 'test'
+  ...
+# Subtest: authorization/type/version failures reject the complete directory rather than choosing a plausible winner
+ok 7 - authorization/type/version failures reject the complete directory rather than choosing a plausible winner
+  ---
+  duration_ms: 7.954976
+  type: 'test'
+  ...
+# Subtest: lookup retains precise separate clocks, corrections and reporting despite no price provider
+ok 8 - lookup retains precise separate clocks, corrections and reporting despite no price provider
+  ---
+  duration_ms: 4.202873
+  type: 'test'
+  ...
+# Subtest: Markets legacy route envelope round-trips typed identity, retained source, instant and range
+ok 9 - Markets legacy route envelope round-trips typed identity, retained source, instant and range
+  ---
+  duration_ms: 2.778894
+  type: 'test'
+  ...
+# Subtest: dedicated native Markets route renders a selected typed asset with reporting and unavailable prices
+ok 10 - dedicated native Markets route renders a selected typed asset with reporting and unavailable prices
+  ---
+  duration_ms: 64.211376
+  type: 'test'
+  ...
+# Subtest: Markets navigation roundtrip retains exact typed asset, recorded time and return path
+ok 11 - Markets navigation roundtrip retains exact typed asset, recorded time and return path
+  ---
+  duration_ms: 87.225398
+  type: 'test'
+  ...
+# Subtest: typing and kind filtering preview choices without committing an investigation
+ok 12 - typing and kind filtering preview choices without committing an investigation
+  ---
+  duration_ms: 65.186788
+  type: 'test'
+  ...
+# Subtest: asset source and precise range survive route reload, view switches and related-event return
+ok 13 - asset source and precise range survive route reload, view switches and related-event return
+  ---
+  duration_ms: 122.578994
+  type: 'test'
+  ...
+# Subtest: asset context removes only the default event assessment and preserves supplied asset references
+ok 14 - asset context removes only the default event assessment and preserves supplied asset references
+  ---
+  duration_ms: 0.801187
+  type: 'test'
+  ...
+# Subtest: actual App uses the bound installed SDK reader; a missing endpoint finishes unavailable without synthetic assets
+ok 15 - actual App uses the bound installed SDK reader; a missing endpoint finishes unavailable without synthetic assets
+  ---
+  duration_ms: 82.173118
+  type: 'test'
+  ...
+# Subtest: actual installed SDK source transfer binds reporting, rejects late account/clock responses and retains navigation hints while loading
+ok 16 - actual installed SDK source transfer binds reporting, rejects late account/clock responses and retains navigation hints while loading
+  ---
+  duration_ms: 56.558816
+  type: 'test'
+  ...
+# Subtest: source transport has no global-client fallback or read at construction and refuses non-instant clocks
+ok 17 - source transport has no global-client fallback or read at construction and refuses non-instant clocks
+  ---
+  duration_ms: 43.636555
+  type: 'test'
+  ...
+# Subtest: installed SDK uses exact RPC/time and current session without cache, provider calls or caller identity guesses
+ok 18 - installed SDK uses exact RPC/time and current session without cache, provider calls or caller identity guesses
+  ---
+  duration_ms: 57.69329
+  type: 'test'
+  ...
+# Subtest: null, missing RPC, denied and malformed responses remain unavailable; another valid instant cannot supply this scope
+ok 19 - null, missing RPC, denied and malformed responses remain unavailable; another valid instant cannot supply this scope
+  ---
+  duration_ms: 94.797566
+  type: 'test'
+  ...
+# Subtest: fixed deadline aborts an installed SDK stalled read, ends unavailable and does not retry
+ok 20 - fixed deadline aborts an installed SDK stalled read, ends unavailable and does not retry
+  ---
+  duration_ms: 3.524279
+  type: 'test'
+  ...
+# Subtest: nanosecond offset asset/source range traverses analytical views and connected-event return without identity coercion
+ok 21 - nanosecond offset asset/source range traverses analytical views and connected-event return without identity coercion
+  ---
+  duration_ms: 324.06159
+  type: 'test'
+  ...
+# Subtest: a one-nanosecond inspection change withholds another clock’s source and reporting while retaining the typed asset
+ok 22 - a one-nanosecond inspection change withholds another clock’s source and reporting while retaining the typed asset
+  ---
+  duration_ms: 72.020571
+  type: 'test'
+  ...
+# Subtest: Markets return is cleared on account change and private public handoff uses only the exact public subject
+ok 23 - Markets return is cleared on account change and private public handoff uses only the exact public subject
+  ---
+  duration_ms: 96.193021
+  type: 'test'
+  ...
+# Subtest: native identity mapping and exact reviewed source/right decisions produce distinct assets without pair substitution
+ok 24 - native identity mapping and exact reviewed source/right decisions produce distinct assets without pair substitution
+  ---
+  duration_ms: 10.206654
+  type: 'test'
+  ...
+# Subtest: source reports, withheld owner decisions and unavailable or expired rights cannot admit an identity
+ok 25 - source reports, withheld owner decisions and unavailable or expired rights cannot admit an identity
+  ---
+  duration_ms: 2.952986
+  type: 'test'
+  ...
+# Subtest: capture hash, source span, event and native assessment correction failures remove only the affected path
+ok 26 - capture hash, source span, event and native assessment correction failures remove only the affected path
+  ---
+  duration_ms: 12.432773
+  type: 'test'
+  ...
+# Subtest: directory identity/version collisions, issuer/share-class merges and pair misclassification fail closed
+ok 27 - directory identity/version collisions, issuer/share-class merges and pair misclassification fail closed
+  ---
+  duration_ms: 24.42436
+  type: 'test'
+  ...
+# Subtest: public projection strips private fields and needs exact source rights, identity versions and path event binding
+ok 28 - public projection strips private fields and needs exact source rights, identity versions and path event binding
+  ---
+  duration_ms: 3.895719
+  type: 'test'
+  ...
+# Subtest: accepted provider directions stay disabled under zero subscription/overage cost and unresolved actual terms
+ok 29 - accepted provider directions stay disabled under zero subscription/overage cost and unresolved actual terms
+  ---
+  duration_ms: 0.29145
+  type: 'test'
+  ...
+# Subtest: actual Markets SQL extends native history and shared admission, feeds installed SDK, and defaults closed
+    # Subtest: missing or drifted full catalog authority aborts installation atomically
+    ok 1 - missing or drifted full catalog authority aborts installation atomically
+      ---
+      duration_ms: 20.094536
+      type: 'test'
+      ...
+    # Subtest: empty directory, date-only clocks and nanosecond aliases qualify deterministically
+    ok 2 - empty directory, date-only clocks and nanosecond aliases qualify deterministically
+      ---
+      duration_ms: 56.354047
+      type: 'test'
+      ...
+    # Subtest: a visible source report and caller flags cannot qualify a market identity
+    ok 3 - a visible source report and caller flags cannot qualify a market identity
+      ---
+      duration_ms: 222.641945
+      type: 'test'
+      ...
+    # Subtest: distinct actual identities and exact path/source/right revisions reach the installed SDK without complete bodies
+    ok 4 - distinct actual identities and exact path/source/right revisions reach the installed SDK without complete bodies
+      ---
+      duration_ms: 288.690899
+      type: 'test'
+      ...
+    # Subtest: readers and ingestion service cannot qualify mappings, revoke reviews or access private ledgers
+    ok 5 - readers and ingestion service cannot qualify mappings, revoke reviews or access private ledgers
+      ---
+      duration_ms: 6.960384
+      type: 'test'
+      ...
+    # Subtest: exact inspection changes preserve identities and withhold another instant’s paths
+    ok 6 - exact inspection changes preserve identities and withhold another instant’s paths
+      ---
+      duration_ms: 72.922892
+      type: 'test'
+      ...
+    # Subtest: a reviewed replacement with an unsupported or disconnected path cannot publish a relationship
+    ok 7 - a reviewed replacement with an unsupported or disconnected path cannot publish a relationship
+      ---
+      duration_ms: 150.580198
+      type: 'test'
+      ...
+    # Subtest: rights revocation and source correction immediately withdraw paths without hiding the unaffected directory
+    ok 8 - rights revocation and source correction immediately withdraw paths without hiding the unaffected directory
+      ---
+      duration_ms: 161.505006
+      type: 'test'
+      ...
+    1..8
+ok 30 - actual Markets SQL extends native history and shared admission, feeds installed SDK, and defaults closed
+  ---
+  duration_ms: 3307.086005
+  type: 'test'
+  ...
+# Subtest: empty Markets installation rollback restores the exact pre-install catalog
+ok 31 - empty Markets installation rollback restores the exact pre-install catalog
+  ---
+  duration_ms: 1820.01504
+  type: 'test'
+  ...
+# Subtest: market instants preserve sub-ms distinctions, offsets and valid calendar bounds
+ok 32 - market instants preserve sub-ms distinctions, offsets and valid calendar bounds
+  ---
+  duration_ms: 1.446148
+  type: 'test'
+  ...
+# Subtest: stock and crypto paths retain exact evidence and distinguish direct from connected
+ok 33 - stock and crypto paths retain exact evidence and distinguish direct from connected
+  ---
+  duration_ms: 3.452772
+  type: 'test'
+  ...
+# Subtest: canonical identity is not a ticker; aliases are namespace-qualified and dated
+ok 34 - canonical identity is not a ticker; aliases are namespace-qualified and dated
+  ---
+  duration_ms: 0.498972
+  type: 'test'
+  ...
+# Subtest: every essential hop must be exact, supported, current and independently eligible
+ok 35 - every essential hop must be exact, supported, current and independently eligible
+  ---
+  duration_ms: 4.273528
+  type: 'test'
+  ...
+# Subtest: correction, missing bytes, rights loss and forbidden URLs fail without promoting evidence
+ok 36 - correction, missing bytes, rights loss and forbidden URLs fail without promoting evidence
+  ---
+  duration_ms: 0.787847
+  type: 'test'
+  ...
+# Subtest: qualification returns a narrow projection rather than forwarding hidden caller fields
+ok 37 - qualification returns a narrow projection rather than forwarding hidden caller fields
+  ---
+  duration_ms: 0.293492
+  type: 'test'
+  ...
+# Subtest: source spans use PostgreSQL Unicode code points, not UTF-16 offsets
+ok 38 - source spans use PostgreSQL Unicode code points, not UTF-16 offsets
+  ---
+  duration_ms: 0.485051
+  type: 'test'
+  ...
+# Subtest: exact spans reject clamped end offsets for ASCII and Unicode retained text
+ok 39 - exact spans reject clamped end offsets for ASCII and Unicode retained text
+  ---
+  duration_ms: 0.417049
+  type: 'test'
+  ...
+# Subtest: alternate UUID case cannot evade canonical identity cycle or duplicate checks
+ok 40 - alternate UUID case cannot evade canonical identity cycle or duplicate checks
+  ---
+  duration_ms: 21.12603
+  type: 'test'
+  ...
+# Subtest: current published offer resolves only the pricing observation, preserving unresolved actual rights and disabled activation
+ok 41 - current published offer resolves only the pricing observation, preserving unresolved actual rights and disabled activation
+  ---
+  duration_ms: 2.525896
+  type: 'test'
+  ...
+# Subtest: each capability needs separately scoped retained evidence; transport success cannot grant rights or history
+ok 42 - each capability needs separately scoped retained evidence; transport success cannot grant rights or history
+  ---
+  duration_ms: 2.430021
+  type: 'test'
+  ...
+# Subtest: endpoint-version batching and additive conversions use returned bounds, including inclusive seven-day history
+ok 43 - endpoint-version batching and additive conversions use returned bounds, including inclusive seven-day history
+  ---
+  duration_ms: 2.053333
+  type: 'test'
+  ...
+# Subtest: published quotas, another endpoint and an adjacent observation cannot substitute for exact account allowance
+ok 44 - published quotas, another endpoint and an adjacent observation cannot substitute for exact account allowance
+  ---
+  duration_ms: 1.318837
+  type: 'test'
+  ...
+# Subtest: unknown endpoints, missing bounds and arithmetic overflow fail closed without integer rounding drift
+ok 45 - unknown endpoints, missing bounds and arithmetic overflow fail closed without integer rounding drift
+  ---
+  duration_ms: 0.242145
+  type: 'test'
+  ...
+# Subtest: credential, payment, forbidden, exhaustion and data failures cannot enter the retry path
+ok 46 - credential, payment, forbidden, exhaustion and data failures cannot enter the retry path
+  ---
+  duration_ms: 0.482497
+  type: 'test'
+  ...
+# Subtest: only typed minute/IP throttles and known transient outages get finite, budgeted retry plans
+ok 47 - only typed minute/IP throttles and known transient outages get finite, budgeted retry plans
+  ---
+  duration_ms: 0.44447
+  type: 'test'
+  ...
+1..47
+# tests 55
+# suites 0
+# pass 55
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5833.1857

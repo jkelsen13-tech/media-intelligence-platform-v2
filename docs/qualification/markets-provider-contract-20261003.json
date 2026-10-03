@@ -1,0 +1,103 @@
+{
+  "scope": "source-only provider policy and deterministic planning fixtures",
+  "generatedAt": "2026-10-03T04:40:28.133543+00:00",
+  "baseSha": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+  "baseTree": "cbcfc510a117101fd163f83b3c574dd979085b02",
+  "branch": "codex/mip-market-contract-20261003",
+  "sourceAndFixtureHashes": [
+    {
+      "path": "/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs",
+      "bytes": 10125,
+      "sha256": "c5d87575db982ebdef53f9af6a2f7e3d396c9b6ab5cbb704c494e9cd9598c170"
+    },
+    {
+      "path": "/workspace/mip-oct03-market-contract/tests/marketsProviderPolicy20261003.test.mjs",
+      "bytes": 11721,
+      "sha256": "d51ca1844ed3f77b30e7462bd5c7f11dde8ee8f3d132af196ebe21a1ac88cae6"
+    },
+    {
+      "path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.md",
+      "bytes": 7082,
+      "sha256": "c0932b36821bffa2db60649591bb9b47029d41e3681322f0151877ae21cf8ec5"
+    }
+  ],
+  "requirements": [
+    {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/libfile_f7703acf17088191bcfee5a7e02c0010-v1.read.txt",
+      "bytes": 33703,
+      "sha256": "e1f86811ec0852dcab7c3197a404b425cde057f018bf9ae8d73e4985fb62d610"
+    },
+    {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/libfile_953c9013cec08191be2e9bef847b753f-v7.read.txt",
+      "bytes": 92294,
+      "sha256": "3ef1f552994f069fc8c84b269cbdb445702970d1f415dee521ac5fabde15c9e3"
+    },
+    {
+      "path": "/workspace/mip-oct03-launch-readiness/requirements/libfile_720892b4771c8191a3216a89362f7028-vunversioned.read.txt",
+      "bytes": 5589,
+      "sha256": "d606162742673f898c59b8199c95a8d7a23b77a48b4a5bd2b717a816931699c3"
+    }
+  ],
+  "officialFormulaDocument": {
+    "url": "https://coinmarketcap.com/api/documentation/pro-api-reference/cryptocurrency",
+    "accessedOn": "2026-10-03",
+    "accessedAtMinuteUTC": "04:33",
+    "sections": [
+      "Quotes Latest",
+      "Quotes Historical"
+    ],
+    "formula": "ceil(total returned bound / batch size) + conversion count - 1",
+    "latestBatchSize": 250,
+    "historicalBatchSize": 100,
+    "provenance": "single parent-authorized harmless public-document read; no provider API/account call"
+  },
+  "dependencyLink": "/workspace/mip-oct03-release-dependency/node_modules",
+  "runs": [
+    {
+      "runtime": "v22.23.3",
+      "executable": "/workspace/mip-runtime22/node_modules/node/bin/node",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-reporter=tap tests/marketPriceContext.test.mjs tests/marketSourceLookup.test.mjs tests/markets*.test.mjs",
+      "counts": {
+        "tests": 55,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 4979.261742,
+      "tap": {
+        "path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.node22.tap",
+        "bytes": 14970,
+        "sha256": "06399db11e29730c9f4614e1b2cc58769e8bc04a0f7dde99cd9e431089b0f3e4"
+      }
+    },
+    {
+      "runtime": "v24.19.0",
+      "executable": "node",
+      "command": "node --test --test-reporter=tap tests/marketPriceContext.test.mjs tests/marketSourceLookup.test.mjs tests/markets*.test.mjs",
+      "counts": {
+        "tests": 55,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 5833.1857,
+      "tap": {
+        "path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.node24.tap",
+        "bytes": 14786,
+        "sha256": "4d7daefe2009e4e5d6999fa79a34e14842da59c9d0cc6bf932ac69d7f85ce1ec"
+      }
+    }
+  ],
+  "newTests": 7,
+  "existingChecks": 48,
+  "gitDiffCheck": "passed",
+  "runtimeBuild": "not run; pure shared policy, no frontend implementation change",
+  "activationAuthorized": false,
+  "actualAccountQualified": false,
+  "globalReservationLedgerImplemented": false,
+  "reviewOwner": "Joffrey; no Cursor dispatch"
+}
