@@ -1,0 +1,24 @@
+{
+  "contract": "mip-qik-provider-independent-feasibility-files-v1",
+  "source_head": "a9ce6b29f46cc965fd45c9edefcb7428f3493c69",
+  "source_tree": "a44cabcecfb55b0f9da0921e6c7538ff3c640c64",
+  "files": [
+    {
+      "path": "MIP_QIK_PROVIDER_INDEPENDENT_FEASIBILITY_2026-10-03.md",
+      "bytes": 3280,
+      "sha256": "6caa5ee4261c800c7d7de6d77c910d98ddc14919655d63bf7dceed8154c8f3e4"
+    },
+    {
+      "path": "feasibility.json",
+      "bytes": 12469,
+      "sha256": "eaa9875c9d92d6fea2b1394511d6e351e972066bfe1a02543fbdbdc6304bee86"
+    },
+    {
+      "path": "installed-libpq-inspection.json",
+      "bytes": 3042,
+      "sha256": "cf70bbc691164879f62d083f874cdd45ff0aebc9348dd82197992611551c0b52"
+    }
+  ],
+  "status": "ABI_AVAILABILITY_OBSERVED_NATIVE17_SERVER_TESTS_BLOCKED",
+  "scope": "Read-only library/executable/package facts only; source/live gates unchanged"
+}
