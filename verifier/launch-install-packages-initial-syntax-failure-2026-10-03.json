@@ -1,0 +1,24 @@
+{
+  "contract": "mip-launch-install-packages-prequalification-failure-v1",
+  "date": "2026-10-03",
+  "status": "FAIL",
+  "runtime": "v24.19.0",
+  "command": "node --test tests/launchInstallationSequence.test.mjs",
+  "test_exit_code": 1,
+  "counts": {
+    "tests": 1,
+    "pass": 0,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "error": "SyntaxError: Invalid or unexpected token",
+  "location": "scripts/launchInstallationSequence.mjs:98",
+  "cause": "Missing closing quote in newly drafted catalog validator field name; corrected before final qualification",
+  "attribution": "Transient uncommitted prequalification draft; exact intermediate source bytes were not preserved, and no frozen/qualified commit is attributed to this failure",
+  "tool_output_chunk_id": "ef8e09",
+  "correction_output_chunk_id": "8d8aef",
+  "source_only": true,
+  "live_operations": 0
+}
