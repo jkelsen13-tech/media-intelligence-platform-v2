@@ -110,6 +110,24 @@
       ]
     }
   ],
+  "qualified_source_path_mappings": {
+    "manifest_path": "docs/qualification/markets-provider-contract-20261003.json",
+    "manifest_sha256": "3868bbda45bdf46b2990db9f293f7363540dbb794dfd5c091bf8ec2d6fedf8d2",
+    "entries": [
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs",
+        "path": "supabase/functions/_shared/marketsProviderPolicy.mjs"
+      },
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/tests/marketsProviderPolicy20261003.test.mjs",
+        "path": "tests/marketsProviderPolicy20261003.test.mjs"
+      },
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.md",
+        "path": "docs/qualification/markets-provider-contract-20261003.md"
+      }
+    ]
+  },
   "historical_snapshots": [
     {
       "manifest_path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
@@ -847,6 +865,36 @@
       "sha256": "4d7daefe2009e4e5d6999fa79a34e14842da59c9d0cc6bf932ac69d7f85ce1ec"
     },
     {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.before-node24.tap",
+      "bytes": 1150,
+      "sha256": "b1fd8bec617298db36539bd614efb90872ec493fc4f0be7c6ea2f2eac0ddcbdd"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.failed-ci.txt",
+      "bytes": 2096,
+      "sha256": "cbf4eda93d1a3db49cd35f13338696ae62bbe43a487a5bc221c6223bb5b0781e"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.json",
+      "bytes": 6901,
+      "sha256": "8b2d66c4b04662d004cfb0317ffa83f427a09dde6cb5e5583bb60a4a4a609d33"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.md",
+      "bytes": 4351,
+      "sha256": "7cac53bb4a18e267809373d4f59372e2c71d6866f1633c2e0751e4424db5866b"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.node22.tap",
+      "bytes": 6210,
+      "sha256": "bbe86d9e105042e23bac6b7938aba907f66d032889ed5e4896504a1f4b4cb40f"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.node24.tap",
+      "bytes": 6209,
+      "sha256": "03a845da470ea68e8606d89b098588ba616d4de49e333a16c2e3997dfe43cdfd"
+    },
+    {
       "path": "docs/qualification/release-dependency-20261003-lineage.json",
       "bytes": 30214,
       "sha256": "b0353eff47a56d61ae7a9622a247c1143b8ba9a0f2f9ad498a2d0a2dd3e43a23"
@@ -983,8 +1031,8 @@
     },
     {
       "path": "scripts/buildLaunchRcSourceBinding20261003.py",
-      "bytes": 5122,
-      "sha256": "c5d2f35fba60d70ea1848b7014899f2f383bf551af972175d3ff1cbd8ab5ab7e"
+      "bytes": 6410,
+      "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
     },
     {
       "path": "scripts/compileLaunchInstallationStage.mjs",
@@ -1025,6 +1073,16 @@
       "path": "scripts/launchInstallationSequence.mjs",
       "bytes": 16832,
       "sha256": "2bec9652687f0eb66d303b8153b1e2ec5c64de9bd1a50c08bd674feb48e23a2a"
+    },
+    {
+      "path": "scripts/launchRcHistoricalSourcePaths20261003.json",
+      "bytes": 772,
+      "sha256": "8e76bc714b2f2a84667018ab19a24efcf14687276c2d6e1ee89dff40369ab4e8"
+    },
+    {
+      "path": "scripts/launchRcSourcePath20261003.mjs",
+      "bytes": 1306,
+      "sha256": "2d04808db4dd95091ac057eadd2cfc47dd53aae217699d0ac5c8dcdd1230785f"
     },
     {
       "path": "scripts/launchReleaseArtifact20261003.mjs",
@@ -1118,13 +1176,18 @@
     },
     {
       "path": "tests/investigationApi.test.mjs",
-      "bytes": 24674,
-      "sha256": "bd22d560dd3a46bcf3c35a7adfd05539a341f18480a9bdc83b705864574f5794"
+      "bytes": 25185,
+      "sha256": "cb01c8ce566babe3351ffb0b0fc3d57d4797ec122ea512dcee1679217378bf59"
     },
     {
       "path": "tests/launchInstallationArtifact.test.mjs",
       "bytes": 13803,
       "sha256": "195f0c76327bbfda6a6a07413d6fb10e343f6a4729569c4162d3d6924e2c4e5d"
+    },
+    {
+      "path": "tests/launchRcSourcePortability20261003.test.mjs",
+      "bytes": 6809,
+      "sha256": "991a3373d2e978fd03033858eafbe371a48415474ca911cca13528a007b663c4"
     },
     {
       "path": "tests/launchReleaseArtifact20261003.test.mjs",

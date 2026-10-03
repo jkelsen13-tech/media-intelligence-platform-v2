@@ -1,0 +1,179 @@
+{
+  "scope": "test/tooling checkout portability only",
+  "generatedAt": "2026-10-03T05:43:21.049228+00:00",
+  "baseSha": "096693a4f62eb4e3f918ae03eb4525f0232e4e54",
+  "baseTree": "0fc1637ec8a6d78a006b41ae91892836f2f495f9",
+  "branch": "codex/mip-market-portability-20261003",
+  "failedPublicRun": {
+    "id": 37099754666,
+    "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37099754666",
+    "tests": 2686,
+    "pass": 2685,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "runtime": "Node 24",
+    "failure": "ENOENT in investigationApi integrated source reader",
+    "buildAudit": "not qualified"
+  },
+  "source_files": [
+    {
+      "path": "scripts/buildLaunchRcSourceBinding20261003.py",
+      "bytes": 6410,
+      "sha256": "2859f46c3b2d8d4bbfac2ccb9a339fd1bca349430dd1646b38039c982e581026"
+    },
+    {
+      "path": "scripts/launchRcHistoricalSourcePaths20261003.json",
+      "bytes": 772,
+      "sha256": "8e76bc714b2f2a84667018ab19a24efcf14687276c2d6e1ee89dff40369ab4e8"
+    },
+    {
+      "path": "scripts/launchRcSourcePath20261003.mjs",
+      "bytes": 1306,
+      "sha256": "2d04808db4dd95091ac057eadd2cfc47dd53aae217699d0ac5c8dcdd1230785f"
+    },
+    {
+      "path": "tests/investigationApi.test.mjs",
+      "bytes": 25185,
+      "sha256": "cb01c8ce566babe3351ffb0b0fc3d57d4797ec122ea512dcee1679217378bf59"
+    },
+    {
+      "path": "tests/launchRcSourcePortability20261003.test.mjs",
+      "bytes": 6809,
+      "sha256": "991a3373d2e978fd03033858eafbe371a48415474ca911cca13528a007b663c4"
+    }
+  ],
+  "runs": [
+    {
+      "runtime": "v22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-reporter=tap tests/launchRcSourcePortability20261003.test.mjs tests/investigationApi.test.mjs tests/marketsProviderPolicy20261003.test.mjs",
+      "counts": {
+        "tests": 23,
+        "pass": 23,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "tap": {
+        "path": "docs/qualification/markets-provider-contract-portability-20261003.node22.tap",
+        "bytes": 6210,
+        "sha256": "bbe86d9e105042e23bac6b7938aba907f66d032889ed5e4896504a1f4b4cb40f"
+      }
+    },
+    {
+      "runtime": "v24.19.0",
+      "command": "node --test --test-reporter=tap tests/launchRcSourcePortability20261003.test.mjs tests/investigationApi.test.mjs tests/marketsProviderPolicy20261003.test.mjs",
+      "counts": {
+        "tests": 23,
+        "pass": 23,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "tap": {
+        "path": "docs/qualification/markets-provider-contract-portability-20261003.node24.tap",
+        "bytes": 6209,
+        "sha256": "03a845da470ea68e8606d89b098588ba616d4de49e333a16c2e3997dfe43cdfd"
+      }
+    }
+  ],
+  "beforeAndFailureEvidence": [
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.before-node24.tap",
+      "bytes": 1150,
+      "sha256": "b1fd8bec617298db36539bd614efb90872ec493fc4f0be7c6ea2f2eac0ddcbdd"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-portability-20261003.failed-ci.txt",
+      "bytes": 2096,
+      "sha256": "cbf4eda93d1a3db49cd35f13338696ae62bbe43a487a5bc221c6223bb5b0781e"
+    }
+  ],
+  "unchangedHistoricalManifests": [
+    {
+      "path": "docs/MIP_NATIVE_REVIEW_CORRECTIONS_SOURCE_2026-10-02.json",
+      "sha256": "c15cba4ea3864c90f0bfbe3dd69308818308c11b431afcb857085252c462e169"
+    },
+    {
+      "path": "docs/qualification/release-dependency-20261003-source.json",
+      "sha256": "95b2e752c8b954b7bef7418c2ad8e631b5914847fcbbe29aa3dc63e367e6d63f"
+    },
+    {
+      "path": "docs/MIP_LAUNCH_INSTALL_PACKAGES_SOURCE_2026-10-03.json",
+      "sha256": "f14fe9628a9d25c961cb4c0e3c1231d3bf70a3db7c727bb134491bed142bbf48"
+    },
+    {
+      "path": "docs/MIP_RETAINED_NEWS_CALIBRATION_SOURCE_2026-10-03.json",
+      "sha256": "bab5bb17eb41adab407abddaeaf664c3faae9b0ad9476f6cf1724e4681795e30"
+    },
+    {
+      "path": "verifier/selective_intake_completion_qualification_2026-10-03.json",
+      "sha256": "1e20c7b25e176e93bb0cec6dd4c091ebc223c729c539826fff31c80d55b72c38"
+    },
+    {
+      "path": "docs/qualification/selective-completion-artifact-20261003.json",
+      "sha256": "4c33aaf24e98d109605e3c957d643a9674e0766ca53258ec1bdd79fa84a16f5f"
+    },
+    {
+      "path": "docs/qualification/markets-provider-contract-20261003.json",
+      "sha256": "3868bbda45bdf46b2990db9f293f7363540dbb794dfd5c091bf8ec2d6fedf8d2"
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.json",
+      "sha256": "25e94bc5fffc16d796561eabe404b37e9446d767c97549e8e36d1e2a2fc0df08"
+    },
+    {
+      "path": "docs/qualification/terrain-comparison-20261003.evidence.json",
+      "sha256": "07f20a73831bf220e0795bf96f3c24d59cee7faa65fca6e0aca787a3b7b193e8"
+    },
+    {
+      "path": "docs/qualification/terrain-composition-20261003.operation-grid.json",
+      "sha256": "175070cb6d27001bda4b8a6d052e5972f7ed47546e0364f815a67d9548909581"
+    }
+  ],
+  "historicalSnapshotCount": 12,
+  "historicalSnapshotKeysAndContentsPreserved": true,
+  "productionPolicyUnchanged": true,
+  "originalProviderTestUnchanged": true,
+  "exactHistoricalPathMappings": {
+    "manifest_path": "docs/qualification/markets-provider-contract-20261003.json",
+    "manifest_sha256": "3868bbda45bdf46b2990db9f293f7363540dbb794dfd5c091bf8ec2d6fedf8d2",
+    "entries": [
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/supabase/functions/_shared/marketsProviderPolicy.mjs",
+        "path": "supabase/functions/_shared/marketsProviderPolicy.mjs"
+      },
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/tests/marketsProviderPolicy20261003.test.mjs",
+        "path": "tests/marketsProviderPolicy20261003.test.mjs"
+      },
+      {
+        "source_path": "/workspace/mip-oct03-market-contract/docs/qualification/markets-provider-contract-20261003.md",
+        "path": "docs/qualification/markets-provider-contract-20261003.md"
+      }
+    ]
+  },
+  "relocationProof": {
+    "actualReaderPass": true,
+    "oldWorkspaceReadInterception": true,
+    "changedCurrentPolicyRefused": true,
+    "missingCurrentPolicyRefused": true,
+    "outsideRootSymlinkRefused": true,
+    "pythonNormalizerQualified": true,
+    "ordinaryRegressionRequiresHistoricalGitObjects": false,
+    "originalDirectoriesModified": false
+  },
+  "fullGenerator": "locally regenerated using real qualified Git objects; shared mapping applied before source file reads",
+  "finalCurrentManifest": "regenerated after all repair evidence files; root must regenerate after coherent integration",
+  "authority": {
+    "newCITriggered": false,
+    "cursorDispatch": false,
+    "newPR": false,
+    "deployment": false,
+    "providerActivation": false
+  },
+  "reviewOwner": "root/Joffrey final coherent route"
+}

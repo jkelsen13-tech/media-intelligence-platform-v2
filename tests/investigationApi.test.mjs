@@ -7,6 +7,7 @@ import { relative } from 'node:path'
 import { createInvestigationApiHandler, createInvestigationApiTransport } from '../supabase/functions/investigation-api/handler.mjs'
 import { createInvestigationBackend } from '../src/lib/investigationBackend.js'
 import { FIXTURE_USER, FIXTURE_BUNDLES } from '../src/lib/investigationWorkspaceFixtures.js'
+import { historicalSourcePath,readRepositorySource,LAUNCH_RC_HISTORICAL_SOURCE_PATHS } from '../scripts/launchRcSourcePath20261003.mjs'
 
 const bundle = FIXTURE_BUNDLES.comparable, origin = 'https://jkelsen13-tech.github.io'
 const input = { investigation_id: bundle.investigation_id, version_id: bundle.version.id }
@@ -35,18 +36,22 @@ test('launch source bindings preserve qualified history and bind the integrated 
   assert.equal(integrated.predecessor.head, 'ca72a6df511bbb26c6b9e0a193a3e0baf01aa428')
   assert.equal(integrated.predecessor.tree, 'cbcfc510a117101fd163f83b3c574dd979085b02')
   assert.equal(integrated.live_operations, 0)
+  assert.deepEqual(integrated.qualified_source_path_mappings,LAUNCH_RC_HISTORICAL_SOURCE_PATHS)
   const snapshotKeys = integrated.historical_snapshots.map(entry => `${entry.manifest_path}:${entry.source_path}`)
   assert.equal(new Set(snapshotKeys).size, snapshotKeys.length)
   const snapshots = new Map(integrated.historical_snapshots.map(entry => [`${entry.manifest_path}:${entry.source_path}`, entry]))
   const hash = bytes => createHash('sha256').update(bytes).digest('hex')
   async function boundBytes(manifestPath, entry, retainedPath = entry.path) {
+    const manifestSha256 = integrated.qualified_manifests.find(item=>item.path===manifestPath)?.sha256
+    const sourcePath = historicalSourcePath({manifestPath,manifestSha256,sourcePath:entry.path})
+    const currentPath = retainedPath===entry.path ? sourcePath : retainedPath
     const snapshot = snapshots.get(`${manifestPath}:${entry.path}`)
     if (snapshot) {
       assert.equal(snapshot.sha256, entry.sha256)
-      assert.equal(snapshot.path, `docs/qualification/launch-rc-20261003-predecessor/${snapshot.lane}/${entry.path}`)
+      assert.equal(snapshot.path, `docs/qualification/launch-rc-20261003-predecessor/${snapshot.lane}/${sourcePath}`)
       assert.equal(snapshot.source_commit, integrated.qualified_manifests.find(item => item.path === manifestPath).head)
     }
-    const bytes = await readFile(new URL(snapshot?.path ?? retainedPath, root))
+    const bytes = await readRepositorySource(root,snapshot?.path ?? currentPath)
     assert.equal(hash(bytes), entry.sha256, `${manifestPath}: ${entry.path}`)
   }
   const manifest = JSON.parse(await readFile(new URL('verifier/investigation-api-native-review-corrections-2026-10-02.json', root), 'utf8'))
