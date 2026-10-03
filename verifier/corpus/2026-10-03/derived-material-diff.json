@@ -1,0 +1,63 @@
+{
+  "method": "cisa-kev-csv-rowdiff-v1",
+  "key": "cveID",
+  "comparison": "CSV fields parsed as exact strings by Python csv.DictReader (UTF-8 BOM removed only from parser input); stored source bytes unmodified",
+  "source_paths": [
+    "provider/kev-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1.csv",
+    "provider/kev-6ff2cc19002acfb5d9214f4ee9bc428640c5084a.csv"
+  ],
+  "row_counts": [
+    1311,
+    1312
+  ],
+  "added_records": [
+    {
+      "cveID": "CVE-2024-20439",
+      "vendorProject": "Cisco",
+      "product": "Smart Licensing Utility",
+      "vulnerabilityName": "Cisco Smart Licensing Utility Static Credential Vulnerability",
+      "dateAdded": "2025-03-31",
+      "shortDescription": "Cisco Smart Licensing Utility contains a static credential vulnerability that allows an unauthenticated, remote attacker to log in to an affected system and gain administrative credentials.",
+      "requiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+      "dueDate": "2025-04-21",
+      "knownRansomwareCampaignUse": "Unknown",
+      "notes": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cslu-7gHMzWmw ; https://nvd.nist.gov/vuln/detail/CVE-2024-20439",
+      "cwes": "CWE-912"
+    }
+  ],
+  "removed_records": [],
+  "changed_records": [
+    {
+      "cveID": "CVE-2025-26633",
+      "diff": {
+        "knownRansomwareCampaignUse": {
+          "before": "Unknown",
+          "after": "Known"
+        }
+      }
+    },
+    {
+      "cveID": "CVE-2025-30066",
+      "diff": {
+        "requiredAction": {
+          "before": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+          "after": "Apply mitigations as set forth in the CISA instructions linked below. Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+        }
+      }
+    },
+    {
+      "cveID": "CVE-2025-30154",
+      "diff": {
+        "requiredAction": {
+          "before": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+          "after": "Apply mitigations as set forth in the CISA instructions linked below. Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+        }
+      }
+    }
+  ],
+  "unchanged_common_records": 1308,
+  "material_label": "SOURCE_CATALOG_RECORD_ADDITION",
+  "review_authority": "SIMULATED_DERIVED_DIFF_ONLY",
+  "story_admission": "NOT_ADMITTED",
+  "factual_ground_truth": "NOT_ESTABLISHED"
+}

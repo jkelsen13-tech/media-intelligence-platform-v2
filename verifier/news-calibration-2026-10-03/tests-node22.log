@@ -1,0 +1,340 @@
+TAP version 13
+# Subtest: provenanceBasis: primary citation types are exactly the locked set
+ok 1 - provenanceBasis: primary citation types are exactly the locked set
+  ---
+  duration_ms: 1.210929
+  type: 'test'
+  ...
+# Subtest: provenanceBasis: primary filing only when a primary-type citation exists
+ok 2 - provenanceBasis: primary filing only when a primary-type citation exists
+  ---
+  duration_ms: 0.243729
+  type: 'test'
+  ...
+# Subtest: provenanceBasis: source-linked requires url AND summary; otherwise nothing
+ok 3 - provenanceBasis: source-linked requires url AND summary; otherwise nothing
+  ---
+  duration_ms: 0.10572
+  type: 'test'
+  ...
+# Subtest: freshnessLabel: relative under 24h, absolute date at/after 24h
+ok 4 - freshnessLabel: relative under 24h, absolute date at/after 24h
+  ---
+  duration_ms: 26.342646
+  type: 'test'
+  ...
+# Subtest: liveCorpusLabel: live count token, never pinned; null when count unknown
+ok 5 - liveCorpusLabel: live count token, never pinned; null when count unknown
+  ---
+  duration_ms: 0.201224
+  type: 'test'
+  ...
+# Subtest: groupArticlesByEvent: multi-article events collapse, singles stay flat
+ok 6 - groupArticlesByEvent: multi-article events collapse, singles stay flat
+  ---
+  duration_ms: 0.281695
+  type: 'test'
+  ...
+# Subtest: groupArticlesByEvent: eventless articles stay flat and keep positions
+ok 7 - groupArticlesByEvent: eventless articles stay flat and keep positions
+  ---
+  duration_ms: 0.233623
+  type: 'test'
+  ...
+# Subtest: isNewSince: strict greater-than against the stored marker
+ok 8 - isNewSince: strict greater-than against the stored marker
+  ---
+  duration_ms: 0.15231
+  type: 'test'
+  ...
+# Subtest: readThenAdvanceLastVisit: returns previous marker, then stores now
+ok 9 - readThenAdvanceLastVisit: returns previous marker, then stores now
+  ---
+  duration_ms: 0.407837
+  type: 'test'
+  ...
+# Subtest: source reports keep their attributed article titles even with older event grouping
+ok 10 - source reports keep their attributed article titles even with older event grouping
+  ---
+  duration_ms: 0.433906
+  type: 'test'
+  ...
+# Subtest: candidate comparison records persistence/decay tradeoffs and untouched holdout
+ok 11 - candidate comparison records persistence/decay tradeoffs and untouched holdout
+  ---
+  duration_ms: 29.373406
+  type: 'test'
+  ...
+# Subtest: adversarial unclassified advances, truncated history and duplicate sources never strengthen a state
+ok 12 - adversarial unclassified advances, truncated history and duplicate sources never strengthen a state
+  ---
+  duration_ms: 25.146578
+  type: 'test'
+  ...
+# Subtest: actual SDK and mounted Story reader preserve reviewed source versions and state reason
+ok 13 - actual SDK and mounted Story reader preserve reviewed source versions and state reason
+  ---
+  duration_ms: 172.900374
+  type: 'test'
+  ...
+# Subtest: permitted report is visibly pending with separate report, fetch and retention clocks
+ok 14 - permitted report is visibly pending with separate report, fetch and retention clocks
+  ---
+  duration_ms: 22.412037
+  type: 'test'
+  ...
+# Subtest: malformed, private, wrong-version and unavailable public context never render its source fields
+ok 15 - malformed, private, wrong-version and unavailable public context never render its source fields
+  ---
+  duration_ms: 86.429953
+  type: 'test'
+  ...
+# Subtest: story/version switching immediately hides old source data and discards late replies
+ok 16 - story/version switching immediately hides old source data and discards late replies
+  ---
+  duration_ms: 21.642314
+  type: 'test'
+  ...
+# Subtest: native Home shows admitted Breaking stories and attributed report urgency with exact Story route actions
+ok 17 - native Home shows admitted Breaking stories and attributed report urgency with exact Story route actions
+  ---
+  duration_ms: 35.533204
+  type: 'test'
+  ...
+# Subtest: feed opens only explicitly reviewed persistent story membership, never a page group identity
+ok 18 - feed opens only explicitly reviewed persistent story membership, never a page group identity
+  ---
+  duration_ms: 41.15537
+  type: 'test'
+  ...
+# Subtest: switching from an already rendered Story withholds its title while the next exact version loads
+ok 19 - switching from an already rendered Story withholds its title while the next exact version loads
+  ---
+  duration_ms: 24.976692
+  type: 'test'
+  ...
+# Subtest: source-report admission stays visibly attributed and pending in ordinary feed and both article detail paths
+ok 20 - source-report admission stays visibly attributed and pending in ordinary feed and both article detail paths
+  ---
+  duration_ms: 86.068358
+  type: 'test'
+  ...
+# Subtest: Story browsing does not reopen a prior investigation article and keeps raw identifiers in collapsed details
+ok 21 - Story browsing does not reopen a prior investigation article and keeps raw identifiers in collapsed details
+  ---
+  duration_ms: 16.804333
+  type: 'test'
+  ...
+# Subtest: source reports request no analytical destinations and remain flat despite older derived joins
+ok 22 - source reports request no analytical destinations and remain flat despite older derived joins
+  ---
+  duration_ms: 65.880582
+  type: 'test'
+  ...
+# Subtest: selected superseded Story sources stay readable with an explicit notice and no current urgency
+ok 23 - selected superseded Story sources stay readable with an explicit notice and no current urgency
+  ---
+  duration_ms: 19.48239
+  type: 'test'
+  ...
+# Subtest: verified Following access denial withholds the public snapshot; authentication expiry preserves public evidence
+ok 24 - verified Following access denial withholds the public snapshot; authentication expiry preserves public evidence
+  ---
+  duration_ms: 82.418072
+  type: 'test'
+  ...
+# Subtest: private head revocation rechecks authorized history once and later displayed-source withdrawal clears it
+ok 25 - private head revocation rechecks authorized history once and later displayed-source withdrawal clears it
+  ---
+  duration_ms: 46.792949
+  type: 'test'
+  ...
+# Subtest: revocation rechecks the exact displayed version even when the initial route selected current head
+ok 26 - revocation rechecks the exact displayed version even when the initial route selected current head
+  ---
+  duration_ms: 52.800045
+  type: 'test'
+  ...
+# Subtest: states preserve canonical identity, exact material reason, review/evidence and policy versions
+ok 27 - states preserve canonical identity, exact material reason, review/evidence and policy versions
+  ---
+  duration_ms: 3.713431
+  type: 'test'
+  ...
+# Subtest: fresh fetch, outlet multiplication and unchanged version alone never produce Breaking
+ok 28 - fresh fetch, outlet multiplication and unchanged version alone never produce Breaking
+  ---
+  duration_ms: 0.327595
+  type: 'test'
+  ...
+# Subtest: single material update, correction and resolved event do not imply whole-story Breaking
+ok 29 - single material update, correction and resolved event do not imply whole-story Breaking
+  ---
+  duration_ms: 0.513857
+  type: 'test'
+  ...
+# Subtest: rapid material changes develop after maximum breaking duration; refreshing cannot reset phase
+ok 30 - rapid material changes develop after maximum breaking duration; refreshing cannot reset phase
+  ---
+  duration_ms: 6.214421
+  type: 'test'
+  ...
+# Subtest: quiet unresolved events decay; a new separated phase can begin without rewriting history
+ok 31 - quiet unresolved events decay; a new separated phase can begin without rewriting history
+  ---
+  duration_ms: 0.346764
+  type: 'test'
+  ...
+# Subtest: declared late and stale reports do not borrow a recent review/fetch as rapid news
+ok 32 - declared late and stale reports do not borrow a recent review/fetch as rapid news
+  ---
+  duration_ms: 0.637453
+  type: 'test'
+  ...
+# Subtest: future, malformed, duplicate, foreign and missing evidence contexts fail closed
+ok 33 - future, malformed, duplicate, foreign and missing evidence contexts fail closed
+  ---
+  duration_ms: 0.466255
+  type: 'test'
+  ...
+# Subtest: source-only evidence never establishes a MIP state; permitted report stays attributed and pending
+ok 34 - source-only evidence never establishes a MIP state; permitted report stays attributed and pending
+  ---
+  duration_ms: 2.761883
+  type: 'test'
+  ...
+# Subtest: report correction preserves supersession identity and does not relaunch Breaking
+ok 35 - report correction preserves supersession identity and does not relaunch Breaking
+  ---
+  duration_ms: 0.427637
+  type: 'test'
+  ...
+# Subtest: history is deterministic, preserves declarations and records decay without new fetches
+ok 36 - history is deterministic, preserves declarations and records decay without new fetches
+  ---
+  duration_ms: 0.995975
+  type: 'test'
+  ...
+# Subtest: retained sub-millisecond clocks do not cross an exact decay boundary early
+ok 37 - retained sub-millisecond clocks do not cross an exact decay boundary early
+  ---
+  duration_ms: 0.256127
+  type: 'test'
+  ...
+# Subtest: malformed nested input fails closed without an exception
+ok 38 - malformed nested input fails closed without an exception
+  ---
+  duration_ms: 0.378422
+  type: 'test'
+  ...
+# Subtest: a late backdated correction is current Updated while the old event time remains exact
+ok 39 - a late backdated correction is current Updated while the old event time remains exact
+  ---
+  duration_ms: 0.225391
+  type: 'test'
+  ...
+# Subtest: backdated declarations cannot manufacture a new Breaking phase in a long active story
+ok 40 - backdated declarations cannot manufacture a new Breaking phase in a long active story
+  ---
+  duration_ms: 0.303669
+  type: 'test'
+  ...
+# Subtest: latest unverified report change withholds prior settled state without withdrawing old admitted evidence
+ok 41 - latest unverified report change withholds prior settled state without withdrawing old admitted evidence
+  ---
+  duration_ms: 4.575864
+  type: 'test'
+  ...
+# Subtest: successive exact report versions cannot reset the maximum story reporting phase
+ok 42 - successive exact report versions cannot reset the maximum story reporting phase
+  ---
+  duration_ms: 0.639056
+  type: 'test'
+  ...
+# Subtest: a superseded supporting capture never becomes a current state or report urgency from its old approval
+ok 43 - a superseded supporting capture never becomes a current state or report urgency from its old approval
+  ---
+  duration_ms: 0.325843
+  type: 'test'
+  ...
+# Subtest: a backdated update with correction novelty keeps its declaration-clock notice and exact binding
+ok 44 - a backdated update with correction novelty keeps its declaration-clock notice and exact binding
+  ---
+  duration_ms: 15.063493
+  type: 'test'
+  ...
+# Subtest: correction novelty neither contributes developing velocity nor restarts the active phase
+ok 45 - correction novelty neither contributes developing velocity nor restarts the active phase
+  ---
+  duration_ms: 6.982341
+  type: 'test'
+  ...
+# Subtest: attributed retraction and contradiction corrections stay SOURCE REPORT with no independent MIP assertion
+ok 46 - attributed retraction and contradiction corrections stay SOURCE REPORT with no independent MIP assertion
+  ---
+  duration_ms: 9.174895
+  type: 'test'
+  ...
+# Subtest: source-report reasons distinguish stale clocks, missing clocks and superseded versions
+ok 47 - source-report reasons distinguish stale clocks, missing clocks and superseded versions
+  ---
+  duration_ms: 1.337661
+  type: 'test'
+  ...
+# Subtest: actual retained official bytes and rights hashes verify independently; exact catalog differences replay with simulated authority
+ok 48 - actual retained official bytes and rights hashes verify independently; exact catalog differences replay with simulated authority
+  ---
+  duration_ms: 633.774399
+  type: 'test'
+  ...
+# Subtest: CSV parser preserves quoted commas, quotes and newlines and refuses malformed or duplicate identifiers
+ok 49 - CSV parser preserves quoted commas, quotes and newlines and refuses malformed or duplicate identifiers
+  ---
+  duration_ms: 0.749904
+  type: 'test'
+  ...
+# Subtest: point-in-time replay binds exact versions and measures policy boundaries by interval duration
+ok 50 - point-in-time replay binds exact versions and measures policy boundaries by interval duration
+  ---
+  duration_ms: 131.250211
+  type: 'test'
+  ...
+# Subtest: missing, foreign or changed capture/review/context bindings fail without a replay verdict
+ok 51 - missing, foreign or changed capture/review/context bindings fail without a replay verdict
+  ---
+  duration_ms: 45.706848
+  type: 'test'
+  ...
+# Subtest: source report urgency, correction and repeated reads produce distinct recorded transitions
+ok 52 - source report urgency, correction and repeated reads produce distinct recorded transitions
+  ---
+  duration_ms: 14.247329
+  type: 'test'
+  ...
+# Subtest: fixture labels cannot acquire real classification implicitly; invalid policy is rejected
+ok 53 - fixture labels cannot acquire real classification implicitly; invalid policy is rejected
+  ---
+  duration_ms: 9.640608
+  type: 'test'
+  ...
+# Subtest: retained metadata inventory preserves source clocks as metadata without inferring a replay corpus
+ok 54 - retained metadata inventory preserves source clocks as metadata without inferring a replay corpus
+  ---
+  duration_ms: 0.3836
+  type: 'test'
+  ...
+# Subtest: as-of replay cannot borrow later correction evidence, version or review labels
+ok 55 - as-of replay cannot borrow later correction evidence, version or review labels
+  ---
+  duration_ms: 3.949708
+  type: 'test'
+  ...
+1..55
+# tests 55
+# suites 0
+# pass 55
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3128.218856

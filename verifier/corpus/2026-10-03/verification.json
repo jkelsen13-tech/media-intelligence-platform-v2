@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "verified_at_utc": "2026-10-03T04:24:52.028462+00:00",
+  "method_version": "offline-retained-cisa-custody-diff-verifier-v1",
+  "manifest_sha256": "0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+  "checks": [
+    {
+      "id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+      "byte_length": 651543,
+      "sha256_verified": true,
+      "git_blob_sha1_verified": true,
+      "row_count_verified": true
+    },
+    {
+      "id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+      "byte_length": 652343,
+      "sha256_verified": true,
+      "git_blob_sha1_verified": true,
+      "row_count_verified": true
+    }
+  ],
+  "rights_documents_hashes_verified": true,
+  "commit_clock_metadata_matches_retained_provider_response": true,
+  "direct_parent_child_revision_verified": true,
+  "material_diff_recomputed": true,
+  "added_records": 1,
+  "changed_records": 3,
+  "unchanged_common_records": 1308,
+  "provider_file_bytes": 1314673,
+  "external_request_count": 20,
+  "live_network_requests_during_verification": 0,
+  "genuine_mip_review_or_story_admission_claimed": false
+}

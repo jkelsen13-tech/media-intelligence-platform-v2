@@ -9,6 +9,9 @@ const ceilInstant = value => { const ns = inspectionInstantNanoseconds(value); r
 const sequence = value => typeof value === 'string' && /^[1-9][0-9]*$/.test(value) && value.length <= 19 && BigInt(value) <= 9223372036854775807n
 const kinds = new Set(['event_established', 'update', 'correction', 'resolution'])
 const states = new Set(['active', 'resolved', 'unresolved'])
+// The owner declares kind and novelty independently. Correction novelty keeps
+// correction semantics even when the enclosing material-change kind is update.
+const isCorrection = change => change.kind === 'correction' || change.novelty === 'correction'
 const unavailable = reason => ({ available: false, state: null, label: 'Story state unavailable', reason_code: reason })
 
 // The shared public context loader validates source bytes, spans, story identity
@@ -66,7 +69,7 @@ function decide(changes, now, policy, phaseChanges = changes) {
   // material-change phase, never resolution or complete collection coverage.
   // A newly declared backdated correction is still a current correction notice.
   // Its declaration clock does not make the underlying event newly Breaking.
-  if (last.kind === 'correction') return nsDuration(now) - last.declaredNs < nsDuration(policy.updatedQuietMs)
+  if (isCorrection(last)) return nsDuration(now) - last.declaredNs < nsDuration(policy.updatedQuietMs)
     ? { state: 'UpdatedEstablished', code: 'reviewed_correction' }
     : { state: 'Historical', code: 'material_change_phase_quiet' }
   if (age >= nsDuration(policy.updatedQuietMs)) return { state: 'Historical', code: 'material_change_phase_quiet' }
@@ -75,7 +78,7 @@ function decide(changes, now, policy, phaseChanges = changes) {
   for (let i = 1; i < phaseChanges.length; i++) {
     // Sequence order is authoritative; a backdated declaration cannot create a
     // quiet gap by moving the preceding effective-time watermark backwards.
-    if (phaseChanges[i].kind !== 'correction' && phaseChanges[i].effectiveNs - latestEffective >= nsDuration(policy.updatedQuietMs)) phase = i
+    if (!isCorrection(phaseChanges[i]) && phaseChanges[i].effectiveNs - latestEffective >= nsDuration(policy.updatedQuietMs)) phase = i
     if (phaseChanges[i].effectiveNs > latestEffective) latestEffective = phaseChanges[i].effectiveNs
   }
   const phaseAge = nsDuration(now) - phaseChanges[phase].effectiveNs
@@ -84,10 +87,16 @@ function decide(changes, now, policy, phaseChanges = changes) {
     && age < nsDuration(policy.breakingFreshMs) && phaseAge < nsDuration(policy.breakingMaxMs)) {
     return { state: 'Breaking', code: 'new_major_material_change_arrived_rapidly' }
   }
-  const velocity = changes.filter(change => nsDuration(now) - change.effectiveNs < nsDuration(policy.velocityWindowMs) && change.kind !== 'correction').length
+  const velocity = changes.filter(change => nsDuration(now) - change.effectiveNs < nsDuration(policy.velocityWindowMs) && !isCorrection(change)).length
   if (age < nsDuration(policy.developingQuietMs) && velocity >= policy.minimumVelocityChanges) return { state: 'Developing', code: 'continuing_material_changes' }
   return { state: 'UpdatedEstablished', code: rapid ? 'established_material_update' : 'material_update_arrived_after_rapid_window' }
 }
+
+const evaluationBoundaries = (changes, policy) => changes.flatMap(change => [
+  change.effectiveMs + policy.breakingFreshMs, change.effectiveMs + policy.breakingMaxMs,
+  change.effectiveMs + policy.velocityWindowMs, change.effectiveMs + policy.developingQuietMs,
+  change.effectiveMs + policy.updatedQuietMs, isCorrection(change) ? change.declaredMs + policy.updatedQuietMs : 0,
+])
 
 function evaluateQualified(qualified, now, policy, coverage) {
   const { story, changes } = qualified
@@ -99,7 +108,7 @@ function evaluateQualified(qualified, now, policy, coverage) {
   if (!decision) return unavailable('no_declared_reviewed_proposition_material_change')
   const last = propositionChanges.at(-1)
   if (last.evidence.some(member => member.is_current_source_version !== true)) return unavailable('supporting_source_version_superseded')
-  const boundaryTimes = propositionChanges.flatMap(change => [change.effectiveMs + policy.breakingFreshMs, change.effectiveMs + policy.breakingMaxMs, change.effectiveMs + policy.velocityWindowMs, change.effectiveMs + policy.developingQuietMs, change.effectiveMs + policy.updatedQuietMs, change.kind === 'correction' ? change.declaredMs + policy.updatedQuietMs : 0]).filter(time => time > now)
+  const boundaryTimes = evaluationBoundaries(propositionChanges, policy).filter(time => time > now)
   return {
     available: true, ...decision, label: NEWS_STATE_LABELS[decision.state],
     reason_code: decision.code, reason: last.reason, policy_version: policy.version,
@@ -130,7 +139,7 @@ export function reconstructNewsStateHistory(context, now, policy = NEWS_STATE_PO
   const times = new Set([now])
   for (const change of qualified.changes) {
     times.add(change.declaredMs)
-    if (change.kind === 'correction' && change.declaredMs + policy.updatedQuietMs <= now) times.add(change.declaredMs + policy.updatedQuietMs)
+    if (isCorrection(change) && change.declaredMs + policy.updatedQuietMs <= now) times.add(change.declaredMs + policy.updatedQuietMs)
     for (const duration of [policy.breakingFreshMs, policy.breakingMaxMs, policy.velocityWindowMs, policy.developingQuietMs, policy.updatedQuietMs]) {
       const time = change.effectiveMs + duration
       if (time <= now && time >= change.declaredMs) times.add(time)
@@ -160,9 +169,15 @@ export function newsSourceReports(context, now, policy = NEWS_STATE_POLICY) {
       || report.article_original_fetched_at !== member.fetched_at || report.capture_retained_at !== member.captured_at
       || (report.fetch_time !== null && instant(report.fetch_time) === null)) return []
     const changes = qualified.changes.filter(change => change.evidence_refs.includes(member.public_version_id))
+    const last = changes.at(-1)
     const decision = qualified.truncated || member.is_current_source_version !== true ? null : decide(changes, now, policy, qualified.changes)
     const reportNs = inspectionInstantNanoseconds(report.report_time)
     const breaking = decision?.state === 'Breaking' && reportNs !== null && nsDuration(now) - reportNs < nsDuration(policy.breakingFreshMs)
+    const reasonCode = qualified.truncated ? 'incomplete_material_change_history'
+      : member.is_current_source_version !== true ? 'supporting_source_version_superseded'
+      : reportNs === null ? 'source_report_time_missing'
+      : decision?.state === 'Breaking' && !breaking ? 'source_report_clock_stale'
+      : decision?.code ?? 'no_declared_report_material_change'
     return [{
       public_version_id: member.public_version_id, source_id: report.source_id,
       source_version_id: report.source_version_id, capture_hash: report.capture_hash,
@@ -177,9 +192,14 @@ export function newsSourceReports(context, now, policy = NEWS_STATE_POLICY) {
       is_current_source_version: member.is_current_source_version, superseded_by_public_version_id: member.superseded_by_public_version_id,
       correction_reason: member.correction_reason ?? null,
       predecessor_public_version_id: member.predecessor_public_version_id ?? null,
-      material_change_id: changes.at(-1)?.material_change_id ?? null,
+      material_change_id: last?.material_change_id ?? null,
+      material_public_version_id: last?.public_version_id ?? null,
+      effective_at: last?.effective_at ?? null, declared_at: last?.declared_at ?? null,
+      evidence_refs: [...(last?.evidence_refs ?? [])], review_refs: [...(last?.review_refs ?? [])],
+      reason_code: reasonCode, reason: last?.reason ?? null, material_policy_version: last?.policy_version ?? null,
+      event_state: last?.event_state ?? null, evaluated_at: new Date(now).toISOString(),
       policy_version: policy.version,
-      next_evaluation_at: [...changes.flatMap(change => [change.effectiveMs + policy.breakingFreshMs, change.effectiveMs + policy.breakingMaxMs]), instant(report.report_time) === null ? 0 : ceilInstant(report.report_time) + policy.breakingFreshMs].filter(time => time > now).sort((a, b) => a - b).map(time => new Date(time).toISOString())[0] ?? null,
+      next_evaluation_at: [...evaluationBoundaries(qualified.changes, policy), reportNs === null ? 0 : ceilInstant(report.report_time) + policy.breakingFreshMs].filter(time => time > now).sort((a, b) => a - b).map(time => new Date(time).toISOString())[0] ?? null,
       qualification: policy.qualification,
       assertion_scope: 'attributed_source_report_only',
     }]
