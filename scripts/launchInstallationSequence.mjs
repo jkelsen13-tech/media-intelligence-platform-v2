@@ -54,7 +54,78 @@ export async function prepareLaunchFixtureFoundation(db) {
   await db.exec('set search_path=pg_catalog')
 }
 export async function launchCatalogQuery() { return (await read('scripts/launchInstallSequenceCatalog.sql')).trim().replace(/;$/, '') }
-export async function launchCatalog(db) { return (await db.query(await launchCatalogQuery())).rows[0].catalog }
+export async function launchCatalog(db) { return validateLaunchCatalog((await db.query(await launchCatalogQuery())).rows[0].catalog) }
+const catalogKeys = ['schemas','relations','functions','roles','default_privileges']
+// Validate the readback contract, not an operator's approval. Missing security
+// fields and duplicate identities must not become reviewable compilation inputs.
+export function validateLaunchCatalog(catalog) {
+  const fail = path => { throw Error('complete named catalogue required: '+path) }
+  const object = (value,path) => { if(!value||typeof value!=='object'||Array.isArray(value))fail(path) }
+  const fields = (value,keys,path) => { object(value,path);for(const key of keys)if(!Object.hasOwn(value,key))fail(path+'.'+key) }
+  const string = (value,path) => { if(typeof value!=='string')fail(path) }
+  const name = (value,path) => { string(value,path);if(!value.length)fail(path) }
+  const bool = (value,path) => { if(typeof value!=='boolean')fail(path) }
+  const nullableString = (value,path) => { if(value!==null)string(value,path) }
+  const stringsOrNull = (value,path) => { if(value!==null){if(!Array.isArray(value))fail(path);value.forEach((v,i)=>string(v,path+'.'+i))} }
+  const list = (value,path,identity,visit) => {
+    if(!Array.isArray(value))fail(path)
+    const seen=new Set()
+    value.forEach((row,i)=>{
+      const item=path+'.'+i;object(row,item)
+      const id=identity(row);if(typeof id!=='string'||!id.length||seen.has(id))fail(item+' duplicate/missing identity')
+      seen.add(id);visit(row,item)
+    })
+  }
+  const acl = (value,path) => list(value,path,r=>JSON.stringify([r.grantor,r.grantee,r.privilege_type,r.is_grantable]),(r,p)=>{
+    fields(r,['grantor','grantee','privilege_type','is_grantable'],p)
+    for(const key of ['grantor','grantee','privilege_type'])name(r[key],p+'.'+key)
+    bool(r.is_grantable,p+'.is_grantable')
+  })
+  const owned = (r,p) => { name(r.owner,p+'.owner');acl(r.acl,p+'.acl') }
+  fields(catalog,catalogKeys,'catalog')
+  if(Object.keys(catalog).some(key=>!catalogKeys.includes(key)))fail('catalog unexpected field')
+  list(catalog.schemas,'schemas',r=>r.identity,(r,p)=>{fields(r,['identity','owner','acl'],p);owned(r,p)})
+  list(catalog.relations,'relations',r=>r.identity,(r,p)=>{
+    fields(r,['identity','kind','owner','rls','force_rls','options','comment','sequence','acl','definition','columns','constraints','indexes','policies','triggers'],p)
+    owned(r,p);if(!['r','p','v','m','S'].includes(r.kind))fail(p+'.kind')
+    bool(r.rls,p+'.rls');bool(r.force_rls,p+'.force_rls');stringsOrNull(r.options,p+'.options')
+    nullableString(r.comment,p+'.comment');nullableString(r.definition,p+'.definition')
+    if(r.sequence!==null){
+      fields(r.sequence,['type','start','increment','max','min','cache','cycle'],p+'.sequence')
+      for(const key of ['type','start','increment','max','min','cache'])name(r.sequence[key],p+'.sequence.'+key)
+      bool(r.sequence.cycle,p+'.sequence.cycle')
+    }
+    list(r.columns,p+'.columns',c=>c.name,(c,q)=>{
+      fields(c,['name','type','not_null','identity','generated','comment','acl','default'],q)
+      name(c.type,q+'.type');bool(c.not_null,q+'.not_null');string(c.identity,q+'.identity');string(c.generated,q+'.generated')
+      nullableString(c.comment,q+'.comment');nullableString(c.default,q+'.default');acl(c.acl,q+'.acl')
+    })
+    list(r.constraints,p+'.constraints',c=>c.name,(c,q)=>{fields(c,['name','definition','validated'],q);name(c.definition,q+'.definition');bool(c.validated,q+'.validated')})
+    if(!Array.isArray(r.indexes))fail(p+'.indexes');r.indexes.forEach((v,i)=>name(v,p+'.indexes.'+i))
+    list(r.policies,p+'.policies',c=>c.name,(c,q)=>{
+      fields(c,['name','cmd','roles','permissive','using','check'],q);name(c.cmd,q+'.cmd');bool(c.permissive,q+'.permissive')
+      if(!Array.isArray(c.roles)||!c.roles.length)fail(q+'.roles');c.roles.forEach((v,i)=>name(v,q+'.roles.'+i))
+      nullableString(c.using,q+'.using');nullableString(c.check,q+'.check')
+    })
+    list(r.triggers,p+'.triggers',c=>c.name,(c,q)=>{fields(c,['name','enabled','definition','function'],q);for(const key of ['enabled','definition','function'])name(c[key],q+'.'+key)})
+  })
+  list(catalog.functions,'functions',r=>r.identity,(r,p)=>{
+    fields(r,['identity','owner','security_definer','configuration','definition','comment','acl'],p)
+    owned(r,p);bool(r.security_definer,p+'.security_definer');stringsOrNull(r.configuration,p+'.configuration');name(r.definition,p+'.definition');nullableString(r.comment,p+'.comment')
+  })
+  list(catalog.roles,'roles',r=>r.identity,(r,p)=>{
+    const flags=['superuser','bypass_rls','login','inherit','create_role','create_db','replication']
+    fields(r,['identity',...flags,'connection_limit','configuration','memberships'],p)
+    flags.forEach(key=>bool(r[key],p+'.'+key));if(!Number.isInteger(r.connection_limit)||r.connection_limit< -1)fail(p+'.connection_limit')
+    stringsOrNull(r.configuration,p+'.configuration')
+    list(r.memberships,p+'.memberships',m=>JSON.stringify([m.role,m.grantor]),(m,q)=>{
+      fields(m,['role','grantor','admin','inherit','set'],q);name(m.role,q+'.role');name(m.grantor,q+'.grantor');for(const key of ['admin','inherit','set'])bool(m[key],q+'.'+key)
+    })
+  })
+  list(catalog.default_privileges,'default_privileges',r=>r.identity,(r,p)=>{fields(r,['identity','acl'],p);acl(r.acl,p+'.acl')})
+  if(!catalog.schemas.some(r=>r.identity==='public')||!catalog.roles.length)fail('public schema/role readback missing')
+  return catalog
+}
 export function catalogDelta(before,after) {
   const delta={}
   for(const key of ['schemas','relations','functions','roles','default_privileges']) {
@@ -68,6 +139,7 @@ export function catalogDelta(before,after) {
 // single transaction. The caller supplies a separately accepted fresh baseline;
 // a fixture captures its own synthetic approval, never a live approved baseline.
 async function guardTransaction(source,stageId,approvedCatalog,settings=[]){
+  validateLaunchCatalog(approvedCatalog)
   const catalogSql=await launchCatalogQuery()
   if((source.match(/^begin;\s*$/gm)??[]).length!==1||(source.match(/^commit;\s*$/gm)??[]).length!==1) throw Error('one explicit proposal transaction required')
   const body=`declare fresh jsonb; approved jsonb:=${literal(JSON.stringify(approvedCatalog))}::jsonb; begin\n`+
@@ -77,6 +149,8 @@ async function guardTransaction(source,stageId,approvedCatalog,settings=[]){
   let delimiter='$launch_guard_'+sha256(body).slice(0,24)+'$'
   while(body.includes(delimiter))delimiter=delimiter.slice(0,-1)+'x$'
   const guard=`\n-- Exact SOURCE proposal sha256: ${sha256(source)}\n`+
+    `set local lock_timeout='5s';\nset local statement_timeout='30s';\n`+
+    `set local idle_in_transaction_session_timeout='30s';\n`+
     `set local standard_conforming_strings=on;\nset local search_path=pg_catalog;\n`+
     `do ${delimiter}${body}${delimiter};\n`+
     settings.map(({name,query,value})=>`select set_config(${literal(name)},${query?'(('+query.trim().replace(/;$/,'')+'))::text':literal(JSON.stringify(value))},true);\n`).join('')+
