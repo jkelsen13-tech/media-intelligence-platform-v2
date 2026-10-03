@@ -1,0 +1,222 @@
+[vite-plugin-static-copy] Collected 383 items.
+{
+  "candidateCommit": "f09f6989f727d65c23581ae26d2f5cd03d18300d",
+  "candidateTree": "68a170c7b9ace3b76b0ca968aea3eeba4f568b38",
+  "dirty": false,
+  "engine": "chromium",
+  "profiles": [
+    {
+      "id": "ipad",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "ipad-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "iphone",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "iphone-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "narrow",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "narrow-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    },
+    {
+      "id": "desktop",
+      "status": "partial",
+      "checks": [
+        {
+          "id": "news-story",
+          "status": "passed"
+        },
+        {
+          "id": "following-account",
+          "status": "passed"
+        },
+        {
+          "id": "search-preview",
+          "status": "passed"
+        },
+        {
+          "id": "navigation-context",
+          "status": "passed"
+        },
+        {
+          "id": "billboard-reader",
+          "status": "passed"
+        },
+        {
+          "id": "orientation",
+          "status": "passed"
+        },
+        {
+          "id": "background-remount",
+          "status": "passed"
+        },
+        {
+          "id": "network-loss",
+          "status": "passed"
+        },
+        {
+          "id": "publication-failure",
+          "status": "passed"
+        },
+        {
+          "id": "keyboard-density",
+          "status": "blocked"
+        },
+        {
+          "id": "webgl-fallback",
+          "status": "passed"
+        }
+      ],
+      "receipt": "desktop-receipt.json",
+      "screenshots": 22,
+      "errors": []
+    }
+  ],
+  "output": "/workspace/mip-oct03-device-acceptance-evidence/clean-f09f698"
+}
