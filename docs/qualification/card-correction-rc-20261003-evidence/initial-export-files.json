@@ -1,0 +1,63 @@
+{
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "status": "STATIC_EXPORT_AND_RUNTIME_MATRIX_COMPLETED_APP_AND_TARGETED_REVIEW_PENDING",
+  "files": [
+    {
+      "path": "MIP_CARD_CONTAINMENT_LATE_FINDING_2026-10-03.md",
+      "bytes": 6716,
+      "sha256": "e84b0fd2d278b8a2193fcb6f14cc67b7fa6fbe95dbcaee56aae9f0947680359a"
+    },
+    {
+      "path": "MIP_Card_Correction_Qualified_Dist_2026-10-03.zip",
+      "bytes": 9798738,
+      "sha256": "e0fbf5017d8d75f28c68c7a0df64cb984917387fda5df3dc09137eed7b6afb96"
+    },
+    {
+      "path": "audit-report-node22.json",
+      "bytes": 365,
+      "sha256": "1771204320d17cbc46952c5535ef0a43b3eab50da8849205da8c6aaa7494445f"
+    },
+    {
+      "path": "audit-report-node24.json",
+      "bytes": 365,
+      "sha256": "1771204320d17cbc46952c5535ef0a43b3eab50da8849205da8c6aaa7494445f"
+    },
+    {
+      "path": "completed-public-ci.json",
+      "bytes": 15961,
+      "sha256": "edc26714ee3beb0000bd7bbcab67364d2949dd045e266de892b17a61bf55c068"
+    },
+    {
+      "path": "concurrent-browser-attempt.json",
+      "bytes": 1400,
+      "sha256": "bcd97e9e844a0fe82ce1e94694771bea93e7c5ccc743ca23b3fb68105e3faf17"
+    },
+    {
+      "path": "dist-export-identity.json",
+      "bytes": 414,
+      "sha256": "42658036a84293e458be26d308fc65133988198c214d5d56e0c55ba253bdba3b"
+    },
+    {
+      "path": "local-node22-first-full-failure.json",
+      "bytes": 999,
+      "sha256": "728b61b9444debaacb5ce1e6f1322a0c2d0633f833f5bce826d994da2e4cd7d7"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 43430,
+      "sha256": "225ee898a8791916d1299ce4557015a1081839132a244800b51147c10514546d"
+    },
+    {
+      "path": "release-artifact-node22.json",
+      "bytes": 185168,
+      "sha256": "4bed592eddfecc70faf131551d5518a81041e633dcbc341e406e2d2efe5fdd8f"
+    },
+    {
+      "path": "release-artifact-node24.json",
+      "bytes": 185168,
+      "sha256": "a2ef19091c1c8354649f03e010434f685b07c441780fd9d90b0d237bf4b48700"
+    }
+  ],
+  "self_hash": "exact evidence commit externally binds this manifest"
+}

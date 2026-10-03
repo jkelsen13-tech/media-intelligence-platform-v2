@@ -1,0 +1,20 @@
+{
+  "contract": "mip-card-corrected-browser-attempt-v1",
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "status": "FAILED_LOCAL_EXECUTION_ATTEMPT_NOT_A_QUALIFICATION",
+  "normal": {
+    "exit_code": 1,
+    "observed_failure": "Vite chose default port5173 despite configured port0; second simultaneous server failed with EADDRINUSE before any App journey.",
+    "log": "device-browser-run.log"
+  },
+  "title_stress": {
+    "exit_code": 1,
+    "observed_failure": "iPhone initial readiness and narrow navigation tap timed out while both full runtime suites were active. No card-containment failure observed in this attempt.",
+    "log": "device-browser-title-stress-run.log",
+    "receipt_directory": "device-browser-title-stress"
+  },
+  "interpretation": "Port collision is confirmed harness execution failure. CPU contention is a plausible timing cause, not an established product exemption. Existing source, assertions and timeout values remain unchanged; sequential exact-head rerun after the matrix/builds will resolve qualification.",
+  "next_execution": "Run normal and title stress sequentially with new immutable output directories after local full qualification completes.",
+  "authority": "No current source/live/physical/release verdict follows from this failed attempt. Preserve all logs and partial records."
+}

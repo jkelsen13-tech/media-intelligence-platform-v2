@@ -1,0 +1,33 @@
+# Late runtime finding and bounded correction — 3 October 2026
+
+This dated record preserves the source review and qualification of `58667adcef63dfff56fd14242ed74082490873c9`, tree `66b7aad2cbc6e4909e3a50bb78663c6817dad02b`, while recording a consequential runtime defect discovered afterward. It does not rewrite that historical source verdict, original browser receipts, evidence commit `7035c545a4438364e6a972642c64d71505f5c630`, or the independently reviewed original qik client.
+
+## What the original evidence did and did not establish
+
+The original browser run recorded forty passing journeys, four blocked owner density judgments and eighty-eight PNG hashes. Parent inspection verified those hashes but found only seventy-one distinct encoded images, including six identical iPhone-landscape screenshots with the World View/card offscreen. The harness rotated and captured context but restored the primary orientation before activating Close and Inspector. Its passing count did not establish rotated control reachability or final visual acceptance. The archived static inventories were recorded evidence; raw build bodies had not been exported for independent rehashing.
+
+The parent found clipping in the original narrow and desktop rotated screenshots. New labeled development instrumentation reproduced transient horizontal clipping from CSS interpolation of obsolete viewport geometry, and sustained narrow Inspector clipping after the motion settled. Narrow card right was approximately `332.33` versus canvas right `317`; desktop card right was approximately `761.33` versus canvas right `681`. The narrow Inspector occupied approximately `460.06–504.06`, beyond card bottom `463.19`, with zero of nine hit-test points reaching it.
+
+A 120-character title probe then exposed another sustained boundary: a five-line title occupied `90.94px`, displacing Inspector `38.64px` below the `231.8px` card. The canonical-occlusion disclosure increased the deficit to `54.64px`. This is an objective overflow defect, not an unresolved owner appearance choice.
+
+## Repair and bounded worker qualification
+
+Implementation `b220edfd5a219f92649571c6ce1727a5fc8f3ccd`, tree `2e892e486d8b6855b56273d229aac1d73622cb7f`, changes only the overlay, billboard CSS, selected layout envelope, two focused regression files and the browser harness. It removes redundant CSS geometry interpolation, uses the existing presentation reading allowance, allows module content to shrink within its own scroll area, and keeps complete overflowing titles in a keyboard-scrollable area. Precision/status disclosures and coarse-pointer controls remain fixed and contained. A conservative CSS fallback is present; Safari qualification is not inferred.
+
+The title measurement observer disconnects on resize replacement, invalidation and unmount. Actual title End/Home scrolling and separate module scrolling are exercised. Canonical coordinates, evidence precision, recorded time, investigation identity, camera and the facility floor `8660.254037844386m` remain unchanged. No provider, data admission or publication policy changes.
+
+The strengthened harness measures immediate and settled card/canvas bounds and nine painted hit-test points per control. It activates Close and Inspector through viewport coordinates and keyboard before restoring orientation. In iPhone landscape, the inherited workspace scroll viewport is shorter than the entire card. Each control is made individually visible by ordinary scrolling inside the actual clipping window; simultaneous whole-card visibility is not claimed. The 120-character stress window measured approximately `241.5–351px`; the normal-title window measured approximately `196.5–351.5px`. No DOM style, z-index or renderer manipulation substitutes for reachability.
+
+The worker passed sixty-four focused tests on each Node runtime. Clean exact-b220 browser runs passed forty normal and twenty title-stress journeys, with six explicitly blocked owner density judgments, zero page errors and 274 verified PNG hashes. The normal run has 129 distinct encoded images; the stress run has 58. These are controlled Chromium, synthetic backend/session/geometry records, not physical-device function, appearance or performance acceptance.
+
+Documentation-only seal `f65610b25d35489e5c707de6d8f0af201ab0184e`, tree `5486bd7ed019c569d2fb56056951e9649ab8dd0d`, preserves the actual executed head b220 and identical six source files. Its later commit is not relabeled as the browser execution head.
+
+## Coherent successor and honest failed execution history
+
+Root integrated the worker and repaired one historical frontend hash assertion seam. All twenty-four original native frontend pins match the exact ca72 Git bodies. Matching registered pins now resolve immutable ca72 predecessor snapshots; other unchanged frontend files retain direct checks against their original hash. The complete current source list is separately hashed. Historical manifests and expected hashes remain unchanged. A first overbroad routing draft recorded fourteen passes and two failures because some unchanged frontend files were absent from the registered list; that failed draft remains retained. The corrected routing and relocation/drift/missing-byte checks passed sixteen checks on both runtimes.
+
+The coherent application successor is `0ebf51d80179130c2b05041663c02777c427fcf4`, tree `aa2b71604f4fd782316b27bc340c88763db4eaad`, branch `codex/mip-launch-card-correction-rc-20261003`. Its current binding has 254 files, sixteen immutable snapshots and twelve qualified lane manifests; SHA256 `ef719675efff016a883f43cb513d830939105feec5e191a7a6ca1853d2540497`. The exact original 586 binding is retained separately.
+
+At this chronology point, full local/public qualification is in progress, and fresh parent-owned targeted review is pending. The separate completed qualification envelope must establish the final result. An initial root parallel browser attempt failed: Vite resolved configured port zero to default 5173, causing a confirmed pre-App port collision; the other runner had initial/navigation timeouts while the full matrix ran. CPU contention is plausible, not an established product exemption. All logs and partial records are retained. A sequential exact-head rerun after the matrix/builds uses unchanged source, assertions and timeout values.
+
+Original cold-portrait RED, its unchanged budget, real source/rights/admission gates, live Auth/RLS, original qik trust/native/rollback gates, physical acceptance, commercial hosting entitlement and merge/deploy/release authority remain separate. External push/email remains post-launch. No settled owner requirement is reopened by this bounded correction.

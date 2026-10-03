@@ -1,0 +1,10 @@
+{
+  "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "counts": {"tests":2691,"pass":2690,"fail":1,"skipped":0,"cancelled":0,"todo":0},
+  "failure": "tests/worldViewBoundedRgbImagery.test.mjs:343: late fixture images.every(image=>image.closes===1) assertion, after deadline rejection succeeded",
+  "production_and_test_change_since_586": false,
+  "original_logs": "isolated/tests-node22.log and isolated/tests-node22.json retained unchanged",
+  "bounded_control": "All28imagerytests passed in isolated Node22 run; imagery-deadline-node22-control.tap",
+  "interpretation": "A phase timing/fixture ownership mismatch is plausible: the test allocates the late bitmap even if timeout precedes entry into decode. No proven production defect or clean full local verdict inferred. Repeat the failed full Node22 suite without browser contention; preserve successful Node24 full2691 receipt. No source/assertion/deadline relaxation."
+}
