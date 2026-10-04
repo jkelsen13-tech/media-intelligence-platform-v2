@@ -1,0 +1,69 @@
+{
+  "schema": "mip.imagery-remount-preparation.v1",
+  "date": "2026-10-04",
+  "status": "PREPARED_AWAITING_PARENT_INTEGRATION_FREEZE_AND_BROWSER_CLEARANCE",
+  "browserExecuted": false,
+  "baseHead": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "baseTree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "focusedChecksEachRuntime": {
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "skip": 0
+  },
+  "rawSourcePngDecode": "PASS_FOUR_EXACT_TILES",
+  "historicalLineageBodies": [
+    {
+      "path": "scripts/qualification/imagery-remount-20261004/historical-harness.mjs",
+      "bytes": 19494,
+      "sha256": "346d600734722fe7efd83d746b1f28392dd84dd60dc0b60de695a022a389a271"
+    },
+    {
+      "path": "scripts/qualification/imagery-remount-20261004/historical-pixel-verifier.py",
+      "bytes": 7312,
+      "sha256": "273e792c1fe6dc7ebf8d10fe2d992747513d54998c3666786913d54e4e3fc68c"
+    },
+    {
+      "path": "scripts/qualification/imagery-remount-20261004/worldViewProjectionFixture.mjs",
+      "bytes": 13026,
+      "sha256": "14e819533327da16195b830d415c421b45ed51531aafaea8fc043d8645fbafa4"
+    },
+    {
+      "path": "scripts/qualification/imagery-remount-20261004/payload-reference.json",
+      "bytes": 9757,
+      "sha256": "1ff070991363abbded076eef9d4454ab37b889a736122193201834ba692fac53"
+    }
+  ],
+  "externalPreparationReceipts": [
+    {
+      "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-node22.tap",
+      "bytes": 987,
+      "sha256": "7b91c22d6e3869e323f1664f4334e34587ec243da2aae03031b8a8b2fd1cd314",
+      "format": "Node default reporter text (retained unchanged)"
+    },
+    {
+      "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-node24.tap",
+      "bytes": 479,
+      "sha256": "f53f8b1173ad151939877a228326097c05c02d8cf4a466578fc96ef233335baa",
+      "format": "Node default reporter text (retained unchanged)"
+    },
+    {
+      "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-inputs.json",
+      "bytes": 1655,
+      "sha256": "6b55a347f9d853f4c898827cbe07d4e6b3ccff7383700d8e686c72eaa1bc0b51",
+      "format": "JSON"
+    },
+    {
+      "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-raw-png.json",
+      "bytes": 2142,
+      "sha256": "bd9f9419869c48ac14097bc31738e24c14b6fac00ff7b64c796f40c9346c8154",
+      "format": "JSON"
+    }
+  ],
+  "productionChanges": false,
+  "custodyFilesEdited": false,
+  "legacyEvidenceEdited": false,
+  "dependenciesInstalled": false,
+  "serverStarted": false,
+  "networkCalls": false
+}

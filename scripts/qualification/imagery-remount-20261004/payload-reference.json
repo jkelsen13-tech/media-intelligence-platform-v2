@@ -1,0 +1,262 @@
+{
+  "schema": "mip-native-imagery-existing-payload-reference-v1",
+  "bytesClassification": "genuine received coarser RGB derivative; permissions for future test independently simulated",
+  "originalTiffDecodedLocally": false,
+  "genuineApplicationAdmitted": false,
+  "registeredEventPoint": false,
+  "package": {
+    "bytes": 2918432,
+    "sha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c"
+  },
+  "runtimeProvenance": {
+    "name": "provenance.json",
+    "byteLength": 20329,
+    "sha256": "343a35a7a5d9f11493ab67a8bce08f8aa07d802f1d5869607b3b5b2429cf58d3"
+  },
+  "sourceMetadataXml": {
+    "name": "source-metadata.xml",
+    "byteLength": 11340,
+    "sha256": "5c45fc70e2380c94696a517eb16759614b44821627db6abb9b8119dc47e000ad"
+  },
+  "capture": {
+    "precision": "day",
+    "start": "2023-03-07"
+  },
+  "coverage": {
+    "crs": "EPSG:4326",
+    "bounds": [
+      -81.70168427944155,
+      41.400004131028425,
+      -81.69717870180786,
+      41.403396541317306
+    ],
+    "reduced": true,
+    "fullViewportCoverage": false
+  },
+  "tiles": [
+    {
+      "name": "tile-0-0.png",
+      "sha256": "82d8d1b75f7a9702b9caa94f03badddd57437aff4aac13ebf118fd1fe32a1dea",
+      "byteLength": 712043,
+      "rgbSha256": "137c428407231fa95b41106dde45d1b91bc5e142c3d471b872af2ef910389a2b",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.70168427944155,
+        41.401700336172865,
+        -81.6994314906247,
+        41.403396541317306
+      ],
+      "crs": "EPSG:4326"
+    },
+    {
+      "name": "tile-0-1.png",
+      "sha256": "334cf0fb048ce34d40641e672c268f6be59e36ed367909d7bd648b7ca03176bc",
+      "byteLength": 710631,
+      "rgbSha256": "6515c51b6543a267263cae66568faf4d6df59037e001432234e1e243d2d1e417",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.6994314906247,
+        41.401700336172865,
+        -81.69717870180786,
+        41.403396541317306
+      ],
+      "crs": "EPSG:4326"
+    },
+    {
+      "name": "tile-1-0.png",
+      "sha256": "7bc9cea86f7569d5769d78e34cac5a79ad298a1da132852f7f03c437f2e63d35",
+      "byteLength": 723958,
+      "rgbSha256": "48497a262905a7aedd7b413dbb2a4322f04b3cbb892d0cfceba1709d8c30816a",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.70168427944155,
+        41.400004131028425,
+        -81.6994314906247,
+        41.401700336172865
+      ],
+      "crs": "EPSG:4326"
+    },
+    {
+      "name": "tile-1-1.png",
+      "sha256": "88f4441ba10f82e511c521a934ddae07a2e347059d3ec020d196893d777d1766",
+      "byteLength": 725224,
+      "rgbSha256": "831605b10f3cfe69e5467e220cc793c71843de1f927ce323295445faee777a43",
+      "width": 512,
+      "height": 512,
+      "bounds": [
+        -81.6994314906247,
+        41.400004131028425,
+        -81.69717870180786,
+        41.401700336172865
+      ],
+      "crs": "EPSG:4326"
+    }
+  ],
+  "resource": {
+    "maxBytes": 16777216,
+    "decodedRgbaBytes": 4194304,
+    "actualFourPngTransportBytes": 2871856,
+    "conservativeReservationBytes": 7112736,
+    "twoLoadsConservativeAllowance": 14225472,
+    "thirdLoadExceedsDefaultAllowance": true,
+    "scope": "source input artifacts plus retained decode; no process RSS/GPU/provider billing claim"
+  },
+  "provenance": {
+    "original": {
+      "byteLength": 100364809,
+      "metadata": {
+        "assetCrs": "EPSG:3753",
+        "bandCount": 4,
+        "bands": [
+          {
+            "alpha": false,
+            "colorInterpretation": "Red",
+            "dataType": "Byte",
+            "index": 1,
+            "nearInfrared": false,
+            "usedForRgb": true
+          },
+          {
+            "alpha": false,
+            "colorInterpretation": "Green",
+            "dataType": "Byte",
+            "index": 2,
+            "nearInfrared": false,
+            "usedForRgb": true
+          },
+          {
+            "alpha": false,
+            "colorInterpretation": "Blue",
+            "dataType": "Byte",
+            "index": 3,
+            "nearInfrared": false,
+            "usedForRgb": true
+          },
+          {
+            "alpha": false,
+            "colorInterpretation": "Undefined",
+            "dataType": "Byte",
+            "index": 4,
+            "nearInfrared": false,
+            "usedForRgb": false
+          }
+        ],
+        "height": 5000,
+        "horizontalUnits": "US-survey-foot",
+        "nativeBounds": [
+          2187500,
+          632500,
+          2188750,
+          633750
+        ],
+        "nativeGeotransform": [
+          2187500,
+          0.25,
+          0,
+          633750,
+          0,
+          -0.25
+        ],
+        "verificationScope": "upstream producer claim; original not decoded by this consumer",
+        "width": 5000
+      },
+      "sha256": "cdd20d732dca52f94edf0eaf0e1afbd544c50886a9b131a9fcc18accf140a17c",
+      "verifiedByProducer": false
+    },
+    "transform": {
+      "alwaysXY": true,
+      "areaOfUse": {
+        "bounds": [
+          -124.79,
+          24.41,
+          -66.91,
+          49.38
+        ],
+        "name": "United States (USA) - CONUS onshore - Alabama; Arizona; Arkansas; California; Colorado; Connecticut; Delaware; Florida; Georgia; Idaho; Illinois; Indiana; Iowa; Kansas; Kentucky; Louisiana; Maine; Maryland; Massachusetts; Michigan; Minnesota; Mississippi; Missouri; Montana; Nebraska; Nevada; New Hampshire; New Jersey; New Mexico; New York; North Carolina; North Dakota; Ohio; Oklahoma; Oregon; Pennsylvania; Rhode Island; South Carolina; South Dakota; Tennessee; Texas; Utah; Vermont; Virginia; Washington; West Virginia; Wisconsin; Wyoming."
+      },
+      "axisConvention": "pyproj alwaysXY lon/lat; GDAL explicit final swap to EPSG:4326 official lat/lon axes",
+      "ballparkAllowed": false,
+      "bestAvailable": true,
+      "coverage": "explicit reduced inscribed rectangle; one native pixel inset",
+      "edgeSamples": 129,
+      "evidencePointRegistered": false,
+      "gdalCoordinateOperation": "proj=pipeline step proj=unitconvert xy_in=us-ft xy_out=m step inv proj=lcc lat_0=39.6666666666667 lon_0=-82.5 lat_1=41.7 lat_2=40.4333333333333 x_0=600000 y_0=0 ellps=GRS80 step proj=push v_3 step proj=cart ellps=GRS80 step proj=helmert x=-0.991 y=1.9072 z=0.5129 rx=-0.0257899075194932 ry=-0.0096500989602704 rz=-0.0116599432323421 s=0 convention=coordinate_frame step inv proj=cart ellps=WGS84 step proj=pop v_3 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1",
+      "gdalCoordinateOperationSha256": "f2a48439e5cbbf249cde4ba29e1567631ff13d48229677a012e1d3d503254e50",
+      "grids": [],
+      "measuredRegistrationAccuracyMetres": null,
+      "nativeBounds": [
+        2187500,
+        632500,
+        2188750,
+        633750
+      ],
+      "networkEnabled": false,
+      "operation": "Inverse of SPCS83 Ohio North zone (US survey foot) + NAD83(HARN) to WGS 84 (3) + axis order change (2D)",
+      "pipeline": "proj=pipeline step proj=unitconvert xy_in=us-ft xy_out=m step inv proj=lcc lat_0=39.6666666666667 lon_0=-82.5 lat_1=41.7 lat_2=40.4333333333333 x_0=600000 y_0=0 ellps=GRS80 step proj=push v_3 step proj=cart ellps=GRS80 step proj=helmert x=-0.991 y=1.9072 z=0.5129 rx=-0.0257899075194932 ry=-0.0096500989602704 rz=-0.0116599432323421 s=0 convention=coordinate_frame step inv proj=cart ellps=WGS84 step proj=pop v_3 step proj=unitconvert xy_in=rad xy_out=deg",
+      "pipelineSha256": "d0b30090edb74d5cfaf692a66a1abdb7ce1318b4f9c8f17e2628313f2e9759a6",
+      "policyReference": "detached-background-research operation-reported accuracy <=1m; no evidence registration or admission",
+      "rendererBounds": [
+        -81.70168427944155,
+        41.40000413102843,
+        -81.69717870180786,
+        41.403396541317306
+      ],
+      "reportedOperationAccuracyMetres": 1,
+      "sourceAccuracySpecification": {
+        "basis": "exact original XML horizontal accuracy class specification; not locally measured registration",
+        "combinedWithOperationError": false,
+        "horizontal95PercentMetres": 0.276,
+        "horizontalRmseMetres": 0.11
+      },
+      "sourceCrs": "EPSG:3753",
+      "status": "qualified-operation-for-detached-derivative",
+      "targetCrs": "EPSG:4326",
+      "toleranceMetres": 1,
+      "unavailableOperations": [],
+      "verticalTransformation": null,
+      "warpApproximationErrorPixels": 0
+    }
+  },
+  "notices": [
+    "Cuyahoga County / Ohio Statewide Imagery Program attribution",
+    "planning-only",
+    "noncadastral",
+    "day-only capture",
+    "display background; no evidence precision upgrade"
+  ],
+  "preservedInputFiles": [
+    {
+      "path": "/workspace/mip-real-imagery-evidence/existing-admission-gate.json",
+      "sha256": "21ea5338c49d6b2ae127c420ead3920d260dece13ea09f0fed9889db34aa1e15",
+      "bytes": 9404
+    },
+    {
+      "path": "/workspace/mip-full-app-real-payload-qualification/receipt.json",
+      "sha256": "1e331607328ca82ae92c343a6757d818451efb3273eecf26b9575118808dcd8d",
+      "bytes": 37341
+    },
+    {
+      "path": "/workspace/mip-full-app-real-payload-qualification/source-boundary-evidence.json",
+      "sha256": "a31fee8012363b0d520bedab80f1dda35712fd37373c30009b1a21f2f1d60947",
+      "bytes": 42334
+    },
+    {
+      "path": "/workspace/mip-real-imagery-evidence/runtime-consumer-receipt.json",
+      "sha256": "077864b04f6687dd938b3d9f1c401c3dd067705e312f18f22a2ebf5fcb6cc58f",
+      "bytes": 25092
+    },
+    {
+      "path": "/workspace/mip-real-imagery-evidence/ohio-BN18756325-wgs84-research.zip",
+      "sha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c",
+      "bytes": 2918432
+    },
+    {
+      "path": "/workspace/mip-following-replay-assessment/witness.json",
+      "sha256": "456b31651ceefa05edc4a6f6dde29cec1bd8ca881f24928f071b23810d27ed03",
+      "bytes": 4592
+    }
+  ]
+}
