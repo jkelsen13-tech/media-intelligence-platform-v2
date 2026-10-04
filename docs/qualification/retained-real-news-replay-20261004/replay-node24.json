@@ -1,0 +1,3142 @@
+{
+  "receipt": {
+    "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+    "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+    "actual_mip_admissions": 0,
+    "source_manifest_sha256": "0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+    "actual_source_revisions": 2,
+    "actual_source_bytes": 1303886,
+    "original_benchmark_cases_unchanged": 2,
+    "original_benchmark_corpus_sha256": "b3dc36b6156bdc0ff59e36776fb5b2dc48fb516c52ebc377c1e100719444638a",
+    "supplemental_cases": 5,
+    "observed_source_difference": {
+      "method": "cisa-kev-exact-field-diff-2026-10-03-v1",
+      "before_rows": 1311,
+      "after_rows": 1312,
+      "added": [
+        "CVE-2024-20439"
+      ],
+      "removed": [],
+      "changed": [
+        {
+          "cveID": "CVE-2025-26633",
+          "fields": {
+            "knownRansomwareCampaignUse": {
+              "before": "Unknown",
+              "after": "Known"
+            }
+          }
+        },
+        {
+          "cveID": "CVE-2025-30066",
+          "fields": {
+            "requiredAction": {
+              "before": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+              "after": "Apply mitigations as set forth in the CISA instructions linked below. Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+            }
+          }
+        },
+        {
+          "cveID": "CVE-2025-30154",
+          "fields": {
+            "requiredAction": {
+              "before": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+              "after": "Apply mitigations as set forth in the CISA instructions linked below. Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+            }
+          }
+        }
+      ],
+      "unchanged_common_records": 1308
+    },
+    "authoritative_event_or_report_clock_cases": 0,
+    "provider_designated_corrections": 0,
+    "numerical_policy_changed": false,
+    "numerical_calibration_performed": false,
+    "live_threshold_approval": false,
+    "representative_longitudinal_calibration_gate": "OPEN",
+    "limitation": "Actual source bytes and repository/retention clocks; simulated observation, owner review, material declarations, correction semantics and oracle labels. No authoritative event/report clock, provider correction designation, MIP admission or empirical threshold selection."
+  },
+  "clock_bindings": [
+    {
+      "id": "cisa-retained-revision-as-of-isolation",
+      "snapshots": [
+        {
+          "context_sha256": "61e5b53ecb21276eac5a62d69a8c58af4cdc8db65ee7fda393588210d202b2c4",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T04:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T04:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000101",
+              "source_revision_id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+              "source_sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+              "repository_committed_at": "2025-03-27T18:34:36Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000600",
+              "effective_at": "2025-03-27T18:34:36Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000101",
+              "source_revision_id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+              "source_sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+              "repository_committed_at": "2025-03-27T18:34:36Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            },
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000600",
+              "effective_at": "2025-03-27T18:34:36Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            },
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2025-03-31T18:47:50Z",
+              "declared_at": "2026-10-03T05:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T06:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T06:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000101",
+              "source_revision_id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+              "source_sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+              "repository_committed_at": "2025-03-27T18:34:36Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            },
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000600",
+              "effective_at": "2025-03-27T18:34:36Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            },
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2025-03-31T18:47:50Z",
+              "declared_at": "2026-10-03T05:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cisa-stale-source-clock-simulated-material-decay",
+      "snapshots": [
+        {
+          "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T04:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T04:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-06T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-06T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cisa-unknown-report-clock-simulated-rapid-declaration",
+      "snapshots": [
+        {
+          "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T04:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T04:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "unknown"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "unknown"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cisa-simulated-backdated-correction-notice-decay",
+      "snapshots": [
+        {
+          "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T04:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T04:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        },
+        {
+          "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000601",
+              "effective_at": "2026-10-03T04:19:48.000Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "simulated_material_effective_time",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            },
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000602",
+              "effective_at": "2025-03-31T18:47:50Z",
+              "declared_at": "2026-10-03T05:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cisa-superseded-selected-source-no-latest-fallback",
+      "snapshots": [
+        {
+          "context_sha256": "bcc830673a2ac389aed0d8b341f2f50cf8ad43fe0579ab85afba2e51adae5285",
+          "contract": "mip-retained-real-news-clock-replay-2026-10-04-v1",
+          "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+          "observed_at": "2026-10-03T05:19:48.000Z",
+          "observation_mapping": "simulated_replay_observation_at_or_after_actual_retention",
+          "simulated_fetch_observation_at": "2026-10-03T05:19:48.000Z",
+          "sources": [
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000101",
+              "source_revision_id": "cisa-kev-csv-b6ec201bce3fc8cf29484c35e54ab3c3f6c2b4a1",
+              "source_sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+              "repository_committed_at": "2025-03-27T18:34:36Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            },
+            {
+              "public_version_id": "00000000-0000-4000-8000-000000000102",
+              "source_revision_id": "cisa-kev-csv-6ff2cc19002acfb5d9214f4ee9bc428640c5084a",
+              "source_sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+              "repository_committed_at": "2025-03-31T18:47:50Z",
+              "actual_retrieved_at": "2026-10-03T04:19:48Z",
+              "authoritative_event_time": null,
+              "authoritative_report_time": null,
+              "canonical_publication_available_at": null,
+              "published_at_mapping": "repository_committer_proxy_only"
+            }
+          ],
+          "material_changes": [
+            {
+              "material_change_id": "00000000-0000-4000-8000-000000000600",
+              "effective_at": "2025-03-27T18:34:36Z",
+              "declared_at": "2026-10-03T04:19:48.000Z",
+              "effective_at_mapping": "repository_committer_proxy_only",
+              "declared_at_mapping": "simulated_owner_declaration_time"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "original_replay": {
+    "contract": "mip-retained-news-replay-2026-10-03-v1",
+    "corpus_sha256": "b3dc36b6156bdc0ff59e36776fb5b2dc48fb516c52ebc377c1e100719444638a",
+    "selected_policy_unchanged": "mip-news-state-2026-10-02-v1",
+    "threshold_selection_performed": false,
+    "thresholds_approved_for_live_use": false,
+    "authority_note": "Hashes verify input integrity and explicit recorded bindings only. Caller classifications, rights references and reviewer labels do not establish source rights, publication authority, independent review or representative corpus coverage.",
+    "real_corpus": {
+      "supplied_cases": 0,
+      "scenario_coverage": [],
+      "missing_scenarios": [
+        "rapid",
+        "slow",
+        "quiet_unresolved",
+        "one_off",
+        "correction",
+        "retraction",
+        "contradiction",
+        "stale_source_report",
+        "repeated_fetch",
+        "syndication",
+        "late_evidence",
+        "missing_time"
+      ],
+      "gate": "missing_real_retained_capture_review_and_label_chronology"
+    },
+    "candidates": [
+      {
+        "policy": {
+          "version": "mip-news-state-2026-10-02-v1",
+          "qualification": "synthetic_calibrated_candidate",
+          "breakingFreshMs": 7200000,
+          "breakingMaxMs": 21600000,
+          "rapidArrivalMs": 10800000,
+          "velocityWindowMs": 43200000,
+          "developingQuietMs": 86400000,
+          "updatedQuietMs": 259200000,
+          "minimumVelocityChanges": 2
+        },
+        "metrics_by_classification": {
+          "retained_real": {
+            "observed_ms": 0,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          },
+          "retained_real_simulated_review": {
+            "observed_ms": 28800000,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          },
+          "synthetic_regression": {
+            "observed_ms": 0,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          }
+        },
+        "cases": [
+          {
+            "id": "official-cisa-late-retention-commit-clock-proxy",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "slow",
+              "late_evidence",
+              "repeated_fetch",
+              "stale_source_report"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+            "metrics": {
+              "observed_ms": 14400000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "084ee8425bf746a49fb2af32ea1cebbd9db8cc99fe0210fc0771191128b7e38c",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "084ee8425bf746a49fb2af32ea1cebbd9db8cc99fe0210fc0771191128b7e38c",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T08:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "084ee8425bf746a49fb2af32ea1cebbd9db8cc99fe0210fc0771191128b7e38c",
+                "snapshot_observed_at": "2026-10-03T06:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "084ee8425bf746a49fb2af32ea1cebbd9db8cc99fe0210fc0771191128b7e38c",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "1133eda81566947fdc8a0ff49d9eb8c8722701776bd5175c24eedd99c21f12f4"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T06:19:48.000Z",
+                "context_sha256": "084ee8425bf746a49fb2af32ea1cebbd9db8cc99fe0210fc0771191128b7e38c",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "1133eda81566947fdc8a0ff49d9eb8c8722701776bd5175c24eedd99c21f12f4"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "official-cisa-missing-issue-time",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "missing_time",
+              "late_evidence"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+            "metrics": {
+              "observed_ms": 14400000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "d5f7faa1df562d4f684f3981543403a4f9f65fd01c5948a395d6f4b364ff1d77",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "d5f7faa1df562d4f684f3981543403a4f9f65fd01c5948a395d6f4b364ff1d77",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T08:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T04:19:48Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "d5f7faa1df562d4f684f3981543403a4f9f65fd01c5948a395d6f4b364ff1d77",
+                "snapshot_observed_at": "2026-10-03T06:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-categorical-stale-or-missing-clock-constraint-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "d5f7faa1df562d4f684f3981543403a4f9f65fd01c5948a395d6f4b364ff1d77",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "2472043c9fada48a8024c1439840d6a9f0da2a6a47ec2c2feeac794d41f513a8"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T06:19:48.000Z",
+                "context_sha256": "d5f7faa1df562d4f684f3981543403a4f9f65fd01c5948a395d6f4b364ff1d77",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "2472043c9fada48a8024c1439840d6a9f0da2a6a47ec2c2feeac794d41f513a8"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "supplemental_replay": {
+    "contract": "mip-retained-news-replay-2026-10-03-v1",
+    "corpus_sha256": "e527016ddf287e24de9277f4fd2ff552e47335f64118603fd672297cc79301d2",
+    "selected_policy_unchanged": "mip-news-state-2026-10-02-v1",
+    "threshold_selection_performed": false,
+    "thresholds_approved_for_live_use": false,
+    "authority_note": "Hashes verify input integrity and explicit recorded bindings only. Caller classifications, rights references and reviewer labels do not establish source rights, publication authority, independent review or representative corpus coverage.",
+    "real_corpus": {
+      "supplied_cases": 0,
+      "scenario_coverage": [],
+      "missing_scenarios": [
+        "rapid",
+        "slow",
+        "quiet_unresolved",
+        "one_off",
+        "correction",
+        "retraction",
+        "contradiction",
+        "stale_source_report",
+        "repeated_fetch",
+        "syndication",
+        "late_evidence",
+        "missing_time"
+      ],
+      "gate": "missing_real_retained_capture_review_and_label_chronology"
+    },
+    "candidates": [
+      {
+        "policy": {
+          "version": "mip-news-state-2026-10-02-v1",
+          "qualification": "synthetic_calibrated_candidate",
+          "breakingFreshMs": 7200000,
+          "breakingMaxMs": 21600000,
+          "rapidArrivalMs": 10800000,
+          "velocityWindowMs": 43200000,
+          "developingQuietMs": 86400000,
+          "updatedQuietMs": 259200000,
+          "minimumVelocityChanges": 2
+        },
+        "metrics_by_classification": {
+          "retained_real": {
+            "observed_ms": 0,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          },
+          "retained_real_simulated_review": {
+            "observed_ms": 853200000,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          },
+          "synthetic_regression": {
+            "observed_ms": 0,
+            "state_error_ms": 0,
+            "false_breaking_persistence_ms": 0,
+            "premature_breaking_decay_ms": 0,
+            "report_label_error_ms": 0,
+            "false_report_breaking_ms": 0,
+            "material_binding_error_ms": 0,
+            "correction_error_ms": 0
+          }
+        },
+        "cases": [
+          {
+            "id": "cisa-retained-revision-as-of-isolation",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "late_evidence",
+              "repeated_fetch"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+            "metrics": {
+              "observed_ms": 288000000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000202",
+                "material_change_id": "00000000-0000-4000-8000-000000000600",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000300",
+                    "capture_hash": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+                    "report_time": "2025-03-27T18:34:36Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000600",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000202",
+                    "effective_at": "2025-03-27T18:34:36Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000101"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "61e5b53ecb21276eac5a62d69a8c58af4cdc8db65ee7fda393588210d202b2c4",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000202",
+                "material_change_id": "00000000-0000-4000-8000-000000000600",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000300",
+                    "capture_hash": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+                    "report_time": "2025-03-27T18:34:36Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000600",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000202",
+                    "effective_at": "2025-03-27T18:34:36Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000101"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "61e5b53ecb21276eac5a62d69a8c58af4cdc8db65ee7fda393588210d202b2c4",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-06T12:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+                "snapshot_observed_at": "2026-10-03T06:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "61e5b53ecb21276eac5a62d69a8c58af4cdc8db65ee7fda393588210d202b2c4",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "bb2c880ac020fd1a13d1058b7bddfbfd65c8ed6fdce9bbb5e551737fe2471e1a"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T05:19:48.000Z",
+                "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "eb39112e6d75c1ebd314b8934a9859e22f69516bbe89dd78d38a09a73760a6d6"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T06:19:48.000Z",
+                "context_sha256": "e0eced3d009f56fce297df9d2d2f232e02f013ed42344d9705e6bef07b922b3d",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "eb39112e6d75c1ebd314b8934a9859e22f69516bbe89dd78d38a09a73760a6d6"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cisa-stale-source-clock-simulated-material-decay",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "stale_source_report",
+              "repeated_fetch",
+              "quiet_unresolved"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+            "metrics": {
+              "observed_ms": 270000000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_clock_stale",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T10:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "established_material_update",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T04:19:48.000Z",
+                "to": "2026-10-06T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_clock_stale",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_clock_stale",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T10:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "established_material_update",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T10:19:48.000Z",
+                "to": "2026-10-03T16:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "established_material_update",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T16:19:48.000Z",
+                "to": "2026-10-04T04:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "established_material_update",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-04T04:19:48.000Z",
+                "to": "2026-10-06T04:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "established_material_update",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T04:19:48.000Z",
+                "to": "2026-10-06T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T05:19:48.000Z",
+                "to": "2026-10-06T07:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-06T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "ba3a6fd125fbdcfd3858acbbdc0889206f99c31baf66ef8d94300e1dd7699712"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T05:19:48.000Z",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "ba3a6fd125fbdcfd3858acbbdc0889206f99c31baf66ef8d94300e1dd7699712"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-06T05:19:48.000Z",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "ba3a6fd125fbdcfd3858acbbdc0889206f99c31baf66ef8d94300e1dd7699712"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cisa-unknown-report-clock-simulated-rapid-declaration",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "missing_time",
+              "repeated_fetch"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+            "metrics": {
+              "observed_ms": 14400000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T08:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": null,
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_time_missing",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "7b039eed09728d76f2133fed527236c81423cee94a64482659ac7e2dc7a161d6"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T05:19:48.000Z",
+                "context_sha256": "5f4c8bdf9a1c8c9706df679a966913d9ccb9864049b30558af2a41cf3a2849f4",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "7b039eed09728d76f2133fed527236c81423cee94a64482659ac7e2dc7a161d6"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cisa-simulated-backdated-correction-notice-decay",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "correction",
+              "late_evidence"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+            "metrics": {
+              "observed_ms": 270000000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_clock_stale",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T05:19:48.000Z",
+                "to": "2026-10-06T07:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T04:19:48.000Z",
+                "to": "2026-10-03T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000203",
+                "material_change_id": "00000000-0000-4000-8000-000000000601",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000601",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000203",
+                    "effective_at": "2026-10-03T04:19:48.000Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "source_report_clock_stale",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "snapshot_observed_at": "2026-10-03T04:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T06:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T06:19:48.000Z",
+                "to": "2026-10-03T10:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T10:19:48.000Z",
+                "to": "2026-10-03T16:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-03T16:19:48.000Z",
+                "to": "2026-10-04T04:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-04T04:19:48.000Z",
+                "to": "2026-10-06T04:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T04:19:48.000Z",
+                "to": "2026-10-06T05:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "reviewed_correction",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              },
+              {
+                "from": "2026-10-06T05:19:48.000Z",
+                "to": "2026-10-06T07:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000204",
+                "material_change_id": "00000000-0000-4000-8000-000000000602",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000301",
+                    "capture_hash": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206",
+                    "report_time": "2025-03-31T18:47:50Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000602",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000204",
+                    "effective_at": "2025-03-31T18:47:50Z",
+                    "declared_at": "2026-10-03T05:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000102"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "material_change_phase_quiet",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T04:19:48.000Z",
+                "context_sha256": "74911a7502b21741bd6c23f763ab8248a75f40206c7e75ca01926912bbacf860",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "ba3a6fd125fbdcfd3858acbbdc0889206f99c31baf66ef8d94300e1dd7699712"
+                  }
+                ]
+              },
+              {
+                "observed_at": "2026-10-03T05:19:48.000Z",
+                "context_sha256": "dfc329974a60dbe7af9dd74feb43df9a9cab2dcdc72d92cf57b9b6b4549ca854",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "1fd594589a5d0680d59c098e87c663263ac0552a5e5e1814e93b87205706e6b1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cisa-superseded-selected-source-no-latest-fallback",
+            "classification": "retained_real_simulated_review",
+            "scenarios": [
+              "late_evidence",
+              "correction"
+            ],
+            "chronology_ref": "actual-retained-cisa-manifest:0ba77e64879a53221ef953d0c08cdfa9b7c720e98969418f89e8dd2bf3ec1c2e",
+            "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+            "metrics": {
+              "observed_ms": 10800000,
+              "state_error_ms": 0,
+              "false_breaking_persistence_ms": 0,
+              "premature_breaking_decay_ms": 0,
+              "report_label_error_ms": 0,
+              "false_report_breaking_ms": 0,
+              "material_binding_error_ms": 0,
+              "correction_error_ms": 0
+            },
+            "transitions": [
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T08:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000202",
+                "material_change_id": "00000000-0000-4000-8000-000000000600",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000300",
+                    "capture_hash": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+                    "report_time": "2025-03-27T18:34:36Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000600",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000202",
+                    "effective_at": "2025-03-27T18:34:36Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000101"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "supporting_source_version_superseded",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "bcc830673a2ac389aed0d8b341f2f50cf8ad43fe0579ab85afba2e51adae5285",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "intervals": [
+              {
+                "from": "2026-10-03T05:19:48.000Z",
+                "to": "2026-10-03T08:19:48.000Z",
+                "state": "UNAVAILABLE",
+                "report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "story_id": "00000000-0000-4000-8000-000000000002",
+                "public_version_id": "00000000-0000-4000-8000-000000000202",
+                "material_change_id": "00000000-0000-4000-8000-000000000600",
+                "material_public_version_id": null,
+                "effective_at": null,
+                "declared_at": null,
+                "reason_code": "latest_material_change_is_attributed_report_pending_verification",
+                "evidence_refs": [],
+                "review_refs": [],
+                "source_reports": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "source_id": "00000000-0000-4000-8000-000000000001",
+                    "source_version_id": "00000000-0000-4000-8000-000000000300",
+                    "capture_hash": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5",
+                    "report_time": "2025-03-27T18:34:36Z",
+                    "material_change_id": "00000000-0000-4000-8000-000000000600",
+                    "material_public_version_id": "00000000-0000-4000-8000-000000000202",
+                    "effective_at": "2025-03-27T18:34:36Z",
+                    "declared_at": "2026-10-03T04:19:48.000Z",
+                    "evidence_refs": [
+                      "00000000-0000-4000-8000-000000000101"
+                    ],
+                    "review_refs": [
+                      "simulated-cisa-source-report-review-2026-10-03"
+                    ],
+                    "reason_code": "supporting_source_version_superseded",
+                    "policy_version": "mip-news-state-2026-10-02-v1",
+                    "material_policy_version": "simulated-cisa-catalog-declaration-v1",
+                    "assertion_scope": "attributed_source_report_only"
+                  }
+                ],
+                "policy_version": "mip-news-state-2026-10-02-v1",
+                "context_sha256": "bcc830673a2ac389aed0d8b341f2f50cf8ad43fe0579ab85afba2e51adae5285",
+                "snapshot_observed_at": "2026-10-03T05:19:48.000Z",
+                "allowed_states": [
+                  "UNAVAILABLE"
+                ],
+                "allowed_report_labels": [
+                  "SOURCE REPORT"
+                ],
+                "label_review_ref": "simulated-source-only-clock-constraints-2026-10-04-v1",
+                "state_passes": true,
+                "report_passes": true,
+                "material_binding_passes": true
+              }
+            ],
+            "receipts": [
+              {
+                "observed_at": "2026-10-03T05:19:48.000Z",
+                "context_sha256": "bcc830673a2ac389aed0d8b341f2f50cf8ad43fe0579ab85afba2e51adae5285",
+                "source_digests": [
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000101",
+                    "sha256": "c31b4b8af97e63c4fcb8d823d7740ec191eaf0970b216c38b1ed09ff21899ce5"
+                  },
+                  {
+                    "public_version_id": "00000000-0000-4000-8000-000000000102",
+                    "sha256": "35823149b421051320c6849cc90c1de55ad63c6f40684dae58b5bf80640db206"
+                  }
+                ],
+                "review_digests": [
+                  {
+                    "review_ref": "simulated-cisa-source-report-review-2026-10-03",
+                    "sha256": "3a103a79d510295431b28c96968198da31470321202726995430bcc52a0ed1b9"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

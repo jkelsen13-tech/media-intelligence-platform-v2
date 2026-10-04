@@ -1,0 +1,244 @@
+TAP version 13
+# Subtest: candidate comparison records persistence/decay tradeoffs and untouched holdout
+ok 1 - candidate comparison records persistence/decay tradeoffs and untouched holdout
+  ---
+  duration_ms: 62.538697
+  type: 'test'
+  ...
+# Subtest: adversarial unclassified advances, truncated history and duplicate sources never strengthen a state
+ok 2 - adversarial unclassified advances, truncated history and duplicate sources never strengthen a state
+  ---
+  duration_ms: 7.94836
+  type: 'test'
+  ...
+# Subtest: states preserve canonical identity, exact material reason, review/evidence and policy versions
+ok 3 - states preserve canonical identity, exact material reason, review/evidence and policy versions
+  ---
+  duration_ms: 6.720395
+  type: 'test'
+  ...
+# Subtest: fresh fetch, outlet multiplication and unchanged version alone never produce Breaking
+ok 4 - fresh fetch, outlet multiplication and unchanged version alone never produce Breaking
+  ---
+  duration_ms: 0.383439
+  type: 'test'
+  ...
+# Subtest: single material update, correction and resolved event do not imply whole-story Breaking
+ok 5 - single material update, correction and resolved event do not imply whole-story Breaking
+  ---
+  duration_ms: 0.534287
+  type: 'test'
+  ...
+# Subtest: rapid material changes develop after maximum breaking duration; refreshing cannot reset phase
+ok 6 - rapid material changes develop after maximum breaking duration; refreshing cannot reset phase
+  ---
+  duration_ms: 5.080006
+  type: 'test'
+  ...
+# Subtest: quiet unresolved events decay; a new separated phase can begin without rewriting history
+ok 7 - quiet unresolved events decay; a new separated phase can begin without rewriting history
+  ---
+  duration_ms: 0.305361
+  type: 'test'
+  ...
+# Subtest: declared late and stale reports do not borrow a recent review/fetch as rapid news
+ok 8 - declared late and stale reports do not borrow a recent review/fetch as rapid news
+  ---
+  duration_ms: 0.633848
+  type: 'test'
+  ...
+# Subtest: future, malformed, duplicate, foreign and missing evidence contexts fail closed
+ok 9 - future, malformed, duplicate, foreign and missing evidence contexts fail closed
+  ---
+  duration_ms: 2.955876
+  type: 'test'
+  ...
+# Subtest: source-only evidence never establishes a MIP state; permitted report stays attributed and pending
+ok 10 - source-only evidence never establishes a MIP state; permitted report stays attributed and pending
+  ---
+  duration_ms: 0.45612
+  type: 'test'
+  ...
+# Subtest: report correction preserves supersession identity and does not relaunch Breaking
+ok 11 - report correction preserves supersession identity and does not relaunch Breaking
+  ---
+  duration_ms: 0.508529
+  type: 'test'
+  ...
+# Subtest: history is deterministic, preserves declarations and records decay without new fetches
+ok 12 - history is deterministic, preserves declarations and records decay without new fetches
+  ---
+  duration_ms: 4.846352
+  type: 'test'
+  ...
+# Subtest: retained sub-millisecond clocks do not cross an exact decay boundary early
+ok 13 - retained sub-millisecond clocks do not cross an exact decay boundary early
+  ---
+  duration_ms: 0.310099
+  type: 'test'
+  ...
+# Subtest: malformed nested input fails closed without an exception
+ok 14 - malformed nested input fails closed without an exception
+  ---
+  duration_ms: 0.442088
+  type: 'test'
+  ...
+# Subtest: a late backdated correction is current Updated while the old event time remains exact
+ok 15 - a late backdated correction is current Updated while the old event time remains exact
+  ---
+  duration_ms: 0.811035
+  type: 'test'
+  ...
+# Subtest: backdated declarations cannot manufacture a new Breaking phase in a long active story
+ok 16 - backdated declarations cannot manufacture a new Breaking phase in a long active story
+  ---
+  duration_ms: 0.869093
+  type: 'test'
+  ...
+# Subtest: latest unverified report change withholds prior settled state without withdrawing old admitted evidence
+ok 17 - latest unverified report change withholds prior settled state without withdrawing old admitted evidence
+  ---
+  duration_ms: 0.288115
+  type: 'test'
+  ...
+# Subtest: successive exact report versions cannot reset the maximum story reporting phase
+ok 18 - successive exact report versions cannot reset the maximum story reporting phase
+  ---
+  duration_ms: 0.875854
+  type: 'test'
+  ...
+# Subtest: a superseded supporting capture never becomes a current state or report urgency from its old approval
+ok 19 - a superseded supporting capture never becomes a current state or report urgency from its old approval
+  ---
+  duration_ms: 0.325041
+  type: 'test'
+  ...
+# Subtest: a backdated update with correction novelty keeps its declaration-clock notice and exact binding
+ok 20 - a backdated update with correction novelty keeps its declaration-clock notice and exact binding
+  ---
+  duration_ms: 8.626184
+  type: 'test'
+  ...
+# Subtest: correction novelty neither contributes developing velocity nor restarts the active phase
+ok 21 - correction novelty neither contributes developing velocity nor restarts the active phase
+  ---
+  duration_ms: 4.296552
+  type: 'test'
+  ...
+# Subtest: attributed retraction and contradiction corrections stay SOURCE REPORT with no independent MIP assertion
+ok 22 - attributed retraction and contradiction corrections stay SOURCE REPORT with no independent MIP assertion
+  ---
+  duration_ms: 8.514606
+  type: 'test'
+  ...
+# Subtest: source-report reasons distinguish stale clocks, missing clocks and superseded versions
+ok 23 - source-report reasons distinguish stale clocks, missing clocks and superseded versions
+  ---
+  duration_ms: 1.247866
+  type: 'test'
+  ...
+# Subtest: actual retained official bytes and rights hashes verify independently; exact catalog differences replay with simulated authority
+ok 24 - actual retained official bytes and rights hashes verify independently; exact catalog differences replay with simulated authority
+  ---
+  duration_ms: 637.093946
+  type: 'test'
+  ...
+# Subtest: CSV parser preserves quoted commas, quotes and newlines and refuses malformed or duplicate identifiers
+ok 25 - CSV parser preserves quoted commas, quotes and newlines and refuses malformed or duplicate identifiers
+  ---
+  duration_ms: 2.348318
+  type: 'test'
+  ...
+# Subtest: point-in-time replay binds exact versions and measures policy boundaries by interval duration
+ok 26 - point-in-time replay binds exact versions and measures policy boundaries by interval duration
+  ---
+  duration_ms: 256.249285
+  type: 'test'
+  ...
+# Subtest: missing, foreign or changed capture/review/context bindings fail without a replay verdict
+ok 27 - missing, foreign or changed capture/review/context bindings fail without a replay verdict
+  ---
+  duration_ms: 113.362387
+  type: 'test'
+  ...
+# Subtest: source report urgency, correction and repeated reads produce distinct recorded transitions
+ok 28 - source report urgency, correction and repeated reads produce distinct recorded transitions
+  ---
+  duration_ms: 39.83383
+  type: 'test'
+  ...
+# Subtest: fixture labels cannot acquire real classification implicitly; invalid policy is rejected
+ok 29 - fixture labels cannot acquire real classification implicitly; invalid policy is rejected
+  ---
+  duration_ms: 42.274527
+  type: 'test'
+  ...
+# Subtest: retained metadata inventory preserves source clocks as metadata without inferring a replay corpus
+ok 30 - retained metadata inventory preserves source clocks as metadata without inferring a replay corpus
+  ---
+  duration_ms: 0.481698
+  type: 'test'
+  ...
+# Subtest: as-of replay cannot borrow later correction evidence, version or review labels
+ok 31 - as-of replay cannot borrow later correction evidence, version or review labels
+  ---
+  duration_ms: 10.219702
+  type: 'test'
+  ...
+# Subtest: retained actual bytes retain their original two benchmark cases and separate five simulated clock cases
+ok 32 - retained actual bytes retain their original two benchmark cases and separate five simulated clock cases
+  ---
+  duration_ms: 58.915062
+  type: 'test'
+  ...
+# Subtest: as-of revision selection retains exact capture identity without borrowing the later material ID or bytes
+ok 33 - as-of revision selection retains exact capture identity without borrowing the later material ID or bytes
+  ---
+  duration_ms: 48.517581
+  type: 'test'
+  ...
+# Subtest: stale actual repository source time cannot become Breaking under a simulated fresh major declaration or repeated fetch
+ok 34 - stale actual repository source time cannot become Breaking under a simulated fresh major declaration or repeated fetch
+  ---
+  duration_ms: 0.279883
+  type: 'test'
+  ...
+# Subtest: unknown authoritative source time stays unknown despite simulated current material and observation clocks
+ok 35 - unknown authoritative source time stays unknown despite simulated current material and observation clocks
+  ---
+  duration_ms: 0.170888
+  type: 'test'
+  ...
+# Subtest: simulated backdated correction uses declaration decay and retains old effective clock without creating Breaking
+ok 36 - simulated backdated correction uses declaration decay and retains old effective clock without creating Breaking
+  ---
+  duration_ms: 0.31116
+  type: 'test'
+  ...
+# Subtest: a superseded selected version keeps its selected bytes and explicit reason without substituting latest source
+ok 37 - a superseded selected version keeps its selected bytes and explicit reason without substituting latest source
+  ---
+  duration_ms: 0.124087
+  type: 'test'
+  ...
+# Subtest: adapter refuses actual-byte digest, authoritative clock and source report clock promotion
+ok 38 - adapter refuses actual-byte digest, authoritative clock and source report clock promotion
+  ---
+  duration_ms: 27.911824
+  type: 'test'
+  ...
+# Subtest: adapter refuses real-review relabeling and provider correction designation while the existing verifier rejects unbound reviews
+ok 39 - adapter refuses real-review relabeling and provider correction designation while the existing verifier rejects unbound reviews
+  ---
+  duration_ms: 18.41139
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 39
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1559.988796
