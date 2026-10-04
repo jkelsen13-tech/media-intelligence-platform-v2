@@ -1,0 +1,19 @@
+{
+  "contract": "mip-static-release-archive-custody-v1",
+  "archive_name": "MIP_Card_Correction_Qualified_Dist_2026-10-03.zip",
+  "archive_bytes": 9798738,
+  "archive_sha256": "e0fbf5017d8d75f28c68c7a0df64cb984917387fda5df3dc09137eed7b6afb96",
+  "manifest_bytes": 81463,
+  "manifest_sha256": "e571bcdf2a4b3532b87a990683daa99b22b88c35e4e6cdcddd7e7931de66681e",
+  "source": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+    "working_tree_clean": true
+  },
+  "crc_verified": true,
+  "archive_members": 446,
+  "manifested_bodies_independently_rehashed": 445,
+  "dist_bodies": 442,
+  "resident_inventory_bytes_equal_to_export": true,
+  "authority": "Read existing archive only; no extraction/rewrite of dist, deployment, restore, account action or source admission."
+}

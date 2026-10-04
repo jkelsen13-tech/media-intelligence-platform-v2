@@ -1,0 +1,116 @@
+{
+  "contract": "mip-static-preflight-execution-evidence-v1",
+  "working_directory": "/workspace/mip-oct04-static-preflight",
+  "commands": [
+    {
+      "runtime": "v24.19.0",
+      "command": "node --test --test-reporter=tap tests/staticReleasePreflight.test.mjs",
+      "exit_code": 0,
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "receipt": "focused-node24.tap"
+    },
+    {
+      "runtime": "v22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-reporter=tap tests/staticReleasePreflight.test.mjs",
+      "exit_code": 0,
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "receipt": "focused-node22.tap"
+    },
+    {
+      "runtime": "v24.19.0",
+      "command": "node scripts/static-release-preflight/run.mjs /workspace/mip-oct04-launch-readiness/static-release-preflight/input.json docs/qualification/static-release-preflight-20261004/actual-body-node24.json",
+      "exit_code": 0,
+      "receipt": "actual-body-node24.json"
+    },
+    {
+      "runtime": "v22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node scripts/static-release-preflight/run.mjs /workspace/mip-oct04-launch-readiness/static-release-preflight/input.json docs/qualification/static-release-preflight-20261004/actual-body-node22.json",
+      "exit_code": 0,
+      "receipt": "actual-body-node22.json"
+    }
+  ],
+  "execution_input_sha256": "8b71b06edd84790ec4e080ef38f10bb3d5725bec51c44c04d76acf7618d1f2bd",
+  "release_identity": {
+    "source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+    "inventory_sha256": "a2ef19091c1c8354649f03e010434f685b07c441780fd9d90b0d237bf4b48700",
+    "body_set_sha256": "f19ce0300031a3e7224c2f8f67b194c5cb23366723c7f77a02d540bea03f7a86",
+    "release_id": "mip-static:0ebf51d80179130c2b05041663c02777c427fcf4:f19ce0300031a3e7224c2f8f67b194c5cb23366723c7f77a02d540bea03f7a86"
+  },
+  "cross_runtime_actual_mapping_equal": true,
+  "cross_runtime_negative_requests_equal": true,
+  "mapped_bodies_per_runtime": 442,
+  "canonical_cesium_bodies_per_runtime": 389,
+  "immutable_cache_bodies": 16,
+  "fail_closed_request_cases_per_runtime": 52,
+  "actual_mime_distribution": {
+    "text/javascript; charset=utf-8": 123,
+    "text/css; charset=utf-8": 33,
+    "image/png": 150,
+    "application/json": 32,
+    "image/jpeg": 53,
+    "application/xml": 1,
+    "image/svg+xml": 10,
+    "application/wasm": 4,
+    "image/gif": 1,
+    "text/html; charset=utf-8": 1,
+    "text/plain; charset=utf-8": 34
+  },
+  "evidence_files": [
+    {
+      "path": "MANIFEST.json",
+      "bytes": 81463,
+      "sha256": "e571bcdf2a4b3532b87a990683daa99b22b88c35e4e6cdcddd7e7931de66681e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8944,
+      "sha256": "207b4e5efb07f5b1623c5f52ea5ef13d39655e5aa638544c50f5457d4875a07d"
+    },
+    {
+      "path": "actual-body-node22.json",
+      "bytes": 285707,
+      "sha256": "2f510f13328f9acac38c295151592414e21f63e390d6c93db0f215fef63de754"
+    },
+    {
+      "path": "actual-body-node24.json",
+      "bytes": 285707,
+      "sha256": "c886957f73dc49e8b9f76855798a03db117cfe196e659a17e561a857cf7a08d7"
+    },
+    {
+      "path": "archive-custody.json",
+      "bytes": 832,
+      "sha256": "99a8e1cc86f532c37811b15ec83a49ebb93d3f905286f8020c46e4a88d2aff9a"
+    },
+    {
+      "path": "execution-input.json",
+      "bytes": 893,
+      "sha256": "8b71b06edd84790ec4e080ef38f10bb3d5725bec51c44c04d76acf7618d1f2bd"
+    },
+    {
+      "path": "focused-node22.tap",
+      "bytes": 3717,
+      "sha256": "77033ea0b6bac48a85ed19eb0b628b550bdac8616411517fda1b72dad1d3e922"
+    },
+    {
+      "path": "focused-node24.tap",
+      "bytes": 3714,
+      "sha256": "33a52e4998e85ffbdab6e39256f290aa97e84721adfbc0fb0e7d0f90b8f728b8"
+    },
+    {
+      "path": "release-artifact-inventory.json",
+      "bytes": 185168,
+      "sha256": "a2ef19091c1c8354649f03e010434f685b07c441780fd9d90b0d237bf4b48700"
+    },
+    {
+      "path": "source-bindings.json",
+      "bytes": 2650,
+      "sha256": "d77e07d1560f279c0adbe39cb861b421e2bc475c48e0cfc946efff52a3318e59"
+    }
+  ],
+  "limits": "Focused model and ephemeral local fixture HTTP only; no deployed host/browser/full-suite/build/real predecessor operation."
+}

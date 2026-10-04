@@ -1,0 +1,18 @@
+{
+  "release": {
+    "distDirectory": "/workspace/mip-oct03-card-qualification-node24/dist",
+    "inventoryPath": "/workspace/mip-oct04-launch-readiness/static-release-preflight/release-artifact-inventory.json",
+    "inventorySHA256": "a2ef19091c1c8354649f03e010434f685b07c441780fd9d90b0d237bf4b48700",
+    "expectedSource": {
+      "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+      "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+      "working_tree_clean": true
+    },
+    "exportManifestPath": "/workspace/mip-oct04-launch-readiness/static-release-preflight/MANIFEST.json",
+    "exportManifestSHA256": "e571bcdf2a4b3532b87a990683daa99b22b88c35e4e6cdcddd7e7931de66681e",
+    "sourceFiles": {
+      "source/package.json": "/workspace/mip-oct04-static-preflight/package.json",
+      "source/package-lock.json": "/workspace/mip-oct04-static-preflight/package-lock.json"
+    }
+  }
+}

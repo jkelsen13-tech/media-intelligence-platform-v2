@@ -1,0 +1,72 @@
+{
+  "contract": "mip-static-preflight-source-bindings-v1",
+  "product_source_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "product_source_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "product_files": [
+    {
+      "path": "package.json",
+      "bytes": 1449,
+      "sha256": "70dffb0db54b52489b2450e8ed6d52ad66ef56dc824504a2deeaad5666588dd2",
+      "git_blob": "49094334ff88caf6da764dda2477d74f4c081a3e",
+      "current_bytes_equal_exact_base": true
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 113183,
+      "sha256": "db79ad5397419116931baaae4ad0dd3aaa14752e990415473aea74189ad18d36",
+      "git_blob": "eda2e723edfff7162ce17e7704c7d43ff9b064b5",
+      "current_bytes_equal_exact_base": true
+    },
+    {
+      "path": "vite.config.js",
+      "bytes": 3988,
+      "sha256": "0c80ac59e749dce72c42bc323e5fa8bb62907134dea65c90a9c1eca95f171d3a",
+      "git_blob": "8342d95b1763888c1d650fdd0ba8cc0929745870",
+      "current_bytes_equal_exact_base": true
+    },
+    {
+      "path": "src/App.jsx",
+      "bytes": 97793,
+      "sha256": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00",
+      "git_blob": "bf34416ad1c548a8517fe7465b6d6f7b6bca1776",
+      "current_bytes_equal_exact_base": true
+    },
+    {
+      "path": "src/lib/deepLinks.js",
+      "bytes": 16321,
+      "sha256": "1bfe8bcd51620d049350fcd3e7927fb29fd7d215192732c47d7e090dbb6a49a7",
+      "git_blob": "7c6817670faf45174b27b23467532a36c97dd6a6",
+      "current_bytes_equal_exact_base": true
+    },
+    {
+      "path": "src/lib/storyReaderRoute.js",
+      "bytes": 1230,
+      "sha256": "2b1376c684241c99686b69ba093e5fac5b9216688bd9a8564193fe4c9e2125da",
+      "git_blob": "84ed1746ca8308bf798c52abe2ce685662932a55",
+      "current_bytes_equal_exact_base": true
+    }
+  ],
+  "new_tool_and_fixture_test_files": [
+    {
+      "path": "scripts/static-release-preflight/model.mjs",
+      "bytes": 17776,
+      "sha256": "aa2d2374d6b6eea470d2fcf459397ed4ff4d59d8aaa04ca07d5c9fe98a60109a"
+    },
+    {
+      "path": "scripts/static-release-preflight/run.mjs",
+      "bytes": 8423,
+      "sha256": "4d3c226047acb2602844a6e62e3dbec38e3fa2551b06070f61aa1b2faee91bd1"
+    },
+    {
+      "path": "scripts/static-release-preflight/input.example.json",
+      "bytes": 743,
+      "sha256": "bfbdd67de4daf8e3a65316456b90fb4e6702e48b3ff32345663b7ddac1cde227"
+    },
+    {
+      "path": "tests/staticReleasePreflight.test.mjs",
+      "bytes": 21301,
+      "sha256": "0886ad8d751963e33d855cdc199de8e0eae012438af42d7e3142b7d967d0cab3"
+    }
+  ],
+  "qualification": "Source bindings only; frozen artifact source and implementation additions are distinct."
+}

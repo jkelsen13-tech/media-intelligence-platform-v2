@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: actual inventory bodies map at the compiled prefix with MIME, HEAD, strong ETags and cache policy
+ok 1 - actual inventory bodies map at the compiled prefix with MIME, HEAD, strong ETags and cache policy
+  ---
+  duration_ms: 29.135545
+  type: 'test'
+  ...
+# Subtest: root-only unchanged dist holds; explicit root redirect requires complete prefix mount
+ok 2 - root-only unchanged dist holds; explicit root redirect requires complete prefix mount
+  ---
+  duration_ms: 10.288729
+  type: 'test'
+  ...
+# Subtest: hash refresh sends the actual server path; unknown server-side routes never acquire invented SPA fallback
+ok 3 - hash refresh sends the actual server path; unknown server-side routes never acquire invented SPA fallback
+  ---
+  duration_ms: 16.146838
+  type: 'test'
+  ...
+# Subtest: raw traversal, controls, separator/repeated encodings and ambiguous paths fail before URL normalization
+ok 4 - raw traversal, controls, separator/repeated encodings and ambiguous paths fail before URL normalization
+  ---
+  duration_ms: 8.686786
+  type: 'test'
+  ...
+# Subtest: query text is not a filepath or a cache body selector
+ok 5 - query text is not a filepath or a cache body selector
+  ---
+  duration_ms: 7.807547
+  type: 'test'
+  ...
+# Subtest: missing JS, tile, worker, WASM, API and private targets are non-HTML errors even with validators
+ok 6 - missing JS, tile, worker, WASM, API and private targets are non-HTML errors even with validators
+  ---
+  duration_ms: 7.023571
+  type: 'test'
+  ...
+# Subtest: only GET/HEAD are admitted; matching typed validators refer to existent actual bytes
+ok 7 - only GET/HEAD are admitted; matching typed validators refer to existent actual bytes
+  ---
+  duration_ms: 7.646463
+  type: 'test'
+  ...
+# Subtest: governed security header values are preserved with provenance; model invents no broad policy
+ok 8 - governed security header values are preserved with provenance; model invents no broad policy
+  ---
+  duration_ms: 6.979795
+  type: 'test'
+  ...
+# Subtest: changed, missing and extra actual bodies, symlinks and incorrect source/pin fail verification
+ok 9 - changed, missing and extra actual bodies, symlinks and incorrect source/pin fail verification
+  ---
+  duration_ms: 19.761164
+  type: 'test'
+  ...
+# Subtest: export manifest binds dist, retained inventory and supplied exact source package bodies
+ok 10 - export manifest binds dist, retained inventory and supplied exact source package bodies
+  ---
+  duration_ms: 17.26566
+  type: 'test'
+  ...
+# Subtest: trusted inventory still refuses malformed counts, unsafe file names and entry/graph inconsistencies
+ok 11 - trusted inventory still refuses malformed counts, unsafe file names and entry/graph inconsistencies
+  ---
+  duration_ms: 16.620865
+  type: 'test'
+  ...
+# Subtest: rollback selects a distinct exact body-set identity and rejects mixing current bytes into previous manifests
+ok 12 - rollback selects a distinct exact body-set identity and rejects mixing current bytes into previous manifests
+  ---
+  duration_ms: 30.851915
+  type: 'test'
+  ...
+# Subtest: report preserves root, security and real-predecessor holds while mapping every actual fixture body
+ok 13 - report preserves root, security and real-predecessor holds while mapping every actual fixture body
+  ---
+  duration_ms: 10.597295
+  type: 'test'
+  ...
+# Subtest: loopback HTTP boundary returns actual bytes, exact headers, HEAD/304 and fail-closed raw paths
+ok 14 - loopback HTTP boundary returns actual bytes, exact headers, HEAD/304 and fail-closed raw paths
+  ---
+  duration_ms: 25.075781
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 286.564303
