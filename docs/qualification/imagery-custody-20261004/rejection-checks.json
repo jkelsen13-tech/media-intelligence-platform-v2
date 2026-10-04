@@ -1,0 +1,22 @@
+{
+  "schema": "mip.imagery-custody-rejection-checks.v1",
+  "verificationScriptSha256": "2a2c94eb90ba38706e6ac2d89073676b6bc05388b266290cab4932b758e7b706",
+  "checks": [
+    {
+      "case": "changed PNG body rejects CRC",
+      "status": "PASS_REJECTED",
+      "reason": "PNG CRC"
+    },
+    {
+      "case": "unsafe ZIP path rejects before extraction",
+      "status": "PASS_REJECTED",
+      "reason": "unsafe ZIP member"
+    },
+    {
+      "case": "duplicate ZIP member rejects",
+      "status": "PASS_REJECTED",
+      "reason": "duplicate ZIP member"
+    }
+  ],
+  "method": "In-memory probes; original files unchanged; no browser or CI execution."
+}

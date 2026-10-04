@@ -1,0 +1,99 @@
+{
+  "schema": "mip.imagery-custody-source-binding.v1",
+  "recordedAtUtc": "2026-10-04",
+  "baseSource": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad"
+  },
+  "browserExecutedSource": {
+    "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+    "tree": "cbcfc510a117101fd163f83b3c574dd979085b02"
+  },
+  "currentBaseProductionFileHashes": {
+    "src/App.jsx": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00",
+    "src/views/WorldView.jsx": "d78e7db8894b2b5408993efc414c2ce9f5d6296546cd13a64ad002f7b1c61384",
+    "src/views/WorldMapCanvas.jsx": "244f020946a7023951e162972d9c4398fa947e772436cc7e71ec350460a1f652",
+    "src/lib/worldViewRealismController.js": "64169b677a089e265bb5e5bfe77052d032f5ddb62b335cb567c659a9b91d5b34",
+    "src/lib/worldViewRendererAdapter.js": "f02a2283bffe46d4f069ce21118dfc3e068f5b7c96bc8ca42165d69cb2590e64",
+    "src/lib/worldViewCesiumEllipsoidRendererAdapter.js": "3882f73309bdbb2e95fc4ea258a85f79b27273c20f20e0b0b2c3c5221d1fa33a",
+    "src/lib/worldViewSourceStatus.js": "44c07737c98c72e6167dcb6781c646aac651dd862398696c3844c618e9bbb098",
+    "src/lib/worldViewBoundedRgbImagery.js": "a8551ab46c2e113a855537eacc0d85f92aa7a795a729ff333227fff4084aeed5"
+  },
+  "scope": "Retained-byte custody and first-attachment recomputation only; no fresh browser or renderer execution and no new production candidate.",
+  "secondAttachmentFrame": {
+    "available": false,
+    "basis": "Final native manifest has exactly seven full viewport frames; retained executed harness screenshots first active, Graph clear and Map before fresh, but contains no screenshot after remounted second attachment. Bounded retained native/imagery artifact lineage yielded no exact second-attachment frame. Receipt proof remains distinct from pixel proof."
+  },
+  "retainedSources": [
+    {
+      "relativePath": "preserved/native-proof.zip",
+      "retainedWorkspacePath": "/workspace/mip-launch-receipts/MIP Native Review Corrections Proof Packet 2026-10-02.zip",
+      "bytes": 5657470,
+      "sha256": "d89425c07526811d0543d8b2e39d0db4ba1cea513d67113967870baf7397b5ab"
+    },
+    {
+      "relativePath": "preserved/wgs84-research.zip",
+      "retainedWorkspacePath": "/workspace/mip-real-imagery-evidence/ohio-BN18756325-wgs84-research.zip",
+      "bytes": 2918432,
+      "sha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c"
+    },
+    {
+      "relativePath": "preserved/unapproved-descriptor.json",
+      "retainedWorkspacePath": "/workspace/mip-real-imagery-evidence/existing-admission-gate.json",
+      "bytes": 9404,
+      "sha256": "21ea5338c49d6b2ae127c420ead3920d260dece13ea09f0fed9889db34aa1e15"
+    },
+    {
+      "relativePath": "payload-reference.json",
+      "retainedWorkspacePath": "/workspace/mip-native-imagery-integration-plan/payload-reference.json",
+      "bytes": 9757,
+      "sha256": "1ff070991363abbded076eef9d4454ab37b889a736122193201834ba692fac53"
+    },
+    {
+      "relativePath": "ohio.expected.json",
+      "retainedWorkspacePath": "/workspace/mip-oct04-imagery-custody/verifier/realImagery/ohio-BN18756325.expected.json",
+      "bytes": 5307,
+      "sha256": "3d7942505029df1eb8897148d780646171c5c27abc999b4216ba6f4033a54b6c"
+    },
+    {
+      "relativePath": "verify.py",
+      "retainedWorkspacePath": "/workspace/mip-oct04-imagery-custody/scripts/qualification/imagery-custody/verify.py",
+      "bytes": 21958,
+      "sha256": "2a2c94eb90ba38706e6ac2d89073676b6bc05388b266290cab4932b758e7b706"
+    }
+  ],
+  "localNativeZipLibraryIdentityRelation": {
+    "libraryFileId": "libfile_caa8f33511488191b653b512345d2cbc",
+    "basis": "Retained canonical requirement names 5657470 bytes and d89425c07526811d0543d8b2e39d0db4ba1cea513d67113967870baf7397b5ab; actual local ZIP matches both, and its own manifest independently pins ca72 source/tree. No Library download was attempted."
+  },
+  "visualInspection": {
+    "method": "view_image on each actual original 512x512 tile and ca72 first-active 1280x900 full viewport",
+    "date": "2026-10-04",
+    "finding": "Four contiguous residential/road/wooded photographic quadrants; native frame displays a small photographic footprint on the blue baseline with simulated authority credit and facility precision unchanged. No image edit, composite or resize generated."
+  },
+  "retainedHistoricalProof": "The complete native proof ZIP is preserved byte-for-byte, including b829 RED CI logs, red-67 native evidence, final ca72 receipts/source/harness and runtime/precision/accounting exclusions.",
+  "originalTiffBodyCustody": false,
+  "originalTiffDecoded": false,
+  "genuineApplicationAdmitted": false,
+  "verificationEvolution": {
+    "initialCanvasReceiptRetainedAt": "/workspace/mip-oct04-launch-readiness/imagery-custody/supplement-20261004/recomputation-receipt.json",
+    "supplement": "Direct recomputation from the preserved first full viewport added after independent pixel search found the unique canvas origin (52,88); original browser/renderer was never rerun."
+  },
+  "runtimeDocumentationErratum": {
+    "date": "2026-10-04",
+    "scope": "Documentation only; verifier and all retained receipts/body bytes unchanged; no baseline or pixel recomputation rerun.",
+    "incorrectV1ReadmeZlib": "1.3.1",
+    "receiptRecordedRecomputationRuntime": "1.3.2",
+    "subsequentPythonModuleInspection": {
+      "ZLIB_VERSION": "1.3.2",
+      "ZLIB_RUNTIME_VERSION": "1.3.2"
+    },
+    "distinctUpstreamDerivativeProvenanceZlib": "1.3.1",
+    "correctedReadmeSha256": "0c967f4abea659d136a2d809d8514f0c97d3d32ae46105dfa5040a0239c0a34b",
+    "preservedVersion1": {
+      "packagePath": "/workspace/mip-oct04-launch-readiness/imagery-custody/MIP Native Imagery Body Custody Supplement 2026-10-04.zip",
+      "bytes": 8647598,
+      "sha256": "2d19a0a51877b3d77ac34e24b77c49f749faa19058b7c5f06268ef4af6d0eeba"
+    }
+  }
+}

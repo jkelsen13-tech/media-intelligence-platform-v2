@@ -1,0 +1,102 @@
+{
+  "schema": "mip.imagery-custody-package-receipt.v1",
+  "packagePath": "/workspace/mip-oct04-launch-readiness/imagery-custody/MIP Native Imagery Body Custody Supplement 2026-10-04 V2.zip",
+  "bytes": 8649747,
+  "sha256": "02c690b80fcf5373c1fb8de863359a5050f032dee5e44af325f42d65e2875f72",
+  "members": 11,
+  "manifestPayloadsVerified": 10,
+  "crc": "PASS_ALL_MEMBERS",
+  "duplicatesMissingExtra": "NONE",
+  "baseSource": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad"
+  },
+  "browserExecutedSource": {
+    "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+    "tree": "cbcfc510a117101fd163f83b3c574dd979085b02"
+  },
+  "nativeProofPreservedSha256": "d89425c07526811d0543d8b2e39d0db4ba1cea513d67113967870baf7397b5ab",
+  "runtimeRgbPreservedSha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c",
+  "secondAttachmentFrameAvailable": false,
+  "readbackDirectory": null,
+  "browserRerun": false,
+  "productionSourceWrites": false,
+  "libraryWrites": false,
+  "readbackRecomputation": {
+    "status": "PASS_SOURCE_BODY_CUSTODY_AND_FIRST_ATTACHMENT_RECOMPUTATION",
+    "rawTileCount": 4,
+    "directFullViewportCorrelations": [
+      0.9659879971695676,
+      0.9858400707499778,
+      0.9614753997523818,
+      0.9617087859187948
+    ],
+    "outsidePixelsUnchanged": 3040,
+    "scriptSha256": "2a2c94eb90ba38706e6ac2d89073676b6bc05388b266290cab4932b758e7b706",
+    "runtime": {
+      "python": "3.12.14",
+      "zlib": "1.3.2"
+    }
+  },
+  "documentationRevision": 2,
+  "preservedVersion1": {
+    "schema": "mip.imagery-custody-package-receipt.v1",
+    "packagePath": "/workspace/mip-oct04-launch-readiness/imagery-custody/MIP Native Imagery Body Custody Supplement 2026-10-04.zip",
+    "bytes": 8647598,
+    "sha256": "2d19a0a51877b3d77ac34e24b77c49f749faa19058b7c5f06268ef4af6d0eeba",
+    "members": 11,
+    "manifestPayloadsVerified": 10,
+    "crc": "PASS_ALL_MEMBERS",
+    "duplicatesMissingExtra": "NONE",
+    "baseSource": {
+      "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+      "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad"
+    },
+    "browserExecutedSource": {
+      "head": "ca72a6df511bbb26c6b9e0a193a3e0baf01aa428",
+      "tree": "cbcfc510a117101fd163f83b3c574dd979085b02"
+    },
+    "nativeProofPreservedSha256": "d89425c07526811d0543d8b2e39d0db4ba1cea513d67113967870baf7397b5ab",
+    "runtimeRgbPreservedSha256": "ebc0599832575409a56088af66c6d284993c69871331252291d1d743af5d862c",
+    "secondAttachmentFrameAvailable": false,
+    "readbackDirectory": "/workspace/mip-oct04-launch-readiness/imagery-custody/package-readback-20261004",
+    "browserRerun": false,
+    "productionSourceWrites": false,
+    "libraryWrites": false,
+    "readbackRecomputation": {
+      "status": "PASS_SOURCE_BODY_CUSTODY_AND_FIRST_ATTACHMENT_RECOMPUTATION",
+      "rawTileCount": 4,
+      "directFullViewportCorrelations": [
+        0.9659879971695676,
+        0.9858400707499778,
+        0.9614753997523818,
+        0.9617087859187948
+      ],
+      "outsidePixelsUnchanged": 3040,
+      "scriptSha256": "2a2c94eb90ba38706e6ac2d89073676b6bc05388b266290cab4932b758e7b706",
+      "runtime": {
+        "python": "3.12.14",
+        "zlib": "1.3.2"
+      }
+    }
+  },
+  "version2Readback": {
+    "members": 11,
+    "manifestPayloadsVerified": 10,
+    "crc": "PASS_ALL_MEMBERS",
+    "priorPayloadsByteUnchanged": [
+      "ohio.expected.json",
+      "payload-reference.json",
+      "preserved/native-proof.zip",
+      "preserved/unapproved-descriptor.json",
+      "preserved/wgs84-research.zip",
+      "recomputation-receipt.json",
+      "rejection-checks.json",
+      "verify.py"
+    ],
+    "correctedReadmeSha256": "0c967f4abea659d136a2d809d8514f0c97d3d32ae46105dfa5040a0239c0a34b",
+    "runtimeDocumentation": "Python3.12.14/zlib runtime1.3.2; distinct upstream preprocessingzlib1.3.1",
+    "freshRecomputation": false,
+    "recomputationReceiptsReusedUnchanged": true
+  }
+}
