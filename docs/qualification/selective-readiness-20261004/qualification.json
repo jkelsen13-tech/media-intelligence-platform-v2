@@ -1,0 +1,305 @@
+{
+  "contract_version": "mip-selective-offline-readiness-source-qualification-20261004-v1",
+  "recorded_at_utc": "2026-10-04T17:26:44.316550+00:00",
+  "source_base": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+    "branch": "codex/mip-selective-readiness-20261004"
+  },
+  "execution_binding": "base checkout with additive new source paths pinned by full-body hashes below; later documentation/log sealing changes no executed code",
+  "scope": "qualification-only exact offline native plan and default-OFF injected transport seam; no production collector or existing-owner edit",
+  "evidence_kind": "offlineRPCmock",
+  "database": {
+    "engine": "PGlite 0.5.8",
+    "observed_version": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten",
+    "observed_server_version_num": "180003",
+    "single_session": true,
+    "wasm": true,
+    "native_postgresql17": false,
+    "hosted_auth_postgrest_proof": false,
+    "read_preflight": "existing run-preflight.psql SELECT parameterized inside disposable read-only transaction"
+  },
+  "new_source_files": [
+    {
+      "path": "scripts/qualification/selective-readiness/offlinePlan.mjs",
+      "bytes": 7372,
+      "sha256": "97b7cb0f8470129f2c4cb5a4ce32b8c9a7e883175003b421cb4085f5dee2539c"
+    },
+    {
+      "path": "scripts/qualification/selective-readiness/nativeFixture.mjs",
+      "bytes": 6806,
+      "sha256": "72c640091f443e6ac4349c2c511c54ff2feb9e7e729e7d475d9bb72670b07ce7"
+    },
+    {
+      "path": "tests/selectiveIntakeReadiness.test.mjs",
+      "bytes": 11452,
+      "sha256": "9071b387e88c1e87618a40967b4c8e3e1523a961f878432c826c0ddade007671"
+    }
+  ],
+  "unchanged_existing_source_files": [
+    {
+      "path": "package-lock.json",
+      "bytes": 113183,
+      "sha256": "db79ad5397419116931baaae4ad0dd3aaa14752e990415473aea74189ad18d36"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1449,
+      "sha256": "70dffb0db54b52489b2450e8ed6d52ad66ef56dc824504a2deeaad5666588dd2"
+    },
+    {
+      "path": "scripts/evidencePipeline.mjs",
+      "bytes": 5398,
+      "sha256": "791e9b7c4ebe132e89c8b210acd62bc13dd0a689daa7c58819024e70ca6129ac"
+    },
+    {
+      "path": "scripts/operatorBackend.mjs",
+      "bytes": 165,
+      "sha256": "795e8046c0ef8b1f773f6ef24cb3bf0a186a5da2f194f6ba5fa978737b4cc1a1"
+    },
+    {
+      "path": "scripts/selectiveExecutionPackage.mjs",
+      "bytes": 1955,
+      "sha256": "b69d39973336e9aec05ed4a095b1d9acfe0aaa7dac958b30ea03f01d72fb93e0"
+    },
+    {
+      "path": "scripts/selectiveIntakeCompletionPackage.mjs",
+      "bytes": 1347,
+      "sha256": "bbfed9b754f40c31d18a4a2df7b83192c34adfac93b62174074b290eef0663de"
+    },
+    {
+      "path": "scripts/selectiveIntakeDeclaration.mjs",
+      "bytes": 12747,
+      "sha256": "3f49a5b80d9c7a4fe66d7ef1f315f90f78d6872286486cca6ad553565250488c"
+    },
+    {
+      "path": "scripts/selectiveIntakeExecution.mjs",
+      "bytes": 19621,
+      "sha256": "8c29dc703566c50bc1ff18637db72a8cc1d1fe754bcda0362271e42f440e322a"
+    },
+    {
+      "path": "supabase/functions/_shared/operatorBackend.mjs",
+      "bytes": 2985,
+      "sha256": "da25675a3a92b305ce0628a641dd732e1b8124ddb8693f829f95cecdf06363e9"
+    },
+    {
+      "path": "supabase/migrations/20260905082406_evidence_pipeline_reliability.sql",
+      "bytes": 27775,
+      "sha256": "e4c5a47f57788b1ff73daf05d62f060eb1adeebdcba391f4384f72c0e70bdedd"
+    },
+    {
+      "path": "supabase/migrations/20260906042413_evidence_change_queue_v1.sql",
+      "bytes": 13635,
+      "sha256": "a08557df7c5e3d37ce87d37ba4146688c21431e1a0825c25915a77b8ce6892d9"
+    },
+    {
+      "path": "supabase/migrations/20260906051224_evidence_assessment_dependencies_v1.sql",
+      "bytes": 20620,
+      "sha256": "ca8af3095c18b5a7e33bef2b959f54a3aadeaa4274ea0ad28185d3b40941e450"
+    },
+    {
+      "path": "supabase/migrations/20260906071525_investigation_change_briefings_v1.sql",
+      "bytes": 13249,
+      "sha256": "48c000a8fe8b8a777a2e0d9c01281de8a88e928ac269d0c08476acd098589931"
+    },
+    {
+      "path": "supabase/migrations/20260906075718_investigation_workspace_batch_v1.sql",
+      "bytes": 34259,
+      "sha256": "2ccf5dbf106ecef8fb589f4c9d824056dde130bc1b5ffc3a3ab6d0b154986647"
+    },
+    {
+      "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "bytes": 29206,
+      "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "bytes": 19851,
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/criteria-registration.json",
+      "bytes": 471,
+      "sha256": "069e2c64fa33179fd1de26fcdef83bac6a2cd7a8d3343e47c2b01ae768372806"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/run-preflight.psql",
+      "bytes": 1740,
+      "sha256": "c87770e6e083774a0691158a54e89700c75dec385904ff57fa72d50b065f2b18"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/source-authorization.json",
+      "bytes": 430,
+      "sha256": "7829e4736bbcf5d985f9862423400f508a6c03e2be66959435ff1e5b44e24e2d"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_completion_restore_v1.sql",
+      "bytes": 35894,
+      "sha256": "f11b0c40cc968324dfd0b04ae955b9a7350614a176d18d448f1bc693c4d93077"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_completion_v1.sql",
+      "bytes": 39890,
+      "sha256": "498a90a5d193d4140c97be965120294617e8adbf634381a2af00f5b814e209b1"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "bytes": 38085,
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+    },
+    {
+      "path": "tests/changeQueueFixture.sql",
+      "bytes": 1962,
+      "sha256": "ad487aaffc81d22ebcae0792efb08b98198894c48ee3492bcd19809addda3838"
+    },
+    {
+      "path": "tests/selectiveExecutionPackageFixture.mjs",
+      "bytes": 916,
+      "sha256": "39dc888178d067ad4cfe70de2331d7a5a10439ac0c71b9d8d2423d92a260c459"
+    },
+    {
+      "path": "tests/selectiveIntakeCompletion.test.mjs",
+      "bytes": 28684,
+      "sha256": "b37692fb5ac6b960ea194479ef11e178b389fc1fed10abf6d418187c1280ff80"
+    },
+    {
+      "path": "tests/selectiveIntakeExecution.test.mjs",
+      "bytes": 31498,
+      "sha256": "9522aada7d864d0fd22d5560abef0ed7e68074ec1f879e829ccf2561e99db2c8"
+    }
+  ],
+  "existing_source_readback": "every listed existing file body equals git show 0ebf51d80179130c2b05041663c02777c427fcf4:path",
+  "red": {
+    "scope": "new qualification helper only; no existing selective engine defect",
+    "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-name-pattern='offline digest refuses' tests/selectiveIntakeReadiness.test.mjs",
+    "runtime": "Node 22.23.3",
+    "exit_code": 1,
+    "tests": 1,
+    "pass": 0,
+    "fail": 1,
+    "failure": "Date object in criteria rules canonicalized to empty object; expected rejection missing",
+    "source_and_log_evidence": [
+      {
+        "path": "docs/qualification/selective-readiness-20261004/red-input-guard/offlinePlan.mjs.txt",
+        "bytes": 7036,
+        "sha256": "bdbd16a95cb89e1f2fb142c530fb12fe85a7f08c5263a690eaaafa8d94ac3841"
+      },
+      {
+        "path": "docs/qualification/selective-readiness-20261004/red-input-guard/selectiveIntakeReadiness.test.mjs.txt",
+        "bytes": 11452,
+        "sha256": "9071b387e88c1e87618a40967b4c8e3e1523a961f878432c826c0ddade007671"
+      },
+      {
+        "path": "docs/qualification/selective-readiness-20261004/red-input-guard/node22.log",
+        "bytes": 945,
+        "sha256": "36c15ffe25d182e955af240caadde37aaae421eb446ccf8156c7a04ec0c7b5f4"
+      }
+    ],
+    "repair": "reject nonplain JSON objects and sparse/custom-property arrays before hash; Date/Map/sparse refusal qualified"
+  },
+  "final_affected_qualification": [
+    {
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-concurrency=1 tests/selectiveIntakeReadiness.test.mjs",
+      "exit_code": 0,
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "duration_ms": 15354.533651,
+      "log": {
+        "path": "docs/qualification/selective-readiness-20261004/node22-readiness-final.log",
+        "bytes": 2364,
+        "sha256": "12bc876cc8f976dbeb966fdca077c8fc3e08592214327eff5b0160fadca1e2c8"
+      },
+      "source_files": [
+        "scripts/qualification/selective-readiness/offlinePlan.mjs",
+        "scripts/qualification/selective-readiness/nativeFixture.mjs",
+        "tests/selectiveIntakeReadiness.test.mjs"
+      ]
+    },
+    {
+      "runtime": "Node 24.19.0",
+      "command": "node --test --test-concurrency=1 tests/selectiveIntakeReadiness.test.mjs",
+      "exit_code": 0,
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "duration_ms": 15395.198408,
+      "log": {
+        "path": "docs/qualification/selective-readiness-20261004/node24-readiness-final.log",
+        "bytes": 1155,
+        "sha256": "78eed7ceb63b9be334bcaf04bc8dbc7137c61a341df7fd95a69fc184fcded628"
+      },
+      "source_files": [
+        "scripts/qualification/selective-readiness/offlinePlan.mjs",
+        "scripts/qualification/selective-readiness/nativeFixture.mjs",
+        "tests/selectiveIntakeReadiness.test.mjs"
+      ]
+    }
+  ],
+  "prior_additive_regression_qualification": [
+    {
+      "runtime": "Node 22.23.3",
+      "command": "/workspace/mip-runtime22/node_modules/node/bin/node --test --test-concurrency=1 tests/selectiveIntakeReadiness.test.mjs tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeCompletion.test.mjs",
+      "exit_code": 0,
+      "tests": 58,
+      "pass": 58,
+      "fail": 0,
+      "scope": "pre-hardening new readiness 9 plus unchanged existing execution/completion 49; not final-source full qualification",
+      "log": {
+        "path": "docs/qualification/selective-readiness-20261004/node22-pre-hardening-regression.log",
+        "bytes": 13687,
+        "sha256": "7a6cd3358d831c7a05250dd010d6c0d752e03e7c3a13a84dca66e70a827442ce"
+      }
+    },
+    {
+      "runtime": "Node 24.19.0",
+      "command": "node --test --test-concurrency=1 tests/selectiveIntakeReadiness.test.mjs tests/selectiveIntakeExecution.test.mjs tests/selectiveIntakeCompletion.test.mjs",
+      "exit_code": 0,
+      "tests": 58,
+      "pass": 58,
+      "fail": 0,
+      "scope": "pre-hardening new readiness 9 plus unchanged existing execution/completion 49; not final-source full qualification",
+      "log": {
+        "path": "docs/qualification/selective-readiness-20261004/node24-pre-hardening-regression.log",
+        "bytes": 6124,
+        "sha256": "88b7d9f071a7a93f021714a8b5cad05e28f92309cf124b3eab2a37892c7b5a26"
+      }
+    }
+  ],
+  "historical_qualification_preserved": "prior 98/55/3 completion groups overlap, remain scoped and are never summed with current groups",
+  "qualified_behavior": [
+    "default OFF with zero backend/source calls",
+    "whole supplied request/criteria/authorization/native-preflight digest binding with explicit synthetic opt-in",
+    "held/mismatched/expired/unknown acceptance or rights refused before writes",
+    "routine sports/entertainment reduction; important reporting allowed; shared religion/institution stack",
+    "native stale-preview revocation and workspace head CAS remain authoritative",
+    "committed capture response loss resumes without refetch",
+    "failed source permit remains consumed",
+    "reconsideration uses native dependency causes with zero source HTTP",
+    "known reconsideration receipt replay succeeds; non-direct successor remains held with unchanged history counts"
+  ],
+  "live_operations": {
+    "source_requests": 0,
+    "hosted_database_operations": 0,
+    "protected_installations": 0,
+    "criteria_or_rights_registration": 0,
+    "collector_activation": 0,
+    "credential_or_settings_changes": 0,
+    "providers_or_spend": 0,
+    "merge_or_deployment": 0
+  },
+  "remaining_operator_gates": [
+    "separate exact selective execution/completion installation approval and genuinely installed post-dependency catalog/paired-runner readback",
+    "actual accepted criteria, lawful exact rights/endpoint/format/quota/expiry and reviewer/native data bindings plus representative corpus/religion coverage",
+    "separate bounded real producer/collector authority and qualified transport/stop/retained-state readback; explicit successor/reconciliation for held partial state"
+  ],
+  "not_claimed": [
+    "final-head full CI",
+    "independent review",
+    "native PostgreSQL 17 or multi-session races",
+    "hosted Auth/PostgREST or real accounts",
+    "actual source-byte rights/quality/coverage",
+    "protected activation, deployment or release"
+  ]
+}

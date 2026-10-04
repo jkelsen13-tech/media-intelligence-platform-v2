@@ -1,0 +1,71 @@
+TAP version 13
+# Subtest: default OFF performs no plan, backend or source work
+ok 1 - default OFF performs no plan, backend or source work
+  ---
+  duration_ms: 0.828354
+  type: 'test'
+  ...
+# Subtest: exact offline native bindings require digest opt-in and injected transport before writes
+ok 2 - exact offline native bindings require digest opt-in and injected transport before writes
+  ---
+  duration_ms: 2264.438595
+  type: 'test'
+  ...
+# Subtest: offline digest refuses non-JSON objects and sparse arrays instead of dropping their contents
+ok 3 - offline digest refuses non-JSON objects and sparse arrays instead of dropping their contents
+  ---
+  duration_ms: 1883.987898
+  type: 'test'
+  ...
+# Subtest: native policy preserves shared religion scope and material sports exceptions with metadata-only defer/skip
+ok 4 - native policy preserves shared religion scope and material sports exceptions with metadata-only defer/skip
+  ---
+  duration_ms: 1941.317135
+  type: 'test'
+  ...
+# Subtest: a stale offline preview does not bypass native revocation or discovery/workspace CAS
+ok 5 - a stale offline preview does not bypass native revocation or discovery/workspace CAS
+  ---
+  duration_ms: 1858.556467
+  type: 'test'
+  ...
+# Subtest: lost committed capture resumes retained owners through explicit fixture retry without another fetch
+ok 6 - lost committed capture resumes retained owners through explicit fixture retry without another fetch
+  ---
+  duration_ms: 1807.335539
+  type: 'test'
+  ...
+# Subtest: consumed failed acquisition stays held and reconsideration never uses source HTTP
+ok 7 - consumed failed acquisition stays held and reconsideration never uses source HTTP
+  ---
+  duration_ms: 1814.764446
+  type: 'test'
+  ...
+# Subtest: partial reconsideration replays a known receipt or holds rebased history without automatic repair
+    # Subtest: reconsider
+    ok 1 - reconsider
+      ---
+      duration_ms: 1892.296794
+      type: 'test'
+      ...
+    # Subtest: rebased-version
+    ok 2 - rebased-version
+      ---
+      duration_ms: 1785.66014
+      type: 'test'
+      ...
+    1..2
+ok 8 - partial reconsideration replays a known receipt or holds rebased history without automatic repair
+  ---
+  duration_ms: 3679.210402
+  type: 'test'
+  ...
+1..8
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15354.533651

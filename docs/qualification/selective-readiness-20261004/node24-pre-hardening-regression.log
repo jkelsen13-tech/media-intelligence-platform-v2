@@ -1,0 +1,71 @@
+✔ intervening correction refuses a new registered execution over stale observed analysis (2596.713901ms)
+✔ committed capture response loss resumes the same native progress with zero refetch (2387.106133ms)
+▶ each committed native response boundary resumes idempotently without a second permit
+  ✔ candidate (2156.408922ms)
+  ✔ analyze (2033.67756ms)
+  ✔ observe (1902.896412ms)
+  ✔ version (1815.831787ms)
+  ✔ annotate (1827.282781ms)
+✔ each committed native response boundary resumes idempotently without a second permit (9740.289854ms)
+▶ rights revocation at every delegated write rejects in SQL before that native mutation
+  ✔ candidate (1767.130715ms)
+  ✔ analyze (1651.323684ms)
+  ✔ observe (1712.456318ms)
+  ✔ version (1736.515315ms)
+  ✔ annotate (1861.1447ms)
+✔ rights revocation at every delegated write rejects in SQL before that native mutation (8731.596494ms)
+✔ native head collision preserves partial retained work and refuses resume without refetch (1607.241676ms)
+✔ canonical receipt head collision preserves the competing receipt and refuses incomplete execution retry (1670.345394ms)
+✔ one-use source capture binds its exact version and rejects changed bytes before another native job (2021.422201ms)
+✔ failed fetch and expired permit stay consumed; only an explicit successor selection can acquire again (1805.697263ms)
+✔ native capture persistence failure rolls back its job and refuses automatic acquisition retry (1777.633857ms)
+✔ progress payload is producer-scoped and reconsideration refuses revoked authority before observation writes (2203.854258ms)
+▶ reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch
+  ✔ reconsider (1942.34121ms)
+  ✔ rebased-version (1644.379381ms)
+✔ reconsideration response loss recovers a known receipt or holds a non-successor partial version without refetch (3588.373102ms)
+✔ completion requires a fresh exact catalogue and guarded restore preserves populated history and all original ACLs (2014.54724ms)
+✔ source authorization expiry during a run refuses the first retained continuation without refetch (2171.007866ms)
+✔ source-rights and criteria successor CAS prevents older pending selection completion (1730.76922ms)
+✔ tampered retained spans and foreign capture or observation scope refuse at the native SQL owner (1739.223997ms)
+✔ registered contract catalogue preserves shared religion coverage and material sports/entertainment exceptions without scores (1785.653193ms)
+▶ registered criteria execute through actual native SQL and fixed operator transport with pre-fetch denial and reconsideration
+  ✔ deterministic fixture matrix preserves explicit religion and important sports/entertainment scope (13.348453ms)
+  ✔ skip and defer are durable metadata decisions with ZERO source HTTP/capture/candidate work (39.842302ms)
+  ✔ unknown/missing rights, disabled/expired grants and malformed endpoints deny before source HTTP (51.170988ms)
+  ✔ head and membership race before permit causes no acquisition (19.085356ms)
+  ✔ authorized analyze-now executes native owners without publishing and exact retry never refetches (85.708208ms)
+  ✔ registered versions and discovery receipt CAS prevent forged policy/source substitution and duplicate permit (9.444996ms)
+  ✔ correction automatically reconsiders native dependency, preserves original evidence and rebases future watches (106.031861ms)
+  ✔ new retained input alone does not trigger; positive native relevance does, and a later correction triggers again (159.529308ms)
+  ✔ registered receipt CAS refuses stale execution and exact historical retries stay idempotent (4.652157ms)
+  ✔ revoked operation rights deny both source fetch and further automatic reconsideration (18.705322ms)
+  ✔ stream byte budget aborts before capture, consumed permits never refetch, and grant quota is atomic (17.340153ms)
+  ✔ a substituted unregistered criteria version cannot append a canonical annotation (36.071625ms)
+  ✔ criteria successor and source authorization revisions are explicit and never overwrite the prior decision (9.953031ms)
+  ✔ SQL reader and mutation privileges stay default-deny and historical receipts remain immutable (8.034982ms)
+  ✔ new source capture never republishes or overwrites an existing eligible article (56.756934ms)
+  ✔ automatic extraction uses canonical retained Unicode spans after native title normalization (42.290563ms)
+  ✔ standalone preflight and rollback pack preserve populated native/private history and stop only the new producer (218.615152ms)
+✔ registered criteria execute through actual native SQL and fixed operator transport with pre-fetch denial and reconsideration (3310.413058ms)
+✔ operator refuses malformed command or an invalid permit before source HTTP (0.565406ms)
+✔ clean-install rollback removes only the empty extension and preserves native owners (1574.027453ms)
+✔ new CLI acquisition and reconsideration writes require apply before backend creation (89.458492ms)
+✔ default OFF performs no plan, backend or source work (0.817858ms)
+✔ exact offline native bindings require digest opt-in and injected transport before writes (2249.687602ms)
+✔ native policy preserves shared religion scope and material sports exceptions with metadata-only defer/skip (1897.85197ms)
+✔ a stale offline preview does not bypass native revocation or discovery/workspace CAS (1742.635806ms)
+✔ lost committed capture resumes retained owners through explicit fixture retry without another fetch (1712.697469ms)
+✔ consumed failed acquisition stays held and reconsideration never uses source HTTP (1911.667068ms)
+▶ partial reconsideration replays a known receipt or holds rebased history without automatic repair
+  ✔ reconsider (1787.362068ms)
+  ✔ rebased-version (1745.760064ms)
+✔ partial reconsideration replays a known receipt or holds rebased history without automatic repair (3535.30503ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65922.179087

@@ -1,0 +1,19 @@
+✔ default OFF performs no plan, backend or source work (0.815874ms)
+✔ exact offline native bindings require digest opt-in and injected transport before writes (2103.102167ms)
+✔ offline digest refuses non-JSON objects and sparse arrays instead of dropping their contents (1817.139948ms)
+✔ native policy preserves shared religion scope and material sports exceptions with metadata-only defer/skip (2052.962408ms)
+✔ a stale offline preview does not bypass native revocation or discovery/workspace CAS (1969.820363ms)
+✔ lost committed capture resumes retained owners through explicit fixture retry without another fetch (1897.68148ms)
+✔ consumed failed acquisition stays held and reconsideration never uses source HTTP (1886.232963ms)
+▶ partial reconsideration replays a known receipt or holds rebased history without automatic repair
+  ✔ reconsider (1774.470301ms)
+  ✔ rebased-version (1774.606454ms)
+✔ partial reconsideration replays a known receipt or holds rebased history without automatic repair (3550.769744ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15395.198408
