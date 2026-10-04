@@ -1,0 +1,27 @@
+{
+  "schema": "mip.launch-engineering-exact-qualification.v1",
+  "head": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "working_tree_clean_before": true,
+  "working_tree_clean_after": true,
+  "head_after": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree_after": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "kind": "build",
+  "runtime": "v24.19.0",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "node_modules/vite/bin/vite.js",
+    "build"
+  ],
+  "cwd": "/workspace/mip-oct04-engineering-qualification-node24",
+  "started_at_utc": "2026-10-04T18:58:54.735803+00:00",
+  "completed_at_utc": "2026-10-04T18:59:18.616986+00:00",
+  "duration_seconds": 23.88118402098189,
+  "exit_code": 0,
+  "log_path": "/workspace/mip-oct04-launch-readiness/qualification/node24-build.log",
+  "log_bytes": 7819,
+  "log_sha256": "31b93d51a4af7bc44fee7c17d8cd31e323c05c8be1c0cb6968e7289a16c81ac2",
+  "runner_sha256": "83edc3da733dae233e2ab0f80284c545df49b6e0cdb89f1dc7e9c049614a1e6b",
+  "qualification": "SOURCE_AND_OFFLINE_FIXTURES_ONLY",
+  "live_operations": 0
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "mip.parent-remote-source-ready-checkpoint.v1",
+  "at_utc": "2026-10-04T19:07:20.369889+00:00",
+  "branch": "codex/mip-launch-engineering-supplements-20261004",
+  "head": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "public_ci": {
+    "id": 37226824334,
+    "status": "in_progress",
+    "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37226824334"
+  },
+  "local_tests": {
+    "node22": {
+      "pass": 2747,
+      "fail": 0,
+      "skip": 0,
+      "cancel": 0,
+      "todo": 0
+    },
+    "node24": {
+      "pass": 2747,
+      "fail": 0,
+      "skip": 0,
+      "cancel": 0,
+      "todo": 0
+    }
+  },
+  "builds": {
+    "node22": "PASS",
+    "node24": "PASS",
+    "fresh_outputs_byte_equal": true,
+    "files": 442,
+    "bytes": 23634316,
+    "retained_output_bytes": 23634201,
+    "comparison_to_retained": "OPEN_115_BYTE_MAIN_CHUNK_AND_HASH_REFERENCE_DIFF_UNDER_INVESTIGATION"
+  },
+  "audit": {
+    "node22": 0,
+    "node24": 0,
+    "note": "Actual zero report parsed; trailing npm update notice retained."
+  },
+  "product_baseline": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "files_unchanged": 1891,
+    "bytes_unchanged": 45189485,
+    "changed_or_removed_paths": 0
+  },
+  "fresh_second_frame": {
+    "status": "PASS_FRESH_SECOND_ATTACHMENT_FULL_VIEWPORT_PIXELS",
+    "path": "06-second-active-full-viewport.png",
+    "bytes": 122267,
+    "sha256": "0de6b89313af5f04e055792f97087fc83e756e7856b5d15262b5ed8349de92c1",
+    "frames": 7,
+    "gets": 8,
+    "imagebitmaps_closed": 8,
+    "actual_admission": false
+  },
+  "complete_imagery_archive": {
+    "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+    "bytes": 7008957,
+    "sha256": "176f640870723c09b4785b49c9c981928be0ee3c6ed4c20fa6d983fcdd868b16",
+    "members": 40,
+    "verified_payloads": 39,
+    "production_bodies_included": 8,
+    "package_receipt_included": true,
+    "library_saved": false
+  },
+  "profile_source_paths": [
+    "scripts/profilePrivilegePackage.mjs",
+    "scripts/compileProfilePrivilegePackage.mjs",
+    "scripts/profilePrivilegeCatalog.sql",
+    "tests/profilePrivilegePackage.test.mjs",
+    "docs/qualification/profile-privilege-package-20261004/qualification.json"
+  ],
+  "independent_cursor": "PARENT_OWNED_READY_FOR_BOUNDED_SOURCE_DISPATCH_NO_VERDICT",
+  "protected_target_merge_deploy_operations": 0
+}

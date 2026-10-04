@@ -1,0 +1,15 @@
+{
+  "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+  "bytes": 7008957,
+  "sha256": "176f640870723c09b4785b49c9c981928be0ee3c6ed4c20fa6d983fcdd868b16",
+  "members": 40,
+  "verified_payloads": 39,
+  "complete_production_witness_bodies": 8,
+  "actual_package_receipt_included": true,
+  "status": "PASS_FRESH_SECOND_ATTACHMENT_FULL_VIEWPORT_PIXELS",
+  "prior_draft_preserved": {
+    "file": "MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04.zip",
+    "bytes": 7008689,
+    "sha256": "19be9121f52b8d1d0b9f34c4c2fe67e968330966e8e3d35f7e80a2b31b412344"
+  }
+}

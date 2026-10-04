@@ -1,0 +1,322 @@
+{
+  "schema": "mip.imagery-remount-full-viewport-pixels.v1",
+  "status": "PASS_FRESH_SECOND_ATTACHMENT_FULL_VIEWPORT_PIXELS",
+  "recordedAtUtc": "2026-10-04T18:34:40.746108+00:00",
+  "candidate": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "browserReceiptSha256": "e38db0e08e4f184343d83caeaa2742556ed4ac62c2a810498f07a9e16f07dc35",
+  "pixelVerifierSha256": "be79796e8235bbe2a7f692fb9ec8c458d1b385bbfaf3b6b0955b8e17a874a138",
+  "sourceFileHashes": {
+    "src/App.jsx": "8534ff3ee054aa1a4805df144fee7619f93b22328cfbd213eaad07a695b4ce00",
+    "src/views/WorldView.jsx": "d78e7db8894b2b5408993efc414c2ce9f5d6296546cd13a64ad002f7b1c61384",
+    "src/views/WorldMapCanvas.jsx": "244f020946a7023951e162972d9c4398fa947e772436cc7e71ec350460a1f652",
+    "src/lib/worldViewRealismController.js": "64169b677a089e265bb5e5bfe77052d032f5ddb62b335cb567c659a9b91d5b34",
+    "src/lib/worldViewRendererAdapter.js": "f02a2283bffe46d4f069ce21118dfc3e068f5b7c96bc8ca42165d69cb2590e64",
+    "src/lib/worldViewCesiumEllipsoidRendererAdapter.js": "3882f73309bdbb2e95fc4ea258a85f79b27273c20f20e0b0b2c3c5221d1fa33a",
+    "src/lib/worldViewSourceStatus.js": "44c07737c98c72e6167dcb6781c646aac651dd862398696c3844c618e9bbb098",
+    "src/lib/worldViewBoundedRgbImagery.js": "a8551ab46c2e113a855537eacc0d85f92aa7a795a729ff333227fff4084aeed5"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "zlib": "1.3.2"
+  },
+  "authority": "SIMULATED_TEST_AUTHORITY_ONLY",
+  "genuineReceivedPixels": true,
+  "genuineApplicationAdmitted": false,
+  "historicalFramesRelabeled": false,
+  "freshSecondFrame": "06-second-active-full-viewport.png",
+  "secondNativeCleanup": "PASS_EIGHT_BITMAPS_CLOSED_ZERO_PHOTO_RGBA_LEASES",
+  "attachments": [
+    {
+      "attachment": "first-control",
+      "baselineFrame": "01-first-baseline-full-viewport.png",
+      "activeFrame": "02-first-active-full-viewport.png",
+      "adapterGeneration": 1,
+      "fullViewportFootprint": {
+        "left": 617.8455532779964,
+        "top": 441.8412235758929,
+        "right": 662.1544467219717,
+        "bottom": 486.1489692441009,
+        "width": 1176,
+        "height": 752
+      },
+      "tiles": [
+        {
+          "name": "tile-0-0.png",
+          "exactEncodedSha256": "82d8d1b75f7a9702b9caa94f03badddd57437aff4aac13ebf118fd1fe32a1dea",
+          "rawNorthUpBandPlanarRgbSha256": "137c428407231fa95b41106dde45d1b91bc5e142c3d471b872af2ef910389a2b",
+          "rawNorthUpInterleavedRgbSha256": "1606cebc414151a2dd3e48f878fafa05609dc560a662b4e45796306bc6a47211",
+          "browserUploadPreflippedInterleavedRgbSha256": "d05549eda0b4a8e3cb31844eb95503fbf77edb3fa1b72ba3ac5365667a2e1124",
+          "rect": [
+            620,
+            444,
+            637,
+            461
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 80.22837370242215,
+          "distinctColors": 286,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9659879971695676,
+          "meanLuminanceError": 7.196104463027041,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-0-1.png",
+          "exactEncodedSha256": "334cf0fb048ce34d40641e672c268f6be59e36ed367909d7bd648b7ca03176bc",
+          "rawNorthUpBandPlanarRgbSha256": "6515c51b6543a267263cae66568faf4d6df59037e001432234e1e243d2d1e417",
+          "rawNorthUpInterleavedRgbSha256": "41ce3e2d926f5aa11c8978b457d0d2dccd5ce919b6709f9aeeeef43e5a1af24b",
+          "browserUploadPreflippedInterleavedRgbSha256": "3055c6029b0f3fb9fa1df9168071fc0f8571f20fb0f5bbae82e54d547f19a145",
+          "rect": [
+            642,
+            444,
+            660,
+            461
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 79.30718954248366,
+          "distinctColors": 291,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9858400707499778,
+          "meanLuminanceError": 4.79817802892762,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-1-0.png",
+          "exactEncodedSha256": "7bc9cea86f7569d5769d78e34cac5a79ad298a1da132852f7f03c437f2e63d35",
+          "rawNorthUpBandPlanarRgbSha256": "48497a262905a7aedd7b413dbb2a4322f04b3cbb892d0cfceba1709d8c30816a",
+          "rawNorthUpInterleavedRgbSha256": "4e0cfbde584270d71cab13c52995f88097d0c0ac8bd183bfc9d100a67efc90ee",
+          "browserUploadPreflippedInterleavedRgbSha256": "d28f9d4ce324979ffc29e3af490a13636a79ad53f8eae0fe3f0f4417bca83151",
+          "rect": [
+            620,
+            466,
+            637,
+            484
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 75.51742919389979,
+          "distinctColors": 299,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9614753997523818,
+          "meanLuminanceError": 6.183346949891067,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-1-1.png",
+          "exactEncodedSha256": "88f4441ba10f82e511c521a934ddae07a2e347059d3ec020d196893d777d1766",
+          "rawNorthUpBandPlanarRgbSha256": "831605b10f3cfe69e5467e220cc793c71843de1f927ce323295445faee777a43",
+          "rawNorthUpInterleavedRgbSha256": "83e2c0ac6a38aa2bd2b8f985e9bb4f77daf29750e3859e800dccf1c4421bebf1",
+          "browserUploadPreflippedInterleavedRgbSha256": "109a4042a4584f3e261ab8ef2b388e9f55416644fe3db6b6d28b6fb4ab091535",
+          "rect": [
+            642,
+            466,
+            660,
+            484
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 81.79320987654322,
+          "distinctColors": 321,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9617087859187948,
+          "meanLuminanceError": 7.755008287608597,
+          "status": "PASS"
+        }
+      ],
+      "outsideFootprint": [
+        {
+          "rect": [
+            567,
+            445,
+            607,
+            483
+          ],
+          "pixels": 1520,
+          "changedPixels": 0
+        },
+        {
+          "rect": [
+            673,
+            445,
+            713,
+            483
+          ],
+          "pixels": 1520,
+          "changedPixels": 0
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "attachment": "fresh-second-attachment",
+      "baselineFrame": "05-second-baseline-full-viewport.png",
+      "activeFrame": "06-second-active-full-viewport.png",
+      "adapterGeneration": 2,
+      "fullViewportFootprint": {
+        "left": 617.8455532779964,
+        "top": 441.8412235758929,
+        "right": 662.1544467219717,
+        "bottom": 486.1489692441009,
+        "width": 1176,
+        "height": 752
+      },
+      "tiles": [
+        {
+          "name": "tile-0-0.png",
+          "exactEncodedSha256": "82d8d1b75f7a9702b9caa94f03badddd57437aff4aac13ebf118fd1fe32a1dea",
+          "rawNorthUpBandPlanarRgbSha256": "137c428407231fa95b41106dde45d1b91bc5e142c3d471b872af2ef910389a2b",
+          "rawNorthUpInterleavedRgbSha256": "1606cebc414151a2dd3e48f878fafa05609dc560a662b4e45796306bc6a47211",
+          "browserUploadPreflippedInterleavedRgbSha256": "d05549eda0b4a8e3cb31844eb95503fbf77edb3fa1b72ba3ac5365667a2e1124",
+          "rect": [
+            620,
+            444,
+            637,
+            461
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 80.22837370242215,
+          "distinctColors": 286,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9659879971695676,
+          "meanLuminanceError": 7.196104463027041,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-0-1.png",
+          "exactEncodedSha256": "334cf0fb048ce34d40641e672c268f6be59e36ed367909d7bd648b7ca03176bc",
+          "rawNorthUpBandPlanarRgbSha256": "6515c51b6543a267263cae66568faf4d6df59037e001432234e1e243d2d1e417",
+          "rawNorthUpInterleavedRgbSha256": "41ce3e2d926f5aa11c8978b457d0d2dccd5ce919b6709f9aeeeef43e5a1af24b",
+          "browserUploadPreflippedInterleavedRgbSha256": "3055c6029b0f3fb9fa1df9168071fc0f8571f20fb0f5bbae82e54d547f19a145",
+          "rect": [
+            642,
+            444,
+            660,
+            461
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 79.30718954248366,
+          "distinctColors": 291,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9858400707499778,
+          "meanLuminanceError": 4.79817802892762,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-1-0.png",
+          "exactEncodedSha256": "7bc9cea86f7569d5769d78e34cac5a79ad298a1da132852f7f03c437f2e63d35",
+          "rawNorthUpBandPlanarRgbSha256": "48497a262905a7aedd7b413dbb2a4322f04b3cbb892d0cfceba1709d8c30816a",
+          "rawNorthUpInterleavedRgbSha256": "4e0cfbde584270d71cab13c52995f88097d0c0ac8bd183bfc9d100a67efc90ee",
+          "browserUploadPreflippedInterleavedRgbSha256": "d28f9d4ce324979ffc29e3af490a13636a79ad53f8eae0fe3f0f4417bca83151",
+          "rect": [
+            620,
+            466,
+            637,
+            484
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 75.51742919389979,
+          "distinctColors": 299,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9614753997523818,
+          "meanLuminanceError": 6.183346949891067,
+          "status": "PASS"
+        },
+        {
+          "name": "tile-1-1.png",
+          "exactEncodedSha256": "88f4441ba10f82e511c521a934ddae07a2e347059d3ec020d196893d777d1766",
+          "rawNorthUpBandPlanarRgbSha256": "831605b10f3cfe69e5467e220cc793c71843de1f927ce323295445faee777a43",
+          "rawNorthUpInterleavedRgbSha256": "83e2c0ac6a38aa2bd2b8f985e9bb4f77daf29750e3859e800dccf1c4421bebf1",
+          "browserUploadPreflippedInterleavedRgbSha256": "109a4042a4584f3e261ab8ef2b388e9f55416644fe3db6b6d28b6fb4ab091535",
+          "rect": [
+            642,
+            466,
+            660,
+            484
+          ],
+          "changedFraction": 1.0,
+          "meanChannelDifferenceFromBaseline": 81.79320987654322,
+          "distinctColors": 321,
+          "northUpLuminanceCorrelationWithReceivedTile": 0.9617087859187948,
+          "meanLuminanceError": 7.755008287608597,
+          "status": "PASS"
+        }
+      ],
+      "outsideFootprint": [
+        {
+          "rect": [
+            567,
+            445,
+            607,
+            483
+          ],
+          "pixels": 1520,
+          "changedPixels": 0
+        },
+        {
+          "rect": [
+            673,
+            445,
+            713,
+            483
+          ],
+          "pixels": 1520,
+          "changedPixels": 0
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "frames": [
+    {
+      "name": "01-first-baseline-full-viewport.png",
+      "sha256": "b7fd05c337f262648c8fc62136b502eb73e8e6b7564509c697c48ba43128cf1e",
+      "bytes": 142405,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "02-first-active-full-viewport.png",
+      "sha256": "26dc1d61222d840c6dd9f9fd1d48fb90fa112e426a814a05451b97e00307fba1",
+      "bytes": 156411,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "03-Graph-cleared-full-viewport.png",
+      "sha256": "4c72ab57bc315c78e5d5c5ffaf4135c2b69aa5e7e1bb5cec789a5608f6661ffb",
+      "bytes": 158821,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "04-Map-return-grant-cleared-full-viewport.png",
+      "sha256": "b1545905eca0c5f1e9f18816442348b38bfef42f90f9a23433e8aeb1e41741e2",
+      "bytes": 154953,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "05-second-baseline-full-viewport.png",
+      "sha256": "30c5fded88db24a9ced3fa7df71433b69e3e1f00d9c6580a4828a0217de50d79",
+      "bytes": 108175,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "06-second-active-full-viewport.png",
+      "sha256": "0de6b89313af5f04e055792f97087fc83e756e7856b5d15262b5ed8349de92c1",
+      "bytes": 122267,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "name": "07-second-cleanup-full-viewport.png",
+      "sha256": "9af73a464f5498e15e63b85adb85046c11a499bedad7f52ba28d1da0925490cb",
+      "bytes": 108166,
+      "width": 1280,
+      "height": 900
+    }
+  ],
+  "limits": [
+    "one fresh local Chromium SwiftShader remount journey",
+    "no real provider/backend request sent; all nonlocal requests intercepted before network",
+    "no genuine source admission/activation",
+    "no original TIFF decode",
+    "no event-point registration",
+    "no full viewport photographic coverage",
+    "no GPU/RSS/provider billing measurement",
+    "no physical-device/appearance acceptance"
+  ]
+}

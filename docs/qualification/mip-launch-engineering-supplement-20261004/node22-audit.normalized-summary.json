@@ -1,0 +1,24 @@
+{
+  "schema": "mip.exact-audit-log-summary.v1",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "runtime": "v22.23.3",
+  "raw_log_sha256": "3140f063474bcd958acdfd76430d447eb983121c4fc985de4d0d50a9d684b58e",
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "audit_report_version": 2,
+  "trailing_npm_notice_preserved": true,
+  "log_modified": false,
+  "command": [
+    "/workspace/mip-runtime22/node_modules/node/bin/node",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/lib/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--json"
+  ]
+}

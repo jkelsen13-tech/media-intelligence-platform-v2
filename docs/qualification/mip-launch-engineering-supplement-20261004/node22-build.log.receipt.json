@@ -1,0 +1,27 @@
+{
+  "schema": "mip.launch-engineering-exact-qualification.v1",
+  "head": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "working_tree_clean_before": true,
+  "working_tree_clean_after": true,
+  "head_after": "06833f99de62877182305eda6fb034800b905f1e",
+  "tree_after": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "kind": "build",
+  "runtime": "v22.23.3",
+  "command": [
+    "/workspace/mip-runtime22/node_modules/node/bin/node",
+    "node_modules/vite/bin/vite.js",
+    "build"
+  ],
+  "cwd": "/workspace/mip-oct04-engineering-qualification-node22",
+  "started_at_utc": "2026-10-04T18:54:40.883975+00:00",
+  "completed_at_utc": "2026-10-04T18:55:06.961459+00:00",
+  "duration_seconds": 26.07748787998571,
+  "exit_code": 0,
+  "log_path": "/workspace/mip-oct04-launch-readiness/qualification/node22-build.log",
+  "log_bytes": 7819,
+  "log_sha256": "ac0be31791893127fce7cf639b93b38f4d2a92e325b40ad0b3db753f0199ea98",
+  "runner_sha256": "83edc3da733dae233e2ab0f80284c545df49b6e0cdb89f1dc7e9c049614a1e6b",
+  "qualification": "SOURCE_AND_OFFLINE_FIXTURES_ONLY",
+  "live_operations": 0
+}
