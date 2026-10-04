@@ -1,0 +1,22 @@
+test_additive_traversal_fetches_only_intersecting_sentinel_branch (test_bounded_ept.Controls.test_additive_traversal_fetches_only_intersecting_sentinel_branch) ... ok
+test_boolean_bounds_are_rejected (test_bounded_ept.Controls.test_boolean_bounds_are_rejected) ... ok
+test_dataset_root_cannot_escape_to_requester_pays_or_arbitrary_paths (test_bounded_ept.Controls.test_dataset_root_cannot_escape_to_requester_pays_or_arbitrary_paths) ... ok
+test_duplicate_schema_names_are_rejected (test_bounded_ept.Controls.test_duplicate_schema_names_are_rejected) ... ok
+test_executor_tunnel_denial_is_terminal_with_unknown_origin_status (test_bounded_ept.Controls.test_executor_tunnel_denial_is_terminal_with_unknown_origin_status) ... ok
+test_exhausted_byte_budgets_stop_before_network (test_bounded_ept.Controls.test_exhausted_byte_budgets_stop_before_network) ... ok
+test_first_denial_stops_every_request_and_persists_no_retry (test_bounded_ept.Controls.test_first_denial_stops_every_request_and_persists_no_retry) ... ok
+test_hierarchy_subtree_escape_is_rejected (test_bounded_ept.Controls.test_hierarchy_subtree_escape_is_rejected) ... ok
+test_initial_metadata_budget_includes_prior_root_bytes (test_bounded_ept.Controls.test_initial_metadata_budget_includes_prior_root_bytes) ... ok
+test_invalid_relative_is_terminal_without_any_request (test_bounded_ept.Controls.test_invalid_relative_is_terminal_without_any_request) ... ok
+test_partial_transfer_counts_bytes_and_stops (test_bounded_ept.Controls.test_partial_transfer_counts_bytes_and_stops) ... ok
+test_qualified_version_and_unique_finite_metadata_are_accepted (test_bounded_ept.Controls.test_qualified_version_and_unique_finite_metadata_are_accepted) ... ok
+test_real_urllib_redirect_processing_never_contacts_destination (test_bounded_ept.Controls.test_real_urllib_redirect_processing_never_contacts_destination) ... ok
+test_surface_estimate_excludes_noise_water_bridge_ignored_and_overlap (test_bounded_ept.Controls.test_surface_estimate_excludes_noise_water_bridge_ignored_and_overlap) ... ok
+test_total_byte_and_request_caps_refuse_before_extra_body (test_bounded_ept.Controls.test_total_byte_and_request_caps_refuse_before_extra_body) ... ok
+test_unknown_and_oversized_length_refused_without_body_read (test_bounded_ept.Controls.test_unknown_and_oversized_length_refused_without_body_read) ... ok
+test_unqualified_ept_version_is_rejected (test_bounded_ept.Controls.test_unqualified_ept_version_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.014s
+
+OK

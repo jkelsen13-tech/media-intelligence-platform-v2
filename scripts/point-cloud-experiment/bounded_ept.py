@@ -121,19 +121,23 @@ class Acquisition:
     def get(self, relative, limit, initial=False):
         if self.ledger['stopped']:
             raise Stop('Acquisition already stopped')
-        if not (relative == 'ept.json' or re.fullmatch(r'ept-hierarchy/\d+-\d+-\d+-\d+\.json', relative)):
-            raise Stop('URL outside exact approved EPT root/pattern')
-        if len(self.ledger['requests']) >= CAPS['requests']:
-            self.ledger.update(stopped=True, stop_reason='Request cap reached')
-            self.persist()
-            raise Stop('Request cap reached')
-        budget = min(limit, CAPS['acquired_bytes'] - self.ledger['bytes'])
-        if initial:
-            budget = min(budget, CAPS['initial_metadata_bytes'] - self.ledger['bytes'])
-        entry = {'url': ROOT + relative, 'at': utc_now(), 'limit_bytes': budget, 'received_bytes': 0}
-        self.ledger['requests'].append(entry)
-        self.persist()
+        entry = None
         try:
+            if not isinstance(relative, str) or not (relative == 'ept.json' or re.fullmatch(
+                    r'ept-hierarchy/\d+-\d+-\d+-\d+\.json', relative)):
+                raise Stop('URL outside exact approved EPT root/pattern')
+            if type(limit) is not int or limit <= 0:
+                raise Stop('Positive integer response-byte budget required')
+            if len(self.ledger['requests']) >= CAPS['requests']:
+                raise Stop('Request cap reached')
+            budget = min(limit, CAPS['acquired_bytes'] - self.ledger['bytes'])
+            if initial:
+                budget = min(budget, CAPS['initial_metadata_bytes'] - self.ledger['bytes'])
+            if budget <= 0:
+                raise Stop('Remaining byte budget exhausted before request')
+            entry = {'url': ROOT + relative, 'at': utc_now(), 'limit_bytes': budget, 'received_bytes': 0}
+            self.ledger['requests'].append(entry)
+            self.persist()
             req = urllib.request.Request(entry['url'], headers={'Accept-Encoding': 'identity',
                                           'User-Agent': 'MIP-bounded-point-cloud-research/1.0'})
             with self.opener.open(req, timeout=20) as response:
@@ -176,26 +180,49 @@ class Acquisition:
                     r'Tunnel connection failed: (?:401|403)\b', str(exc.reason)):
                 self.ledger['denied'] = True
                 entry['denial_layer'] = 'executor_tunnel; origin HTTP status unknown'
-            entry['error'] = str(exc)
+            if entry is not None:
+                entry['error'] = str(exc)
+            else:
+                # Preserve terminal validation failures without recording unapproved
+                # relative URLs or pretending a network request occurred.
+                self.ledger.setdefault('preflight_errors', []).append({'at': utc_now(), 'error': str(exc)})
             self.ledger.update(stopped=True, stop_reason=str(exc), stopped_at=utc_now())
             self.persist()
             raise Stop(str(exc)) from exc
 
 
 def validate_metadata(meta):
+    if not isinstance(meta, dict):
+        raise Stop('EPT metadata must be an object')
     if meta.get('dataType') != 'laszip' or meta.get('hierarchyType') != 'json':
         raise Stop('Only documented LAZ and JSON EPT supported')
-    if meta.get('version') not in ('1.0.0', '1.1.0') or meta.get('span') != 128:
+    if meta.get('version') != '1.0.0' or type(meta.get('span')) is not int or meta['span'] != 128:
         raise Stop('Unqualified EPT version/span')
-    if meta.get('srs', {}).get('authority') != 'EPSG' or str(meta['srs'].get('horizontal')) != '3857':
+    srs = meta.get('srs')
+    if not isinstance(srs, dict) or srs.get('authority') != 'EPSG' or str(srs.get('horizontal')) != '3857':
         raise Stop('Unqualified horizontal CRS')
     for name in ('bounds', 'boundsConforming'):
         b = meta.get(name, [])
-        if len(b) != 6 or not all(isinstance(v, (int, float)) and math.isfinite(v) for v in b):
+        try:
+            valid = isinstance(b, list) and len(b) == 6 and all(
+                type(v) in (int, float) and math.isfinite(v) for v in b)
+        except OverflowError:
+            valid = False
+        if not valid:
             raise Stop('Invalid EPT bounds')
         if any(b[i] >= b[i + 3] for i in range(3)):
             raise Stop('Empty or reversed EPT bounds')
-    fields = {x['name']: x for x in meta.get('schema', [])}
+    schema = meta.get('schema')
+    if not isinstance(schema, list):
+        raise Stop('EPT schema must be an array')
+    fields = {}
+    for field in schema:
+        if not isinstance(field, dict) or not isinstance(field.get('name'), str) or not field['name']:
+            raise Stop('Invalid EPT schema field name')
+        name = field['name']
+        if name in fields:
+            raise Stop('Duplicate EPT schema field name')
+        fields[name] = field
     needed = {'X', 'Y', 'Z', 'GpsTime', 'PointSourceId', 'Classification',
               'ReturnNumber', 'NumberOfReturns', 'ClassFlags'}
     if not needed <= fields.keys():

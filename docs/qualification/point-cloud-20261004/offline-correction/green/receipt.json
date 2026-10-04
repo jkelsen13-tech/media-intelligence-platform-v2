@@ -1,0 +1,38 @@
+{
+  "scope": "Offline correction tests;no network requests",
+  "tests": [
+    {
+      "runtime": "node22",
+      "binary": "/workspace/mip-runtime22/node_modules/node/bin/node",
+      "version": "v22.23.3",
+      "exit_code": 0,
+      "log": "docs/qualification/point-cloud-20261004/offline-correction/green/node22.tap"
+    },
+    {
+      "runtime": "node24",
+      "binary": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "version": "v24.19.0",
+      "exit_code": 0,
+      "log": "docs/qualification/point-cloud-20261004/offline-correction/green/node24.tap"
+    }
+  ],
+  "python_exit_code": 0,
+  "python_case_count": 17,
+  "files": [
+    {
+      "file": "node22.tap",
+      "bytes": 544,
+      "sha256": "7954314ed79b0230ebeaa7cc144cfa6465640aeb35962dc83c28887ca7440269"
+    },
+    {
+      "file": "node24.tap",
+      "bytes": 293,
+      "sha256": "c3436e4a7d1e675c9721c094e80380287142d80268d0794b4bb8a821bf0b2eae"
+    },
+    {
+      "file": "python-unittest.txt",
+      "bytes": 2566,
+      "sha256": "0c399d2733fea9a6cb10e5570f73c2854f1479773e1be1933b16b0aeef887d25"
+    }
+  ]
+}

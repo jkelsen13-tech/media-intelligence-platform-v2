@@ -2,14 +2,64 @@
   "schema": "mip.point-cloud-artifact-inventory.v1",
   "files": [
     {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/green/node22.tap",
+      "bytes": 544,
+      "sha256": "7954314ed79b0230ebeaa7cc144cfa6465640aeb35962dc83c28887ca7440269"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/green/node24.tap",
+      "bytes": 293,
+      "sha256": "c3436e4a7d1e675c9721c094e80380287142d80268d0794b4bb8a821bf0b2eae"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/green/python-unittest.txt",
+      "bytes": 2566,
+      "sha256": "0c399d2733fea9a6cb10e5570f73c2854f1479773e1be1933b16b0aeef887d25"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/green/receipt.json",
+      "bytes": 1113,
+      "sha256": "9600929da85c32d8fba9cf2d2d74b2def6b7159913641111fc94b1b48ff592bb"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/bounded_ept.py.source",
+      "bytes": 20408,
+      "sha256": "26a3ec9f22994c117a2a661920279faf7d5abbe1bb7ecdfa42f15b7b7d7ac6c0"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/node22.tap",
+      "bytes": 10242,
+      "sha256": "b01adb420339eeffab8054c5febc6099d01b0872f025d40d2c1a0129f29e72a5"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/node24.tap",
+      "bytes": 9852,
+      "sha256": "e8f44d8cfda541f37c58dbd60d4009a4c8290fc07dfca468eba199feeced295a"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/pointCloudExperiment20261004.test.mjs.source",
+      "bytes": 1685,
+      "sha256": "691c01d481611a7ced9efd1a667bb96c97c8b6fe1bf63f26ed3478d3adac88f7"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/receipt.json",
+      "bytes": 1658,
+      "sha256": "f6266e96290739862d1d8591d569d0b2c1be862388323d8fcbf147be638d8922"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/offline-correction/red/test_bounded_ept.py.source",
+      "bytes": 11596,
+      "sha256": "516cc0c7d7482d77cb024c23d74dce3db1830b0df795425a65218fca24030188"
+    },
+    {
       "path": "docs/qualification/point-cloud-20261004/primary-source-checks.json",
       "bytes": 1577,
       "sha256": "e1f0db9dc38fc4b5882d8aea8b58174b6d7a85003d9813d68483e532bcc279f3"
     },
     {
       "path": "docs/qualification/point-cloud-20261004/qualification.json",
-      "bytes": 5173,
-      "sha256": "292384bff4c25ebdbff1c3706f3a2cce3b920e250d0edf7349bb2ec0e5ccebb6"
+      "bytes": 6717,
+      "sha256": "9b7f3563ff8dd31401e5c2997dcf31cf3e6c82a4ed0f9b19199852520373b6d2"
     },
     {
       "path": "docs/qualification/point-cloud-20261004/raw-attempt-acquisition.json",
@@ -23,8 +73,8 @@
     },
     {
       "path": "docs/qualification/point-cloud-20261004/report.md",
-      "bytes": 6073,
-      "sha256": "9f5fbca59136f5eb2aae50c3c8a7e7ab3aa433e517fe683316ed7f8903325ad2"
+      "bytes": 7121,
+      "sha256": "09a6ef75ba9cc14de15955492060db42b311cd09615474c2f30d4c2d85598dac"
     },
     {
       "path": "docs/qualification/point-cloud-20261004/tests.tap",
@@ -33,18 +83,18 @@
     },
     {
       "path": "scripts/point-cloud-experiment/README.md",
-      "bytes": 3989,
-      "sha256": "c13d9189be2a10f27194660ef47cdd1c81dbca30d0bcf32a719c8eb33a947a60"
+      "bytes": 4315,
+      "sha256": "dae2003659b181e95262da2c42f90e7d09b9fe06b864bf935382ff29cd1c4497"
     },
     {
       "path": "scripts/point-cloud-experiment/bounded_ept.py",
-      "bytes": 20408,
-      "sha256": "26a3ec9f22994c117a2a661920279faf7d5abbe1bb7ecdfa42f15b7b7d7ac6c0"
+      "bytes": 21646,
+      "sha256": "6b5b3bb0da1947ba9637a19913c12f43b90e2be3a872e94eb018287a3452692d"
     },
     {
       "path": "scripts/point-cloud-experiment/test_bounded_ept.py",
-      "bytes": 8935,
-      "sha256": "6c66f443e2cbf75b5f46a40e35a081986f97c8629b05490ae9e2624d371add0a"
+      "bytes": 11827,
+      "sha256": "e601ba52cb96cc5f772923a9cd92e6e58a77b272404f5dc4a7be64e5c5b10cca"
     },
     {
       "path": "tests/pointCloudExperiment20261004.test.mjs",
@@ -52,5 +102,5 @@
       "sha256": "691c01d481611a7ced9efd1a667bb96c97c8b6fe1bf63f26ed3478d3adac88f7"
     }
   ],
-  "total_bytes": 50378
+  "total_bytes": 117383
 }

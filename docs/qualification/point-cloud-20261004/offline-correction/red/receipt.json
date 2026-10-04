@@ -1,0 +1,49 @@
+{
+  "predecessor_head": "e03e633fd77d667b6c89a5b734ec77efcf48a9f4",
+  "predecessor_tree": "80b83a32defff5a84f06e6e5d1afcda61853ad03",
+  "scope": "Offline negative controls; no network requests",
+  "tests": [
+    {
+      "runtime": "node22",
+      "binary": "/workspace/mip-runtime22/node_modules/node/bin/node",
+      "version": "v22.23.3",
+      "exit_code": 1,
+      "log": "docs/qualification/point-cloud-20261004/offline-correction/red/node22.tap"
+    },
+    {
+      "runtime": "node24",
+      "binary": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "version": "v24.19.0",
+      "exit_code": 1,
+      "log": "docs/qualification/point-cloud-20261004/offline-correction/red/node24.tap"
+    }
+  ],
+  "files": [
+    {
+      "file": "bounded_ept.py.source",
+      "bytes": 20408,
+      "sha256": "26a3ec9f22994c117a2a661920279faf7d5abbe1bb7ecdfa42f15b7b7d7ac6c0"
+    },
+    {
+      "file": "node22.tap",
+      "bytes": 10242,
+      "sha256": "b01adb420339eeffab8054c5febc6099d01b0872f025d40d2c1a0129f29e72a5"
+    },
+    {
+      "file": "node24.tap",
+      "bytes": 9852,
+      "sha256": "e8f44d8cfda541f37c58dbd60d4009a4c8290fc07dfca468eba199feeced295a"
+    },
+    {
+      "file": "pointCloudExperiment20261004.test.mjs.source",
+      "bytes": 1685,
+      "sha256": "691c01d481611a7ced9efd1a667bb96c97c8b6fe1bf63f26ed3478d3adac88f7"
+    },
+    {
+      "file": "test_bounded_ept.py.source",
+      "bytes": 11596,
+      "sha256": "516cc0c7d7482d77cb024c23d74dce3db1830b0df795425a65218fca24030188"
+    }
+  ],
+  "snapshot_extensions": "Source snapshots use .source suffix to avoid accidental test discovery;body bytes unchanged"
+}

@@ -87,12 +87,28 @@ registration. No request to bypass the denied route is implied.
 
 ## Verification and authority
 
-Two Node tests pass, wrapping eleven offline Python adversarial/semantics cases
-and a CLI point-acquisition refusal. The tests exercise terminal origin/tunnel
+The initial e03e633 evidence retained two passing Node tests wrapping eleven
+offline Python cases and a CLI point-acquisition refusal. The tests exercise terminal origin/tunnel
 denial, actual urllib redirect processing, unknown/oversized/truncated bodies,
 cumulative/initial byte caps, request caps, subtree containment, additive sample
 counting, and explicit roof/vegetation uncertainty using synthetic points. They
 do not establish real heights or a decoded point sample.
+
+The later parent source review identified preflight and metadata-validation gaps
+in the new utility. Five added negative controls retained RED on Node 22.23.3 and
+24.19.0: sixteen Python cases with eight failing assertions/subtests. The exact
+pre-repair source, tests and runtime logs are retained with SHA256 values in
+`offline-correction/red/`. These observations do not modify the initial actual
+403 receipt or imply a repeated provider request.
+
+The bounded offline correction persists a terminal stopped ledger for invalid
+relative paths, rejects exhausted initial/total budgets before any opener call,
+accepts only the verified EPT 1.0.0 version, and rejects duplicate schema names
+and Boolean bounds. Corrected results are seventeen passing Python cases and
+two passing Node wrapper tests on each of the existing 22.23.3 and 24.19.0
+runtimes, retained in `offline-correction/green/`. This follow-up made zero network
+requests, installed no runtime or decoder, and preserved both raw actual-attempt
+receipts byte-for-byte.
 
 Starting source is `0ebf51d80179130c2b05041663c02777c427fcf4`, tree
 `aa2b71604f4fd782316b27bc340c88763db4eaad`, on the isolated

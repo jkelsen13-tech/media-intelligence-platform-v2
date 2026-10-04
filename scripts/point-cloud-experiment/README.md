@@ -39,6 +39,11 @@ process has a 96 MiB whole-process virtual-memory ceiling, stricter than its
 verified before body reads. Every received partial byte is counted. All HTTP
 redirects are refused. Any request error or unverifiable cap stops the run;
 an existing ledger/report cannot be retried or overwritten.
+Invalid relative paths also persist a terminal stop, and exhausted initial/total
+budgets refuse before any opener call. Preflight failures never log unapproved
+URL contents or count as attempted network requests. Only the verified EPT
+1.0.0 metadata version is accepted; duplicate schema names and Boolean bounds
+are refused.
 
 The planner selects at most eight dense nodes whose summed hierarchy count is
 at most 500,000 points. This is a hypothetical upper bound, not decoded evidence.

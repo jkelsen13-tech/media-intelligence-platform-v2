@@ -10,7 +10,7 @@ import urllib.response
 from email.message import Message
 
 from bounded_ept import (Acquisition, CAPS, ROOT, NoRedirect, Stop, analyze_sample,
-                         inside, mercator, node_bounds, traverse)
+                         inside, mercator, node_bounds, traverse, validate_metadata)
 
 
 class Response(io.BytesIO):
@@ -39,6 +39,65 @@ class Opener:
 
 
 class Controls(unittest.TestCase):
+    def test_invalid_relative_is_terminal_without_any_request(self):
+        with tempfile.TemporaryDirectory() as folder:
+            opener = Opener([])
+            a = Acquisition(folder, opener)
+            with self.assertRaises(Stop):
+                a.get('../ept.json', 1024)
+            self.assertTrue(a.ledger['stopped'])
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            self.assertEqual(opener.requests, [])
+            self.assertTrue(json.loads((pathlib.Path(folder) / 'acquisition.json').read_text())['stopped'])
+
+    def test_exhausted_byte_budgets_stop_before_network(self):
+        for total, initial, limit in ((CAPS['acquired_bytes'], False, 1024),
+                                      (CAPS['initial_metadata_bytes'], True, 1024),
+                                      (0, False, 0)):
+            with self.subTest(total=total, initial=initial, limit=limit), tempfile.TemporaryDirectory() as folder:
+                opener = Opener([Response(b'{}')])
+                a = Acquisition(folder, opener)
+                a.ledger['bytes'] = total
+                with self.assertRaises(Stop):
+                    a.get('ept.json', limit, initial=initial)
+                self.assertEqual(opener.requests, [])
+                self.assertEqual(a.ledger['requests'], [])
+                self.assertTrue(a.ledger['stopped'])
+
+    @staticmethod
+    def metadata_fixture():
+        return {'dataType': 'laszip', 'hierarchyType': 'json', 'version': '1.0.0', 'span': 128,
+                'srs': {'authority': 'EPSG', 'horizontal': '3857'},
+                'bounds': [0, 0, 0, 8, 8, 8], 'boundsConforming': [0, 0, 0, 8, 8, 8],
+                'schema': [{'name': n} for n in ('X', 'Y', 'Z', 'GpsTime', 'PointSourceId',
+                                                'Classification', 'ReturnNumber', 'NumberOfReturns', 'ClassFlags')]}
+
+    def test_unqualified_ept_version_is_rejected(self):
+        meta = self.metadata_fixture()
+        meta['version'] = '1.1.0'
+        with self.assertRaises(Stop):
+            validate_metadata(meta)
+
+    def test_qualified_version_and_unique_finite_metadata_are_accepted(self):
+        fields = validate_metadata(self.metadata_fixture())
+        self.assertEqual(len(fields), 9)
+        self.assertEqual(fields['X']['name'], 'X')
+
+    def test_duplicate_schema_names_are_rejected(self):
+        meta = self.metadata_fixture()
+        meta['schema'].append({'name': 'X', 'scale': 12345})
+        with self.assertRaises(Stop):
+            validate_metadata(meta)
+
+    def test_boolean_bounds_are_rejected(self):
+        for name in ('bounds', 'boundsConforming'):
+            with self.subTest(name=name):
+                meta = self.metadata_fixture()
+                meta[name][0] = False
+                with self.assertRaises(Stop):
+                    validate_metadata(meta)
+
     def test_real_urllib_redirect_processing_never_contacts_destination(self):
         class FakeHTTPS(urllib.request.HTTPSHandler):
             requests = []
