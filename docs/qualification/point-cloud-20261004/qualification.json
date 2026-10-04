@@ -1,0 +1,138 @@
+{
+  "schema": "mip.cleveland-point-cloud-qualification.v1",
+  "checked_at": "2026-10-04T17:21:50.693926+00:00",
+  "base_head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+  "base_tree": "aa2b71604f4fd782316b27bc340c88763db4eaad",
+  "branch": "codex/mip-point-cloud-experiment-20261004",
+  "source": "https://s3-us-west-2.amazonaws.com/usgs-lidar-public/OH_Statewide_Phase1_1_2019/ept.json",
+  "outcome": "BLOCKED_EXECUTOR_TUNNEL_DENIED_AND_EXISTING_LAZ_DECODER_UNAVAILABLE",
+  "attempts": 1,
+  "source_received_bytes": 0,
+  "hierarchy_requests": 0,
+  "laz_requests": 0,
+  "decoded_points": 0,
+  "process_peak_rss_bytes": 18087936,
+  "process_virtual_memory_limit_bytes": 100663296,
+  "acquisition_elapsed_seconds": 0.018088853015797213,
+  "denial": {
+    "layer": "executor HTTP CONNECT tunnel",
+    "message": "Tunnel connection failed: 403 Forbidden",
+    "origin_http_status": null,
+    "terminal": true,
+    "retried": false
+  },
+  "receipt_correction": {
+    "raw_acquisition_denied_boolean": false,
+    "correct_interpretation": "DENIED at executor tunnel, not established origin HTTP403",
+    "reason": "Raw initial code classified HTTPError only; later tested source also classifies tunnel URLError. Original receipts are retained unchanged; no new request occurred."
+  },
+  "raw_receipts": [
+    {
+      "file": "raw-attempt-acquisition.json",
+      "bytes": 965,
+      "sha256": "5b32538c0b42f3d961e054c442f91b25bf6463924941ee7b65099ecd0fc6adee"
+    },
+    {
+      "file": "raw-attempt-experiment.json",
+      "bytes": 1279,
+      "sha256": "60b124c86ef8804f7b769377d99bb9a1ea414d7111a0e59d32a2694020c4754a"
+    }
+  ],
+  "decoder_feasibility": {
+    "python": "3.12.14",
+    "laspy": false,
+    "lazrs": false,
+    "pdal_python": false,
+    "pdal_binary": false,
+    "lasinfo": false,
+    "las2las": false,
+    "lazperf": false,
+    "numpy": true,
+    "scipy": true,
+    "pyproj": false,
+    "shapely": false,
+    "existing_search_roots": [
+      "/workspace",
+      "/opt",
+      "/usr/local/lib",
+      "/usr/bin"
+    ],
+    "whole_machine_absence_claim": false,
+    "installs": false
+  },
+  "source_controls": {
+    "no_retry_alternate_executor_or_mirror": true,
+    "requester_pays_bucket_forbidden": true,
+    "denied_TIFF_Library_Overture_NHC_NWS_routes_untouched": true,
+    "protected_or_live_changes": false,
+    "source_admitted": false,
+    "active": false,
+    "merged": false,
+    "pushed": false,
+    "deployed": false
+  },
+  "source_metadata_evidence": {
+    "exact_ept_bytes_observed_in_this_attempt": false,
+    "ept_sha256": null,
+    "noaa_documented_xy": "EPSG:3857 metres",
+    "noaa_documented_z": "NAVD88 / GEOID12B metres, original orthometric heights converted from US survey feet",
+    "local_registration_verified": false,
+    "Phase1_1_period": [
+      "2019-11-09",
+      "2020-05-02"
+    ],
+    "local_capture_date": null,
+    "classification_schema_expected_not_locally_byte_verified": [
+      1,
+      2,
+      7,
+      9,
+      17,
+      18,
+      20
+    ],
+    "authoritative_building_class_6": false,
+    "GpsTime_semantics_header_verified": false,
+    "OriginId_or_RGB_assumed": false
+  },
+  "footprints": {
+    "source_manifest_library_id": "libfile_be276af8144c8191a6d33a9c4e19c031",
+    "source_geometry": "OSM ways 1511440097 and 1511440098 version1, unchanged2D rings",
+    "expected_file": "cleveland-overlap-building-footprints.geojson",
+    "expected_bytes": 3117,
+    "expected_sha256": "fe14f6d6472de92c67e34136db9a97a816e9e49e17208354523f683d10872735",
+    "raw_bytes_available": false,
+    "raw_reconstructed": false,
+    "license": "ODbL1.0 / OSM attribution; existing manifest source-tagged microsoft/BuildingFootprints",
+    "source_capture_date": null,
+    "height": null
+  },
+  "terrain_selection": {
+    "source_manifest": "libfile_be276af8144c8191a6d33a9c4e19c031",
+    "native_crs": "EPSG:26917 generic NAD83 UTM17N",
+    "native_bounds": [
+      441017.99997115403,
+      4583350.000010459,
+      441529.99997115403,
+      4583862.000010459
+    ],
+    "native_width_height_metres": [
+      512,
+      512
+    ],
+    "prior_geographic_transform": "Approximate manifest default GDAL/PROJ operation; area/epoch/datum-operation accuracy not qualified",
+    "purpose": "Acquisition selection only, not registered terrain or canonical owner AOI"
+  },
+  "limitations": [
+    "No actual EPT metadata/hierarchy/node bytes, so no hashes/counts/bounds from that source can be claimed here.",
+    "No point-cloud height estimate or real visualization was produced.",
+    "Offline synthetic semantics tests do not qualify actual buildings or heights.",
+    "Current exact source-CLEAN application0eb/aa2b is unchanged; admitted-data, precision, rights and final appearance gates remain open.",
+    "NOAA80072 original1.25footDEM is a different product from standard1metreDEM; neither acquired or changed."
+  ],
+  "attempt_source_identity": {
+    "committed_snapshot": null,
+    "final_tool_live_request_rerun": false,
+    "limit": "The failed request ran the initial uncommitted tool. Later final source corrections were verified offline only; final source is not relabeled as the exact live-request executable."
+  }
+}

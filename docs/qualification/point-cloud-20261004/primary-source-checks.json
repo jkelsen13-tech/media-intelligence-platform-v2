@@ -1,0 +1,32 @@
+{
+  "schema": "mip.point-cloud-primary-source-checks.v1",
+  "checked_at": "2026-10-04T17:21:50.694107+00:00",
+  "method": "Read-only web tool primary pages; webpage raw bodies were not materialized and have no claimed byte hashes",
+  "sources": [
+    {
+      "url": "https://www.fisheries.noaa.gov/inport/item/69581",
+      "result": "READ_OK",
+      "observations": "Updated2026-08-19; official Phase1_1 EPT URL; EPSG3857 and NAVD88/GEOID12B metreZ lineage; LAS classes1,2,7,9,17,18,20; no building6; Phase1_1 period2019-11-09 to2020-05-02."
+    },
+    {
+      "url": "https://registry.opendata.aws/usgs-lidar/",
+      "result": "READ_OK",
+      "observations": "USGovernmentPublicDomain; usgs-lidar-public public EPT noAWSaccount; usgs-lidar originalLAZ RequesterPays forbidden in this experiment."
+    },
+    {
+      "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services",
+      "result": "READ_OK",
+      "observations": "3DEP products free without use restrictions; pointcloud/source-resolutionDEM/standardDEM products distinct."
+    },
+    {
+      "url": "https://www.usgs.gov/news/technical-announcement/usgs-3dep-lidar-point-cloud-now-available-amazon-public-dataset",
+      "result": "READ_OK",
+      "observations": "USGS identifies public EPT pointcloud distribution."
+    },
+    {
+      "url": "https://entwine.io/en/latest/entwine-point-tile.html",
+      "result": "READ_OK",
+      "observations": "Cubic bounds and numeric depthXY Z keys; hierarchy-1 sentinel; additive node levels; LAZ parsed according to individualheader."
+    }
+  ]
+}

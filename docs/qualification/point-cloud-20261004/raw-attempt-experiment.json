@@ -1,0 +1,40 @@
+{
+  "schema": "mip.cleveland-bounded-point-cloud-experiment.v1",
+  "started_at": "2026-10-04T17:17:49.613878+00:00",
+  "scope": "Independent public EPT point-cloud research; no source admission or production change",
+  "caps": {
+    "initial_metadata_bytes": 1048576,
+    "acquired_bytes": 33554432,
+    "decoded_points": 500000,
+    "live_buffer_bytes": 100663296,
+    "requests": 32,
+    "hierarchy_pages": 16,
+    "depth": 18,
+    "node_bytes": 8388608,
+    "hierarchy_bytes": 1048576
+  },
+  "decoder": {
+    "laspy": false,
+    "lazrs": false,
+    "numpy": true,
+    "usable": false
+  },
+  "admitted": false,
+  "active": false,
+  "crs": {
+    "xy": "EPSG:3857 metres",
+    "z": "NAVD88 / GEOID12B metres per NOAA lineage",
+    "registration": "UNVERIFIED; analytic projection and prior approximate terrain ring are research selection only"
+  },
+  "footprint_custody_sha256": "fe14f6d6472de92c67e34136db9a97a816e9e49e17208354523f683d10872735",
+  "source_date_range_Phase1_1": [
+    "2019-11-09",
+    "2020-05-02"
+  ],
+  "local_capture_date": null,
+  "status": "STOPPED",
+  "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+  "finished_at": "2026-10-04T17:17:49.631278+00:00",
+  "elapsed_seconds": 0.018088853015797213,
+  "process_peak_rss_bytes": 18087936
+}

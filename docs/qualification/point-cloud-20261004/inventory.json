@@ -1,0 +1,56 @@
+{
+  "schema": "mip.point-cloud-artifact-inventory.v1",
+  "files": [
+    {
+      "path": "docs/qualification/point-cloud-20261004/primary-source-checks.json",
+      "bytes": 1577,
+      "sha256": "e1f0db9dc38fc4b5882d8aea8b58174b6d7a85003d9813d68483e532bcc279f3"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/qualification.json",
+      "bytes": 5173,
+      "sha256": "292384bff4c25ebdbff1c3706f3a2cce3b920e250d0edf7349bb2ec0e5ccebb6"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/raw-attempt-acquisition.json",
+      "bytes": 965,
+      "sha256": "5b32538c0b42f3d961e054c442f91b25bf6463924941ee7b65099ecd0fc6adee"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/raw-attempt-experiment.json",
+      "bytes": 1279,
+      "sha256": "60b124c86ef8804f7b769377d99bb9a1ea414d7111a0e59d32a2694020c4754a"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/report.md",
+      "bytes": 6073,
+      "sha256": "9f5fbca59136f5eb2aae50c3c8a7e7ab3aa433e517fe683316ed7f8903325ad2"
+    },
+    {
+      "path": "docs/qualification/point-cloud-20261004/tests.tap",
+      "bytes": 294,
+      "sha256": "ad743f3c53663fd1dd009470d09e799e23f5d2754a99ac668d0ba99168ac4af1"
+    },
+    {
+      "path": "scripts/point-cloud-experiment/README.md",
+      "bytes": 3989,
+      "sha256": "c13d9189be2a10f27194660ef47cdd1c81dbca30d0bcf32a719c8eb33a947a60"
+    },
+    {
+      "path": "scripts/point-cloud-experiment/bounded_ept.py",
+      "bytes": 20408,
+      "sha256": "26a3ec9f22994c117a2a661920279faf7d5abbe1bb7ecdfa42f15b7b7d7ac6c0"
+    },
+    {
+      "path": "scripts/point-cloud-experiment/test_bounded_ept.py",
+      "bytes": 8935,
+      "sha256": "6c66f443e2cbf75b5f46a40e35a081986f97c8629b05490ae9e2624d371add0a"
+    },
+    {
+      "path": "tests/pointCloudExperiment20261004.test.mjs",
+      "bytes": 1685,
+      "sha256": "691c01d481611a7ced9efd1a667bb96c97c8b6fe1bf63f26ed3478d3adac88f7"
+    }
+  ],
+  "total_bytes": 50378
+}

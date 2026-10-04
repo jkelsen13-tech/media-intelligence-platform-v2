@@ -1,0 +1,185 @@
+"""Offline adversarial controls and conservative surface semantics, no network."""
+import io
+import json
+import pathlib
+import tempfile
+import unittest
+import urllib.error
+import urllib.request
+import urllib.response
+from email.message import Message
+
+from bounded_ept import (Acquisition, CAPS, ROOT, NoRedirect, Stop, analyze_sample,
+                         inside, mercator, node_bounds, traverse)
+
+
+class Response(io.BytesIO):
+    def __init__(self, data, headers=None):
+        super().__init__(data)
+        self.headers = headers or {'Content-Length': str(len(data))}
+        self.status = 200
+        self.read_calls = 0
+
+    def read(self, n=-1):
+        self.read_calls += 1
+        return super().read(n)
+
+
+class Opener:
+    def __init__(self, responses):
+        self.responses = iter(responses)
+        self.requests = []
+
+    def open(self, req, timeout):
+        self.requests.append(req.full_url)
+        response = next(self.responses)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
+class Controls(unittest.TestCase):
+    def test_real_urllib_redirect_processing_never_contacts_destination(self):
+        class FakeHTTPS(urllib.request.HTTPSHandler):
+            requests = []
+            def https_open(self, req):
+                self.requests.append(req.full_url)
+                headers = Message()
+                headers['Location'] = 'https://unapproved.example/alternate'
+                response = urllib.response.addinfourl(io.BytesIO(b''), headers, req.full_url, 302)
+                response.msg = 'Found'
+                return response
+        handler = FakeHTTPS()
+        opener = urllib.request.build_opener(NoRedirect(), handler)
+        with tempfile.TemporaryDirectory() as folder:
+            a = Acquisition(folder, opener)
+            with self.assertRaisesRegex(Stop, 'Redirect refused'):
+                a.get('ept.json', 1024)
+            self.assertEqual(handler.requests, [ROOT + 'ept.json'])
+            self.assertTrue(a.ledger['stopped'])
+
+    def test_first_denial_stops_every_request_and_persists_no_retry(self):
+        opener = Opener([urllib.error.HTTPError(ROOT + 'ept.json', 403, 'Forbidden', {}, None)])
+        with tempfile.TemporaryDirectory() as folder:
+            a = Acquisition(folder, opener)
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            with self.assertRaises(Stop):
+                a.get('ept-hierarchy/0-0-0-0.json', 1024)
+            self.assertEqual(len(opener.requests), 1)
+            ledger = json.loads((pathlib.Path(folder) / 'acquisition.json').read_text())
+            self.assertTrue(ledger['denied'])
+            self.assertEqual(ledger['bytes'], 0)
+            with self.assertRaises(Stop):
+                Acquisition(folder, opener)
+
+    def test_unknown_and_oversized_length_refused_without_body_read(self):
+        for headers in ({'Content-Type': 'application/json'}, {'Content-Length': '1025'}):
+            with self.subTest(headers=headers), tempfile.TemporaryDirectory() as folder:
+                response = Response(b'actual-body', headers)
+                a = Acquisition(folder, Opener([response]))
+                with self.assertRaises(Stop):
+                    a.get('ept.json', 1024)
+                self.assertEqual(response.read_calls, 0)
+                self.assertEqual(a.ledger['bytes'], 0)
+
+    def test_executor_tunnel_denial_is_terminal_with_unknown_origin_status(self):
+        error = urllib.error.URLError(OSError('Tunnel connection failed: 403 Forbidden'))
+        with tempfile.TemporaryDirectory() as folder:
+            opener = Opener([error])
+            a = Acquisition(folder, opener)
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            self.assertTrue(a.ledger['denied'])
+            self.assertNotIn('status', a.ledger['requests'][0])
+            self.assertIn('origin HTTP status unknown', a.ledger['requests'][0]['denial_layer'])
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            self.assertEqual(len(opener.requests), 1)
+
+    def test_initial_metadata_budget_includes_prior_root_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            response = Response(b'xx')
+            a = Acquisition(folder, Opener([response]))
+            a.ledger['bytes'] = CAPS['initial_metadata_bytes'] - 1
+            with self.assertRaises(Stop):
+                a.get('ept-hierarchy/0-0-0-0.json', CAPS['hierarchy_bytes'], initial=True)
+            self.assertEqual(response.read_calls, 0)
+
+    def test_partial_transfer_counts_bytes_and_stops(self):
+        with tempfile.TemporaryDirectory() as folder:
+            a = Acquisition(folder, Opener([Response(b'abc', {'Content-Length': '8'})]))
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            self.assertEqual(a.ledger['bytes'], 3)
+            self.assertTrue(a.ledger['stopped'])
+
+    def test_dataset_root_cannot_escape_to_requester_pays_or_arbitrary_paths(self):
+        with tempfile.TemporaryDirectory() as folder:
+            opener = Opener([])
+            a = Acquisition(folder, opener)
+            for path in ('https://example.com/a', '../ept.json', 'ept-sources/list.json',
+                         'ept-data/../../../a.laz', 'ept-data/1-1-1-1.laz?requester=true'):
+                with self.assertRaises(Stop):
+                    a.get(path, 1024)
+            self.assertEqual(opener.requests, [])
+
+    def test_total_byte_and_request_caps_refuse_before_extra_body(self):
+        with tempfile.TemporaryDirectory() as folder:
+            response = Response(b'ab')
+            a = Acquisition(folder, Opener([response]))
+            a.ledger['bytes'] = CAPS['acquired_bytes'] - 1
+            with self.assertRaises(Stop):
+                a.get('ept-hierarchy/1-1-1-1.json', 1024)
+            self.assertEqual(response.read_calls, 0)
+        with tempfile.TemporaryDirectory() as folder:
+            opener = Opener([])
+            a = Acquisition(folder, opener)
+            a.ledger['requests'] = [{}] * CAPS['requests']
+            with self.assertRaises(Stop):
+                a.get('ept.json', 1024)
+            self.assertEqual(opener.requests, [])
+
+    def test_additive_traversal_fetches_only_intersecting_sentinel_branch(self):
+        root = {'0-0-0-0': 5, '1-0-0-0': -1, '1-1-1-1': -1}
+        child = {'1-0-0-0': 4, '2-0-0-0': 600001, '2-1-1-0': 8}
+        with tempfile.TemporaryDirectory() as folder:
+            opener = Opener([Response(json.dumps(root).encode()), Response(json.dumps(child).encode())])
+            a = Acquisition(folder, opener)
+            meta = {'bounds': [0, 0, 0, 8, 8, 8], 'boundsConforming': [0, 0, 0, 8, 8, 8]}
+            plan = traverse(a, meta, [1, 1, 3.8, 3.8], min_depth=1)
+            self.assertEqual([p['key'] for p in plan['pages']], ['0-0-0-0', '1-0-0-0'])
+            self.assertLessEqual(plan['selected_point_upper_bound'], 500000)
+            self.assertFalse(plan['full_density'])
+            self.assertTrue(plan['omitted_nodes'] > 0)
+            self.assertEqual(node_bounds(meta['bounds'], '1-0-0-0'), [0, 0, 0, 4, 4, 4])
+
+    def test_hierarchy_subtree_escape_is_rejected(self):
+        root = {'0-0-0-0': 1, '1-0-0-0': -1}
+        bad_child = {'1-0-0-0': 2, '2-3-3-3': 20}
+        with tempfile.TemporaryDirectory() as folder:
+            a = Acquisition(folder, Opener([Response(json.dumps(root).encode()), Response(json.dumps(bad_child).encode())]))
+            with self.assertRaises(Stop):
+                traverse(a, {'bounds': [0, 0, 0, 8, 8, 8], 'boundsConforming': [0, 0, 0, 8, 8, 8]}, [0, 0, 3, 3])
+
+    def test_surface_estimate_excludes_noise_water_bridge_ignored_and_overlap(self):
+        x, y = mercator(-81.69979, 41.40060)
+        ring = [[x-4, y-4], [x+4, y-4], [x+4, y+4], [x-4, y+4], [x-4, y-4]]
+        def point(dx, classification, z, flags=0):
+            return {'x': x+dx, 'y': y, 'z': z, 'classification': classification,
+                    'class_flags': flags, 'return_number': 1, 'number_of_returns': 1,
+                    'point_source_id': 10, 'gps_time': 123}
+        records = [point(0, 1, 210) for _ in range(20)] + [point(-10, 2, 200) for _ in range(20)]
+        records += [point(0, cls, 999) for cls in (7, 9, 17, 18, 20)]
+        records += [point(0, 1, 999, flags=8)]
+        result = analyze_sample(records, [{'ring': ring, 'properties': {'osm_id': 1511440098}}])
+        estimate = result['footprints'][0]
+        self.assertEqual(estimate['surface_above_local_ground_metres_estimate'], 10)
+        self.assertFalse(estimate['authoritative_building_class'])
+        self.assertFalse(estimate['admitted_3d'])
+        self.assertEqual(estimate['height_status'], 'estimated_unclassified_surface_roof_or_vegetation')
+        self.assertIsNone(result['flight_date'])
+
+
+if __name__ == '__main__':
+    unittest.main()

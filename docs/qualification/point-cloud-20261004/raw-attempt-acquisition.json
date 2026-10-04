@@ -1,0 +1,30 @@
+{
+  "schema": "mip.bounded-ept-acquisition.v1",
+  "started_at": "2026-10-04T17:17:49.625264+00:00",
+  "root": "https://s3-us-west-2.amazonaws.com/usgs-lidar-public/OH_Statewide_Phase1_1_2019/",
+  "caps": {
+    "initial_metadata_bytes": 1048576,
+    "acquired_bytes": 33554432,
+    "decoded_points": 500000,
+    "live_buffer_bytes": 100663296,
+    "requests": 32,
+    "hierarchy_pages": 16,
+    "depth": 18,
+    "node_bytes": 8388608,
+    "hierarchy_bytes": 1048576
+  },
+  "bytes": 0,
+  "requests": [
+    {
+      "url": "https://s3-us-west-2.amazonaws.com/usgs-lidar-public/OH_Statewide_Phase1_1_2019/ept.json",
+      "at": "2026-10-04T17:17:49.625460+00:00",
+      "limit_bytes": 65536,
+      "received_bytes": 0,
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "stopped": true,
+  "denied": false,
+  "stop_reason": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+  "stopped_at": "2026-10-04T17:17:49.631094+00:00"
+}
