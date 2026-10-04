@@ -1,0 +1,182 @@
+TAP version 13
+# Subtest: byte-exact existing proposal is preserved and its own catalog query is used
+ok 1 - byte-exact existing proposal is preserved and its own catalog query is used
+  ---
+  duration_ms: 7.098864
+  type: 'test'
+  ...
+# Subtest: default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+ok 2 - default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+  ---
+  duration_ms: 2089.935503
+  type: 'test'
+  ...
+# Subtest: explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+ok 3 - explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+  ---
+  duration_ms: 1350.665638
+  type: 'test'
+  ...
+# Subtest: same-owner policy, role-attribute and row drift abort before privilege change and roll back
+ok 4 - same-owner policy, role-attribute and row drift abort before privilege change and roll back
+  ---
+  duration_ms: 1518.752734
+  type: 'test'
+  ...
+# Subtest: non-owner runtime security/session identity mismatch refuses before REVOKE
+ok 5 - non-owner runtime security/session identity mismatch refuses before REVOKE
+  ---
+  duration_ms: 1426.649586
+  type: 'test'
+  ...
+# Subtest: PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+ok 6 - PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+  ---
+  duration_ms: 1271.27188
+  type: 'test'
+  ...
+# Subtest: missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+ok 7 - missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+  ---
+  duration_ms: 1261.731639
+  type: 'test'
+  ...
+# Subtest: accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+ok 8 - accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+  ---
+  duration_ms: 1270.575643
+  type: 'test'
+  ...
+# Subtest: exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+ok 9 - exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+  ---
+  duration_ms: 1304.522794
+  type: 'test'
+  ...
+# Subtest: verification refuses actual source drift in an isolated complete imported-helper source copy
+ok 10 - verification refuses actual source drift in an isolated complete imported-helper source copy
+  ---
+  duration_ms: 1281.432991
+  type: 'test'
+  ...
+# Subtest: committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+ok 11 - committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+  ---
+  duration_ms: 1408.168383
+  type: 'test'
+  ...
+# Subtest: recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+ok 12 - recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+  ---
+  duration_ms: 1326.74562
+  type: 'test'
+  ...
+# Subtest: browser SET true INHERIT false broad-role path refuses before source compilation
+ok 13 - browser SET true INHERIT false broad-role path refuses before source compilation
+  ---
+  duration_ms: 1292.131837
+  type: 'test'
+  ...
+# Subtest: browser SET path to table owner or a superuser refuses offline
+ok 14 - browser SET path to table owner or a superuser refuses offline
+  ---
+  duration_ms: 1183.573569
+  type: 'test'
+  ...
+# Subtest: browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+ok 15 - browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+  ---
+  duration_ms: 1213.28724
+  type: 'test'
+  ...
+# Subtest: browser ADMIN-only membership can enable dangerous SET path and refuses offline
+ok 16 - browser ADMIN-only membership can enable dangerous SET path and refuses offline
+  ---
+  duration_ms: 1156.426544
+  type: 'test'
+  ...
+# Subtest: multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+ok 17 - multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+  ---
+  duration_ms: 1200.161093
+  type: 'test'
+  ...
+# Subtest: SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+ok 18 - SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+  ---
+  duration_ms: 1259.286562
+  type: 'test'
+  ...
+# Subtest: temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+ok 19 - temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+  ---
+  duration_ms: 1243.532669
+  type: 'test'
+  ...
+# Subtest: controlled read-only capture and wrappers ignore temp catalog views and restore local context after each boundary
+ok 20 - controlled read-only capture and wrappers ignore temp catalog views and restore local context after each boundary
+  ---
+  duration_ms: 1263.874915
+  type: 'test'
+  ...
+# Subtest: distinct non-superuser owner and installer with preexisting SET membership qualify rollback and commit-source fixtures
+not ok 21 - distinct non-superuser owner and installer with preexisting SET membership qualify rollback and commit-source fixtures
+  ---
+  duration_ms: 1217.53751
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:336:1'
+  failureType: 'testCodeFailure'
+  error: 'permission denied for schema auth'
+  code: '42501'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///workspace/mip-oct03-release-dependency/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///workspace/mip-oct03-release-dependency/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///workspace/mip-oct03-release-dependency/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///workspace/mip-oct03-release-dependency/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///workspace/mip-oct03-release-dependency/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+# Subtest: profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+ok 22 - profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+  ---
+  duration_ms: 2080.10033
+  type: 'test'
+  ...
+# Subtest: positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+ok 23 - positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+  ---
+  duration_ms: 1306.031722
+  type: 'test'
+  ...
+# Subtest: own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+ok 24 - own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+  ---
+  duration_ms: 1338.23398
+  type: 'test'
+  ...
+# Subtest: missing baseline, policy drift and indirect effective grants abort atomically
+ok 25 - missing baseline, policy drift and indirect effective grants abort atomically
+  ---
+  duration_ms: 1238.007243
+  type: 'test'
+  ...
+# Subtest: non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+ok 26 - non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+  ---
+  duration_ms: 1264.962875
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 25
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26657.539457

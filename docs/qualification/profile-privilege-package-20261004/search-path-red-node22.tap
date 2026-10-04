@@ -1,0 +1,27 @@
+TAP version 13
+# Subtest: temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+not ok 1 - temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+  ---
+  duration_ms: 1536.287071
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:304:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:312:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1631.238941

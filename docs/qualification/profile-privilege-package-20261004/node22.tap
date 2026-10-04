@@ -1,0 +1,148 @@
+TAP version 13
+# Subtest: byte-exact existing proposal is preserved and its own catalog query is used
+ok 1 - byte-exact existing proposal is preserved and its own catalog query is used
+  ---
+  duration_ms: 7.817435
+  type: 'test'
+  ...
+# Subtest: default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+ok 2 - default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+  ---
+  duration_ms: 2456.369549
+  type: 'test'
+  ...
+# Subtest: explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+ok 3 - explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+  ---
+  duration_ms: 1361.608468
+  type: 'test'
+  ...
+# Subtest: same-owner policy, role-attribute and row drift abort before privilege change and roll back
+ok 4 - same-owner policy, role-attribute and row drift abort before privilege change and roll back
+  ---
+  duration_ms: 1725.384731
+  type: 'test'
+  ...
+# Subtest: non-owner runtime security/session identity mismatch refuses before REVOKE
+ok 5 - non-owner runtime security/session identity mismatch refuses before REVOKE
+  ---
+  duration_ms: 1485.013067
+  type: 'test'
+  ...
+# Subtest: PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+ok 6 - PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+  ---
+  duration_ms: 1323.507432
+  type: 'test'
+  ...
+# Subtest: missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+ok 7 - missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+  ---
+  duration_ms: 1242.180363
+  type: 'test'
+  ...
+# Subtest: accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+ok 8 - accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+  ---
+  duration_ms: 1224.281101
+  type: 'test'
+  ...
+# Subtest: exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+ok 9 - exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+  ---
+  duration_ms: 1318.693061
+  type: 'test'
+  ...
+# Subtest: verification refuses actual source drift in an isolated complete imported-helper source copy
+ok 10 - verification refuses actual source drift in an isolated complete imported-helper source copy
+  ---
+  duration_ms: 1392.048694
+  type: 'test'
+  ...
+# Subtest: committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+ok 11 - committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+  ---
+  duration_ms: 1440.880652
+  type: 'test'
+  ...
+# Subtest: recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+ok 12 - recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+  ---
+  duration_ms: 1340.966465
+  type: 'test'
+  ...
+# Subtest: browser SET true INHERIT false broad-role path refuses before source compilation
+ok 13 - browser SET true INHERIT false broad-role path refuses before source compilation
+  ---
+  duration_ms: 1414.000295
+  type: 'test'
+  ...
+# Subtest: browser SET path to table owner or a superuser refuses offline
+ok 14 - browser SET path to table owner or a superuser refuses offline
+  ---
+  duration_ms: 1269.165397
+  type: 'test'
+  ...
+# Subtest: browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+ok 15 - browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+  ---
+  duration_ms: 1243.063931
+  type: 'test'
+  ...
+# Subtest: browser ADMIN-only membership can enable dangerous SET path and refuses offline
+ok 16 - browser ADMIN-only membership can enable dangerous SET path and refuses offline
+  ---
+  duration_ms: 1376.820536
+  type: 'test'
+  ...
+# Subtest: multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+ok 17 - multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+  ---
+  duration_ms: 1376.172337
+  type: 'test'
+  ...
+# Subtest: SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+ok 18 - SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+  ---
+  duration_ms: 1237.87798
+  type: 'test'
+  ...
+# Subtest: profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+ok 19 - profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+  ---
+  duration_ms: 2012.973576
+  type: 'test'
+  ...
+# Subtest: positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+ok 20 - positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+  ---
+  duration_ms: 1522.823806
+  type: 'test'
+  ...
+# Subtest: own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+ok 21 - own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+  ---
+  duration_ms: 1682.901502
+  type: 'test'
+  ...
+# Subtest: missing baseline, policy drift and indirect effective grants abort atomically
+ok 22 - missing baseline, policy drift and indirect effective grants abort atomically
+  ---
+  duration_ms: 1339.127497
+  type: 'test'
+  ...
+# Subtest: non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+ok 23 - non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+  ---
+  duration_ms: 1347.933647
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24341.5303

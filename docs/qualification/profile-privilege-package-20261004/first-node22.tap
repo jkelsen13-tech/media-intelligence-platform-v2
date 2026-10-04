@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: byte-exact existing proposal is preserved and its own catalog query is used
+ok 1 - byte-exact existing proposal is preserved and its own catalog query is used
+  ---
+  duration_ms: 5.952416
+  type: 'test'
+  ...
+# Subtest: default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+ok 2 - default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+  ---
+  duration_ms: 1679.405951
+  type: 'test'
+  ...
+# Subtest: explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+ok 3 - explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+  ---
+  duration_ms: 1337.553172
+  type: 'test'
+  ...
+# Subtest: same-owner policy, role-attribute and row drift abort before privilege change and roll back
+ok 4 - same-owner policy, role-attribute and row drift abort before privilege change and roll back
+  ---
+  duration_ms: 1493.932548
+  type: 'test'
+  ...
+# Subtest: non-owner runtime security/session identity mismatch refuses before REVOKE
+ok 5 - non-owner runtime security/session identity mismatch refuses before REVOKE
+  ---
+  duration_ms: 1331.042298
+  type: 'test'
+  ...
+# Subtest: PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+not ok 6 - PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+  ---
+  duration_ms: 1267.278973
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:123:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /dependent browser grant/. Input:
+    
+    'Error: complete exact profile security catalog required: indirect PUBLIC/inherited or unexpected grantor broad privilege'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: indirect PUBLIC/inherited or unexpected grantor broad privilege'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:79:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:136:118)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:201:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:134:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:134:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+ok 7 - missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+  ---
+  duration_ms: 1330.191301
+  type: 'test'
+  ...
+# Subtest: accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+ok 8 - accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+  ---
+  duration_ms: 1294.763954
+  type: 'test'
+  ...
+# Subtest: exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+ok 9 - exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+  ---
+  duration_ms: 1375.184792
+  type: 'test'
+  ...
+# Subtest: verification refuses actual source drift in an isolated complete imported-helper source copy
+ok 10 - verification refuses actual source drift in an isolated complete imported-helper source copy
+  ---
+  duration_ms: 1319.032258
+  type: 'test'
+  ...
+# Subtest: committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+ok 11 - committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+  ---
+  duration_ms: 1413.779082
+  type: 'test'
+  ...
+# Subtest: recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+ok 12 - recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+  ---
+  duration_ms: 1276.137248
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 11
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15218.901678

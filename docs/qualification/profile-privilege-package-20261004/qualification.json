@@ -1,0 +1,377 @@
+{
+  "contract": "mip-profile-privilege-source-qualification-20261004-v1",
+  "observed_at_utc": "2026-10-04T18:20:58.787Z",
+  "qualification": "SYNTHETIC_PGLITE_18_3_WASM_ONLY",
+  "source_base": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad"
+  },
+  "qualified_source": {
+    "head": "1baed873da899808f341d12ab44588c19d7f72bd",
+    "tree": "2971f71f211e3081321fdd1a2651113bd85538f3"
+  },
+  "proposal": {
+    "bytes": 3870,
+    "sha256": "2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7",
+    "git_blob": "a485ecdf0125fa7cd7ff82f1056dc452040deb51"
+  },
+  "runtime": {
+    "node22": "v22.23.3",
+    "node24": "v24.19.0",
+    "database": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+  },
+  "test_results": {
+    "node22": {
+      "tests": 27,
+      "pass": 27,
+      "fail": 0
+    },
+    "node24": {
+      "tests": 27,
+      "pass": 27,
+      "fail": 0
+    },
+    "first_run": {
+      "tests": 12,
+      "pass": 11,
+      "fail": 1,
+      "assertion_preserved": true
+    },
+    "set_role_red": {
+      "tests": 4,
+      "pass": 0,
+      "fail": 4,
+      "assertions_preserved": true
+    },
+    "search_path_red": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "assertion_preserved": true
+    },
+    "quoted_context_red": {
+      "tests": 26,
+      "pass": 7,
+      "fail": 19,
+      "assertions_preserved": true
+    },
+    "nonsuper_cleanup_red": {
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "signup_assertion_preserved": true
+    }
+  },
+  "synthetic_readback": {
+    "status": "EXACT_PROFILE_INSTALLED_FIXTURE_OR_ACCEPTED_READBACK",
+    "removed_acl_entries": 9,
+    "rollback_exact_original_catalog": true,
+    "commit_exact_allowed_delta": true,
+    "hold_exact_installed_catalog": true,
+    "fixture_original_profile_rows": 2,
+    "fixture_installed_profile_rows": 2,
+    "post_commit_scoped_signup": true,
+    "non_superuser_owner": true,
+    "non_superuser_installer": true,
+    "preexisting_set_only_nonadmin_membership": true,
+    "current_user": "profile_owner",
+    "session_user": "profile_installer",
+    "controlled_catalog_context": "pg_catalog, pg_temp",
+    "force_rls_non_bypassing_owner_known_rows": 3,
+    "force_rls_non_bypassing_owner_observed_rows": 0,
+    "force_rls_incomplete_scope_refused_by_final_test": true,
+    "original_channel_native_rollback_acknowledgment": "UNRUN_NOT_SUPPLIED_BY_FILE_RECEIPT"
+  },
+  "compiled_sha256": {
+    "read_only_capture": "9ef18d7e453015a09ae516d930f34c1d9873b4f95942fefefd3fb925d10d4b66",
+    "rollback_only": "3e97570296b6adbc246c4b1a2e9577f3e2e466a709264414882337fcfc6e97ca",
+    "commit_source": "30127bc127273e69a4c2afe2d95e273219e8f47b24a41d698e513ba569bcca87",
+    "recovery_hold": "cecbf9069e167e2ba732aa50981f506da6ee166238f9e112f5e445b37f00cc66"
+  },
+  "source_artifact_count": 38,
+  "source_artifacts": [
+    {
+      "path": "scripts/algorithmEvidenceAdapter.mjs",
+      "sha256": "21cddca3dcb6c37e6cba661b22337188f13dbd224034bca18a9a0c7a9289323e"
+    },
+    {
+      "path": "scripts/comparisonReviewedVersionPackage.mjs",
+      "sha256": "da280f84c74c718fe8fa2928a24100bb60605400617e90febb7f161b607667da"
+    },
+    {
+      "path": "scripts/compileLaunchInstallationStage.mjs",
+      "sha256": "8d238ff25d304266713f30ebf5d709276750a5f3c62dbdd2192e684c4c54d648"
+    },
+    {
+      "path": "scripts/compileProfilePrivilegePackage.mjs",
+      "sha256": "8cedd38954e6d763e81c0702a1f9836d6651eb6e6bd5c757cf6a33349a681b86"
+    },
+    {
+      "path": "scripts/launchInstallationSequence.mjs",
+      "sha256": "2bec9652687f0eb66d303b8153b1e2ec5c64de9bd1a50c08bd674feb48e23a2a"
+    },
+    {
+      "path": "scripts/launchInstallSequenceCatalog.sql",
+      "sha256": "e8e0a026981faddc82ab053dcb21d1fc56a70374b3d58519119b2e7fc33ed5cc"
+    },
+    {
+      "path": "scripts/legacyAtomicCompletionPackage.mjs",
+      "sha256": "c6652e41325a163575e2ad52b0170ebeec673705bac032f4f3e9b6c8b97d68ce"
+    },
+    {
+      "path": "scripts/marketsDirectoryPackage.mjs",
+      "sha256": "1de8f15bff7224e06f63ce2264fc94b5e2e956fe01e2a61821847370b98e5e61"
+    },
+    {
+      "path": "scripts/mipConsolidationRestore.mjs",
+      "sha256": "289397633829f6890a65d8a9ed1471c100d04d4aaea3178678e2ac7ce4e4e9c7"
+    },
+    {
+      "path": "scripts/mipIdentityReconciliation.mjs",
+      "sha256": "a5426d15af8ad2c1186fafdae2e0f13e8bb82944e89b9b00466a48207c46f82b"
+    },
+    {
+      "path": "scripts/mipSourceRegisters.mjs",
+      "sha256": "e8e2582780b7d914f4d6df0b34d3f8894aa8fe3060e29f00890e9ecddc0373fb"
+    },
+    {
+      "path": "scripts/profilePrivilegeCatalog.sql",
+      "sha256": "d0a66d9ffd9196a9900dbb49e9275f0ea3ae9c0abca9367f61244063f4ba7b15"
+    },
+    {
+      "path": "scripts/profilePrivilegePackage.mjs",
+      "sha256": "72ffe4a523db75303d916fc7bc57a28f7402e0ed637af9cf10a597cd095e4259"
+    },
+    {
+      "path": "scripts/reviewedPublicVersionPackage.mjs",
+      "sha256": "0ab7d66295cc8b8381c754194355adb00281cb4032d2361d9d50dfecd63661d9"
+    },
+    {
+      "path": "scripts/selectiveExecutionPackage.mjs",
+      "sha256": "b69d39973336e9aec05ed4a095b1d9acfe0aaa7dac958b30ea03f01d72fb93e0"
+    },
+    {
+      "path": "scripts/storyFollowingPackage.mjs",
+      "sha256": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00"
+    },
+    {
+      "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.rollback.sql",
+      "sha256": "327d0f853b31639b8d3307279eff13e0063ecce86c971a8f0acc41def8abf301"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+      "sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sha256": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/installed-catalog.sql",
+      "sha256": "d83c582b58487dd0855f854acba49b0cbd47dfc0eb9376a8151e7376d2aaefb9"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+      "sha256": "1a7d2f604d98620461ffab3549abca3f7a4f8d8772316b04f519b2af4b09fd90"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2-rollback.sql",
+      "sha256": "56753ce12cf31d6c5768748d6ff54370f018b0b7d48c6ac46232ddbc5f596550"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2.sql",
+      "sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b"
+    },
+    {
+      "path": "supabase/source-proposals/mip_profiles_least_privilege_2026-10-02.sql",
+      "sha256": "2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.installed-catalog.sql",
+      "sha256": "caa50bacf71d2b6f0b3a9bf55f47bd40611de8b909c3416f8a2003176789b614"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.rollback.sql",
+      "sha256": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/installed-catalog.sql",
+      "sha256": "fb15c6cb72bd4ec5c57bb654ba0a33bd1de08870f38b87c3fec38c31749cccc4"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+      "sha256": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+      "sha256": "9c361f339a22ca974cd3ef4e05bcde9931beb36c39dc3f6d9e9890b0e1e06f97"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+      "sha256": "3ad363d53155444b07d674068057cd3dfbcedddd802799b5a6b2a92eebcd8115"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+      "sha256": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7"
+    },
+    {
+      "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/lib.js",
+      "sha256": "eff2bcbd0fda3f702bc681e1b47828de9059cfc842ad4ef9d15ddd428e9167ba"
+    },
+    {
+      "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/lib.js",
+      "sha256": "0c78a9ab7ff414289faf6b5bc78daefad355cb9e08146d7d02882c54acf8e151"
+    }
+  ],
+  "fixture_sources": [
+    {
+      "path": "supabase/migrations/20260813_mip_profiles.sql",
+      "sha256": "7e7e5008ae1af8c294b0b588f43ef2667a4bb32cf7b30162caef63edab3bdf02"
+    },
+    {
+      "path": "supabase/migrations/20260813_scope_mip_signup_trigger.sql",
+      "sha256": "98e28a9a5f2ada4bb7b8ee11b1bc48f7a684d8b34d3903c27a3275106bdc23fb"
+    },
+    {
+      "path": "tests/security/mipProfilesLeastPrivilege.test.mjs",
+      "sha256": "3064818b0247f2b7dd964d20fe67a2b2f41b0485fce11860600f425993d7bfe7"
+    },
+    {
+      "path": "tests/profilePrivilegePackage.test.mjs",
+      "sha256": "55f3b5f7f3199e8614ce67d59a1760045fcc962056278f7d3142d01c3d28d598"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "first-node22.tap",
+      "bytes": 4910,
+      "sha256": "9091c221b45ede79734828a2e243b2b72222a3008aa3df96c0b08a1e250fe40f"
+    },
+    {
+      "path": "set-role-red-node22.tap",
+      "bytes": 3126,
+      "sha256": "cefce17c43caa27999dbe1bf7f15f98574d1fbbaf2afeaeb0f31fde13d2af800"
+    },
+    {
+      "path": "set-role-red-source.json",
+      "bytes": 7448,
+      "sha256": "9fb2a5dbfcc59633a2ec0a1196d68e9bb86aab02817a5f1eba02572a9c6c253e"
+    },
+    {
+      "path": "search-path-red-node22.tap",
+      "bytes": 868,
+      "sha256": "1abfdc6eaab1ce5afca8f47267d20200a7f17a99382dc4149456354f2741d8d8"
+    },
+    {
+      "path": "search-path-red-source.json",
+      "bytes": 7483,
+      "sha256": "14078efe5397c58970d781d88613af86e01a316ead53321f8f4d71ba2fdf3f2b"
+    },
+    {
+      "path": "final-context-node22.tap",
+      "bytes": 95687,
+      "sha256": "1949668ca5f62bad44d59c06122c8e3f515bfd69e31b26363e65e18a3f681831"
+    },
+    {
+      "path": "nonsuper-cleanup-red-node22.tap",
+      "bytes": 8185,
+      "sha256": "8b20416c1d64895df5eeb352500524550c224632910e2c8967e8312bdadf3d41"
+    },
+    {
+      "path": "final-node22.tap",
+      "bytes": 7371,
+      "sha256": "9f27093c581049be45fd1c4c4fd4bf8f2de676b968e3c4af518d4f071fb0db00"
+    },
+    {
+      "path": "final-node24.tap",
+      "bytes": 7372,
+      "sha256": "423c40ea3db85a5e5006623776052a129c411b8ccdc6d2155d3a3bf5f70f7cf7"
+    },
+    {
+      "path": "synthetic/read-only-capture.sql",
+      "bytes": 7859,
+      "sha256": "9ef18d7e453015a09ae516d930f34c1d9873b4f95942fefefd3fb925d10d4b66"
+    },
+    {
+      "path": "synthetic/original-accepted.json",
+      "bytes": 42946,
+      "sha256": "cbdfc7766597c3175129c9b8740eecb65d50278ecb45fbc07e436547781528fb"
+    },
+    {
+      "path": "synthetic/installed-accepted.json",
+      "bytes": 40223,
+      "sha256": "8a4d3b282bc5ab7d4793518b8fe3c38cf4dea6098db10ec6dbf454de8cc957f9"
+    },
+    {
+      "path": "synthetic/rollback-only.sql",
+      "bytes": 73408,
+      "sha256": "3e97570296b6adbc246c4b1a2e9577f3e2e466a709264414882337fcfc6e97ca"
+    },
+    {
+      "path": "synthetic/rollback-only.sql.sha256.json",
+      "bytes": 7560,
+      "sha256": "6aed820f75bbdefac8685f5ddddb43c655b3b1cf09d296f68a88318b6ee8653b"
+    },
+    {
+      "path": "synthetic/commit-source.sql",
+      "bytes": 73406,
+      "sha256": "30127bc127273e69a4c2afe2d95e273219e8f47b24a41d698e513ba569bcca87"
+    },
+    {
+      "path": "synthetic/commit-source.sql.sha256.json",
+      "bytes": 7553,
+      "sha256": "f9810a953606b1caba3b8073bf45a210da88347520f180af24c9655385240735"
+    },
+    {
+      "path": "synthetic/recovery-hold.sql",
+      "bytes": 33074,
+      "sha256": "cecbf9069e167e2ba732aa50981f506da6ee166238f9e112f5e445b37f00cc66"
+    },
+    {
+      "path": "synthetic/recovery-hold.sql.sha256.json",
+      "bytes": 7756,
+      "sha256": "7cd41decdee4f181c932ce26c6d361909180a8a4dbdfca5af8ccda41df776057"
+    }
+  ],
+  "authority": {
+    "live_operations": 0,
+    "native_operations": 0,
+    "credentials": 0,
+    "approved": false,
+    "applied_live": false,
+    "native_qualified": false,
+    "full_suite_run": false,
+    "browser_run": false
+  },
+  "recovery_constraint": "HOLD/readback only after a future separately approved committed install; no regrant restoration; original source receipt is not actual install provenance",
+  "remaining_gates": [
+    "fresh independently accepted complete real native owner/session/server/database/role/catalog baseline in the controlled pg_catalog-first capture context",
+    "exact source/SQL/receipt verification with accepted private custody",
+    "qualified native executor/client, concurrency/failure behavior and measured forward/recovery windows",
+    "separate one-attempt rollback-only approval",
+    "original-channel ROLLBACK acknowledgment plus independently fresh exact restoration readback",
+    "later separate COMMIT approval and fresh installed catalog/assigned genuine-account Auth/signup/RLS readback",
+    "any broad privilege restoration needs its own exact future security package and approval"
+  ],
+  "row_scope_policy": "Complete profile-row readback required: verified current owner with FORCE RLS false, or owner itself SUPERUSER/BYPASSRLS; otherwise fail closed, no bypass/grant/disable/ownership helper"
+}

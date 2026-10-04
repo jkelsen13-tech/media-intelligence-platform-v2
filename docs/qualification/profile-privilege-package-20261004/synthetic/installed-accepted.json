@@ -1,0 +1,1600 @@
+{
+  "contract": "mip-profile-privilege-accepted-catalog-v1",
+  "qualification": "SYNTHETIC_PGLITE_ONLY",
+  "observed_at_utc": "2026-10-04T18:20:58.692Z",
+  "catalog": {
+    "rows": [
+      {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "created_at": "2026-10-04T18:20:58.528+00:00",
+        "display_name": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "created_at": "2026-10-04T18:20:58.528+00:00",
+        "display_name": null
+      }
+    ],
+    "roles": [
+      {
+        "oid": 16384,
+        "name": "anon",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 16385,
+        "name": "authenticated",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 16420,
+        "name": "fixture_signup_actor",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 6171,
+        "name": "pg_database_owner",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 10,
+        "name": "postgres",
+        "login": true,
+        "config": null,
+        "inherit": true,
+        "create_db": true,
+        "superuser": true,
+        "bypass_rls": true,
+        "create_role": true,
+        "replication": true,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 16418,
+        "name": "profile_installer",
+        "login": true,
+        "config": null,
+        "inherit": false,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 16417,
+        "name": "profile_owner",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      },
+      {
+        "oid": 16386,
+        "name": "service_role",
+        "login": false,
+        "config": null,
+        "inherit": true,
+        "create_db": false,
+        "superuser": false,
+        "bypass_rls": true,
+        "create_role": false,
+        "replication": false,
+        "valid_until": null,
+        "connection_limit": -1
+      }
+    ],
+    "schemas": [
+      {
+        "acl": "{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres,profile_owner=U/postgres,fixture_signup_actor=U/postgres}",
+        "name": "auth",
+        "owner": "postgres"
+      },
+      {
+        "acl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner,profile_owner=U/pg_database_owner}",
+        "name": "public",
+        "owner": "pg_database_owner"
+      }
+    ],
+    "baseline": {
+      "acl": "{profile_owner=arwdDxtm/profile_owner,anon=arwd/profile_owner,authenticated=arwd/profile_owner,service_role=arwdDxtm/profile_owner}",
+      "owner": "profile_owner",
+      "columns": [
+        {
+          "acl": "{anon=r*/profile_owner,service_role=r*x*/profile_owner}",
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "acl": "{anon=w*/profile_owner,authenticated=a*/profile_owner,service_role=w*/profile_owner}",
+          "name": "display_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "acl": "{authenticated=r*/profile_owner}",
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "mip_profiles_insert_own",
+          "check": "(auth.uid() = id)",
+          "roles": "{0}",
+          "using": null,
+          "command": "a",
+          "permissive": true
+        },
+        {
+          "name": "mip_profiles_select_own",
+          "check": null,
+          "roles": "{0}",
+          "using": "(auth.uid() = id)",
+          "command": "r",
+          "permissive": true
+        },
+        {
+          "name": "mip_profiles_update_own",
+          "check": "(auth.uid() = id)",
+          "roles": "{0}",
+          "using": "(auth.uid() = id)",
+          "command": "w",
+          "permissive": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "mip_profiles_created_at_not_null",
+          "validated": true,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "mip_profiles_id_fkey",
+          "validated": true,
+          "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "mip_profiles_id_not_null",
+          "validated": true,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "mip_profiles_pkey",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        }
+      ],
+      "row_security": true,
+      "signup_trigger": {
+        "enabled": "O",
+        "function": "CREATE OR REPLACE FUNCTION public.handle_new_mip_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if new.raw_user_meta_data->>'app' = 'mip' then\n    insert into public.mip_profiles (id)\n    values (new.id)\n    on conflict (id) do nothing;\n  end if;\n  return new;\nend;\n$function$\n",
+        "definition": "CREATE TRIGGER on_auth_user_created_mip AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_mip_user()",
+        "function_acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "function_owner": "postgres"
+      },
+      "force_row_security": false
+    },
+    "identity": {
+      "database": "postgres",
+      "table_oid": 16397,
+      "search_path": "pg_catalog, pg_temp",
+      "server_port": null,
+      "current_user": "profile_owner",
+      "database_oid": 5,
+      "session_user": "profile_installer",
+      "server_address": null,
+      "server_version": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+      "server_version_num": "180003"
+    },
+    "effective": [
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "DELETE",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "MAINTAIN",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRIGGER",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRUNCATE",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "DELETE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "MAINTAIN",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRIGGER",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRUNCATE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "DELETE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "MAINTAIN",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRIGGER",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "TRUNCATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "table",
+        "column": null,
+        "allowed": false,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "DELETE",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "MAINTAIN",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "TRIGGER",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "TRUNCATE",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "DELETE",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "MAINTAIN",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "TRIGGER",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "TRUNCATE",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "table",
+        "column": null,
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "anon",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": true
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "authenticated",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "id",
+        "allowed": false,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": false,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "profile_installer",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": false,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "profile_owner",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": true
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": true
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "id",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "display_name",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": true
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "INSERT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "REFERENCES",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "SELECT",
+        "grant_option": false
+      },
+      {
+        "role": "service_role",
+        "scope": "column",
+        "column": "created_at",
+        "allowed": true,
+        "privilege": "UPDATE",
+        "grant_option": false
+      }
+    ],
+    "acl_entries": [
+      {
+        "scope": "column",
+        "column": "created_at",
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": true,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "column",
+        "column": "display_name",
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": true,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "column",
+        "column": "display_name",
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "INSERT",
+        "grant_option": true,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "column",
+        "column": "display_name",
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": true,
+        "browser_effective": []
+      },
+      {
+        "scope": "column",
+        "column": "id",
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": true,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "column",
+        "column": "id",
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "REFERENCES",
+        "grant_option": true,
+        "browser_effective": []
+      },
+      {
+        "scope": "column",
+        "column": "id",
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": true,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "DELETE",
+        "grant_option": false,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "INSERT",
+        "grant_option": false,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": false,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "anon",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": false,
+        "browser_effective": [
+          "anon"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "DELETE",
+        "grant_option": false,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "INSERT",
+        "grant_option": false,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": false,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "authenticated",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": false,
+        "browser_effective": [
+          "authenticated"
+        ]
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "DELETE",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "INSERT",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "MAINTAIN",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "REFERENCES",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "TRIGGER",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "TRUNCATE",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "service_role",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "DELETE",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "INSERT",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "MAINTAIN",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "REFERENCES",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "SELECT",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "TRIGGER",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "TRUNCATE",
+        "grant_option": false,
+        "browser_effective": []
+      },
+      {
+        "scope": "table",
+        "column": null,
+        "grantee": "profile_owner",
+        "grantor": "profile_owner",
+        "privilege": "UPDATE",
+        "grant_option": false,
+        "browser_effective": []
+      }
+    ],
+    "memberships": [
+      {
+        "set": true,
+        "role": "profile_owner",
+        "admin": false,
+        "member": "profile_installer",
+        "grantor": "postgres",
+        "inherit": false
+      },
+      {
+        "set": true,
+        "role": "fixture_signup_actor",
+        "admin": false,
+        "member": "profile_installer",
+        "grantor": "postgres",
+        "inherit": false
+      }
+    ],
+    "browser_paths": [
+      {
+        "set": true,
+        "role": "anon",
+        "admin": false,
+        "broad": [],
+        "usage": true,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "authenticated",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "fixture_signup_actor",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "pg_database_owner",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "postgres",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": true,
+        "admin_targets": [
+          "anon",
+          "authenticated",
+          "fixture_signup_actor",
+          "pg_database_owner",
+          "postgres",
+          "profile_installer",
+          "profile_owner",
+          "service_role"
+        ],
+        "column_references": true
+      },
+      {
+        "set": false,
+        "role": "profile_installer",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "profile_owner",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": true,
+        "admin_targets": [],
+        "column_references": true
+      },
+      {
+        "set": false,
+        "role": "service_role",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "anon",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": true
+      },
+      {
+        "set": false,
+        "role": "anon",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": true,
+        "role": "authenticated",
+        "admin": false,
+        "broad": [],
+        "usage": true,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "fixture_signup_actor",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "pg_database_owner",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "postgres",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": true,
+        "admin_targets": [
+          "anon",
+          "authenticated",
+          "fixture_signup_actor",
+          "pg_database_owner",
+          "postgres",
+          "profile_installer",
+          "profile_owner",
+          "service_role"
+        ],
+        "column_references": true
+      },
+      {
+        "set": false,
+        "role": "profile_installer",
+        "admin": false,
+        "broad": [],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": false
+      },
+      {
+        "set": false,
+        "role": "profile_owner",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": true,
+        "admin_targets": [],
+        "column_references": true
+      },
+      {
+        "set": false,
+        "role": "service_role",
+        "admin": false,
+        "broad": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ],
+        "usage": false,
+        "browser": "authenticated",
+        "owner_access": false,
+        "admin_targets": [],
+        "column_references": true
+      }
+    ]
+  },
+  "acceptance": {
+    "status": "INDEPENDENTLY_ACCEPTED",
+    "accepted_by": "synthetic assertion/readback fixture only; no real reviewer/target acceptance",
+    "accepted_at_utc": "2026-10-04T18:20:58.692Z",
+    "catalog_sha256": "aa3196d4506627595b344ebee419c01fc6099ff194977155f918614798122a6a",
+    "query_sha256": "35e5aa7a1b5cf0360ad7e0ba90cf71fac619d78325738fe284de937aee503c1b",
+    "proposal_sha256": "2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7"
+  }
+}

@@ -1,0 +1,3126 @@
+TAP version 13
+# Subtest: byte-exact existing proposal is preserved and its own catalog query is used
+ok 1 - byte-exact existing proposal is preserved and its own catalog query is used
+  ---
+  duration_ms: 9.620237
+  type: 'test'
+  ...
+# Subtest: default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+not ok 2 - default rollback-only artifact installs exact table/column delta inside transaction and restores complete state/settings
+  ---
+  duration_ms: 2091.154619
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:63:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:66:49)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+not ok 3 - explicit commit source artifact and actual installed readback preserve CRUD/service/grant options and own-row RLS
+  ---
+  duration_ms: 1325.679247
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:84:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:86:23)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: same-owner policy, role-attribute and row drift abort before privilege change and roll back
+not ok 4 - same-owner policy, role-attribute and row drift abort before privilege change and roll back
+  ---
+  duration_ms: 1289.259517
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:106:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:109:46)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: non-owner runtime security/session identity mismatch refuses before REVOKE
+not ok 5 - non-owner runtime security/session identity mismatch refuses before REVOKE
+  ---
+  duration_ms: 1394.88442
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:118:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:119:64)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+not ok 6 - PUBLIC and inherited broad grants, unexpected grantors and dependent grants refuse in offline compiler
+  ---
+  duration_ms: 1305.024035
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /indirect PUBLIC\/inherited/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:132:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:132:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+ok 7 - missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline
+  ---
+  duration_ms: 1290.129049
+  type: 'test'
+  ...
+# Subtest: accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+not ok 8 - accepted bytes enforce duplicate-free UTF8, query/source digest, freshness and explicit independent acceptance
+  ---
+  duration_ms: 1216.634308
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:151:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    acceptedProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:190:3)
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:153:21)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+not ok 9 - exclusive private artifact pair verifies, refuses collisions and accepted bytes/SQL/receipt tampering/incomplete pairs
+  ---
+  duration_ms: 1209.807496
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:165:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    acceptedProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:190:3)
+    async prepare (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:39:18)
+    async compileProfilePrivilegeArtifact (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:77:43)
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:167:17)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: verification refuses actual source drift in an isolated complete imported-helper source copy
+not ok 10 - verification refuses actual source drift in an isolated complete imported-helper source copy
+  ---
+  duration_ms: 1204.189492
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:195:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    acceptedProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:190:3)
+    async prepare (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:39:18)
+    async compileProfilePrivilegeArtifact (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:77:43)
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:197:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+not ok 11 - committed install recovery is exact-source/readback-bound HOLD with no regrant and preserves installed state
+  ---
+  duration_ms: 1254.50562
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:208:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    acceptedProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:190:3)
+    async prepare (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:39:18)
+    async compileProfilePrivilegeArtifact (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:77:43)
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:210:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+not ok 12 - recovery refuses missing/tampered original bytes and a rollback-only artifact presented as committed provenance
+  ---
+  duration_ms: 1230.874489
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:227:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    acceptedProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:190:3)
+    async prepare (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:39:18)
+    async compileProfilePrivilegeArtifact (file:///workspace/mip-oct04-profile-package/scripts/compileProfilePrivilegePackage.mjs:77:43)
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:229:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: browser SET true INHERIT false broad-role path refuses before source compilation
+not ok 13 - browser SET true INHERIT false broad-role path refuses before source compilation
+  ---
+  duration_ms: 1392.139244
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:239:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:248:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:248:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: browser SET path to table owner or a superuser refuses offline
+not ok 14 - browser SET path to table owner or a superuser refuses offline
+  ---
+  duration_ms: 1312.745727
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:251:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:258:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:258:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+not ok 15 - browser SET path to BYPASSRLS role exposes other profiles and refuses offline
+  ---
+  duration_ms: 1313.84353
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:261:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:271:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:271:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: browser ADMIN-only membership can enable dangerous SET path and refuses offline
+not ok 16 - browser ADMIN-only membership can enable dangerous SET path and refuses offline
+  ---
+  duration_ms: 1279.167494
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:274:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:282:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:282:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+not ok 17 - multi-hop SET, inherited owner and reachable role-admin paths refuse; inert or benign memberships stay allowed
+  ---
+  duration_ms: 1237.925792
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:285:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:288:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:288:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+not ok 18 - SET into a separate superuser or CREATEROLE role refuses even without explicit broad ACL grants
+  ---
+  duration_ms: 1232.026183
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:301:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role path/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:304:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:304:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+not ok 19 - temp catalog role masking cannot hide a real browser BYPASSRLS attribute
+  ---
+  duration_ms: 1212.174216
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:309:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /browser role bypasses RLS/. Input:
+    
+    'Error: complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:317:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:317:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: controlled read-only capture and wrappers ignore temp catalog views and restore local context after each boundary
+not ok 20 - controlled read-only capture and wrappers ignore temp catalog views and restore local context after each boundary
+  ---
+  duration_ms: 1248.421206
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:320:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+    +   acl_entries: [],
+    +   baseline: null,
+    +   browser_paths: [],
+    -   acl_entries: [
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: 'created_at',
+    -       grant_option: true,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: 'display_name',
+    -       grant_option: true,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: 'display_name',
+    -       grant_option: true,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'INSERT',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: 'display_name',
+    -       grant_option: true,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: 'id',
+    -       grant_option: true,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: 'id',
+    -       grant_option: true,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: 'id',
+    -       grant_option: true,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: 'id',
+    -       grant_option: true,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'DELETE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'INSERT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'MAINTAIN',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'TRIGGER',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'TRUNCATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'postgres',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'DELETE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'INSERT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'MAINTAIN',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'TRIGGER',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'TRUNCATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'anon'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'anon',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'DELETE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'INSERT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'MAINTAIN',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'TRIGGER',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'TRUNCATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [
+    -         'authenticated'
+    -       ],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'authenticated',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'DELETE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'INSERT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'MAINTAIN',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'REFERENCES',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'SELECT',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'TRIGGER',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'TRUNCATE',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       browser_effective: [],
+    -       column: null,
+    -       grant_option: false,
+    -       grantee: 'service_role',
+    -       grantor: 'postgres',
+    -       privilege: 'UPDATE',
+    -       scope: 'table'
+    -     }
+    -   ],
+    -   baseline: {
+    -     acl: '{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}',
+    -     columns: [
+    -       {
+    -         acl: '{anon=r*x*/postgres,service_role=r*x*/postgres}',
+    -         default: null,
+    -         name: 'id',
+    -         not_null: true,
+    -         type: 'uuid'
+    -       },
+    -       {
+    -         acl: '{anon=w*/postgres,authenticated=a*/postgres,service_role=w*/postgres}',
+    -         default: null,
+    -         name: 'display_name',
+    -         not_null: false,
+    -         type: 'text'
+    -       },
+    -       {
+    -         acl: '{authenticated=r*/postgres}',
+    -         default: 'now()',
+    -         name: 'created_at',
+    -         not_null: true,
+    -         type: 'timestamp with time zone'
+    -       }
+    -     ],
+    -     constraints: [
+    -       {
+    -         definition: 'NOT NULL created_at',
+    -         name: 'mip_profiles_created_at_not_null',
+    -         validated: true
+    -       },
+    -       {
+    -         definition: 'FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE',
+    -         name: 'mip_profiles_id_fkey',
+    -         validated: true
+    -       },
+    -       {
+    -         definition: 'NOT NULL id',
+    -         name: 'mip_profiles_id_not_null',
+    -         validated: true
+    -       },
+    -       {
+    -         definition: 'PRIMARY KEY (id)',
+    -         name: 'mip_profiles_pkey',
+    -         validated: true
+    -       }
+    -     ],
+    -     force_row_security: false,
+    -     owner: 'postgres',
+    -     policies: [
+    -       {
+    -         check: '(auth.uid() = id)',
+    -         command: 'a',
+    -         name: 'mip_profiles_insert_own',
+    -         permissive: true,
+    -         roles: '{0}',
+    -         using: null
+    -       },
+    -       {
+    -         check: null,
+    -         command: 'r',
+    -         name: 'mip_profiles_select_own',
+    -         permissive: true,
+    -         roles: '{0}',
+    -         using: '(auth.uid() = id)'
+    -       },
+    -       {
+    -         check: '(auth.uid() = id)',
+    -         command: 'w',
+    -         name: 'mip_profiles_update_own',
+    -         permissive: true,
+    -         roles: '{0}',
+    -         using: '(auth.uid() = id)'
+    -       }
+    -     ],
+    -     row_security: true,
+    -     signup_trigger: {
+    -       definition: 'CREATE TRIGGER on_auth_user_created_mip AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_mip_user()',
+    -       enabled: 'O',
+    -       function: 'CREATE OR REPLACE FUNCTION public.handle_new_mip_user()\n' +
+    -         ' RETURNS trigger\n' +
+    -         ' LANGUAGE plpgsql\n' +
+    -         ' SECURITY DEFINER\n' +
+    -         " SET search_path TO ''\n" +
+    -         'AS $function$\n' +
+    -         'begin\n' +
+    -         "  if new.raw_user_meta_data->>'app' = 'mip' then\n" +
+    -         '    insert into public.mip_profiles (id)\n' +
+    -         '    values (new.id)\n' +
+    -         '    on conflict (id) do nothing;\n' +
+    -         '  end if;\n' +
+    -         '  return new;\n' +
+    -         'end;\n' +
+    -         '$function$\n',
+    -       function_acl: '{postgres=X/postgres,service_role=X/postgres}',
+    -       function_owner: 'postgres'
+    -     }
+    -   },
+    -   browser_paths: [
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'anon',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'anon',
+    -       set: true,
+    -       usage: true
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'anon',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'authenticated',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [],
+    -       browser: 'anon',
+    -       column_references: false,
+    -       owner_access: false,
+    -       role: 'pg_database_owner',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [
+    -         'anon',
+    -         'authenticated',
+    -         'pg_database_owner',
+    -         'postgres',
+    -         'service_role'
+    -       ],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'anon',
+    -       column_references: true,
+    -       owner_access: true,
+    -       role: 'postgres',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'anon',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'service_role',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'authenticated',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'anon',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'authenticated',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'authenticated',
+    -       set: true,
+    -       usage: true
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [],
+    -       browser: 'authenticated',
+    -       column_references: false,
+    -       owner_access: false,
+    -       role: 'pg_database_owner',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [
+    -         'anon',
+    -         'authenticated',
+    -         'pg_database_owner',
+    -         'postgres',
+    -         'service_role'
+    -       ],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'authenticated',
+    -       column_references: true,
+    -       owner_access: true,
+    -       role: 'postgres',
+    -       set: false,
+    -       usage: false
+    -     },
+    -     {
+    -       admin: false,
+    -       admin_targets: [],
+    -       broad: [
+    -         'MAINTAIN',
+    -         'REFERENCES',
+    -         'TRIGGER',
+    -         'TRUNCATE'
+    -       ],
+    -       browser: 'authenticated',
+    -       column_references: true,
+    -       owner_access: false,
+    -       role: 'service_role',
+    -       set: false,
+    -       usage: false
+    -     }
+    -   ],
+        effective: [
+          {
+            allowed: true,
+            column: null,
+    -       grant_option: false,
+    -       privilege: 'DELETE',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'MAINTAIN',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'TRIGGER',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'TRUNCATE',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'anon',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'DELETE',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'MAINTAIN',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'TRIGGER',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'TRUNCATE',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'authenticated',
+    -       scope: 'table'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: null,
+            grant_option: true,
+            privilege: 'DELETE',
+            role: 'postgres',
+            scope: 'table'
+          },
+    ...
+            column: 'id',
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+            grant_option: true,
+    -       privilege: 'REFERENCES',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: true,
+    -       privilege: 'SELECT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+            privilege: 'INSERT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: true,
+    -       privilege: 'UPDATE',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'anon',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: true,
+    -       privilege: 'INSERT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+    -       privilege: 'SELECT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'display_name',
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'INSERT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'REFERENCES',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: true,
+    -       privilege: 'SELECT',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'created_at',
+    -       grant_option: false,
+    -       privilege: 'UPDATE',
+    -       role: 'authenticated',
+    -       scope: 'column'
+    -     },
+    -     {
+    -       allowed: true,
+    -       column: 'id',
+    -       grant_option: true,
+    -       privilege: 'INSERT',
+            role: 'postgres',
+            scope: 'column'
+          },
+          {
+            allowed: true,
+    ...
+          session_user: 'postgres',
+    +     table_oid: null
+    -     table_oid: 16397
+        },
+        memberships: [],
+        roles: [
+          {
+            bypass_rls: false,
+    ...
+            login: false,
+    -       name: 'anon',
+    -       oid: 16384,
+    -       replication: false,
+    -       superuser: false,
+    -       valid_until: null
+    -     },
+    -     {
+    -       bypass_rls: false,
+    -       config: null,
+    -       connection_limit: -1,
+    -       create_db: false,
+    -       create_role: false,
+    -       inherit: true,
+    -       login: false,
+    -       name: 'authenticated',
+    -       oid: 16385,
+    -       replication: false,
+    -       superuser: false,
+    -       valid_until: null
+    -     },
+    -     {
+    -       bypass_rls: false,
+    -       config: null,
+    -       connection_limit: -1,
+    -       create_db: false,
+    -       create_role: false,
+    -       inherit: true,
+    -       login: false,
+            name: 'pg_database_owner',
+            oid: 6171,
+            replication: false,
+            superuser: false,
+            valid_until: null
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    rows:
+      0:
+        id: '10000000-0000-4000-8000-000000000001'
+        created_at: '2026-10-04T17:58:39.106+00:00'
+        display_name: ~
+      1:
+        id: '10000000-0000-4000-8000-000000000002'
+        created_at: '2026-10-04T17:58:39.106+00:00'
+        display_name: ~
+    roles:
+      0:
+        oid: 16384
+        name: 'anon'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: false
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+      1:
+        oid: 16385
+        name: 'authenticated'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: false
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+      2:
+        oid: 6171
+        name: 'pg_database_owner'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: false
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+      3:
+        oid: 10
+        name: 'postgres'
+        login: true
+        config: ~
+        inherit: true
+        create_db: true
+        superuser: true
+        bypass_rls: true
+        create_role: true
+        replication: true
+        valid_until: ~
+        connection_limit: -1
+      4:
+        oid: 16386
+        name: 'service_role'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: true
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+    schemas:
+      0:
+        acl: '{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres}'
+        name: 'auth'
+        owner: 'postgres'
+      1:
+        acl: '{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}'
+        name: 'public'
+        owner: 'pg_database_owner'
+    baseline:
+      acl: '{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}'
+      owner: 'postgres'
+      columns:
+        0:
+          acl: '{anon=r*x*/postgres,service_role=r*x*/postgres}'
+          name: 'id'
+          type: 'uuid'
+          default: ~
+          not_null: true
+        1:
+          acl: '{anon=w*/postgres,authenticated=a*/postgres,service_role=w*/postgres}'
+          name: 'display_name'
+          type: 'text'
+          default: ~
+          not_null: false
+        2:
+          acl: '{authenticated=r*/postgres}'
+          name: 'created_at'
+          type: 'timestamp with time zone'
+          default: 'now()'
+          not_null: true
+      policies:
+        0:
+          name: 'mip_profiles_insert_own'
+          check: '(auth.uid() = id)'
+          roles: '{0}'
+          using: ~
+          command: 'a'
+          permissive: true
+        1:
+          name: 'mip_profiles_select_own'
+          check: ~
+          roles: '{0}'
+          using: '(auth.uid() = id)'
+          command: 'r'
+          permissive: true
+        2:
+          name: 'mip_profiles_update_own'
+          check: '(auth.uid() = id)'
+          roles: '{0}'
+          using: '(auth.uid() = id)'
+          command: 'w'
+          permissive: true
+      constraints:
+        0:
+          name: 'mip_profiles_created_at_not_null'
+          validated: true
+          definition: 'NOT NULL created_at'
+        1:
+          name: 'mip_profiles_id_fkey'
+          validated: true
+          definition: 'FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE'
+        2:
+          name: 'mip_profiles_id_not_null'
+          validated: true
+          definition: 'NOT NULL id'
+        3:
+          name: 'mip_profiles_pkey'
+          validated: true
+          definition: 'PRIMARY KEY (id)'
+      row_security: true
+      signup_trigger:
+        enabled: 'O'
+        function: |-
+          CREATE OR REPLACE FUNCTION public.handle_new_mip_user()
+           RETURNS trigger
+           LANGUAGE plpgsql
+           SECURITY DEFINER
+           SET search_path TO ''
+          AS $function$
+          begin
+            if new.raw_user_meta_data->>'app' = 'mip' then
+              insert into public.mip_profiles (id)
+              values (new.id)
+              on conflict (id) do nothing;
+            end if;
+            return new;
+          end;
+          $function$
+          
+        definition: 'CREATE TRIGGER on_auth_user_created_mip AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_mip_user()'
+        function_acl: '{postgres=X/postgres,service_role=X/postgres}'
+        function_owner: 'postgres'
+      force_row_security: false
+    identity:
+      database: 'postgres'
+      table_oid: 16397
+      search_path: '"pg_catalog, pg_temp"'
+      server_port: ~
+      current_user: 'postgres'
+      database_oid: 5
+      session_user: 'postgres'
+      server_address: ~
+      server_version: 'PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit'
+      server_version_num: '180003'
+    effective:
+      0:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: false
+      1:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      2:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: false
+      3:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      4:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      5:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: false
+      6:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: false
+      7:
+        role: 'anon'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      8:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: false
+      9:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      10:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: false
+      11:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      12:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      13:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: false
+      14:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: false
+      15:
+        role: 'authenticated'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      16:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: true
+      17:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      18:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: true
+      19:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      20:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      21:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: true
+      22:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: true
+      23:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      24:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: false
+      25:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      26:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: false
+      27:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      28:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      29:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: false
+      30:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: false
+      31:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      32:
+        role: 'anon'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      33:
+        role: 'anon'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      34:
+        role: 'anon'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      35:
+        role: 'anon'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      36:
+        role: 'anon'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      37:
+        role: 'anon'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      38:
+        role: 'anon'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      39:
+        role: 'anon'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      40:
+        role: 'anon'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      41:
+        role: 'anon'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      42:
+        role: 'anon'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      43:
+        role: 'anon'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      44:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      45:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      46:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      47:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      48:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      49:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      50:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      51:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      52:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      53:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      54:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      55:
+        role: 'authenticated'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      56:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      57:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      58:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      59:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      60:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      61:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      62:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      63:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      64:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      65:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      66:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      67:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      68:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      69:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      70:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      71:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      72:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      73:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      74:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      75:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      76:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      77:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      78:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      79:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+    acl_entries:
+      0:
+        scope: 'column'
+        column: 'created_at'
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: true
+        browser_effective:
+          0: 'authenticated'
+      1:
+        scope: 'column'
+        column: 'display_name'
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: true
+        browser_effective:
+          0: 'anon'
+      2:
+        scope: 'column'
+        column: 'display_name'
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'INSERT'
+        grant_option: true
+        browser_effective:
+          0: 'authenticated'
+      3:
+        scope: 'column'
+        column: 'display_name'
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: true
+        browser_effective:
+      4:
+        scope: 'column'
+        column: 'id'
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: true
+        browser_effective:
+          0: 'anon'
+      5:
+        scope: 'column'
+        column: 'id'
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: true
+        browser_effective:
+          0: 'anon'
+      6:
+        scope: 'column'
+        column: 'id'
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: true
+        browser_effective:
+      7:
+        scope: 'column'
+        column: 'id'
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: true
+        browser_effective:
+      8:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'DELETE'
+        grant_option: false
+        browser_effective:
+      9:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'INSERT'
+        grant_option: false
+        browser_effective:
+      10:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'MAINTAIN'
+        grant_option: false
+        browser_effective:
+      11:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: false
+        browser_effective:
+      12:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: false
+        browser_effective:
+      13:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'TRIGGER'
+        grant_option: false
+        browser_effective:
+      14:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'TRUNCATE'
+        grant_option: false
+        browser_effective:
+      15:
+        scope: 'table'
+        column: ~
+        grantee: 'postgres'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: false
+        browser_effective:
+      16:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'DELETE'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      17:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'INSERT'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      18:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'MAINTAIN'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      19:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      20:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      21:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'TRIGGER'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      22:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'TRUNCATE'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      23:
+        scope: 'table'
+        column: ~
+        grantee: 'anon'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: false
+        browser_effective:
+          0: 'anon'
+      24:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'DELETE'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      25:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'INSERT'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      26:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'MAINTAIN'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      27:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      28:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      29:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'TRIGGER'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      30:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'TRUNCATE'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      31:
+        scope: 'table'
+        column: ~
+        grantee: 'authenticated'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: false
+        browser_effective:
+          0: 'authenticated'
+      32:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'DELETE'
+        grant_option: false
+        browser_effective:
+      33:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'INSERT'
+        grant_option: false
+        browser_effective:
+      34:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'MAINTAIN'
+        grant_option: false
+        browser_effective:
+      35:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'REFERENCES'
+        grant_option: false
+        browser_effective:
+      36:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'SELECT'
+        grant_option: false
+        browser_effective:
+      37:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'TRIGGER'
+        grant_option: false
+        browser_effective:
+      38:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'TRUNCATE'
+        grant_option: false
+        browser_effective:
+      39:
+        scope: 'table'
+        column: ~
+        grantee: 'service_role'
+        grantor: 'postgres'
+        privilege: 'UPDATE'
+        grant_option: false
+        browser_effective:
+    memberships:
+    browser_paths:
+      0:
+        set: true
+        role: 'anon'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: true
+        browser: 'anon'
+        owner_access: false
+        admin_targets:
+        column_references: true
+      1:
+        set: false
+        role: 'authenticated'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'anon'
+        owner_access: false
+        admin_targets:
+        column_references: true
+      2:
+        set: false
+        role: 'pg_database_owner'
+        admin: false
+        broad:
+        usage: false
+        browser: 'anon'
+        owner_access: false
+        admin_targets:
+        column_references: false
+      3:
+        set: false
+        role: 'postgres'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'anon'
+        owner_access: true
+        admin_targets:
+          0: 'anon'
+          1: 'authenticated'
+          2: 'pg_database_owner'
+          3: 'postgres'
+          4: 'service_role'
+        column_references: true
+      4:
+        set: false
+        role: 'service_role'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'anon'
+        owner_access: false
+        admin_targets:
+        column_references: true
+      5:
+        set: false
+        role: 'anon'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'authenticated'
+        owner_access: false
+        admin_targets:
+        column_references: true
+      6:
+        set: true
+        role: 'authenticated'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: true
+        browser: 'authenticated'
+        owner_access: false
+        admin_targets:
+        column_references: true
+      7:
+        set: false
+        role: 'pg_database_owner'
+        admin: false
+        broad:
+        usage: false
+        browser: 'authenticated'
+        owner_access: false
+        admin_targets:
+        column_references: false
+      8:
+        set: false
+        role: 'postgres'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'authenticated'
+        owner_access: true
+        admin_targets:
+          0: 'anon'
+          1: 'authenticated'
+          2: 'pg_database_owner'
+          3: 'postgres'
+          4: 'service_role'
+        column_references: true
+      9:
+        set: false
+        role: 'service_role'
+        admin: false
+        broad:
+          0: 'MAINTAIN'
+          1: 'REFERENCES'
+          2: 'TRIGGER'
+          3: 'TRUNCATE'
+        usage: false
+        browser: 'authenticated'
+        owner_access: false
+        admin_targets:
+        column_references: true
+  actual:
+    rows:
+      0:
+        id: '10000000-0000-4000-8000-000000000001'
+        created_at: '2026-10-04T17:58:39.106+00:00'
+        display_name: ~
+      1:
+        id: '10000000-0000-4000-8000-000000000002'
+        created_at: '2026-10-04T17:58:39.106+00:00'
+        display_name: ~
+    roles:
+      0:
+        oid: 6171
+        name: 'pg_database_owner'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: false
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+      1:
+        oid: 10
+        name: 'postgres'
+        login: true
+        config: ~
+        inherit: true
+        create_db: true
+        superuser: true
+        bypass_rls: true
+        create_role: true
+        replication: true
+        valid_until: ~
+        connection_limit: -1
+      2:
+        oid: 16386
+        name: 'service_role'
+        login: false
+        config: ~
+        inherit: true
+        create_db: false
+        superuser: false
+        bypass_rls: true
+        create_role: false
+        replication: false
+        valid_until: ~
+        connection_limit: -1
+    schemas:
+      0:
+        acl: '{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres}'
+        name: 'auth'
+        owner: 'postgres'
+      1:
+        acl: '{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}'
+        name: 'public'
+        owner: 'pg_database_owner'
+    baseline: ~
+    identity:
+      database: 'postgres'
+      table_oid: ~
+      search_path: '"pg_catalog, pg_temp"'
+      server_port: ~
+      current_user: 'postgres'
+      database_oid: 5
+      session_user: 'postgres'
+      server_address: ~
+      server_version: 'PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit'
+      server_version_num: '180003'
+    effective:
+      0:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: true
+      1:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      2:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: true
+      3:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      4:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      5:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: true
+      6:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: true
+      7:
+        role: 'postgres'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      8:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'DELETE'
+        grant_option: false
+      9:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      10:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'MAINTAIN'
+        grant_option: false
+      11:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      12:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      13:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRIGGER'
+        grant_option: false
+      14:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'TRUNCATE'
+        grant_option: false
+      15:
+        role: 'service_role'
+        scope: 'table'
+        column: ~
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      16:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      17:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      18:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      19:
+        role: 'postgres'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      20:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      21:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      22:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      23:
+        role: 'postgres'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      24:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: true
+      25:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      26:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      27:
+        role: 'postgres'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      28:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      29:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: true
+      30:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: true
+      31:
+        role: 'service_role'
+        scope: 'column'
+        column: 'id'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+      32:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      33:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      34:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      35:
+        role: 'service_role'
+        scope: 'column'
+        column: 'display_name'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: true
+      36:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'INSERT'
+        grant_option: false
+      37:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'REFERENCES'
+        grant_option: false
+      38:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'SELECT'
+        grant_option: false
+      39:
+        role: 'service_role'
+        scope: 'column'
+        column: 'created_at'
+        allowed: true
+        privilege: 'UPDATE'
+        grant_option: false
+    acl_entries:
+    memberships:
+    browser_paths:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:326:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: distinct non-superuser owner and installer with preexisting SET membership qualify rollback and commit-source fixtures
+not ok 21 - distinct non-superuser owner and installer with preexisting SET membership qualify rollback and commit-source fixtures
+  ---
+  duration_ms: 1251.649763
+  type: 'test'
+  location: '/workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:336:1'
+  failureType: 'testCodeFailure'
+  error: 'complete exact profile security catalog required: controlled pg_catalog-first catalog/decompiler context'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:87:32)
+    validateProfileCatalog (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:99:51)
+    compileProfileSql (file:///workspace/mip-oct04-profile-package/scripts/profilePrivilegePackage.mjs:226:3)
+    TestContext.<anonymous> (file:///workspace/mip-oct04-profile-package/tests/profilePrivilegePackage.test.mjs:350:23)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+ok 22 - profile proposal removes only non-CRUD browser privileges and preserves identity catalog and service grants
+  ---
+  duration_ms: 2207.49829
+  type: 'test'
+  ...
+# Subtest: positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+ok 23 - positive control proves broad TRUNCATE bypasses row policies; proposal denies it
+  ---
+  duration_ms: 1387.704513
+  type: 'test'
+  ...
+# Subtest: own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+ok 24 - own-row profile CRUD and MIP-only signup trigger work after proposal; cross-user access remains denied
+  ---
+  duration_ms: 1362.515405
+  type: 'test'
+  ...
+# Subtest: missing baseline, policy drift and indirect effective grants abort atomically
+ok 25 - missing baseline, policy drift and indirect effective grants abort atomically
+  ---
+  duration_ms: 1222.680293
+  type: 'test'
+  ...
+# Subtest: non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+ok 26 - non-owner execution fails closed; table REFERENCES revoke also removes owned column REFERENCES while preserving column SELECT
+  ---
+  duration_ms: 1276.142515
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 7
+# fail 19
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26414.101529

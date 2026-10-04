@@ -1,0 +1,172 @@
+{
+  "contract": "mip-profile-privilege-offline-artifact-v1",
+  "mode": "rollback-only",
+  "source_base": {
+    "head": "0ebf51d80179130c2b05041663c02777c427fcf4",
+    "tree": "aa2b71604f4fd782316b27bc340c88763db4eaad"
+  },
+  "qualification": "SYNTHETIC_PGLITE_ONLY",
+  "source_proposal": "supabase/source-proposals/mip_profiles_least_privilege_2026-10-02.sql",
+  "source_sha256": "2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7",
+  "compiled_sha256": "3e97570296b6adbc246c4b1a2e9577f3e2e466a709264414882337fcfc6e97ca",
+  "accepted_catalog_file_sha256": "cbdfc7766597c3175129c9b8740eecb65d50278ecb45fbc07e436547781528fb",
+  "accepted_catalog_sha256": "90710a0325deb41b4a295ce3cde21fb5ff7f8c7988413a64275033854b0cbe9f",
+  "catalog_query_sha256": "35e5aa7a1b5cf0360ad7e0ba90cf71fac619d78325738fe284de937aee503c1b",
+  "source_artifacts": [
+    {
+      "path": "scripts/algorithmEvidenceAdapter.mjs",
+      "sha256": "21cddca3dcb6c37e6cba661b22337188f13dbd224034bca18a9a0c7a9289323e"
+    },
+    {
+      "path": "scripts/comparisonReviewedVersionPackage.mjs",
+      "sha256": "da280f84c74c718fe8fa2928a24100bb60605400617e90febb7f161b607667da"
+    },
+    {
+      "path": "scripts/compileLaunchInstallationStage.mjs",
+      "sha256": "8d238ff25d304266713f30ebf5d709276750a5f3c62dbdd2192e684c4c54d648"
+    },
+    {
+      "path": "scripts/compileProfilePrivilegePackage.mjs",
+      "sha256": "8cedd38954e6d763e81c0702a1f9836d6651eb6e6bd5c757cf6a33349a681b86"
+    },
+    {
+      "path": "scripts/launchInstallationSequence.mjs",
+      "sha256": "2bec9652687f0eb66d303b8153b1e2ec5c64de9bd1a50c08bd674feb48e23a2a"
+    },
+    {
+      "path": "scripts/launchInstallSequenceCatalog.sql",
+      "sha256": "e8e0a026981faddc82ab053dcb21d1fc56a70374b3d58519119b2e7fc33ed5cc"
+    },
+    {
+      "path": "scripts/legacyAtomicCompletionPackage.mjs",
+      "sha256": "c6652e41325a163575e2ad52b0170ebeec673705bac032f4f3e9b6c8b97d68ce"
+    },
+    {
+      "path": "scripts/marketsDirectoryPackage.mjs",
+      "sha256": "1de8f15bff7224e06f63ce2264fc94b5e2e956fe01e2a61821847370b98e5e61"
+    },
+    {
+      "path": "scripts/mipConsolidationRestore.mjs",
+      "sha256": "289397633829f6890a65d8a9ed1471c100d04d4aaea3178678e2ac7ce4e4e9c7"
+    },
+    {
+      "path": "scripts/mipIdentityReconciliation.mjs",
+      "sha256": "a5426d15af8ad2c1186fafdae2e0f13e8bb82944e89b9b00466a48207c46f82b"
+    },
+    {
+      "path": "scripts/mipSourceRegisters.mjs",
+      "sha256": "e8e2582780b7d914f4d6df0b34d3f8894aa8fe3060e29f00890e9ecddc0373fb"
+    },
+    {
+      "path": "scripts/profilePrivilegeCatalog.sql",
+      "sha256": "d0a66d9ffd9196a9900dbb49e9275f0ea3ae9c0abca9367f61244063f4ba7b15"
+    },
+    {
+      "path": "scripts/profilePrivilegePackage.mjs",
+      "sha256": "72ffe4a523db75303d916fc7bc57a28f7402e0ed637af9cf10a597cd095e4259"
+    },
+    {
+      "path": "scripts/reviewedPublicVersionPackage.mjs",
+      "sha256": "0ab7d66295cc8b8381c754194355adb00281cb4032d2361d9d50dfecd63661d9"
+    },
+    {
+      "path": "scripts/selectiveExecutionPackage.mjs",
+      "sha256": "b69d39973336e9aec05ed4a095b1d9acfe0aaa7dac958b30ea03f01d72fb93e0"
+    },
+    {
+      "path": "scripts/storyFollowingPackage.mjs",
+      "sha256": "193947fb01f1ec616abce61def98d61bee1606d0d2a008e015c559649ab81b00"
+    },
+    {
+      "path": "supabase/source-proposals/assessment_relevant_inputs_v1.sql",
+      "sha256": "155874498004715014c8eb4b776daf8dc512bf4c60b6ffc1311b218a38f35e19"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.rollback.sql",
+      "sha256": "327d0f853b31639b8d3307279eff13e0063ecce86c971a8f0acc41def8abf301"
+    },
+    {
+      "path": "supabase/source-proposals/comparison-reviewed-versions-v1.sql",
+      "sha256": "5ba7f54fb58cac6291b6ce7af9f939d7daadba3763232643fcded7df30a711f7"
+    },
+    {
+      "path": "supabase/source-proposals/investigation_selective_intake_v1.sql",
+      "sha256": "77fe363ce52794455779e8cbd79934e5f8c28be583de869c28f46e48d5691703"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-completion-v1.sql",
+      "sha256": "be9c66b512ec141ed3107b07285767ac4c68a929eecf14385681697608de7161"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/installed-catalog.sql",
+      "sha256": "d83c582b58487dd0855f854acba49b0cbd47dfc0eb9376a8151e7376d2aaefb9"
+    },
+    {
+      "path": "supabase/source-proposals/legacy-atomic-pack/rollback.sql",
+      "sha256": "1a7d2f604d98620461ffab3549abca3f7a4f8d8772316b04f519b2af4b09fd90"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2-rollback.sql",
+      "sha256": "56753ce12cf31d6c5768748d6ff54370f018b0b7d48c6ac46232ddbc5f596550"
+    },
+    {
+      "path": "supabase/source-proposals/markets-directory-v2.sql",
+      "sha256": "e8cbc68c61f68975f613dafcec8c9f3a54fa5da0b50ff8176309b0958d13019b"
+    },
+    {
+      "path": "supabase/source-proposals/mip_profiles_least_privilege_2026-10-02.sql",
+      "sha256": "2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.installed-catalog.sql",
+      "sha256": "caa50bacf71d2b6f0b3a9bf55f47bd40611de8b909c3416f8a2003176789b614"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.rollback.sql",
+      "sha256": "da84c8c37d486315bdd2043bf8642d7c42efa515acf6abca8cccb4401eb10c08"
+    },
+    {
+      "path": "supabase/source-proposals/public-reviewed-versions-v1.sql",
+      "sha256": "8e7895c435125779a145fa42ab6e5579a8bc70f4db4bc0fbd38f7eed52b5ea49"
+    },
+    {
+      "path": "supabase/source-proposals/selective_intake_execution_v1.sql",
+      "sha256": "c0ffa6adf1997b44cdbfd301030c0a20690b86abcb4cdc446ef77c6caa54a471"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/installed-catalog.sql",
+      "sha256": "fb15c6cb72bd4ec5c57bb654ba0a33bd1de08870f38b87c3fec38c31749cccc4"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/remove-empty-extension.sql",
+      "sha256": "7a66a8577a4d45c4a1d4f0469e9eac95aa370143b1d1f680f1af5fcb8088ff17"
+    },
+    {
+      "path": "supabase/source-proposals/selective-intake-pack/rollback.sql",
+      "sha256": "9c361f339a22ca974cd3ef4e05bcde9931beb36c39dc3f6d9e9890b0e1e06f97"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.catalog.sql",
+      "sha256": "3ad363d53155444b07d674068057cd3dfbcedddd802799b5a6b2a92eebcd8115"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.rollback.sql",
+      "sha256": "2561d42397bbb11a03a82f182d2a8fd0dceb132d41774c29cf4a3c11a228247d"
+    },
+    {
+      "path": "supabase/source-proposals/story_following_v1.sql",
+      "sha256": "bf61df7baf65a467f3e73c63b4d7789c72cf06fbe9c71e7523761f12b0f49ad7"
+    },
+    {
+      "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/arc-membership-run/lib.js",
+      "sha256": "eff2bcbd0fda3f702bc681e1b47828de9059cfc842ad4ef9d15ddd428e9167ba"
+    },
+    {
+      "path": "verifier/recovered-functions/2026-09-05/yhbwnrtlqbjtcrrlpbge/source-comparison-run/lib.js",
+      "sha256": "0c78a9ab7ff414289faf6b5bc78daefad355cb9e08146d7d02882c54acf8e151"
+    }
+  ],
+  "authority": "offline source integrity only; no independent acceptance, rollback acknowledgment, rehearsal, COMMIT, recovery, target execution or release authority",
+  "recovery": "transaction ROLLBACK restores original state during separately authorized rehearsal; committed restoration requires separate future package and approval",
+  "live_operations": 0
+}
