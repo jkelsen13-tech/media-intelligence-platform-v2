@@ -1,0 +1,13 @@
+{
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "source_archive": "source-06833f99.zip",
+  "archive_bytes": 30081020,
+  "archive_sha256": "870d613e5a7db24d389cd87eed13db897072fae4de6e59d8b26368a4e87a2796",
+  "file_count": 2001,
+  "source_bytes": 47539982,
+  "actual_complete_archive_body_readback": "PASS",
+  "baseline_paths": 1891,
+  "additive_paths": 110,
+  "baseline_changed_or_removed_paths": 0
+}

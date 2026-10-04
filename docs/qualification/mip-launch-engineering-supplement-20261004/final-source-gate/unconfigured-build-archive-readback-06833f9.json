@@ -1,0 +1,10 @@
+{
+  "path": "/workspace/mip-oct04-launch-readiness/MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+  "bytes": 9727315,
+  "sha256": "71772c93a8db8c01fd26dee2318123807e151b5982bc1df28e9ed4b5f04a0819",
+  "actual_complete_archive_body_readback": "PASS",
+  "body_count": 442,
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "release_approved": false
+}

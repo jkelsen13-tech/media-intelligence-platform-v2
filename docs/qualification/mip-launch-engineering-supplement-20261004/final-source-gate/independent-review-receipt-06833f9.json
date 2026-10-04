@@ -1,0 +1,26 @@
+{
+  "schema": "mip.parent-owned-independent-review-receipt.v1",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "verdict": "CLEAN FOR BOUNDED SUNDAY ENGINEERING SUPPLEMENT SOURCE GATE",
+  "agent_id": "bc-b4f71b29-ad30-50cf-88ea-d3cb0f885aec",
+  "original_model_name": "cursor-grok-4.6-xhigh",
+  "request_timestamp": "1791141303.515449",
+  "result_timestamp": "1791141869.953189",
+  "result_url": "https://matvelt.slack.com/archives/D0C5P4EFJUT/p1791141869953189?thread_ts=1791141303.515449&cid=D0C5P4EFJUT",
+  "full_thread_transport_json": {
+    "path": "/workspace/mip-oct04-launch-readiness/qualification/independent-review-thread-06833f9.json",
+    "bytes": 12412,
+    "sha256": "396cd2e156ca2a361759a600ea8c86c49426c11dc5903899da547bf2ebf9b600"
+  },
+  "unchanged_review_body": {
+    "path": "/workspace/mip-oct04-launch-readiness/qualification/independent-review-report-06833f9.txt",
+    "bytes": 5965,
+    "sha256": "77ac8084d19bc43158f7191ce0af4ab8c02750cde2f06fbb9547112d8ebdfeb7"
+  },
+  "consequential_repair_required": false,
+  "dispatch_owner": "Joffrey",
+  "duplicate_dispatches_by_remote_coordinator": 0,
+  "scope": "Additive offline engineering source only; all reviewer OBSERVED/REPORTED/PENDING/UNRUN distinctions retained.",
+  "spend_ledger_verified": false
+}

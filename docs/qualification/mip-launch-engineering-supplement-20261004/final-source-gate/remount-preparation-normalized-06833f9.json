@@ -1,0 +1,45 @@
+{
+  "schema": "mip.auxiliary-preparation-summary.v1",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "runs": [
+    {
+      "runtime": "v22.23.3",
+      "counts": {
+        "tests": 8,
+        "suites": 0,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "raw_log": {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/node22-remount-preparation.log",
+        "bytes": 1985,
+        "sha256": "9028833388dbab3b1c0e41e91a1f736951a906fe9313abb1fd99da14d87053a4"
+      },
+      "included_in_2747_aggregate": false,
+      "original_receipt_preserved": true
+    },
+    {
+      "runtime": "v24.19.0",
+      "counts": {
+        "tests": 8,
+        "suites": 0,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "raw_log": {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/node24-remount-preparation.log",
+        "bytes": 907,
+        "sha256": "b3aa30204dad53f08236a6dc1755906d34dafb5fad82bbd52a88bc3351b53abd"
+      },
+      "included_in_2747_aggregate": false,
+      "original_receipt_preserved": true
+    }
+  ]
+}

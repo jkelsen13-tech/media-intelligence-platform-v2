@@ -1,0 +1,24 @@
+{
+  "recorded_at_utc": "2026-10-04T19:36:53.852064+00:00",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "qualification_package": {
+    "path": "/workspace/mip-oct04-launch-readiness/MIP Launch Engineering Supplement Qualification 2026-10-04.zip",
+    "bytes": 31036147,
+    "sha256": "ffbfb7eba3e0dfb4fa53979a11f0b4b98005acb5df4eca1ae0d337b7548f77bb",
+    "payloads": 57,
+    "actual_complete_archive_body_readback": "PASS"
+  },
+  "fresh_imagery_package": {
+    "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+    "bytes": 7008957,
+    "sha256": "176f640870723c09b4785b49c9c981928be0ee3c6ed4c20fa6d983fcdd868b16"
+  },
+  "unconfigured_build_package": {
+    "path": "/workspace/mip-oct04-launch-readiness/MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+    "bytes": 9727315,
+    "sha256": "71772c93a8db8c01fd26dee2318123807e151b5982bc1df28e9ed4b5f04a0819"
+  },
+  "independent_review": "CLEAN FOR BOUNDED SUNDAY ENGINEERING SUPPLEMENT SOURCE GATE",
+  "public_ci_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37226824334"
+}

@@ -1,0 +1,85 @@
+{
+  "schema": "mip.exact-public-ci-readback.v1",
+  "recorded_at_utc": "2026-10-04T19:36:53.852064+00:00",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "workflow_run": 37226824334,
+  "workflow_url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37226824334",
+  "status": "completed",
+  "conclusion": "success",
+  "workflow_source": {
+    "path": "/workspace/mip-oct04-engineering-supplements/.github/workflows/golden.yml",
+    "bytes": 696,
+    "sha256": "aff2ead4d717ce7df84aa61d480e20ef902c23f5b080fa487526c8867d287317"
+  },
+  "jobs": [
+    {
+      "id": 111508071964,
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37226824334/job/111508071964",
+      "runtime": "v22.23.3",
+      "npm": "10.9.9",
+      "counts": {
+        "tests": 2747,
+        "suites": 0,
+        "pass": 2747,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "build_seconds": 21.4,
+      "emitted_index_filenames": [
+        "index-DxpLh7Rg.js",
+        "index-DCXxWubq.js",
+        "index-Bqg0JbM1.js"
+      ],
+      "audit_step_conclusion": "skipped",
+      "audit_vulnerabilities": null,
+      "raw_log": {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/public-ci/node22-public-ci.log",
+        "bytes": 1162812,
+        "sha256": "2af4b3386d16f67cd88382351312d4a58a4b70c9506f8c57b729462e0427e2a1"
+      },
+      "decoded_log_utf16_units": 1162592
+    },
+    {
+      "id": 111508071780,
+      "url": "https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37226824334/job/111508071780",
+      "runtime": "v24.21.0",
+      "npm": "11.19.0",
+      "counts": {
+        "tests": 2747,
+        "suites": 0,
+        "pass": 2747,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "build_seconds": 24.71,
+      "emitted_index_filenames": [
+        "index-DxpLh7Rg.js",
+        "index-DCXxWubq.js",
+        "index-Bqg0JbM1.js"
+      ],
+      "audit_step_conclusion": "success",
+      "audit_vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "raw_log": {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/public-ci/node24-public-ci.log",
+        "bytes": 390569,
+        "sha256": "39f1e85661e5ca0b9f97dbd6ea1be9f0fcabc795c6514e4365a1bebb8eac3d10"
+      },
+      "decoded_log_utf16_units": 384802
+    }
+  ],
+  "metadata_serialization": "Decoded first-party JSON with a terminal newline; complete decoded job logs preserved unchanged.",
+  "actions_artifacts": [],
+  "remote_body_hashes_verified": false
+}

@@ -1,0 +1,106 @@
+{
+  "contract": "mip-static-artifact-comparison-recomputation-v1",
+  "observed_at_utc": "2026-10-04T19:31:16.386511+00:00",
+  "verdict": "PASS_INDEPENDENT_LOCAL_BODY_RECEIPT_RECOMPUTATION",
+  "method": "Independent Python exact file reads and SHA256; explicit actual-graph-derived filename substitutions; no SequenceMatcher, token parser, test or build execution.",
+  "prior_receipt": {
+    "path": "/workspace/mip-oct04-launch-readiness/qualification/artifact-comparison/body-comparison.json",
+    "bytes": 249989,
+    "sha256": "bfb88f78011af499768793027253c608aa7cab58d4fff1fe13ebe219cf29fc99"
+  },
+  "local_bodies": {
+    "roots": {
+      "old": "/workspace/mip-oct03-card-qualification-node24/dist",
+      "new22": "/workspace/mip-oct04-engineering-qualification-node22/dist",
+      "new24": "/workspace/mip-oct04-engineering-qualification-node24/dist"
+    },
+    "file_counts": {
+      "old": 442,
+      "new22": 442,
+      "new24": 442
+    },
+    "total_bytes": {
+      "old": 23634201,
+      "new22": 23634316,
+      "new24": 23634316
+    },
+    "actual_body_reads_verified_against_receipt": 1326,
+    "fresh_node22_node24_body_sets_byte_identical": true,
+    "exact_emitted_name_pairs_recomputed": 10,
+    "normalized_body_results_verified": 442,
+    "equal_after_only_filename_normalization": 441,
+    "remaining_different_bodies": [
+      {
+        "old_path": "assets/index-IfqN_mDM.js",
+        "new_path": "assets/index-Bqg0JbM1.js",
+        "old_bytes": 2032941,
+        "fresh_bytes": 2033056,
+        "old_sha256": "f290fbcb9230323731193d91f0f3f647197f371d6f60c7ff6d104d31dd9bfddf",
+        "fresh_sha256": "6c9361885a127b4dbafd310fadf15fa9b279e0ea37e3e063883e3719469ea905",
+        "normalized_fresh_sha256": "186670e5c140f9f4fe944d8bc74474e91215c0063b0ba34585e38ca1268c8143"
+      }
+    ]
+  },
+  "public_ci": {
+    "run_id": 37226824334,
+    "head": "06833f99de62877182305eda6fb034800b905f1e",
+    "run_conclusion": "success",
+    "run_json_sha256": "065cea0490c17f281e34925d2e3266f74ea44fd9572dc97ef824eace3ca247d1",
+    "jobs_json_sha256": "363d29eaa9d255383fd5173a6b0f47ba84272ca35260d286986c008cb7cd2e66",
+    "decoded_logs": [
+      {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/public-ci/node22-public-ci.log",
+        "bytes": 1162812,
+        "sha256": "2af4b3386d16f67cd88382351312d4a58a4b70c9506f8c57b729462e0427e2a1",
+        "runtime": "22.23.3",
+        "runtime_evidence": {
+          "line": 129,
+          "text": "2026-10-04T19:03:54.2696907Z node: v22.23.3"
+        },
+        "logged_entry": {
+          "line": 16794,
+          "text": "2026-10-04T19:09:12.0373080Z dist/assets/index-Bqg0JbM1.js                                        2,033.06 kB \u2502 gzip:   600.40 kB"
+        },
+        "consistent_with_fresh_sanitized_filename": true,
+        "remote_body_sha256_proven": false
+      },
+      {
+        "path": "/workspace/mip-oct04-launch-readiness/qualification/public-ci/node24-public-ci.log",
+        "bytes": 390569,
+        "sha256": "39f1e85661e5ca0b9f97dbd6ea1be9f0fcabc795c6514e4365a1bebb8eac3d10",
+        "runtime": "24.21.0",
+        "runtime_evidence": {
+          "line": 129,
+          "text": "2026-10-04T19:03:56.5136448Z node: v24.21.0"
+        },
+        "logged_entry": {
+          "line": 3057,
+          "text": "2026-10-04T19:10:21.3218302Z dist/assets/index-Bqg0JbM1.js                                        2,033.06 kB \u2502 gzip:   600.40 kB"
+        },
+        "consistent_with_fresh_sanitized_filename": true,
+        "remote_body_sha256_proven": false
+      }
+    ],
+    "downloadable_actions_artifacts": {
+      "available_in_retained_evidence": false,
+      "upload_artifact_steps_in_retained_jobs": [],
+      "upload_artifact_action_in_frozen_workflow": false,
+      "workflow_sha256": "aff2ead4d717ce7df84aa61d480e20ef902c23f5b080fa487526c8867d287317",
+      "remote_artifacts_endpoint_enumerated_by_this_check": false,
+      "limit": "No downloadable artifact bodies are supplied by the retained CI evidence. Parent reports no downloadable Actions artifacts; this read-only check did not query the remote artifacts endpoint."
+    },
+    "interpretation": "Both public logs emit index-Bqg0JbM1.js, consistent with the sanitized fresh local build. Logged names and rounded build sizes do not prove remote body hashes or complete artifact equality."
+  },
+  "preservation": {
+    "all_existing_comparison_files_unchanged": true,
+    "preexisting_file_count": 8,
+    "only_new_recomputation_json_written": true,
+    "source_changes": false,
+    "output_body_changes": false,
+    "test_or_build_rerun": false,
+    "release_artifact_selected": false,
+    "network_or_provider_operations": false,
+    "ambient_environment_values_read": false
+  },
+  "remaining_gate": "Fresh sanitized artifact remains distinct from retained configured artifact; no remote body-hash proof, configured release selection, hosting or deployment qualification follows."
+}

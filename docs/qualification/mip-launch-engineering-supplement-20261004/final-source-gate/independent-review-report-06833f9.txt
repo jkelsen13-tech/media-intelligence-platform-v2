@@ -1,0 +1,36 @@
+_CLEAN FOR BOUNDED SUNDAY ENGINEERING SUPPLEMENT SOURCE GATE_
+
+Route `originalModelName` is `cursor-grok-4.6-xhigh`. No substitution. Review-only. No edits, commits, push, PR, GitHub comments, CI triggers, installs, live SQL, or spend. Ledger unobservable; no spend certification.
+CI logs read in full: job `111508071964` Node `v22.23.3` `# tests/pass 2747`, fail/skip/cancel/todo 0, `built in 21.40s`, audit skipped. Job `111508071780` Node `v24.21.0` same 2747/0, `built in 24.71s`, `npm audit --json` info/low/moderate/high/critical/total 0. Imagery 8-each under `scripts/qualification` were not in aggregate `npm test` (confirmed). Qik workflows and qualified application paths were untouched.
+
+_PRIMARY (profile privilege package): PASS for this bounded source gate._ No consequential defect. Preserved proposal unchanged. Files confer no acceptance or live execution authority.
+• Current/session/owner: catalog binds `current_user`, `session_user`, owner; compiler requires `baseline.owner === identity.current_user` (`scripts/profilePrivilegePackage.mjs` 96-108; `scripts/profilePrivilegeCatalog.sql` 28-32).
+• FORCE RLS / complete rows: non-bypassing owner under FORCE RLS is refused before REVOKE (`profilePrivilegePackage.mjs` 135; test 366-369). No bypass/grant/disable helper.
+• USAGE vs SET vs ADMIN: `browser_paths` uses `pg_has_role` USAGE/SET/`MEMBER WITH ADMIN OPTION` (`profilePrivilegeCatalog.sql` 44-56; validator 160-172). SET-only inherit-false, owner, ADMIN, multi-hop, and CREATEROLE/SUPERUSER/BYPASSRLS paths refuse (tests 239-307). RED `set-role-red-*` preserved.
+• Exploded ACL + effective closure: `aclexplode` table (with `acldefault`) and column ACLs, grantor/grantee/option, complete table+column matrix (`profilePrivilegeCatalog.sql` 7-12, 57-71; validator 139-159). PUBLIC/inherited/unexpected/dependent browser broad grants refuse (test 127-138).
+• pg_catalog-first: capture/wrappers set `search_path=pg_catalog, pg_temp` and bind `identity.search_path` (`profilePrivilegePackage.mjs` 11, 82, 99). Temp `pg_roles` mask refuses (test 309-318). RED `search-path-red-*` preserved.
+• Hostile JSON/literals: duplicate members/invalid UTF-8 refused (`parseProfileJson` 21-59); dollar-tag collision and `E'...'` literals (221-228; test 372-381).
+• Private exclusive artifacts: `0600`, `O_NOFOLLOW`, identity re-read (`compileProfilePrivilegePackage.mjs` 15-25); reused `writeArtifact` `wx` pair (`compileLaunchInstallationStage.mjs` 57-69).
+• LOCAL timeouts restore after ROLLBACK; COMMIT returns session defaults (tests 63-104). Timeouts are per-lock/statement/idle, not total walltime.
+• Service/CRUD/signup preserved (tests 84-104, 336-364). Default artifact is rollback-only; recovery HOLD has zero GRANT/REVOKE (`compileProfileRecoveryHoldSql` 245-252; synthetic `recovery-hold.sql`).
+Packet file hashes at frozen HEAD match `qualification.json` (38 source artifacts + fixtures + evidence). Focused TAP 27/27 includes 22 new tests plus 5 unchanged `tests/security/mipProfilesLeastPrivilege.test.mjs`. PGlite 18.3 fixtures OBSERVED in public CI; this executor had no `node_modules`, so those 22 were not rerun here.
+
+_SECONDARY: PASS for bounded source, with stated holds._
+• Selective readiness: default OFF, digest opt-in, injected transport, revocation/CAS/one-use permits (tests in CI; hashes match packet). No new owner engine.
+• Retained CISA replay: this executor 8/8. Actual bytes 1,303,886 vs simulated review/event clocks; no fetch-only Breaking; calibration gate OPEN.
+• Static preflight: this executor 14/14 fixture tests. Packet reports 442/442 bodies, prefix/root/MIME/cache/ETag/304, fail-closed, no host authority. Dist bodies themselves were not present to rehash here.
+• Point cloud: original attempt tunnel 403, 0 bytes, stopped (`raw-attempt-*.json`). Current decoder `usable:false`; `--acquire-points` stops before a ledger. This executor: Python 17/17 and wrapper 2/2. No building-height authority.
+• Imagery: 8 production World View files identical across `ca72` = `0eb` = HEAD. Prep tests 6/6 here; 2 Vite-transform tests UNRUN (external vite/chromium absent). Harness intercepts before navigation, simulated authority, loopback-only. In-repo `preparation.json` is still awaiting browser clearance. Parent REPORTS first/second whole-viewport plus seven frames; export/consumer readback PENDING. No new private pixel proof inferred. No original TIFF, terrain registration, physical FPS, or appearance claim.
+_OBSERVED vs REPORTED / PENDING / UNRUN_
+• OBSERVED: exact remote pins; additive-only tree; CI 2747/2747 on Node 22.23.3 and 24.21.0; proposal unchanged; primary/secondary source behavior above; hermetic builtin tests named above.
+• REPORTED, not re-executed here: focused PGlite 27/27 TAP; 442-body rehash against external dist; imagery photographic viewports; packet local Node 24.19.0.
+• PENDING: export/consumer imagery readback; retained vs new CI dist identity (CI emitted `index.es-CfANxpfs.js`; retained inventory is `assets/index.es-Du2UdQLy.js`). Do not assume equal.
+• UNRUN: native PostgreSQL 17, concurrency, hosted/TLS, original-channel ROLLBACK ack, protected install, live accounts/data, qik rehearsal/COMMIT, physical device, browser pixel proof on this executor.
+• Packet note, not a source repair: `qualification.json` `qualified_source` `1baed873...` is not on origin; HEAD file bytes still match that packet's hashes.
+• Original point-cloud receipt `denied: false` is preserved RED; current code classifies tunnel 403 as denied. Wrapper/history mismatch is not a frozen application defect.
+No consequential finding with a required repair. Newly developed wrappers are not attributed to frozen application defects.
+
+This verdict does not extend to protected installation, live accounts/data, qik rehearsal/COMMIT, merge, deploy, or release.
+
+STOP.
+<https://cursor.com/agents/bc-b4f71b29-ad30-50cf-88ea-d3cb0f885aec|Open in Cursor> · Grok 4.6
