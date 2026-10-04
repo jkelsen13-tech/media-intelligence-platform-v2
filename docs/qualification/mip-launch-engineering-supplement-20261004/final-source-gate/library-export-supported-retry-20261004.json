@@ -1,0 +1,66 @@
+{
+  "schema": "mip.library-supported-batch-bounded-retry.v1",
+  "recorded_at_utc": "2026-10-04T20:01:10.953262+00:00",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "source_review": "CLEAN FOR BOUNDED SUNDAY ENGINEERING SUPPLEMENT SOURCE GATE",
+  "status": "FAILED_SUPPORTED_RETRY_TOOLS_LIST_NETWORK_NO_SAVE_CONFIRMED",
+  "first_attempt_preserved": true,
+  "initial_failure_receipt": "/workspace/mip-oct04-launch-readiness/library-export-failure-20261004.json",
+  "retry_authorization": "Parent Joffrey explicitly authorized one retry of the same complete supported four-file helper batch after the established pre-write discovery network failure.",
+  "supported_batch_attempts_total": 2,
+  "authorized_retries_used": 1,
+  "helper_exit_code": 1,
+  "stdout_bytes": 0,
+  "stderr_bytes": 70,
+  "stderr": "library upload failed: hosted apps tools/list request failed: network",
+  "results_or_Library_ids_returned": 0,
+  "save_confirmed": false,
+  "items": [
+    {
+      "name": "MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/imagery-remount/MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+      "bytes": 7008957,
+      "sha256": "176f640870723c09b4785b49c9c981928be0ee3c6ed4c20fa6d983fcdd868b16",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Launch Engineering Supplement Qualification 2026-10-04.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Launch Engineering Supplement Qualification 2026-10-04.zip",
+      "bytes": 31036147,
+      "sha256": "ffbfb7eba3e0dfb4fa53979a11f0b4b98005acb5df4eca1ae0d337b7548f77bb",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+      "bytes": 9727315,
+      "sha256": "71772c93a8db8c01fd26dee2318123807e151b5982bc1df28e9ed4b5f04a0819",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Launch Engineering Supplement Report 2026-10-04.md",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Launch Engineering Supplement Report 2026-10-04.md",
+      "bytes": 16370,
+      "sha256": "b5275fad5725b7837a916268a639a83ea3a86df6c7586d76ac966853204fbf57",
+      "library_id": null,
+      "save_confirmed": false
+    }
+  ],
+  "supported_route_check": {
+    "connected_app_read_only_title_search": "SUCCESS_NO_EXACT_TITLE_MATCHES",
+    "helper_hosted_apps_discovery_probe": "No documented separate read-only probe exposed; same supported helper retry used.",
+    "helper_and_both_current_companions": "HASH_VERIFIED_UNCHANGED",
+    "same_complete_ordered_payload_batch": "HASH_VERIFIED_UNCHANGED"
+  },
+  "direct_action_manual_preparation_split_batch_alternate_executor_or_bypass": false,
+  "additional_retry": "STOPPED_NONE_AUTHORIZED",
+  "next_exact_external_gate": "Restore availability of the existing supported hosted-app tools/list transport in this saved execution environment. App connection/read availability is not equivalent to that transport. After confirmed supported export, independently materialize and verify fresh second pixels and configured/unconfigured artifact bodies.",
+  "configured_release_artifact": "HOLD_NOT_SELECTED_OR_APPROVED",
+  "active_commands": 0,
+  "physical_device_access": false,
+  "live_protected_target_merge_deploy_release_actions": 0
+}
