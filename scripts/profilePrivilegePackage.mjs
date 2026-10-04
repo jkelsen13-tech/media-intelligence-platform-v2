@@ -131,6 +131,8 @@ export function validateProfileCatalog(catalog, { installed = false } = {}) {
   const roleNames=new Set(catalog.roles.map(r=>r.name))
   const subjects=[...new Set([...browsers,'service_role',id.current_user,id.session_user])].sort()
   for(const name of subjects)if(!roleNames.has(name))fail('missing security role '+name)
+  const ownerRole=catalog.roles.find(r=>r.name===b.owner)
+  if(b.force_row_security&&!ownerRole.superuser&&!ownerRole.bypass_rls)fail('complete profile row scope unavailable for non-bypassing owner under FORCE RLS')
   for(const name of browsers) { const r=catalog.roles.find(r=>r.name===name); if(r.superuser||r.bypass_rls)fail('browser role bypasses RLS '+name) }
   unique(catalog.memberships,m=>JSON.stringify([m.role,m.member,m.grantor]),'memberships')
   for(const m of catalog.memberships){fields(m,['role','member','grantor','admin','inherit','set'],'membership');for(const key of ['role','member','grantor']){text(m[key],'membership.'+key);if(!roleNames.has(m[key]))fail('membership role closure '+m[key])}for(const key of ['admin','inherit','set'])bool(m[key],'membership.'+key)}

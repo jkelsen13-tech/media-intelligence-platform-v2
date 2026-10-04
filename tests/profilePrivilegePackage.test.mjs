@@ -362,6 +362,11 @@ test('distinct non-superuser owner and installer with preexisting SET membership
   await db.query('insert into auth.users values ($1,$2)',[signup,'{"app":"mip"}'])
   await db.exec('set role profile_owner')
   assert.equal((await db.query('select count(*)::int n from public.mip_profiles where id=$1',[signup])).rows[0].n,1)
+  assert.equal((await db.query('select count(*)::int n from public.mip_profiles')).rows[0].n,3)
+  await db.exec('alter table public.mip_profiles force row level security')
+  const visibleOnly=await catalog(db)
+  assert.equal(visibleOnly.rows.length,0)
+  await assert.rejects(compileProfileSql(visibleOnly),/complete profile row scope/)
 })
 
 test('literal row/catalog text survives DO delimiter collisions and nonstandard string settings exactly',async t=>{
