@@ -30,16 +30,32 @@ The original thresholds remain: over 95% changed quadrant pixels, mean baseline 
 
 ## Preparation validation and execution
 
-Four focused preparation tests passed on Node 22.23.3 and 24.19.0. They validate the exact clean-source gate, plain loopback origin restriction, unchanged deterministic fixture semantics and the existing installed Vite transform's single disposable injection seam. Input preparation verified the original descriptor, runtime package, raw PNG hashes/dimensions and all eight base production bytes. The Python verifier decoded all four raw tiles and reproduced their north-up and upload hash identities. This validation did not launch Chromium, start Vite, run a photographic baseline or install software. Preparation receipts are named in `preparation.json`.
+Eight focused preparation tests passed on Node 22.23.3 and 24.19.0. The original four validate the exact clean-source gate, plain loopback origin restriction, unchanged deterministic fixture semantics and the existing installed Vite transform's single disposable injection seam. Four additional checks validate the safe server declaration, unchanged browser-key guard, removal of ambient client values without reading them, and installed Vite resolution against fake env-file/ambient sentinels. Input preparation verified the original descriptor, runtime package, raw PNG hashes/dimensions and all eight base production bytes. The Python verifier decoded all four raw tiles and reproduced their north-up and upload hash identities. This validation did not launch Chromium, start Vite, run a photographic baseline or install software. Preparation receipts are named in `preparation.json`; earlier preparation receipts remain unchanged.
 
-After the parent freezes and clears execution, invoke the harness from that frozen project root with its exact head/tree and a new output directory:
+`server.mjs` loads the unchanged project Vite configuration and App using already installed project dependencies. It binds to `127.0.0.1` on an explicit strict port, keeps HTTP/WebSocket origins on that loopback port and refuses an existing isolated `envDir`. Installed Vite receives `envFile:false`, so its resolved `envDir` is `false` and no saved env file is loaded. Before importing Vite, the entry removes ambient `VITE_*`, its unique fixture prefix and `DEBUG` variables without reading, printing or hashing their values. The direct defines are limited to `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`; there is no whole-env replacement.
+
+The unchanged `makeClient()` returns `null` without both env values, and its unchanged origin guard accepts only the public V2 origin already present in source. The server therefore uses that public origin solely to reach the browser's locally fulfilled synthetic route and the visibly fake key `sb_publishable_FIXTURE_ONLY_MIP_IMAGERY_REMOUNT_20261004_NOT_A_REAL_KEY`. This key passes the existing publishable browser-key syntax guard and is not an account credential. It grants no target permission. The browser establishes all nonlocal HTTP/WebSocket interception before `goto`; the local server entry itself starts no browser and performs no target probe. Server startup also requires the Vite config, client and origin/key guards to match the exact base application bytes. Its external receipt records these hashes, the server entry hash, source head/tree and env isolation facts; the browser receipt independently records the same server entry hash.
+
+After the parent integrates these files, makes already installed dependencies available to the frozen project and clears serial execution, start the safe server from that clean frozen project root. Supply the parent's exact head/tree, explicit port and a new external receipt path:
+
+```sh
+MIP_IMAGERY_REMOUNT_EXPECTED_HEAD=<frozen-head> \
+MIP_IMAGERY_REMOUNT_EXPECTED_TREE=<frozen-tree> \
+/workspace/mip-runtime22/node_modules/node/bin/node \
+  scripts/qualification/imagery-remount-20261004/server.mjs \
+  --port <parent-port> \
+  --receipt /workspace/mip-oct04-launch-readiness/imagery-remount/<new-server-receipt>.json
+```
+
+Keep that server running for the single browser journey. In a separate terminal from the same frozen project root, invoke the harness with that exact loopback port and a new output directory:
 
 ```sh
 MIP_IMAGERY_REMOUNT_EXPECTED_HEAD=<frozen-head> \
 MIP_IMAGERY_REMOUNT_EXPECTED_TREE=<frozen-tree> \
 MIP_IMAGERY_REMOUNT_BASE=http://127.0.0.1:<parent-port>/media-intelligence-platform-v2/ \
 MIP_IMAGERY_REMOUNT_OUTPUT=/workspace/mip-oct04-launch-readiness/imagery-remount/<new-run> \
-node scripts/qualification/imagery-remount-20261004/run.mjs
+/workspace/mip-runtime22/node_modules/node/bin/node \
+  scripts/qualification/imagery-remount-20261004/run.mjs
 
 python scripts/qualification/imagery-remount-20261004/pixels.py \
   --directory /workspace/mip-oct04-launch-readiness/imagery-remount/<new-run> \

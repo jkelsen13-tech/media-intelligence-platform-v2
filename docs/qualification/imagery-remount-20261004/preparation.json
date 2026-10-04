@@ -65,5 +65,49 @@
   "legacyEvidenceEdited": false,
   "dependenciesInstalled": false,
   "serverStarted": false,
-  "networkCalls": false
+  "networkCalls": false,
+  "safeServerPreparation20261004": {
+    "status": "PASS_PREPARATION_ONLY_AWAITING_PARENT_FREEZE_AND_CLEARANCE",
+    "focusedChecksEachRuntime": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skip": 0
+    },
+    "additionalServerChecksEachRuntime": 4,
+    "runtimeVersions": [
+      "22.23.3",
+      "24.19.0"
+    ],
+    "serverEntry": "scripts/qualification/imagery-remount-20261004/server.mjs",
+    "serverEntrySha256": "11c007c847ede6c2841afb9577e9d867745cf8ac2ed67b465aa6c59420af585a",
+    "unchangedClientRequiresBothEnvValues": true,
+    "syntheticBrowserKey": "sb_publishable_FIXTURE_ONLY_MIP_IMAGERY_REMOUNT_20261004_NOT_A_REAL_KEY",
+    "browserKeyGuardAcceptsFixtureOnlySyntax": true,
+    "publicV2OriginOnlyForInterceptedLocalFixture": true,
+    "declaredEnvDirMustNotExist": true,
+    "envFileLoading": false,
+    "installedViteResolvedEnvDir": false,
+    "rootEnvFileAndAmbientFakeSentinelsExcluded": true,
+    "ambientClientValuesReadPrintedHashed": false,
+    "loopbackHost": "127.0.0.1",
+    "explicitStrictPortRequired": true,
+    "browserExecuted": false,
+    "serverStarted": false,
+    "targetProbes": false,
+    "externalPreparationReceipts": [
+      {
+        "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-safe-server-node22.tap",
+        "bytes": 1985,
+        "sha256": "bce0159080e1b15b6b7a13140d84df58bbc9ef52bf4812872ee191f1073309e2",
+        "format": "TAP"
+      },
+      {
+        "path": "/workspace/mip-oct04-launch-readiness/imagery-remount/preparation-safe-server-node24.tap",
+        "bytes": 1982,
+        "sha256": "bb9a3fe3cea4873eaf3e468cf35902bcbe62b51d99983996ab9613df3619ddb9",
+        "format": "TAP"
+      }
+    ]
+  }
 }
