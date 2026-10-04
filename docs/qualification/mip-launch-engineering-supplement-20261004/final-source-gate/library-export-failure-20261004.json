@@ -1,0 +1,52 @@
+{
+  "schema": "mip.library-prepared-batch-transport-failure.v1",
+  "recorded_at_utc": "2026-10-04T19:55:10.808065+00:00",
+  "source_head": "06833f99de62877182305eda6fb034800b905f1e",
+  "source_tree": "fd3a2889251a4ac3e16132b682eef128171cec1c",
+  "status": "FAILED_TOOLS_LIST_NETWORK_NO_SAVE_CONFIRMED",
+  "helper_exit_code": 1,
+  "stdout_bytes": 0,
+  "stderr": "library upload failed: hosted apps tools/list request failed: network",
+  "items": [
+    {
+      "name": "MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/imagery-remount/MIP Fresh Native Imagery Second Attachment Qualification 2026-10-04 V2.zip",
+      "bytes": 7008957,
+      "sha256": "176f640870723c09b4785b49c9c981928be0ee3c6ed4c20fa6d983fcdd868b16",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Launch Engineering Supplement Qualification 2026-10-04.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Launch Engineering Supplement Qualification 2026-10-04.zip",
+      "bytes": 31036147,
+      "sha256": "ffbfb7eba3e0dfb4fa53979a11f0b4b98005acb5df4eca1ae0d337b7548f77bb",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Unconfigured Frontend Build Bodies 2026-10-04.zip",
+      "bytes": 9727315,
+      "sha256": "71772c93a8db8c01fd26dee2318123807e151b5982bc1df28e9ed4b5f04a0819",
+      "library_id": null,
+      "save_confirmed": false
+    },
+    {
+      "name": "MIP Launch Engineering Supplement Report 2026-10-04.md",
+      "local_path": "/workspace/mip-oct04-launch-readiness/MIP Launch Engineering Supplement Report 2026-10-04.md",
+      "bytes": 16370,
+      "sha256": "b5275fad5725b7837a916268a639a83ea3a86df6c7586d76ac966853204fbf57",
+      "library_id": null,
+      "save_confirmed": false
+    }
+  ],
+  "attempts": 1,
+  "retry_or_direct_fallback": false,
+  "raw_result_path": "/workspace/mip-oct04-launch-readiness/library-export-result-20261004.json",
+  "raw_error_path": "/workspace/mip-oct04-launch-readiness/library-export-stderr-20261004.log",
+  "supported_route": "Current unchanged library_upload.py with both complete current companion files; one complete ordered four-file JSON batch and EOF.",
+  "skill_reference": "skill://plugin_connector_1p_1b8ff8edfc1481918b252c8277e23125/library/references/prepared-uploads.md",
+  "governing_rule": "Do not call prepare_uploads or finalize_uploads separately or transfer a returned URL yourself. Never switch a started helper write to a direct action.",
+  "next_external_gate": "Restore availability of the supported hosted-app discovery transport in this authorized saved execution environment; do not substitute manual preparation/finalization, split direct creates or an alternate executor. Parent consumer needs fresh Library IDs after confirmed save."
+}
