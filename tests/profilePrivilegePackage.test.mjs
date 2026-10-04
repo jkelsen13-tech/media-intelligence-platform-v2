@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join,dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { PGlite } from '@electric-sql/pglite'
-import { profileCatalogQuery,profileBaselineQuery,profileProposal,validateProfileCatalog,
+import { profileCatalogQuery,profileCatalogCaptureSql,PROFILE_CATALOG_SEARCH_PATH,profileBaselineQuery,profileProposal,validateProfileCatalog,
   acceptedProfileCatalog,compileProfileSql,validateProfileInstalledReadback,
   PROFILE_CATALOG_CONTRACT,PROFILE_PROPOSAL_SHA256,PROFILE_PROPOSAL_PATH,sha256 } from '../scripts/profilePrivilegePackage.mjs'
 import { compileProfilePrivilegeArtifact,verifyProfilePrivilegeArtifact,profileSourceIdentities } from '../scripts/compileProfilePrivilegePackage.mjs'
@@ -34,7 +34,11 @@ async function fixture(t) {
   await db.query('insert into auth.users values ($1,$2),($3,$2),($4,$5)',[own,'{"app":"mip"}',other,unrelated,'{"app":"other"}'])
   return db
 }
-async function catalog(db){return (await db.query(await profileCatalogQuery())).rows[0].catalog}
+async function catalog(db){
+  const context=(await db.query("select pg_catalog.current_setting('search_path') search_path")).rows[0].search_path
+  if(context===PROFILE_CATALOG_SEARCH_PATH)return (await db.query(await profileCatalogQuery())).rows[0].catalog
+  return (await db.exec(await profileCatalogCaptureSql())).flatMap(result=>result.rows).find(row=>Object.hasOwn(row,'catalog')).catalog
+}
 async function accepted(c,{observed=now,accepted=observed}={}) {
   return {contract:PROFILE_CATALOG_CONTRACT,qualification:'SYNTHETIC_PGLITE_ONLY',observed_at_utc:new Date(observed).toISOString(),catalog:c,
     acceptance:{status:'INDEPENDENTLY_ACCEPTED',accepted_by:'synthetic fixture reviewer; no real catalog acceptance',accepted_at_utc:new Date(accepted).toISOString(),
@@ -48,7 +52,7 @@ async function privateFiles(t,c) {
 }
 async function settings(db) {return (await db.query(`select current_setting('lock_timeout') lock_timeout,
   current_setting('statement_timeout') statement_timeout,current_setting('idle_in_transaction_session_timeout') idle_timeout,
-  current_setting('mip.profile_acl_expected_catalog',true) baseline`)).rows[0]}
+  current_setting('mip.profile_acl_expected_catalog',true) baseline,current_setting('search_path') search_path`)).rows[0]}
 
 test('byte-exact existing proposal is preserved and its own catalog query is used',async()=>{
   const bytes=await readFile(new URL(PROFILE_PROPOSAL_PATH,root));assert.equal(bytes.length,3870);assert.equal(sha256(bytes),PROFILE_PROPOSAL_SHA256)
@@ -66,7 +70,7 @@ test('default rollback-only artifact installs exact table/column delta inside tr
   // ROLLBACK for independent fixture observation of the installed state.
   await db.exec(sql.replace(/rollback;\s*$/,''))
   const inside=await catalog(db);validateProfileInstalledReadback(forceBefore,inside)
-  assert.deepEqual(await settings(db),{lock_timeout:'5s',statement_timeout:'30s',idle_timeout:'30s',baseline:JSON.stringify(forceBefore.baseline)})
+  assert.deepEqual(await settings(db),{lock_timeout:'5s',statement_timeout:'30s',idle_timeout:'30s',baseline:JSON.stringify(forceBefore.baseline),search_path:PROFILE_CATALOG_SEARCH_PATH})
   for(const role of ['anon','authenticated']) {
     for(const privilege of ['TRUNCATE','TRIGGER','REFERENCES','MAINTAIN'])assert.equal(inside.effective.find(e=>e.role===role&&e.scope==='table'&&e.privilege===privilege).allowed,false)
     assert.equal(inside.effective.some(e=>e.role===role&&e.privilege==='REFERENCES'&&e.allowed),false)
@@ -137,6 +141,7 @@ test('PUBLIC and inherited broad grants, unexpected grantors and dependent grant
 test('missing/malformed security identity, dangerous browser role and incomplete ACL/effective matrix refuse offline',async t=>{
   const db=await fixture(t),before=await catalog(db)
   const changes=[c=>delete c.identity.session_user,c=>c.identity.server_version_num='not-a-version',c=>c.baseline.owner='different-owner',
+    c=>c.identity.search_path='pg_temp, public',
     c=>c.roles.find(r=>r.name==='anon').bypass_rls=true,c=>c.effective.pop(),c=>c.acl_entries.push(c.acl_entries[0]),
     c=>c.browser_paths.pop(),c=>delete c.browser_paths[0].set,
     c=>delete c.baseline.signup_trigger.function_owner,c=>c.baseline.signup_trigger=null,c=>c.baseline.row_security=false]
@@ -299,4 +304,74 @@ test('SET into a separate superuser or CREATEROLE role refuses even without expl
   await assert.rejects(compileProfileSql(await catalog(db)),/browser role path/)
   await db.exec('revoke super_target from anon;create role creator createrole;grant creator to anon with inherit false,set true')
   await assert.rejects(compileProfileSql(await catalog(db)),/browser role path/)
+})
+
+test('temp catalog role masking cannot hide a real browser BYPASSRLS attribute',async t=>{
+  const db=await fixture(t)
+  await db.exec(`alter role anon bypassrls;create temporary view pg_roles as
+    select p.oid,p.rolname,p.rolsuper,p.rolinherit,p.rolcreaterole,p.rolcreatedb,p.rolcanlogin,
+    p.rolreplication,false as rolbypassrls,p.rolconnlimit,p.rolvaliduntil,p.rolconfig from pg_catalog.pg_roles p`)
+  assert.equal((await db.query("select rolbypassrls from pg_catalog.pg_roles where rolname='anon'")).rows[0].rolbypassrls,true)
+  assert.equal((await db.query("select rolbypassrls from pg_temp.pg_roles where rolname='anon'")).rows[0].rolbypassrls,false)
+  const before=await catalog(db)
+  await assert.rejects(compileProfileSql(before),/browser role bypasses RLS/)
+})
+
+test('controlled read-only capture and wrappers ignore temp catalog views and restore local context after each boundary',async t=>{
+  const db=await fixture(t),before=await catalog(db),initial=await settings(db)
+  await db.exec(`create temporary view pg_roles as select p.* from pg_catalog.pg_roles p where rolname not in ('anon','authenticated');
+    create temporary view pg_class as select c.* from pg_catalog.pg_class c where oid<>'public.mip_profiles'::regclass;
+    set search_path=pg_temp, public`)
+  const spoofSettings=await settings(db),captured=await catalog(db)
+  assert.deepEqual(captured,before);assert.deepEqual(await settings(db),spoofSettings)
+  const uncontrolled=(await db.query(await profileCatalogQuery())).rows[0].catalog
+  await assert.rejects(compileProfileSql(uncontrolled),/controlled pg_catalog-first|complete exact/)
+  const captureSql=await profileCatalogCaptureSql()
+  assert.match(captureSql,/begin isolation level repeatable read read only/);assert.match(captureSql,/rollback;\s*$/)
+  await db.exec(await compileProfileSql(captured));assert.deepEqual(await catalog(db),before);assert.deepEqual(await settings(db),spoofSettings)
+  await db.exec(await compileProfileSql(captured,{mode:'commit'}));validateProfileInstalledReadback(before,await catalog(db));assert.deepEqual(await settings(db),spoofSettings)
+  await db.query("select pg_catalog.set_config('search_path',$1,false)",[initial.search_path])
+})
+
+test('distinct non-superuser owner and installer with preexisting SET membership qualify rollback and commit-source fixtures',async t=>{
+  const db=await fixture(t)
+  // These are explicit synthetic setup facts. The compiler never creates the
+  // owner, transfers ownership, grants membership or supplies an auto-grant helper.
+  await db.exec(`create role profile_owner;create role profile_installer login noinherit;
+    alter table public.mip_profiles owner to profile_owner;
+    grant usage on schema public,auth to profile_owner;
+    grant profile_owner to profile_installer with admin false,inherit false,set true;
+    create role fixture_signup_actor;
+    grant usage on schema auth to fixture_signup_actor;
+    grant insert on auth.users to fixture_signup_actor;
+    grant fixture_signup_actor to profile_installer with admin false,inherit false,set true;
+    set session authorization profile_installer;set role profile_owner`)
+  const before=await catalog(db),initial=await settings(db)
+  assert.equal(before.baseline.owner,'profile_owner');assert.equal(before.identity.current_user,'profile_owner');assert.equal(before.identity.session_user,'profile_installer')
+  for(const name of ['profile_owner','profile_installer']){const role=before.roles.find(r=>r.name===name);assert.equal(role.superuser,false);assert.equal(role.bypass_rls,false);assert.equal(role.create_role,false)}
+  assert.ok(before.memberships.some(m=>m.role==='profile_owner'&&m.member==='profile_installer'&&m.set&&!m.inherit&&!m.admin))
+  assert.ok(before.acl_entries.filter(e=>['anon','authenticated'].includes(e.grantee)).every(e=>e.grantor==='profile_owner'))
+  await db.exec(await compileProfileSql(before));assert.deepEqual(await catalog(db),before);assert.deepEqual(await settings(db),initial)
+  await db.exec(await compileProfileSql(before,{mode:'commit'}));const installed=await catalog(db);validateProfileInstalledReadback(before,installed)
+  assert.deepEqual(installed.rows,before.rows);assert.deepEqual(installed.baseline.signup_trigger,before.baseline.signup_trigger)
+  assert.deepEqual(installed.acl_entries.filter(e=>e.grantee==='service_role'),before.acl_entries.filter(e=>e.grantee==='service_role'))
+  assert.ok(installed.acl_entries.some(e=>e.grantee==='anon'&&e.scope==='column'&&e.privilege==='SELECT'&&e.grant_option))
+  assert.equal(installed.identity.session_user,'profile_installer');assert.deepEqual(await settings(db),initial)
+  await db.exec('set role fixture_signup_actor')
+  const signup='10000000-0000-4000-8000-000000000004'
+  await db.query('insert into auth.users values ($1,$2)',[signup,'{"app":"mip"}'])
+  await db.exec('set role profile_owner')
+  assert.equal((await db.query('select count(*)::int n from public.mip_profiles where id=$1',[signup])).rows[0].n,1)
+})
+
+test('literal row/catalog text survives DO delimiter collisions and nonstandard string settings exactly',async t=>{
+  const db=await fixture(t)
+  await db.query('update public.mip_profiles set display_name=$1 where id=$2',["literal $profile_guard$ and $profile_guard_1$ quote ' slash \\ newline\n🌊",own])
+  const before=await catalog(db),sql=await compileProfileSql(before)
+  assert.match(sql,/do \$profile_guard_2\$/)
+  await db.exec('set standard_conforming_strings=off')
+  await db.exec(sql);assert.deepEqual(await catalog(db),before)
+  await db.exec(await compileProfileSql(before,{mode:'commit'}));validateProfileInstalledReadback(before,await catalog(db))
+  assert.equal((await db.query('select display_name from public.mip_profiles where id=$1',[own])).rows[0].display_name,before.rows.find(r=>r.id===own).display_name)
+  assert.equal((await db.query("select current_setting('standard_conforming_strings') setting")).rows[0].setting,'off')
 })

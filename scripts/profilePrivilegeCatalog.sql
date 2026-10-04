@@ -29,7 +29,7 @@ select jsonb_build_object(
     'database',current_database(),'database_oid',(select oid::bigint from pg_database where datname=current_database()),
     'server_address',inet_server_addr()::text,'server_port',inet_server_port(),
     'server_version_num',current_setting('server_version_num'),'server_version',version(),
-    'table_oid',(select oid::bigint from table_object)),
+    'table_oid',(select oid::bigint from table_object),'search_path',pg_catalog.current_setting('search_path')),
   'baseline',(select jsonb_build_object from baseline),
   'roles',coalesce((select jsonb_agg(jsonb_build_object('oid',p.oid::bigint,'name',p.rolname,
     'superuser',p.rolsuper,'inherit',p.rolinherit,'create_role',p.rolcreaterole,

@@ -8,12 +8,13 @@ export const PROFILE_PROPOSAL_PATH = 'supabase/source-proposals/mip_profiles_lea
 export const PROFILE_PROPOSAL_SHA256 = '2d6f494d51b0aa97be2d74865be99befe802280f3f466fbb95333ba5ec2824f7'
 export const PROFILE_CATALOG_CONTRACT = 'mip-profile-privilege-accepted-catalog-v1'
 export const PROFILE_CATALOG_MAX_AGE_MS = 300_000
+export const PROFILE_CATALOG_SEARCH_PATH = 'pg_catalog, pg_temp'
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex')
 const broad = ['TRUNCATE', 'TRIGGER', 'REFERENCES', 'MAINTAIN']
 const browsers = ['anon', 'authenticated']
 const tablePrivileges = ['SELECT','INSERT','UPDATE','DELETE',...broad]
 const columnPrivileges = ['SELECT','INSERT','UPDATE','REFERENCES']
-const literal = value => "'" + String(value).replaceAll("'", "''") + "'"
+const literal = value => "E'" + String(value).replaceAll('\\','\\\\').replaceAll("'", "''") + "'"
 
 // JSON.parse accepts duplicate object members. Catalogs and receipts must not:
 // reviewers and runtimes must see one unambiguous value for every member.
@@ -74,6 +75,13 @@ export async function profileCatalogQuery() {
   if (template.split('__PROFILE_PROPOSAL_BASELINE__').length !== 2) throw Error('exact profile catalog marker required')
   return template.replace('__PROFILE_PROPOSAL_BASELINE__', await profileBaselineQuery()).trim().replace(/;$/, '')
 }
+export async function profileCatalogCaptureSql() {
+  // A separate operator may review/submit this read-only, rollback-contained
+  // capture text. This module never executes it. Explicit pg_catalog first
+  // controls relation lookup and decompiler context even with hostile temp views.
+  return `begin isolation level repeatable read read only;\nset local lock_timeout='5s';\nset local statement_timeout='30s';\nset local idle_in_transaction_session_timeout='30s';\nset local search_path=${PROFILE_CATALOG_SEARCH_PATH};\n`+
+    await profileCatalogQuery()+`;\nrollback;\n`
+}
 
 export function validateProfileCatalog(catalog, { installed = false } = {}) {
   const fail = path => { throw Error('complete exact profile security catalog required: ' + path) }
@@ -87,7 +95,8 @@ export function validateProfileCatalog(catalog, { installed = false } = {}) {
   const unique = (rows,key,p) => { const keys = rows.map(key); if (new Set(keys).size !== keys.length) fail(p+'.duplicate') }
   fields(catalog,['identity','baseline','roles','memberships','browser_paths','acl_entries','effective','schemas','rows'],'catalog')
   const id = catalog.identity
-  fields(id,['current_user','session_user','database','database_oid','server_address','server_port','server_version_num','server_version','table_oid'],'identity')
+  fields(id,['current_user','session_user','database','database_oid','server_address','server_port','server_version_num','server_version','table_oid','search_path'],'identity')
+  if(id.search_path!==PROFILE_CATALOG_SEARCH_PATH)fail('controlled pg_catalog-first catalog/decompiler context')
   for (const key of ['current_user','session_user','database','server_version_num','server_version']) text(id[key],'identity.'+key)
   if (!/^\d{6}$/.test(id.server_version_num) || Number(id.server_version_num)<170000) fail('identity.server_version_num')
   for (const key of ['database_oid','table_oid']) { int(id[key],'identity.'+key); if(id[key]<=0) fail('identity.'+key) }
@@ -211,14 +220,17 @@ function comparisonGuard(query, expected, message, original = null) {
   const normalize=original?`\n  actual:=jsonb_set(actual,'{baseline,acl}','null'::jsonb);\n`+
     original.baseline.columns.filter(c=>original.acl_entries.some(e=>e.scope==='column'&&e.column===c.name&&e.grantor===original.baseline.owner&&browsers.includes(e.grantee)&&e.privilege==='REFERENCES')).map(c=>
       `  actual:=jsonb_set(actual,array['baseline','columns',${literal(String(original.baseline.columns.findIndex(x=>x.name===c.name)))},'acl'],'null'::jsonb);\n`).join(''):''
-  return `do $profile_guard$\ndeclare actual jsonb;\nbegin\n  select catalog into actual from (${query}) snapshot;${normalize}\n  if actual is distinct from ${literal(JSON.stringify(expected))}::jsonb then\n    raise exception ${literal(message)};\n  end if;\nend\n$profile_guard$;\n`
+  const body=`\ndeclare actual jsonb;\nbegin\n  select catalog into actual from (${query}) snapshot;${normalize}\n  if actual is distinct from ${literal(JSON.stringify(expected))}::jsonb then\n    raise exception ${literal(message)};\n  end if;\nend\n`
+  let suffix=0,tag='$profile_guard$'
+  while(body.includes(tag))tag=`$profile_guard_${++suffix}$`
+  return `do ${tag}${body}${tag};\n`
 }
 export async function compileProfileSql(catalog,{mode='rollback-only'}={}) {
   validateProfileCatalog(catalog)
   if(!['rollback-only','commit'].includes(mode))throw Error('exact profile rollback-only or explicit commit source mode required')
   const proposal=await profileProposal(),query=await profileCatalogQuery()
   if((proposal.match(/^begin;$/gm)||[]).length!==1||(proposal.match(/^commit;$/gm)||[]).length!==1)throw Error('exact profile proposal transaction boundary required')
-  const before=`begin;\nset local lock_timeout='5s';\nset local statement_timeout='30s';\nset local idle_in_transaction_session_timeout='30s';\nlock table public.mip_profiles in access exclusive mode;\n`+
+  const before=`begin;\nset local lock_timeout='5s';\nset local statement_timeout='30s';\nset local idle_in_transaction_session_timeout='30s';\nset local search_path=${PROFILE_CATALOG_SEARCH_PATH};\nlock table public.mip_profiles in access exclusive mode;\n`+
     comparisonGuard(query,catalog,'profile package accepted security/session/catalog/row baseline drift')+
     `select set_config('mip.profile_acl_expected_catalog',${literal(JSON.stringify(catalog.baseline))},true);`
   const after=comparisonGuard(query,profileInvariantCatalog(profileExpectedInstalledCatalog(catalog),catalog),'profile package unexpected installed catalog/row/ACL/grantor/options delta',catalog)+
@@ -233,7 +245,7 @@ export async function compileProfileRecoveryHoldSql(original,installed) {
   return `-- RECOVERY HOLD: preserve state. No restoration GRANT or privilege mutation.\n`+
     `-- Broad privilege restoration requires separate exact future security approval.\n`+
     `-- A file receipt is not original-channel ROLLBACK acknowledgment.\n`+
-    `begin;\nset local lock_timeout='5s';\nset local statement_timeout='30s';\nset local idle_in_transaction_session_timeout='30s';\nlock table public.mip_profiles in access exclusive mode;\n`+
+    `begin;\nset local lock_timeout='5s';\nset local statement_timeout='30s';\nset local idle_in_transaction_session_timeout='30s';\nset local search_path=${PROFILE_CATALOG_SEARCH_PATH};\nlock table public.mip_profiles in access exclusive mode;\n`+
     comparisonGuard(await profileCatalogQuery(),installed,'profile recovery HOLD fresh installed state drift')+
     `rollback;\n`
 }
