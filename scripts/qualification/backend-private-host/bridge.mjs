@@ -12,6 +12,12 @@ import { FixedPrivatePipe } from './private-pipe.mjs'
 // A trusted runtime/immutable artifact/clock/private credential provider binding
 // has not been issued. This is a factual deployment gate, not a caller option.
 const PRODUCTION_RUNTIME_BOUND = false
+// Independent of the empty authority registry and any future accepted roots.
+// The Oct 7 provider evidence does not confirm the managed server-side trust
+// interface required by the original frozen dblink package. This fixed HOLD
+// requires reviewed source changes to reconsider; no caller value can lift it.
+const PROVIDER_REFUSAL_CODE = 'PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD'
+const PROVIDER_POLICY_LOCK_SHA256 = '75210834f32f6ebe6dbc21ac24601b5c953d9956b6b83e78d0a9914b5807373c'
 const PYTHON = '/usr/bin/python3'
 const LIBPQ = '/usr/lib/x86_64-linux-gnu/libpq.so.5.17'
 const workerPath = new URL('./private_worker.py', import.meta.url).pathname
@@ -19,10 +25,53 @@ const clientPath = new URL('../backend-private-client/libpq17.py', import.meta.u
 const bootstrap = session => `import importlib.util,sys\nspec=importlib.util.spec_from_file_location('qik_private_worker',${JSON.stringify(workerPath)})\nworker=importlib.util.module_from_spec(spec)\nspec.loader.exec_module(worker)\nworker.serve_private_pipe(sys.stdin.buffer,sys.stdout.buffer,${JSON.stringify(session)})\n`
 const refusal = code => Object.freeze({ code, liveAuthorized: false, childSpawned: false })
 
+async function loadFixedProviderCapability() {
+  // Fixed public JSON only: no policy script, dynamic import, callback, provider
+  // probe, credential or caller-selected path/configuration is consumed.
+  const lockUrl = new URL('../backend-provider-policy/source-lock.json', import.meta.url)
+  const contractUrl = new URL('../backend-provider-policy/evidence-contract.json', import.meta.url)
+  const sha = bytes => createHash('sha256').update(bytes).digest('hex')
+  try {
+    const lockBytes = await readFile(lockUrl)
+    if (sha(lockBytes) !== PROVIDER_POLICY_LOCK_SHA256) throw new Error()
+    const lock = JSON.parse(lockBytes.toString('utf8'))
+    if (!exactKeys(lock, ['version', 'sources']) || lock.version !== 'qik-provider-capability-source-lock-1'
+      || !exactKeys(lock.sources, ['evidence-contract.json'])) throw new Error()
+    const pin = lock.sources['evidence-contract.json']
+    if (!exactKeys(pin, ['bytes', 'sha256']) || !Number.isSafeInteger(pin.bytes) || pin.bytes < 1
+      || !/^[a-f0-9]{64}$/.test(pin.sha256)) throw new Error()
+    const bytes = await readFile(contractUrl)
+    if (bytes.length !== pin.bytes || sha(bytes) !== pin.sha256) throw new Error()
+    const contract = JSON.parse(bytes.toString('utf8'))
+    if (contract.version !== 'qik-provider-capability-policy-1' || contract.status !== 'HOLD'
+      || contract.refusalCode !== PROVIDER_REFUSAL_CODE || contract.inspectionOnly !== true
+      || contract.liveAuthorized !== false || contract.productionActivationAvailable !== false) throw new Error()
+    if (!isDeepStrictEqual(await readFile(lockUrl), lockBytes)
+      || !isDeepStrictEqual(await readFile(contractUrl), bytes)) throw new Error()
+    const freeze = value => {
+      if (value && typeof value === 'object') {
+        for (const item of Object.values(value)) freeze(item)
+        Object.freeze(value)
+      }
+      return value
+    }
+    return freeze(contract)
+  } catch { throw new Error('PROVIDER_POLICY_SOURCE_DRIFT') }
+}
+
+async function requireFixedProviderCapability() {
+  await loadFixedProviderCapability()
+  throw new Error(PROVIDER_REFUSAL_CODE)
+}
+
 export async function inspectPrivateBridgeGate(options = {}) {
   const bound = bindInert(options, 'PRIVATE_BRIDGE_INPUT_REFUSED')
   if (!exactKeys(bound, []) && !exactKeys(bound, ['claims'])) throw new Error('PRIVATE_BRIDGE_INPUT_REFUSED')
   await loadHeldSource()
+  const providerCapability = await loadFixedProviderCapability()
+  if (providerCapability.status === 'HOLD') return Object.freeze({ ...refusal(PROVIDER_REFUSAL_CODE), providerCapability })
+  // Retain the independent authority/runtime gates below. A future provider
+  // revision must review this fixed HOLD as well as satisfy all existing gates.
   const authority = await loadFixedProductionAuthority()
   if (authority.ready !== true || typeof authority.authorizePhase !== 'function') return refusal(authority.code ?? 'PRODUCTION_AUTHORITY_UNAVAILABLE')
   const authorization = await authority.authorizePhase()
@@ -36,6 +85,7 @@ export async function inspectPrivateBridgeGate(options = {}) {
 // No caller callback or supplied "all claims true" value satisfies these gates.
 // Kept private until actual runtime and private provider bindings are reviewed.
 async function authorizeFixedPhase(held, reviewedSourceHashes, context, phase, recovery) {
+  await requireFixedProviderCapability()
   const authority = await loadFixedProductionAuthority()
   if (authority.ready !== true || typeof authority.authorizePhase !== 'function') throw new Error(authority.code ?? 'PRODUCTION_AUTHORITY_UNAVAILABLE')
   const runtimeHashes = await loadFixedRuntimeHashes()
@@ -52,6 +102,7 @@ async function authorizeFixedPhase(held, reviewedSourceHashes, context, phase, r
 }
 
 async function loadFixedRuntimeHashes() {
+  await requireFixedProviderCapability()
   // Public executable/library fingerprints only. These are observations, never
   // immutable-deployment attestation, trusted clock provenance or approval.
   const sha = async path => createHash('sha256').update(await readFile(path)).digest('hex')
@@ -70,6 +121,7 @@ async function loadFixedNativeHashes(held) {
 }
 
 async function launchFixedPrivateWorker(held, reviewedSourceHashes, context, session, recovery) {
+  await requireFixedProviderCapability()
   await authorizeFixedPhase(held, reviewedSourceHashes, context, `connect_${session}`, recovery)
   if (!PRODUCTION_RUNTIME_BOUND) throw new Error('APPROVED_PRIVATE_HOST_RUNTIME_UNBOUND')
   // Exact interpreter/native library/source hashes and immutable deployment must
@@ -90,15 +142,18 @@ async function launchFixedPrivateWorker(held, reviewedSourceHashes, context, ses
 // A future trusted host must bind an actual issuer and inherited memory/pipe route
 // whose evidence is verified by the fixed production verifier before a secret read.
 async function takeFixedPrivateCredentialHandoff() {
+  await requireFixedProviderCapability()
   throw new Error('ACCEPTED_PRIVATE_HANDOFF_ISSUER_AND_ROUTE_UNBOUND')
 }
 
 // Internal production port SOURCE, called only by the private controller wiring.
 // Two workers isolate the verifier from the primary's pending request and socket.
-// Current empty production registry refuses BEFORE hash/handoff/spawn/connect.
+// Fixed provider HOLD refuses BEFORE authority/hash/handoff/spawn/connect;
+// the independent empty registry and all existing safety gates remain in source.
 export async function createFixedProductionPort() {
   if (arguments.length !== 0) throw new Error('PRIVATE_BRIDGE_INPUT_REFUSED')
   const held = await loadHeldSource()
+  await requireFixedProviderCapability()
   const authority = await loadFixedProductionAuthority()
   if (authority.ready !== true) throw new Error(authority.code ?? 'PRODUCTION_AUTHORITY_UNAVAILABLE')
   const hashes = await loadFixedNativeHashes(held)

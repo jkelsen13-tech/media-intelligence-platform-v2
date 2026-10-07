@@ -2,8 +2,8 @@
   "version": "qik-private-host-integration-lock-1",
   "sources": {
     "../backend-private-client/libpq17.py": {
-      "bytes": 32808,
-      "sha256": "d2669a2fec291aa12d61e5c4d55be729a785ce91658df363402b43c43498b0d0"
+      "bytes": 33152,
+      "sha256": "9c64efae9d5532a8dc3b50a9099545f9727703873b2bf11f3317231196d23733"
     },
     "../backend-private-client/frozen-inventory.json": {
       "bytes": 118721,

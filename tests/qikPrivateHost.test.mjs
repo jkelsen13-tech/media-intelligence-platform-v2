@@ -295,7 +295,9 @@ test('operational production gate refuses populated claims, callbacks and roots 
     const inspected = await inspectPrivateHost({ claims }), gate = await inspectPrivateBridgeGate({ claims })
     assert.equal(inspected.liveReady, false); assert.equal(inspected.productionActivationAvailable, false)
     assert.equal(inspected.claimsCanAuthorize, false); assert.equal(gate.liveAuthorized, false)
-    await assert.rejects(createFixedProductionPort(), /TRUST_ROOT_UNBOUND|AUTHORITY_SOURCE_UNAVAILABLE/)
+    // The independent provider HOLD now refuses before the still-empty registry.
+    assert.equal(gate.code, 'PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD')
+    await assert.rejects(createFixedProductionPort(), /PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD/)
     await assert.rejects(createFixedProductionPort({ ready: true, authorizePhase: () => true }), /PRIVATE_BRIDGE_INPUT_REFUSED/)
     await assert.rejects(inspectPrivateBridgeGate({ claims: { trusted: true, authorizePhase: () => true } }), /PRIVATE_BRIDGE_INPUT_REFUSED/)
     await assert.rejects(inspectPrivateHost({ roots: ['caller-root'] }), /HOST_INSPECTION_REFUSED/)

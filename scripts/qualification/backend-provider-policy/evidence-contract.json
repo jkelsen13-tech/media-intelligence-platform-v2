@@ -1,0 +1,83 @@
+{
+  "version": "qik-provider-capability-policy-1",
+  "status": "HOLD",
+  "mode": "source-only-offline-inspection",
+  "inspectionOnly": true,
+  "refusalCode": "PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD",
+  "liveAuthorized": false,
+  "productionActivationAvailable": false,
+  "networkMode": "none",
+  "provider": "Supabase",
+  "scope": {
+    "projectRef": "qikvmopbtijoebdqosyq",
+    "host": "db.qikvmopbtijoebdqosyq.supabase.co",
+    "port": 5432,
+    "database": "postgres",
+    "serverConnectionMechanism": "PostgreSQL server-side dblink using libpq",
+    "authentication": "password; sslrootcert verifies server trust, not sslcert client authentication"
+  },
+  "evidence": {
+    "ticketId": "SU-495218",
+    "threadId": "1a10bb76d10d2ea8",
+    "initialTechnicalReply": {
+      "messageId": "1a115364f2345ce3",
+      "date": "Wed, 07 Oct 2026 07:14:01 +0000 (UTC)",
+      "dateUtc": "2026-10-07T07:14:01Z"
+    },
+    "customerScopeClarification": {
+      "messageId": "1a11546d42c12d7f",
+      "date": "Wed, 7 Oct 2026 02:32:05 -0500",
+      "dateUtc": "2026-10-07T07:32:05Z"
+    },
+    "finalTechnicalReply": {
+      "messageId": "1a11571c51facd28",
+      "date": "Wed, 07 Oct 2026 08:18:59 +0000 (UTC)",
+      "dateUtc": "2026-10-07T08:18:59Z"
+    }
+  },
+  "capabilities": {
+    "externalLibpq": {
+      "sslmode": "verify-full",
+      "downloadedSupabaseCaThroughSslrootcert": "SUPPORTED",
+      "certificateChainVerification": "SUPPORTED",
+      "hostnameVerification": "SUPPORTED"
+    },
+    "managedServerDblink": {
+      "customerAccessibleTrustFile": "NOT_SUPPORTED",
+      "stableManagedHostSystemTrustInterface": "NOT_GUARANTEED",
+      "endpointVerifyFullConfiguration": "NOT_CONFIRMED_SUPPORTED",
+      "encryptionAloneSatisfiesChainAndHostnameRequirement": false
+    },
+    "credentialAndLoggingPrivacy": {
+      "documentedDblinkExposureMatrixProvided": false,
+      "projectLogsAndSpecificSyntheticFailureInvestigationOffered": true,
+      "unobservedProviderSystemsOrAllFailurePathsAbsenceEstablished": false
+    }
+  },
+  "originalFrozenPackage": {
+    "frozen675Head": "675654be5a778c3173e682c4013031cb7796ed36",
+    "sourceLockSha256": "be46812c3154b58162037d93a755b544e8862d81eb26738369db6887bdf8f18c",
+    "guardedDoSha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46",
+    "serverTrustPathSetting": "ssl_ca_file",
+    "serverDblinkVerificationPrecedesOneRowCompareAndSwap": true,
+    "serverSslCaFileEqualsExternalDownloadedCaEstablished": false,
+    "operationalStatus": "SUPERSEDED_PROVIDER_CAPABILITY_HOLD"
+  },
+  "externalReplacement": {
+    "actualConsumerSourceRequirementsMapping": "HISTORICAL_SOURCE_MAPPED_LIVE_BINDING_UNQUALIFIED",
+    "equivalenceEstablished": false,
+    "activationAuthorized": false,
+    "mappedHistoricalSourceCommit": "948f83d050ec6b15badd9aa96d867e2840e54840"
+  },
+  "authorization": {
+    "callerClaimsCanAuthorize": false,
+    "futureAcceptedRootsCanRemoveThisHold": false,
+    "callerTrustOrConfigurationOverridesAccepted": false,
+    "newReviewedSourceRequiredToReconsiderHold": true
+  },
+  "closedQualification": {
+    "classification": "historical source and synthetic response qualification",
+    "managedProviderReadinessEstablished": false,
+    "nativePg17QualificationEstablished": false
+  }
+}

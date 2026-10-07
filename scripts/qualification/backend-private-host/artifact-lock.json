@@ -15,8 +15,8 @@
       "sha256": "80a0f1c1071bec6c4719cc3bbb2950e6798427ab1d94435f638f49b1e7471b34"
     },
     "bridge.mjs": {
-      "bytes": 10816,
-      "sha256": "40ef35acdb16234e12781e8c95c7acca4095a506cd032a82aa60b2deae35f939"
+      "bytes": 14047,
+      "sha256": "e76edce6035c4710590f284443fdbe7c4d2c833ff08ffe6dbda9f7fd3db2b3d8"
     },
     "private_worker.py": {
       "bytes": 8808,
@@ -28,7 +28,7 @@
     },
     "integration-lock.json": {
       "bytes": 1383,
-      "sha256": "5561931199ef60f1f69f964573dedb47144f86d7c6754bd60583d993bbb02d30"
+      "sha256": "cf7932651fd12db5612210cc04d19931f74b3d51bae7506ce9957e481c192c15"
     },
     "inert.mjs": {
       "bytes": 1386,

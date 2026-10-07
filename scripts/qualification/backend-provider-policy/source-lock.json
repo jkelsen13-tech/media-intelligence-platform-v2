@@ -1,0 +1,9 @@
+{
+  "version": "qik-provider-capability-source-lock-1",
+  "sources": {
+    "evidence-contract.json": {
+      "bytes": 3280,
+      "sha256": "bd88f873718af394d64e47ca86eef6527fc9a0187d068a80ccd0c8d2271bbbcb"
+    }
+  }
+}

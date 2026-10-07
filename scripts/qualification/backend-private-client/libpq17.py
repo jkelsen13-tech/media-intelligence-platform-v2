@@ -465,7 +465,11 @@ class PrivateTransport:
                 _refuse("TRANSACTION_STATUS_REFUSED")
         except BaseException as error:
             self._failed = True
-            self.finish()
+            try:
+                self.finish()
+            except BaseException:
+                # Cleanup failure cannot replace the original sanitized refusal.
+                pass
             if isinstance(error, TransportRefused):
                 raise
             _refuse("TRANSPORT_INTERRUPTED" if isinstance(error, (KeyboardInterrupt, SystemExit)) else "TRANSPORT_FAILED")
@@ -703,12 +707,15 @@ class PrivateTransport:
 
     def finish(self):
         """Release PGconn. Closing never acknowledges rollback or original drain."""
-        if self._conn:
-            connection, self._conn = self._conn, None
-            self._pq.PQfinish(connection)
+        connection, self._conn = self._conn, None
         self._failed = True
         self._first_result = None
         # Retain outstanding uncertainty after close for independent verification.
+        if connection:
+            try:
+                self._pq.PQfinish(connection)
+            except BaseException as error:
+                _refuse("TRANSPORT_INTERRUPTED" if isinstance(error, (KeyboardInterrupt, SystemExit)) else "TRANSPORT_FAILED")
 
 
 def main(argv=None):
