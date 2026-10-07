@@ -43,6 +43,7 @@
   },
   "overrides": {
     "dompurify": "3.4.16",
+    "source-map-js": "1.2.2",
     "vite-plugin-static-copy@3.4.0": {
       "chokidar": "4.0.3"
     }
