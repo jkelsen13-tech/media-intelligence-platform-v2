@@ -1,0 +1,95 @@
+--- a/http.c
++++ b/http.c
+@@ -338,8 +338,16 @@
+ static size_t
+ http_writeback(void *contents, size_t size, size_t nmemb, void *userp)
+ {
+-	size_t realsize = size * nmemb;
+ 	StringInfo si = (StringInfo)userp;
++	/* Audit responses are minimal. Bound each header/body buffer to 64KiB. */
++	const size_t max_response_bytes = 64 * 1024;
++	size_t realsize;
++	if ( size && nmemb > max_response_bytes / size )
++		return 0;
++	realsize = size * nmemb;
++	if ( si->len < 0 || (size_t)si->len > max_response_bytes ||
++	     realsize > max_response_bytes - (size_t)si->len )
++		return 0;
+ 	appendBinaryStringInfo(si, (const char*)contents, (int)realsize);
+ 	return realsize;
+ }
+@@ -554,7 +562,7 @@
+ 			if (buffer)
+ 			{
+ 				snprintf(buffer, total_len, "%s: %s", header_fld, header_val);
+-				elog(DEBUG2, "pgsql-http: optional request header '%s'", buffer);
++				elog(DEBUG2, "pgsql-http: optional request header configured");
+ 				headers = curl_slist_append(headers, buffer);
+ 				pfree(buffer);
+ 			}
+@@ -715,10 +723,20 @@
+ 		int so2 = pmatch[2].rm_so;
+ 		int eo2 = pmatch[2].rm_eo;
+ 
++		/* Reserve the terminator and refuse invalid/oversized matches. */
++		if ( si->cursor < 0 || si->cursor > si->len ||
++		     eo0 <= 0 || eo0 > si->len - si->cursor ||
++		     so1 < 0 || eo1 <= so1 || eo1 > eo0 || eo1 - so1 >= RVSZ ||
++		     so2 < 0 || eo2 <= so2 || eo2 > eo0 || eo2 - so2 >= RVSZ )
++		{
++			regfree(&regex);
++			elog(ERROR, "mip_http_response_header_refused");
++		}
++
+ 		/* Copy the matched portions out of the string */
+-		memcpy(rv1, si->data+si->cursor+so1, Min(eo1-so1, RVSZ));
++		memcpy(rv1, si->data+si->cursor+so1, eo1-so1);
+ 		rv1[eo1-so1] = '\0';
+-		memcpy(rv2, si->data+si->cursor+so2, Min(eo2-so2, RVSZ));
++		memcpy(rv2, si->data+si->cursor+so2, eo2-so2);
+ 		rv2[eo2-so2] = '\0';
+ 
+ 		/* Move forward for next match */
+@@ -765,7 +783,7 @@
+ 	if (opt->curlopt_type == CURLOPT_STRING)
+ 	{
+ 		err = curl_easy_setopt(handle, opt->curlopt, opt->curlopt_val);
+-		elog(DEBUG2, "pgsql-http: set '%s' to value '%s', return value = %d", opt->curlopt_str, opt->curlopt_val, err);
++		elog(DEBUG2, "pgsql-http: set '%s', return value = %d", opt->curlopt_str, err);
+ 	}
+ 	/* Argument is a long */
+ 	else if (opt->curlopt_type == CURLOPT_LONG)
+@@ -792,7 +810,7 @@
+ 		elog(DEBUG2, "pgsql-http: set 'CURLOPT_SSLKEYTYPE' to value 'PEM', return value = %d", err);
+ 
+ 		err = curl_easy_setopt(handle, opt->curlopt, &blob);
+-		elog(DEBUG2, "pgsql-http: set '%s' to value '%s', return value = %d", opt->curlopt_str, opt->curlopt_val, err);
++		elog(DEBUG2, "pgsql-http: set '%s', return value = %d", opt->curlopt_str, err);
+ 	}
+ #endif
+ 	else
+@@ -1122,12 +1140,9 @@
+ 	/* Set the HTTP content encoding to all curl supports */
+ 	CURL_SETOPT(g_http_handle, CURLOPT_ACCEPT_ENCODING, "");
+ 
+-	if ( method != HTTP_HEAD )
+-	{
+-		/* Follow redirects, as many as 5 */
+-		CURL_SETOPT(g_http_handle, CURLOPT_FOLLOWLOCATION, 1);
+-		CURL_SETOPT(g_http_handle, CURLOPT_MAXREDIRS, 5);
+-	}
++	/* Nonproduction bounded-audit fork: refuse every redirect. */
++	CURL_SETOPT(g_http_handle, CURLOPT_FOLLOWLOCATION, 0);
++	CURL_SETOPT(g_http_handle, CURLOPT_MAXREDIRS, 0);
+ 
+ 	if ( g_use_keepalive )
+ 	{
+@@ -1238,7 +1253,7 @@
+ 	* PERFORM THE REQUEST!
+ 	**************************************************************************/
+ 	http_return = curl_easy_perform(g_http_handle);
+-	elog(DEBUG2, "pgsql-http: queried '%s'", uri);
++	elog(DEBUG2, "pgsql-http: request completed");
+ 	elog(DEBUG2, "pgsql-http: http_return '%d'", http_return);
+ 
+ 	/* Clean up some input things we don't need anymore */

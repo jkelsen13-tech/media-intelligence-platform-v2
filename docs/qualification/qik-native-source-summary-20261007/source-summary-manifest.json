@@ -1,0 +1,206 @@
+{
+  "schema": "qik-native-evidence-20261007-1",
+  "mode": "offline-native-evidence-integrity",
+  "productionAuthorized": false,
+  "liveReady": false,
+  "hold": "PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD",
+  "source": {
+    "localCommit": "e91436f9982a9038e30d9858956ee808b22bc727",
+    "remoteCommit": "6b55a05d25f5a6d1bf3ea8573268eeedf641207a",
+    "tree": "95a185b70ef5611a2cfd387a06ceeff26a170e16"
+  },
+  "originalSourcePins": [
+    {
+      "key": "guardedOperation",
+      "path": "scripts/qualification/qik-audit-route-transform-proposal-20261002.sql",
+      "bytes": 7101,
+      "sha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+    },
+    {
+      "key": "preSubmitDeadlines",
+      "path": "scripts/qualification/qik-audit-route-pre-submit-deadlines-20261002.sql",
+      "bytes": 324,
+      "sha256": "2ac3ca583a82fc717cca12b9f64d40019339b3be7c2aeefb0948473a5336518d"
+    },
+    {
+      "key": "inheritedContract",
+      "path": "scripts/qualification/backend-client-contract/contract.mjs",
+      "bytes": 24099,
+      "sha256": "209102c3a77015ab53d34718e499d5568243d7eb6a7471c3035875b115b704f9"
+    },
+    {
+      "key": "inheritedInputs",
+      "path": "scripts/qualification/backend-client-contract/required-inputs.json",
+      "bytes": 1136,
+      "sha256": "f7f33a1f5a391c3ee2148ae9a4b1bd3701e04f4e0467fe00fbc6ee10d84750c6"
+    },
+    {
+      "key": "package",
+      "path": "scripts/qualification/backend-live-rehearsal/package.mjs",
+      "bytes": 19837,
+      "sha256": "0051f2d1b2b219ced57e1590c88a64c2ac18cd2b9a2a26bb39f5394543dc40a4"
+    },
+    {
+      "key": "inert",
+      "path": "scripts/qualification/backend-live-rehearsal/inert.mjs",
+      "bytes": 1408,
+      "sha256": "a827785291d4e136f17c2a1e6352241213b5024ad086d8cce01e8f0b74ce825d"
+    },
+    {
+      "key": "cli",
+      "path": "scripts/qualification/backend-live-rehearsal/inspect.mjs",
+      "bytes": 1169,
+      "sha256": "ffc97f7f4de06f2986ee83d4b6976d63aeabad32f0beb0e13a24478cb807daa3"
+    },
+    {
+      "key": "inputs",
+      "path": "scripts/qualification/backend-live-rehearsal/required-inputs.json",
+      "bytes": 1161,
+      "sha256": "303791820407872a7ab1296607f83afc05aea8ec0c988cb297d2202da8f72146"
+    },
+    {
+      "key": "clientBinding",
+      "path": "scripts/qualification/backend-live-rehearsal/client-binding-contract.json",
+      "bytes": 5654,
+      "sha256": "4ba4c09a7d96281efc579e38ee5d2080ea4f0882dc274ed05a798be383d4b841"
+    },
+    {
+      "key": "protocol",
+      "path": "scripts/qualification/backend-live-rehearsal/submission-protocol.json",
+      "bytes": 9759,
+      "sha256": "71eba36030f172fc642d52cf676eb98e8421309f191d0c31b9848e362b6e1e94"
+    },
+    {
+      "key": "auxiliary",
+      "path": "scripts/qualification/backend-live-rehearsal/auxiliary-commands.json",
+      "bytes": 2967,
+      "sha256": "dc656c95ad65008a80db3c1560e37ce8a515f323d6601c42518edb66032ee5aa"
+    },
+    {
+      "key": "sqlBoundary",
+      "path": "scripts/qualification/backend-rollback-sql/boundary.mjs",
+      "bytes": 10951,
+      "sha256": "dacff35888b623465ab406714e253c139f199150dc7afcd38bfe38b474604a0b"
+    },
+    {
+      "key": "sqlSnapshot",
+      "path": "scripts/qualification/backend-rollback-sql/snapshot-public.sql",
+      "bytes": 7352,
+      "sha256": "adf179a0dffbf042801e84caadea92da56165c2118a42bfe263c2ed46da76b47"
+    },
+    {
+      "key": "sqlRowGuards",
+      "path": "scripts/qualification/backend-rollback-sql/inspect-rows-public.sql",
+      "bytes": 261,
+      "sha256": "fcef821e4b3bf324a41880061f6d234c6561161b5fae04ab0f5d3e1c01b5e0bf"
+    },
+    {
+      "key": "sqlPrivateRowGuards",
+      "path": "scripts/qualification/backend-rollback-sql/inspect-rows-private-booleans.sql",
+      "bytes": 2081,
+      "sha256": "90ff1fc36827dd2767b86a625d19d4ef97a7e8121936b0696201788179d7c6d6"
+    },
+    {
+      "key": "sqlPrivateCapture",
+      "path": "scripts/qualification/backend-rollback-sql/capture-rows-private.sql",
+      "bytes": 508,
+      "sha256": "4aa06e049b12eb7edba96ce029e3e0fbb377ca60d17280200fa95c3d3278c314"
+    },
+    {
+      "key": "sqlPrivateCompare",
+      "path": "scripts/qualification/backend-rollback-sql/compare-rows-private.sql",
+      "bytes": 3568,
+      "sha256": "1ee43c88f697d328a6c73dbbe6ff6c307da270b9a57034c230908483cf47e141"
+    },
+    {
+      "key": "sqlAuthority",
+      "path": "scripts/qualification/backend-rollback-sql/authority-commands.json",
+      "bytes": 809,
+      "sha256": "d26bb6504cbcdd63595d5815b337d929613436daf46699c4220bc7e77f827cbb"
+    }
+  ],
+  "guardedOperation": {
+    "path": "scripts/qualification/qik-audit-route-transform-proposal-20261002.sql",
+    "bytes": 7101,
+    "sha256": "5be14204dbd68b44ccaba07222bd6a5b4f9d9f627ce4750fce596211e6d6fb46"
+  },
+  "receipts": {
+    "doClassifications": "docs/qualification/qik-native-source-summary-20261007/do-classification-summary.json",
+    "nativeClientWorker": "docs/qualification/qik-native-source-summary-20261007/client-summary.json",
+    "fixedPrivatePipe": "docs/qualification/qik-native-source-summary-20261007/pipe-summary.json"
+  },
+  "files": [
+    {
+      "path": "docs/qualification/qik-native-source-summary-20261007/client-summary.json",
+      "bytes": 4337,
+      "sha256": "e13b5f5fc53f41c8f06d56822e635cf773aa98efc4be577a0348dd093db09e92"
+    },
+    {
+      "path": "docs/qualification/qik-native-source-summary-20261007/do-classification-summary.json",
+      "bytes": 9531,
+      "sha256": "91f009fd95a9cc404e9056fb83c977e6cd73f51ae1e8b91e7e5a44122fba7c55"
+    },
+    {
+      "path": "docs/qualification/qik-native-source-summary-20261007/pipe-summary.json",
+      "bytes": 742,
+      "sha256": "52d87e86e78e8f0c16ae18d2dcedb45cb88f2a10419a34c1a0f1ff9452148feb"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/002_http_transport_proposal.sql",
+      "bytes": 4288,
+      "sha256": "3854a41ed90ff94803dc05c17931d239603f0cbf098c7d966bb08d0b4b5751fe"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/003_ack_contract.sql",
+      "bytes": 1147,
+      "sha256": "d9ac6fde6ffd35ebaa703ad69567a1633f47f1c85ec47d0f8be99fff0d0f63d9"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/src/LICENSE.pgsql-http.md",
+      "bytes": 1083,
+      "sha256": "115c0f245f92e1a6a486407e9a08301c65d724209c35dcae4df2836dac9128a8"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/src/http-bounded-response.c",
+      "bytes": 43924,
+      "sha256": "4a1b9fddc953ef4e7b240d3ec61c5e7267c0f886cd1fc0df8999a55bb29ecea1"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/src/pgsql-http-bounded-response.patch",
+      "bytes": 3555,
+      "sha256": "31b68380e181e3be00b57aa082287ca5376b855bc9228160c853945f6c2dcd77"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/src/upstream-http-v1.6.3.c",
+      "bytes": 43320,
+      "sha256": "20f27b859c1ed7bae3eb35e01db17a6855ff428dbcf1192d1c504a71e5d51d03"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/response_component.c",
+      "bytes": 1983,
+      "sha256": "924eb301fbfc298b11ec4a9a4ff1564cbc8177f0ba0e0135a2ed9454e811ad82"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/test_response_component.py",
+      "bytes": 4290,
+      "sha256": "2da08f08d0e6fc2a0c4afc9ce79c403c5b386888f02c4a1bd21ebc6928e29642"
+    },
+    {
+      "path": "scripts/qualification/qik-selected-catalog-read-20261007/approval-scope.md",
+      "bytes": 3271,
+      "sha256": "a2cf8d5962061c2024fcdbb79c8bf2bf8dbe3225a4530ddb13a215a5b696227f"
+    },
+    {
+      "path": "scripts/qualification/qik-selected-catalog-read-20261007/catalog-observation.sql",
+      "bytes": 16108,
+      "sha256": "abc567e9f35a3dd9f6908a203aee3f3d6e027a503683c7f89e5f1317a30e3c69"
+    }
+  ],
+  "scope": "WHITELISTED_SOURCE_AND_DERIVED_SUMMARY_ONLY",
+  "limitations": [
+    "Summaries are deterministic allowlisted projections, not raw native execution receipts.",
+    "Detailed fixture traces, connection strings, credential/config/runtime material, captured SQL and artifact binaries stay in the remote private MIP workspace.",
+    "Verification checks named source and summary integrity only; no producer authentication, native replay, provider privacy/current qik/live authority."
+  ],
+  "summaryKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+}

@@ -1,0 +1,27 @@
+{
+  "mode": "isolated-native-process-pipe-qualification",
+  "productionAuthorized": false,
+  "liveReady": false,
+  "passed": true,
+  "caseCount": 4,
+  "cases": [
+    {
+      "case": "fixed-private-pipe-native-success",
+      "passed": true
+    },
+    {
+      "case": "fixed-private-pipe-native-scram-refusal",
+      "passed": true
+    },
+    {
+      "case": "fixed-private-pipe-native-distinct-verifier-inventory",
+      "passed": true
+    },
+    {
+      "case": "fixed-private-pipe-native-parent-close-releases-session-without-rollback-ack",
+      "passed": true
+    }
+  ],
+  "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT",
+  "originalReceiptSha256": "55d6f27aa4650e8bd2d5e66c799042ce0501e471c471d62999d8211401034f15"
+}

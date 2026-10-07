@@ -1,0 +1,272 @@
+[
+  {
+    "case": "preexisting-column-privilege-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "opaque-ampersand-password-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "ordinary-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "query-sentinel-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "username-sentinel-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "historical-query-sentinel-red",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "historical-username-sentinel-red",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "missing-selected-true-row",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "missing-row",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "false-id-only",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "missing-row",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "unrelated-false-id-row-success",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "unsafe-logging-guard",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "logging_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "missing-update",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "grant_missing",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "missing-operation",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "state_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "wrong-operation",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "state_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "duplicate-singleton",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "state_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "malformed-source",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "source_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "duplicate-parameter",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "source_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "already-applied",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "already_applied",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "bad-auditor",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "bad-tls",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "rowcount-zero",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "write_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "independent-session-lock-contention",
+    "classification": "native-pg-stub-dblink-imported-do",
+    "pass": true,
+    "expectedRefusal": "inflight",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "inside-do-timeout-red",
+    "classification": "native-pg-stub-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "pre-submission-timeout-green",
+    "classification": "native-pg-stub-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-ordinary",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-query-sentinel",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-username-sentinel",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-percent-encoded",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-ampersand",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": null,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-bad-password",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-missing-login",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_probe_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-rowcount-zero",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_write_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-stale-target",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_already_applied",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-missing-update",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_grant_missing",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "exact-byte-real-dblink-invalid-session-identity",
+    "classification": "native-pg-real-dblink-standalone-exact-byte-do",
+    "pass": true,
+    "expectedRefusal": "qik_audit_route_identity_refused",
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "independent-row-lock-timeout",
+    "classification": "native-pg-real-independent-lock-standalone-exact-byte-do",
+    "pass": true,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "independent-stale-cas-predicate",
+    "classification": "native-pg-instrumented-isolated-source-predicate-only",
+    "pass": true,
+    "rowCount": 0,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "autonomous-audit-probe-outer-rollback-retention",
+    "classification": "native-pg-real-dblink-exact-historical-consumer",
+    "pass": true,
+    "retainedAuditRows": 1,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  },
+  {
+    "case": "attached-publication-guard-autonomous-rejection-outer-rollback-retention",
+    "classification": "native-pg-real-dblink-exact-historical-consumer-and-guard",
+    "pass": true,
+    "retainedAuditRows": 1,
+    "receiptKind": "WHITELISTED_DERIVED_SUMMARY_NOT_RAW_NATIVE_RECEIPT"
+  }
+]
