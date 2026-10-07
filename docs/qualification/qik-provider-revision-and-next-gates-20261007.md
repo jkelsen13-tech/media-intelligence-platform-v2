@@ -58,7 +58,15 @@ The new package runs 53 Python probes and 21 pipe/controller probes, plus actual
 
 No usable approved native PG17 server fixture is present. Server executables/directories are absent; the local Docker socket exists but its read-only inventory contains zero containers. No fixture was created or started. Installed libpq17.11/42-symbol inspection is ABI availability, not native TLS/auth/cancel qualification. Provider logs and internal telemetry were not observed.
 
-Full exact-source Node22/24 regression/build/audit and fresh independent review are recorded separately when completed. Source/synthetic, native, hosted, owner-device and execution gates stay distinct. This report is not a security certification or permission to install or execute.
+The initial integrated GitHub proposal `8211aef604da0c60bd5a48e0cb2edc3bbb156498`, tree `95e4b8e6dd298d35357030642522c4503aab6c72`, passed public CI [37645556200](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37645556200): 1,800 tests each on Node22.23.3 and Node24.21.0, zero failures/skips/cancellations, both builds. Its Node24 audit reported one HIGH finding; that workflow step is a continue-on-error triage report. This does not overwrite the earlier local five-HIGH observation or the historical October3 zero audit.
+
+The corrected dependency successor's exact GitHub head/tree, final Node22/24 regression/build/audit receipts and fresh independent review are recorded in the accompanying candidate manifest when completed. Source/synthetic, native, hosted, owner-device and execution gates stay distinct. This report is not a security certification or permission to install or execute.
+
+## New material dependency repair
+
+Current qualification identified [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q), updated October5, after the preserved October3 audit. A separate implementation worker committed `d7a04fcdd43424bc8d7fbbe13888eafa423aa861`: the compatible `source-map-js` patch from 1.2.1 to exact 1.2.2. Only this lock entry, its exact override, an unchanged BSD license copy and the qualification document were added or changed. No app dependency, Vite configuration, qik source/pin, production setting or public evidence policy changed.
+
+The [patch qualification](../SOURCE_MAP_JS_COMPATIBLE_PATCH_2026-10-07.md) retains both distinct pre-fix audit observations, exact registry artifact integrity, a genuinely isolated installed-byte inventory, the bounded malformed/valid source-map probe and its complete reproducible source. Five compatibility groups and four inherited build-tool tests pass on each local Node22/24; both actual application builds pass with byte-identical 437-file output. Full and omit-dev worker audits report zero. This is a development/build tooling repair, not native/provider operational qualification. Final remote CI still binds its own exact corrected head.
 
 ## Public certificate custody
 
