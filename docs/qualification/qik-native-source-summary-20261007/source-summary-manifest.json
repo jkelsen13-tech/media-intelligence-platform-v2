@@ -131,6 +131,11 @@
   },
   "files": [
     {
+      "path": ".github/workflows/golden.yml",
+      "bytes": 1000,
+      "sha256": "ff99f80ebc24c77002b07c779ebff0d6eb312b0f51be610745a0d22a63e7a210"
+    },
+    {
       "path": "docs/qualification/qik-native-source-summary-20261007.md",
       "bytes": 9530,
       "sha256": "216fced4c0b0f461d6f98877111bb7a7a31c2abf21118f66f8cbed68075502e8"
@@ -157,8 +162,8 @@
     },
     {
       "path": "docs/qualification/qik-review-repairs-20261008.md",
-      "bytes": 9917,
-      "sha256": "90f1fb534fd319944c68a6133460eb73f14e01a99adacae90d37e244fab1bb01"
+      "bytes": 11274,
+      "sha256": "d1559dac25e93f9e5b4f62df0128bfd4ffef127df3ebfafa6d09a3d669c93866"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/002_http_transport_proposal.sql",
@@ -242,8 +247,8 @@
     },
     {
       "path": "scripts/qualification/qik-native-evidence-20261007/verify.mjs",
-      "bytes": 25817,
-      "sha256": "ee4126f3a22c7cc0fb4631e16067b3cf543491e5d234bbadb662d0be667eab3d"
+      "bytes": 25851,
+      "sha256": "643a6f24f92d590d1f2cd7c69fef4e5f6f614092f914008a84658bf5f7e97d24"
     },
     {
       "path": "scripts/qualification/qik-selected-catalog-read-20261007/approval-scope.md",

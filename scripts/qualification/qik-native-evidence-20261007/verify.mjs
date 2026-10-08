@@ -80,6 +80,7 @@ export const REQUIRED_PACKAGE_PATHS = Object.freeze([
   'docs/qualification/qik-provider-revision-and-next-gates-20261007.md',
   'docs/qualification/qik-review-repairs-20261008.md',
   'scripts/qualification/qik-native-evidence-20261007/build-source-summary-manifest.mjs',
+  '.github/workflows/golden.yml',
 ]);
 // These are declared private receipt references and a declared library profile.
 // Their preimages are absent from this public package; no byte verification is possible.

@@ -50,7 +50,7 @@ It checks actual public source/package bytes, declared fixed classifications,
 outcomes and metadata. Replacing supplied summaries and repinning all their
 hashes cannot confer native execution or producer authority. The fixed package
 includes the safe proposals, component/SQL test sources, verifier, documentation
-and CI test wrappers; the manifest omits its own hash. The deterministic
+and CI test wrappers and workflow; the manifest omits its own hash. The deterministic
 builder rebinds only this package and does not access private receipt bytes.
 
 ## HTTP commit, input and failure semantics
@@ -127,6 +127,28 @@ CI are recorded in the remote final handoff after source convergence. A green
 CI step alone is not an audit result; actual Node24 audit JSON must be inspected.
 Node22 audit is separately skipped by the existing workflow. Original native
 DO/client/pipe receipts are preserved rather than re-executed in this repair.
+
+## Hosted CI prerequisite correction
+
+The first repaired public source candidate
+ba0e200e802aed5b9f1d4fd9c2a099f877a01cc0,
+tree d8d6ae8abef415d43d90fe0f50fec0d8a2034dff, failed
+[CI37806859658](https://github.com/jkelsen13-tech/media-intelligence-platform-v2/actions/runs/37806859658).
+Both Node jobs passed1,832 of1,833 tests and failed the new sanitizer component
+test at compile time because the hosted runners lacked `curl/curl.h`. Their
+build and audit steps were skipped; the separately passing local full suites,
+builds and actual zero audit do not turn this failed CI into qualification.
+
+The corrective child adds the official Ubuntu `libcurl4-openssl-dev` package
+to the ephemeral runner before tests. It preserves the actual header-dependent
+C components and ASan/UBSan checks. No test is skipped or weakened and no
+package is installed in the saved executor or on a physical device. The
+complete HTTP extension, real network transport, provider trust and live
+installation remain unqualified. No C or SQL source changed for this CI repair.
+The fixed public package now includes30 required files, including the CI
+workflow, so the successor manifest binds this prerequisite source as well.
+The failed parent candidate and its logs remain preserved; the corrective
+child requires its own exact-source CI and fresh independent review.
 
 The separately reviewed frontend
 c143cddf0f4bb6e6815b85a179fb1f54d6f3cef1,

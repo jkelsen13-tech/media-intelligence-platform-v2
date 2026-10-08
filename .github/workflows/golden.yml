@@ -20,6 +20,13 @@ jobs:
       # G-ALG-0 added a real runtime dependency (graphology); the suite no
       # longer runs on zero node_modules, so npm ci is required first.
       - run: npm ci
+      - name: Install libcurl headers for C qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libcurl4-openssl-dev
+          printf '#include <curl/curl.h>\n' | gcc -x c -fsyntax-only -
       - run: npm test
       - run: npm run build
       - name: Dependency audit (triage report)
