@@ -131,6 +131,11 @@
   },
   "files": [
     {
+      "path": "docs/qualification/qik-native-source-summary-20261007.md",
+      "bytes": 9530,
+      "sha256": "216fced4c0b0f461d6f98877111bb7a7a31c2abf21118f66f8cbed68075502e8"
+    },
+    {
       "path": "docs/qualification/qik-native-source-summary-20261007/client-summary.json",
       "bytes": 4337,
       "sha256": "e13b5f5fc53f41c8f06d56822e635cf773aa98efc4be577a0348dd093db09e92"
@@ -146,14 +151,24 @@
       "sha256": "52d87e86e78e8f0c16ae18d2dcedb45cb88f2a10419a34c1a0f1ff9452148feb"
     },
     {
+      "path": "docs/qualification/qik-provider-revision-and-next-gates-20261007.md",
+      "bytes": 18988,
+      "sha256": "90030f97619223fa1097a545fe1d09b14126fe9867c3a546b9b4d08db09aa09c"
+    },
+    {
+      "path": "docs/qualification/qik-review-repairs-20261008.md",
+      "bytes": 9917,
+      "sha256": "90f1fb534fd319944c68a6133460eb73f14e01a99adacae90d37e244fab1bb01"
+    },
+    {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/002_http_transport_proposal.sql",
-      "bytes": 4288,
-      "sha256": "3854a41ed90ff94803dc05c17931d239603f0cbf098c7d966bb08d0b4b5751fe"
+      "bytes": 5506,
+      "sha256": "48a7109c4c66a01196044b09cbb209e961447fad6ad7c7a21b3936c07d6865b9"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/003_ack_contract.sql",
-      "bytes": 1147,
-      "sha256": "d9ac6fde6ffd35ebaa703ad69567a1633f47f1c85ec47d0f8be99fff0d0f63d9"
+      "bytes": 3606,
+      "sha256": "bde55ed0b4b7897e9d05c8c57e3901f965eea72047dd46540b6db2829e213208"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/src/LICENSE.pgsql-http.md",
@@ -162,18 +177,48 @@
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/src/http-bounded-response.c",
-      "bytes": 43924,
-      "sha256": "4a1b9fddc953ef4e7b240d3ec61c5e7267c0f886cd1fc0df8999a55bb29ecea1"
+      "bytes": 43969,
+      "sha256": "2082cadc2e31ada55db1ea06759c0e05cbef6847127b9c0df85eb395abfb4741"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/src/pgsql-http-bounded-response.patch",
-      "bytes": 3555,
-      "sha256": "31b68380e181e3be00b57aa082287ca5376b855bc9228160c853945f6c2dcd77"
+      "bytes": 30881,
+      "sha256": "c1ecb5c44b3520dce7991e9ba44ef7a743b595dbaeb17db399e46cad30bcca47"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/src/upstream-http-v1.6.3.c",
       "bytes": 43320,
       "sha256": "20f27b859c1ed7bae3eb35e01db17a6855ff428dbcf1192d1c504a71e5d51d03"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/component_support.py",
+      "bytes": 4559,
+      "sha256": "0cc028132eb4bcbd223e7988b5ba85df3cd42dda139907e8c8f0aef6b75aa0c2"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/curl_policy_component.c",
+      "bytes": 17378,
+      "sha256": "dd58fa31c86e76aeefe6c6d881021272c8b93a9944c547638a191e0dfe754f43"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/header_component.c",
+      "bytes": 2020,
+      "sha256": "c3e85050cf34c31b42876afc1508d8e03a44f06441302712f2e4483d47be8c53"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/http_contract_fixture.sql",
+      "bytes": 7551,
+      "sha256": "e01e2d4148ae2b686f04ee1c419ab3a6ee5062a28c360fb622963e0958117b83"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/http_contract_native.py",
+      "bytes": 7434,
+      "sha256": "3bab172e5138df812001b25b9a2c76f64674171de34866e560060287bbdbf806"
+    },
+    {
+      "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/http_contract_regressions.sql",
+      "bytes": 16727,
+      "sha256": "00fe3aa20d7ad7b01b44c62ddb4395a1f30be6d96b2ddb8a87cd0aa815ffa4cd"
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/response_component.c",
@@ -182,18 +227,53 @@
     },
     {
       "path": "scripts/qualification/qik-http-source-proposal-20261007/tests/test_response_component.py",
-      "bytes": 4290,
-      "sha256": "2da08f08d0e6fc2a0c4afc9ce79c403c5b386888f02c4a1bd21ebc6928e29642"
+      "bytes": 5760,
+      "sha256": "8a23e15e39e55c40ccca1d1b5978ef88faa26c0f37a688507384f2e4f4ada85f"
+    },
+    {
+      "path": "scripts/qualification/qik-native-evidence-20261007/README.md",
+      "bytes": 4252,
+      "sha256": "e10ac9a22a7116ee2268ffae655d7d7befe8f55fc24a2ebcc8dc8264835002d0"
+    },
+    {
+      "path": "scripts/qualification/qik-native-evidence-20261007/build-source-summary-manifest.mjs",
+      "bytes": 3048,
+      "sha256": "b919830fb50815ae69b668e711c759a74913bb06a248be41d1c818e51134e46b"
+    },
+    {
+      "path": "scripts/qualification/qik-native-evidence-20261007/verify.mjs",
+      "bytes": 25817,
+      "sha256": "ee4126f3a22c7cc0fb4631e16067b3cf543491e5d234bbadb662d0be667eab3d"
     },
     {
       "path": "scripts/qualification/qik-selected-catalog-read-20261007/approval-scope.md",
-      "bytes": 3271,
-      "sha256": "a2cf8d5962061c2024fcdbb79c8bf2bf8dbe3225a4530ddb13a215a5b696227f"
+      "bytes": 8726,
+      "sha256": "04c12150a3cd92c8772951d1bedfd2c42c9825778a16033cfc0c32746a6a8914"
     },
     {
       "path": "scripts/qualification/qik-selected-catalog-read-20261007/catalog-observation.sql",
-      "bytes": 16108,
-      "sha256": "abc567e9f35a3dd9f6908a203aee3f3d6e027a503683c7f89e5f1317a30e3c69"
+      "bytes": 16859,
+      "sha256": "f6172aea3e5c1d61d4e3516755c2bb7af213bb6a68c0c62a3c13b6bccb3c66eb"
+    },
+    {
+      "path": "tests/qualification/qik-catalog-observation-scope-review-repair.test.mjs",
+      "bytes": 6630,
+      "sha256": "cf0cf896be976b7a8a3913f5299a4df90ec9c5247274245af185840801c5cb01"
+    },
+    {
+      "path": "tests/qualification/qik-http-contract-review-repair.test.mjs",
+      "bytes": 8311,
+      "sha256": "71dd418d6a604a37d3c11c8bd6c14491d07c88d9050e97e7f304870d5d974cb3"
+    },
+    {
+      "path": "tests/qualification/qik-http-curl-review-repair.test.mjs",
+      "bytes": 5563,
+      "sha256": "95167a739ca9219492bc3b4a240a881e607e0ad7aff03502123c4e58ec3149d3"
+    },
+    {
+      "path": "tests/qualification/qik-native-evidence-20261007.test.mjs",
+      "bytes": 21486,
+      "sha256": "3b0796eb6b1ca3456f35c5b8b35899c3b4f9b1023fa5cb90acd65d1b63a63825"
     }
   ],
   "scope": "WHITELISTED_SOURCE_AND_DERIVED_SUMMARY_ONLY",

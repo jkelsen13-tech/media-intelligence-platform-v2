@@ -1,7 +1,17 @@
--- PREPARED APPROVAL PACKAGE ONLY. Never submit without future exact-file review
--- and owner authorization for this single catalog observation.
--- Fixed public expected hashes are compared internally. No observed definition,
--- configuration, ACL, source text, new hash, operational row or URI is returned.
+-- CONDITIONAL SCOPE MANIFEST ONLY. No current owner authorization request.
+-- Never submit before accepted private credential delivery, custody/memory and
+-- database/provider/executor log behavior, exact-file review and owner approval.
+-- Privileged postgres observation: pg_get_functiondef reads full definitions of
+-- mip_comparison_install.audit_probe(boolean), mip_factual.guard_publication(),
+-- mip_factual.log_rejection(jsonb,text),
+-- mip_factual_transport.dblink_exec(text,text), and
+-- mip_factual_transport_raw.dblink_exec(text,text) inside the database session.
+-- Credential-adjacent source text may be processed transiently in server memory;
+-- fixed boolean output does not remove that read or establish logging/zeroization.
+-- proconfig, ACLs and selected dependencies are also compared internally.
+-- Only 49 fixed labels and two booleans are returned; no observed definition,
+-- configuration, ACL, URI, credential, new hash, operational row or error text.
+-- See approval-scope.md for the exact conditional scope and unmet prerequisites.
 BEGIN READ ONLY;
 SET LOCAL statement_timeout = '5000ms';
 SET LOCAL lock_timeout = '500ms';

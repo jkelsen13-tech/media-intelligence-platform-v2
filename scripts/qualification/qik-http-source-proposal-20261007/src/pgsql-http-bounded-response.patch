@@ -1,6 +1,134 @@
 --- a/http.c
 +++ b/http.c
-@@ -338,8 +338,16 @@
+@@ -30,13 +30,19 @@
+ /* Constants */
+ #define HTTP_VERSION "1.6.1"
+ #define HTTP_ENCODING "gzip"
+-#define CURL_MIN_VERSION 0x071400 /* 7.20.0 */
++#define CURL_MIN_VERSION 0x073400 /* 7.52.0: explicit pre-proxy refusal */
++#define HTTP_REQUEST_MAX_BYTES 65536
++#define HTTP_HEADER_MAX_COUNT 32
++#define HTTP_HEADER_FIELD_MAX_BYTES 128
++#define HTTP_HEADER_VALUE_MAX_BYTES 8191
++#define HTTP_URI_MAX_BYTES 2048
++#define HTTP_TIMEOUT_MAX_MS 5000
++#define HTTP_CONNECT_TIMEOUT_MAX_MS 1000
+ 
+ /* System */
+ #include <regex.h>
+ #include <string.h>
+ #include <stdlib.h>
+-#include <limits.h>	/* INT_MAX */
+ #include <signal.h> /* SIGINT */
+ 
+ /* PostgreSQL */
+@@ -125,14 +131,10 @@
+ 	HEADER_VALUE = 1
+ };
+ 
+-/*
+- * String/Long for strings and numbers, blob only for
+- * CURLOPT_SSLKEY_BLOB and CURLOPT_SSLCERT_BLOB
+- */
++/* The specialized audit fork has no credential, key, or blob option API. */
+ typedef enum {
+ 	CURLOPT_STRING,
+-	CURLOPT_LONG,
+-	CURLOPT_BLOB
++	CURLOPT_LONG
+ } http_curlopt_type;
+ 
+ /* CURLOPT string/enum value mapping */
+@@ -141,69 +143,26 @@
+ 	char *curlopt_val;
+ 	CURLoption curlopt;
+ 	http_curlopt_type curlopt_type;
+-	bool superuser_only;
+ } http_curlopt;
+ 
+ 
+-/* CURLOPT values we allow user to set at run-time */
+-/* Be careful adding these, as they can be a security risk */
++/* Only non-secret, bounded configuration is available at run-time.
++ * CURLOPT_PROXY_CAINFO is deliberately unsupported, like all proxy options.
++ * The /mip/trust namespace is a future read-only deployment contract;
++ * validation here neither opens files nor qualifies a trust consumer. */
+ static http_curlopt settable_curlopts[] = {
+-	{ "CURLOPT_CAINFO", NULL, CURLOPT_CAINFO, CURLOPT_STRING, false },
+-	{ "CURLOPT_TIMEOUT", NULL, CURLOPT_TIMEOUT, CURLOPT_LONG, false },
+-	{ "CURLOPT_TIMEOUT_MS", NULL, CURLOPT_TIMEOUT_MS, CURLOPT_LONG, false },
+-	{ "CURLOPT_CONNECTTIMEOUT", NULL, CURLOPT_CONNECTTIMEOUT, CURLOPT_LONG, false },
+-	{ "CURLOPT_CONNECTTIMEOUT_MS", NULL, CURLOPT_CONNECTTIMEOUT_MS, CURLOPT_LONG, false },
+-	{ "CURLOPT_USERAGENT", NULL, CURLOPT_USERAGENT, CURLOPT_STRING, false },
+-	{ "CURLOPT_USERPWD", NULL, CURLOPT_USERPWD, CURLOPT_STRING, false },
+-	{ "CURLOPT_IPRESOLVE", NULL, CURLOPT_IPRESOLVE, CURLOPT_LONG, false },
+-#if LIBCURL_VERSION_NUM >= 0x070903 /* 7.9.3 */
+-	{ "CURLOPT_SSLCERTTYPE", NULL, CURLOPT_SSLCERTTYPE, CURLOPT_STRING, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x070e01 /* 7.14.1 */
+-	{ "CURLOPT_PROXY", NULL, CURLOPT_PROXY, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXYPORT", NULL, CURLOPT_PROXYPORT, CURLOPT_LONG, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x071301 /* 7.19.1 */
+-	{ "CURLOPT_PROXYUSERNAME", NULL, CURLOPT_PROXYUSERNAME, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXYPASSWORD", NULL, CURLOPT_PROXYPASSWORD, CURLOPT_STRING, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x071504 /* 7.21.4 */
+-	{ "CURLOPT_TLSAUTH_USERNAME", NULL, CURLOPT_TLSAUTH_USERNAME, CURLOPT_STRING, false },
+-	{ "CURLOPT_TLSAUTH_PASSWORD", NULL, CURLOPT_TLSAUTH_PASSWORD, CURLOPT_STRING, false },
+-	{ "CURLOPT_TLSAUTH_TYPE", NULL, CURLOPT_TLSAUTH_TYPE, CURLOPT_STRING, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x071800 /* 7.24.0 */
+-	{ "CURLOPT_DNS_SERVERS", NULL, CURLOPT_DNS_SERVERS, CURLOPT_STRING, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x071900 /* 7.25.0 */
+-	{ "CURLOPT_TCP_KEEPALIVE", NULL, CURLOPT_TCP_KEEPALIVE, CURLOPT_LONG, false },
+-	{ "CURLOPT_TCP_KEEPIDLE", NULL, CURLOPT_TCP_KEEPIDLE, CURLOPT_LONG, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x072500 /* 7.37.0 */
+-	{ "CURLOPT_SSL_VERIFYHOST", NULL, CURLOPT_SSL_VERIFYHOST, CURLOPT_LONG, false },
+-	{ "CURLOPT_SSL_VERIFYPEER", NULL, CURLOPT_SSL_VERIFYPEER, CURLOPT_LONG, false },
+-#endif
+-	{ "CURLOPT_SSLCERT", NULL, CURLOPT_SSLCERT, CURLOPT_STRING, false },
+-	{ "CURLOPT_SSLKEY", NULL, CURLOPT_SSLKEY, CURLOPT_STRING, false },
+-#if LIBCURL_VERSION_NUM >= 0x073400  /* 7.52.0 */
+-	{ "CURLOPT_PRE_PROXY", NULL, CURLOPT_PRE_PROXY, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXY_CAINFO", NULL, CURLOPT_PROXY_TLSAUTH_USERNAME, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXY_TLSAUTH_USERNAME", NULL, CURLOPT_PROXY_TLSAUTH_USERNAME, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXY_TLSAUTH_PASSWORD", NULL, CURLOPT_PROXY_TLSAUTH_PASSWORD, CURLOPT_STRING, false },
+-	{ "CURLOPT_PROXY_TLSAUTH_TYPE", NULL, CURLOPT_PROXY_TLSAUTH_TYPE, CURLOPT_STRING, false },
+-#endif
+-#if LIBCURL_VERSION_NUM >= 0x074700  /* 7.71.0 */
+-	{ "CURLOPT_SSLKEY_BLOB", NULL, CURLOPT_SSLKEY_BLOB, CURLOPT_BLOB, false },
+-	{ "CURLOPT_SSLCERT_BLOB", NULL, CURLOPT_SSLCERT_BLOB, CURLOPT_BLOB, false },
+-#endif
+-	{ NULL, NULL, 0, 0, false } /* Array null terminator */
++	{ "CURLOPT_CAINFO", NULL, CURLOPT_CAINFO, CURLOPT_STRING },
++	{ "CURLOPT_TIMEOUT", NULL, CURLOPT_TIMEOUT, CURLOPT_LONG },
++	{ "CURLOPT_TIMEOUT_MS", NULL, CURLOPT_TIMEOUT_MS, CURLOPT_LONG },
++	{ "CURLOPT_CONNECTTIMEOUT", NULL, CURLOPT_CONNECTTIMEOUT, CURLOPT_LONG },
++	{ "CURLOPT_CONNECTTIMEOUT_MS", NULL, CURLOPT_CONNECTTIMEOUT_MS, CURLOPT_LONG },
++	{ NULL, NULL, 0, 0 }
+ };
+ 
+ /* Function signatures */
+ void _PG_init(void);
+ void _PG_fini(void);
+ static size_t http_writeback(void *contents, size_t size, size_t nmemb, void *userp);
+-static size_t http_readback(void *buffer, size_t size, size_t nitems, void *instream);
+ 
+ /* Global variables */
+ static bool g_use_keepalive;
+@@ -291,7 +250,7 @@
+ 							&g_timeout_msec,
+ 							0,
+ 							0,
+-							INT_MAX,
++							HTTP_TIMEOUT_MAX_MS,
+ 							PGC_USERSET,
+ 							GUC_NOT_IN_SAMPLE | GUC_UNIT_MS,
+ 							NULL,
+@@ -338,37 +297,27 @@
  static size_t
  http_writeback(void *contents, size_t size, size_t nmemb, void *userp)
  {
@@ -18,16 +146,346 @@
  	appendBinaryStringInfo(si, (const char*)contents, (int)realsize);
  	return realsize;
  }
-@@ -554,7 +562,7 @@
- 			if (buffer)
- 			{
- 				snprintf(buffer, total_len, "%s: %s", header_fld, header_val);
+ 
+-/**
+-* This function is passed into CURL as the CURLOPT_READFUNCTION,
+-* this allows the PUT operation to read the data it needs. We
+-* pass a StringInfo as our input, and per the callback contract
+-* return the number of bytes read at each call.
+-*/
+-static size_t
+-http_readback(void *buffer, size_t size, size_t nitems, void *instream)
+-{
+-	size_t reqsize = size * nitems;
+-	StringInfo si = (StringInfo)instream;
+-	size_t remaining = si->len - si->cursor;
+-	size_t readsize = Min(reqsize, remaining);
+-	memcpy(buffer, si->data + si->cursor, readsize);
+-	si->cursor += readsize;
+-	return readsize;
+-}
+-
+ static void
+ http_error(CURLcode err, const char *error_buffer)
+ {
+-	if ( strlen(error_buffer) > 0 )
+-		ereport(ERROR, (errmsg("%s", error_buffer)));
+-	else
+-		ereport(ERROR, (errmsg("%s", curl_easy_strerror(err))));
++	/* Curl diagnostics can contain endpoints or other request material. */
++	(void)err;
++	(void)error_buffer;
++	ereport(ERROR, (errmsg("mip_http_transport_refused")));
+ }
+ 
+ /* Utility macro to try a setopt and catch an error */
+@@ -388,20 +337,220 @@
+ static http_method
+ request_type(const char *method)
+ {
+-	if ( strcasecmp(method, "GET") == 0 )
+-		return HTTP_GET;
+-	else if ( strcasecmp(method, "POST") == 0 )
++	if ( strcmp(method, "POST") == 0 )
+ 		return HTTP_POST;
+-	else if ( strcasecmp(method, "PUT") == 0 )
+-		return HTTP_PUT;
+-	else if ( strcasecmp(method, "DELETE") == 0 )
+-		return HTTP_DELETE;
+-	else if ( strcasecmp(method, "HEAD") == 0 )
+-		return HTTP_HEAD;
+-	else if ( strcasecmp(method, "PATCH") == 0 )
+-		return HTTP_PATCH;
+-	else
+-		return HTTP_UNKNOWN;
++	return HTTP_UNKNOWN;
++}
++
++/* Reject truncation at an embedded NUL before any C-string interpretation. */
++static char *
++http_text_to_cstring(text *input)
++{
++	size_t len = VARSIZE_ANY_EXHDR(input);
++	if (len > HTTP_REQUEST_MAX_BYTES || memchr(VARDATA_ANY(input), '\0', len))
++		elog(ERROR, "mip_http_request_text_refused");
++	return text_to_cstring(input);
++}
++
++static bool
++http_ascii_alnum(unsigned char c)
++{
++	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
++	       (c >= '0' && c <= '9');
++}
++
++static bool
++http_request_header_valid(const char *field, const char *value)
++{
++	size_t i, len = strlen(field);
++	if (!len || len > HTTP_HEADER_FIELD_MAX_BYTES)
++		return false;
++	for (i = 0; i < len; i++)
++	{
++		unsigned char c = (unsigned char)field[i];
++		if (!http_ascii_alnum(c) && !strchr("!#$%&'*+-.^_`|~", c))
++			return false;
++	}
++	len = strlen(value);
++	if (len > HTTP_HEADER_VALUE_MAX_BYTES)
++		return false;
++	for (i = 0; i < len; i++)
++		if ((unsigned char)value[i] < 32 || (unsigned char)value[i] > 126)
++			return false;
++	return true;
++}
++
++static bool
++http_optional_header_allowed(const char *field)
++{
++	/* Keep authority, framing, and transport headers under curl/C control. */
++	return strcasecmp(field, "Content-Type") != 0 &&
++	       strcasecmp(field, "Host") != 0 &&
++	       strcasecmp(field, "Content-Length") != 0 &&
++	       strcasecmp(field, "Transfer-Encoding") != 0 &&
++	       strcasecmp(field, "Connection") != 0 &&
++	       strcasecmp(field, "Proxy-Authorization") != 0 &&
++	       strcasecmp(field, "Expect") != 0;
++}
++
++static struct curl_slist *
++http_append_request_header(struct curl_slist *headers, const char *field, const char *value)
++{
++	size_t total_len;
++	size_t bytes, count = 1;
++	char *buffer;
++	struct curl_slist *result;
++	struct curl_slist *item;
++	if (!http_request_header_valid(field, value))
++		elog(ERROR, "mip_http_request_header_refused");
++	total_len = strlen(field) + strlen(value) + 3;
++	bytes = total_len;
++	for (item = headers; item; item = item->next)
++	{
++		size_t item_bytes = strlen(item->data) + 1;
++		if (++count > HTTP_HEADER_MAX_COUNT || item_bytes > HTTP_REQUEST_MAX_BYTES - bytes)
++			elog(ERROR, "mip_http_request_header_refused");
++		bytes += item_bytes;
++	}
++	buffer = palloc(total_len);
++	snprintf(buffer, total_len, "%s: %s", field, value);
++	result = curl_slist_append(headers, buffer);
++	pfree(buffer);
++	if (!result)
++		elog(ERROR, "mip_http_request_header_refused");
++	return result;
++}
++
++static bool
++http_uri_allowed(const char *uri)
++{
++	size_t i, host_start = 8, label_start = 8, path_start, len = strlen(uri);
++	const char *segment;
++	bool host_has_letter = false, host_has_dot = false;
++	if (len > HTTP_URI_MAX_BYTES || len <= host_start || strncmp(uri, "https://", 8) != 0)
++		return false;
++	/* DNS authority only; no userinfo, escapes, literals, or empty labels. */
++	for (i = host_start; i < len && uri[i] != ':' && uri[i] != '/'; i++)
++	{
++		unsigned char c = (unsigned char)uri[i];
++		if (c == '.')
++		{
++			host_has_dot = true;
++			if (i == label_start || i - label_start > 63 || uri[i-1] == '-')
++				return false;
++			label_start = i + 1;
++		}
++		else if (!http_ascii_alnum(c) || (c >= 'A' && c <= 'Z'))
++		{
++			if (c != '-' || i == label_start)
++				return false;
++		}
++		if (c >= 'a' && c <= 'z')
++			host_has_letter = true;
++	}
++	if (i == label_start || i - label_start > 63 || i - host_start > 253 || uri[i-1] == '-' ||
++	    !host_has_letter || !host_has_dot)
++		return false;
++	/* A letter-only DNS suffix also excludes curl's numeric/hex IP forms. */
++	if (i - label_start < 2 ||
++	    (i - label_start == 9 && strncmp(uri + label_start, "localhost", 9) == 0) ||
++	    (i - label_start == 5 && strncmp(uri + label_start, "local", 5) == 0))
++		return false;
++	for (path_start = label_start; path_start < i; path_start++)
++		if (uri[path_start] < 'a' || uri[path_start] > 'z')
++			return false;
++	if (i == len || uri[i] != '/')
++		return false;
++	path_start = ++i;
++	if (strstr(uri + path_start, ".."))
++		return false;
++	segment = uri + path_start;
++	for (; i <= len; i++)
++	{
++		unsigned char c = (unsigned char)uri[i];
++		if (c == '/' || c == '\0')
++		{
++			size_t span = (size_t)(uri + i - segment);
++			if ((!span && c == '/') || (span == 1 && segment[0] == '.') ||
++			    (span == 2 && segment[0] == '.' && segment[1] == '.'))
++				return false;
++			segment = uri + i + 1;
++		}
++		else if (!http_ascii_alnum(c) && !strchr("-._~", c))
++			return false;
++	}
++	return true;
++}
++
++static bool
++http_cainfo_allowed(const char *value)
++{
++	const char *basename;
++	size_t i, len;
++	if (strncmp(value, "/mip/trust/", 11) != 0)
++		return false;
++	basename = value + 11;
++	len = strlen(basename);
++	if (len != 68 || strcmp(basename + 64, ".pem") != 0)
++		return false;
++	for (i = 0; i < 64; i++)
++		if (!((basename[i] >= 'a' && basename[i] <= 'f') || (basename[i] >= '0' && basename[i] <= '9')))
++			return false;
++	return true;
++}
++
++static bool
++http_curlopt_value_valid(const http_curlopt *opt, const char *value, long *number)
++{
++	long maximum;
++	size_t i, len = strlen(value);
++	if (opt->curlopt == CURLOPT_CAINFO && opt->curlopt_type == CURLOPT_STRING)
++		return http_cainfo_allowed(value);
++	if (opt->curlopt_type != CURLOPT_LONG)
++		return false;
++	switch (opt->curlopt)
++	{
++		case CURLOPT_TIMEOUT: maximum = HTTP_TIMEOUT_MAX_MS / 1000; break;
++		case CURLOPT_TIMEOUT_MS: maximum = HTTP_TIMEOUT_MAX_MS; break;
++		case CURLOPT_CONNECTTIMEOUT: maximum = HTTP_CONNECT_TIMEOUT_MAX_MS / 1000; break;
++		case CURLOPT_CONNECTTIMEOUT_MS: maximum = HTTP_CONNECT_TIMEOUT_MAX_MS; break;
++		default: return false;
++	}
++	if (!len || len > 4 || value[0] == '0')
++		return false;
++	*number = 0;
++	for (i = 0; i < len; i++)
++	{
++		if (value[i] < '0' || value[i] > '9')
++			return false;
++		*number = *number * 10 + value[i] - '0';
++	}
++	return *number <= maximum;
++}
++
++static CURLcode
++http_apply_transport_policy(CURL *handle)
++{
++	CURLcode result;
++#define HTTP_POLICY_SET(opt, value) do { \
++	result = curl_easy_setopt(handle, opt, value); \
++	if (result != CURLE_OK) return result; \
++} while (0)
++	HTTP_POLICY_SET(CURLOPT_PROXY, "");
++	HTTP_POLICY_SET(CURLOPT_PRE_PROXY, "");
++	HTTP_POLICY_SET(CURLOPT_SSL_VERIFYPEER, 1L);
++	HTTP_POLICY_SET(CURLOPT_SSL_VERIFYHOST, 2L);
++	HTTP_POLICY_SET(CURLOPT_FOLLOWLOCATION, 0L);
++	HTTP_POLICY_SET(CURLOPT_MAXREDIRS, 0L);
++#if LIBCURL_VERSION_NUM >= 0x075500 /* 7.85.0 */
++	HTTP_POLICY_SET(CURLOPT_PROTOCOLS_STR, "https");
++	HTTP_POLICY_SET(CURLOPT_REDIR_PROTOCOLS_STR, "https");
++#else
++	HTTP_POLICY_SET(CURLOPT_PROTOCOLS, (long)CURLPROTO_HTTPS);
++	HTTP_POLICY_SET(CURLOPT_REDIR_PROTOCOLS, (long)CURLPROTO_HTTPS);
++#endif
++#undef HTTP_POLICY_SET
++	return CURLE_OK;
+ }
+ 
+ /**
+@@ -486,6 +635,7 @@
+ 	ArrayIterator iterator;
+ 	Datum value;
+ 	bool isnull;
++	size_t count = 0;
+ 
+ #if PG_VERSION_NUM >= 90500
+ 	iterator = array_create_iterator(array, 0, NULL);
+@@ -504,6 +654,8 @@
+ 		Datum *values;
+ 		bool *nulls;
+ 
++		if (++count > HTTP_HEADER_MAX_COUNT)
++			elog(ERROR, "mip_http_request_header_refused");
+ 		/* Skip null array items */
+ 		if ( isnull )
+ 			continue;
+@@ -514,6 +666,8 @@
+ 		tup_len = HeapTupleHeaderGetDatumLength(rec);
+ 		tup_desc = lookup_rowtype_tupdesc(tup_type, tup_typmod);
+ 		ncolumns = tup_desc->natts;
++		if (ncolumns != 2)
++			elog(ERROR, "mip_http_request_header_refused");
+ 
+ 		/* Prepare for values / nulls to hold the data */
+ 		values = (Datum *) palloc0(ncolumns * sizeof(Datum));
+@@ -533,38 +687,21 @@
+ 		/* server to deal with. */
+ 		if ( ! nulls[HEADER_FIELD] )
+ 		{
+-			size_t total_len = 0;
+-			char  *buffer = NULL;
+ 			char *header_val;
+-			char *header_fld = TextDatumGetCString(values[HEADER_FIELD]);
+-
+-			/* Don't process "content-type" in the optional headers */
+-			if ( strlen(header_fld) <= 0 || strncasecmp(header_fld, "Content-Type", 12) == 0 )
+-			{
+-				elog(NOTICE, "'Content-Type' is not supported as an optional header");
+-				continue;
+-			}
++			char *header_fld = http_text_to_cstring(DatumGetTextP(values[HEADER_FIELD]));
++			if (!http_optional_header_allowed(header_fld))
++				elog(ERROR, "mip_http_request_header_refused");
+ 
+ 			if ( nulls[HEADER_VALUE] )
+ 				header_val = pstrdup("");
+ 			else
+-				header_val = TextDatumGetCString(values[HEADER_VALUE]);
+-			total_len = strlen(header_val) + strlen(header_fld) + sizeof(char) + sizeof(": ");
+-			buffer = palloc(total_len);
+-			if (buffer)
+-			{
+-				snprintf(buffer, total_len, "%s: %s", header_fld, header_val);
 -				elog(DEBUG2, "pgsql-http: optional request header '%s'", buffer);
-+				elog(DEBUG2, "pgsql-http: optional request header configured");
- 				headers = curl_slist_append(headers, buffer);
- 				pfree(buffer);
- 			}
-@@ -715,10 +723,20 @@
+-				headers = curl_slist_append(headers, buffer);
+-				pfree(buffer);
+-			}
+-			else
+-			{
+-				elog(ERROR, "pgsql-http: palloc(%zu) failure", total_len);
+-			}
++				header_val = http_text_to_cstring(DatumGetTextP(values[HEADER_VALUE]));
++			headers = http_append_request_header(headers, header_fld, header_val);
+ 			pfree(header_fld);
+ 			pfree(header_val);
+ 		}
++		else
++			elog(ERROR, "mip_http_request_header_refused");
+ 
+ 		/* Free all the temporary structures */
+ 		ReleaseTupleDesc(tup_desc);
+@@ -715,10 +852,20 @@
  		int so2 = pmatch[2].rm_so;
  		int eo2 = pmatch[2].rm_eo;
  
@@ -50,25 +508,249 @@
  		rv2[eo2-so2] = '\0';
  
  		/* Move forward for next match */
-@@ -765,7 +783,7 @@
- 	if (opt->curlopt_type == CURLOPT_STRING)
+@@ -749,63 +896,23 @@
+ 
+ 	if ( version_info->version_num < CURL_MIN_VERSION )
  	{
+-		elog(ERROR, "pgsql-http requires Curl version 0.7.20 or higher");
++		elog(ERROR, "mip_http_curl_version_refused");
+ 	}
+ }
+ 
+ static bool
+ set_curlopt(CURL* handle, const http_curlopt *opt)
+ {
+-	CURLcode err = CURLE_OK;
+-	char http_error_buffer[CURL_ERROR_SIZE] = "\0";
+-
+-	memset(http_error_buffer, 0, sizeof(http_error_buffer));
+-
+-	/* Argument is a string */
++	CURLcode err;
++	long value_long = 0;
++	if (!opt->curlopt_val || !http_curlopt_value_valid(opt, opt->curlopt_val, &value_long))
++		elog(ERROR, "mip_http_curl_option_refused");
+ 	if (opt->curlopt_type == CURLOPT_STRING)
+-	{
  		err = curl_easy_setopt(handle, opt->curlopt, opt->curlopt_val);
 -		elog(DEBUG2, "pgsql-http: set '%s' to value '%s', return value = %d", opt->curlopt_str, opt->curlopt_val, err);
-+		elog(DEBUG2, "pgsql-http: set '%s', return value = %d", opt->curlopt_str, err);
- 	}
- 	/* Argument is a long */
- 	else if (opt->curlopt_type == CURLOPT_LONG)
-@@ -792,7 +810,7 @@
- 		elog(DEBUG2, "pgsql-http: set 'CURLOPT_SSLKEYTYPE' to value 'PEM', return value = %d", err);
- 
- 		err = curl_easy_setopt(handle, opt->curlopt, &blob);
+-	}
+-	/* Argument is a long */
+-	else if (opt->curlopt_type == CURLOPT_LONG)
+-	{
+-		long value_long;
+-		errno = 0;
+-		value_long = strtol(opt->curlopt_val, NULL, 10);
+-		if ( errno == EINVAL || errno == ERANGE )
+-			elog(ERROR, "invalid integer provided for '%s'", opt->curlopt_str);
+-
++	else
+ 		err = curl_easy_setopt(handle, opt->curlopt, value_long);
+-		elog(DEBUG2, "pgsql-http: set '%s' to value '%ld', return value = %d", opt->curlopt_str, value_long, err);
+-	}
+-#if LIBCURL_VERSION_NUM >= 0x074700  /* 7.71.0 */
+-	/* Only used for CURLOPT_SSLKEY_BLOB and CURLOPT_SSLCERT_BLOB */
+-	else if (opt->curlopt_type == CURLOPT_BLOB)
+-	{
+-		struct curl_blob blob;
+-		blob.len = strlen(opt->curlopt_val) + 1;
+-		blob.data = opt->curlopt_val;
+-		blob.flags = CURL_BLOB_COPY;
+-
+-		err = curl_easy_setopt(handle, CURLOPT_SSLKEYTYPE, "PEM");
+-		elog(DEBUG2, "pgsql-http: set 'CURLOPT_SSLKEYTYPE' to value 'PEM', return value = %d", err);
+-
+-		err = curl_easy_setopt(handle, opt->curlopt, &blob);
 -		elog(DEBUG2, "pgsql-http: set '%s' to value '%s', return value = %d", opt->curlopt_str, opt->curlopt_val, err);
-+		elog(DEBUG2, "pgsql-http: set '%s', return value = %d", opt->curlopt_str, err);
+-	}
+-#endif
+-	else
+-	{
+-		/* Never get here */
+-		elog(ERROR, "invalid curlopt_type");
+-	}
+-
+-	if ( err != CURLE_OK )
+-	{
+-		http_error(err, http_error_buffer);
+-		return false;
+-	}
++	if (err != CURLE_OK)
++		http_error(err, "");
+ 	return true;
+ }
+ 
+@@ -829,16 +936,12 @@
+ 		curl_easy_reset(handle);
  	}
+ 
+-	/* Always want a default fast (1 second) connection timeout */
+-	/* User can over-ride with http_set_curlopt() if they wish */
+-	curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 1000);
+-	curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 5000);
+-
+-    /* Set the user agent. If not set, use PG_VERSION as default */
+-    curl_easy_setopt(handle, CURLOPT_USERAGENT, PG_VERSION_STR);
+-
+ 	if (!handle)
+-		ereport(ERROR, (errmsg("Unable to initialize CURL")));
++		ereport(ERROR, (errmsg("mip_http_transport_refused")));
++	if (curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 1000L) != CURLE_OK ||
++	    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 5000L) != CURLE_OK ||
++	    curl_easy_setopt(handle, CURLOPT_USERAGENT, PG_VERSION_STR) != CURLE_OK)
++		http_error(CURLE_FAILED_INIT, "");
+ 
+ 	/* Bring in any options the user has set this session */
+ 	while (1)
+@@ -850,6 +953,8 @@
+ 			set_curlopt(handle, &opt);
+ 	}
+ 
++	if (http_apply_transport_policy(handle) != CURLE_OK)
++		http_error(CURLE_FAILED_INIT, "");
+ 	g_http_handle = handle;
+ 	return handle;
+ }
+@@ -863,9 +968,8 @@
+ Datum http_reset_curlopt(PG_FUNCTION_ARGS)
+ {
+ 	size_t i = 0;
+-	/* Set up global HTTP handle */
+-	CURL * handle = http_get_handle();
+-	curl_easy_reset(handle);
++	if (g_http_handle)
++		curl_easy_reset(g_http_handle);
+ 
+ 	/* Clean out the settable_curlopts global cache */
+ 	while (1)
+@@ -915,17 +1019,18 @@
+ 	{
+ 	    Datum result;
+ 		HeapTuple tuple;
+-		text *option, *value;
++		text *option;
+ 		http_curlopt *opt = settable_curlopts + state->i++;
+ 		if (!opt->curlopt_str)
+ 			break;
+ 		if (!opt->curlopt_val)
+ 			continue;
+ 		option = cstring_to_text(opt->curlopt_str);
+-		value = cstring_to_text(opt->curlopt_val);
+ 		vals[0] = PointerGetDatum(option);
+-		vals[1] = PointerGetDatum(value);
+-		nulls[0] = nulls[1] = 0;
++		/* Retain the SQL row ABI but disclose names only. */
++		vals[1] = (Datum)0;
++		nulls[0] = false;
++		nulls[1] = true;
+         tuple = heap_form_tuple(funcctx->tuple_desc, vals, nulls);
+         result = HeapTupleGetDatum(tuple);
+ 		SRF_RETURN_NEXT(funcctx, result);
+@@ -945,6 +1050,7 @@
+ 	char *curlopt, *value;
+ 	text *curlopt_txt, *value_txt;
+ 	CURL *handle;
++	long checked_number = 0;
+ 
+ 	/* Version check */
+ 	http_check_curl_version(curl_version_info(CURLVERSION_NOW));
+@@ -959,8 +1065,8 @@
+ 	/* Read arguments */
+ 	curlopt_txt = PG_GETARG_TEXT_P(0);
+ 	value_txt = PG_GETARG_TEXT_P(1);
+-	curlopt = text_to_cstring(curlopt_txt);
+-	value = text_to_cstring(value_txt);
++	curlopt = http_text_to_cstring(curlopt_txt);
++	value = http_text_to_cstring(value_txt);
+ 
+ 	while (1)
+ 	{
+@@ -968,13 +1074,15 @@
+ 		if (!opt->curlopt_str) break;
+ 		if (strcasecmp(opt->curlopt_str, curlopt) == 0)
+ 		{
++			if (!http_curlopt_value_valid(opt, value, &checked_number))
++				elog(ERROR, "mip_http_curl_option_refused");
+ 			if (opt->curlopt_val) pfree(opt->curlopt_val);
+ 			opt->curlopt_val = MemoryContextStrdup(CacheMemoryContext, value);
+ 			PG_RETURN_BOOL(set_curlopt(handle, opt));
+ 		}
+ 	}
+ 
+-	elog(ERROR, "curl option '%s' is not available for run-time configuration", curlopt);
++	elog(ERROR, "mip_http_curl_option_refused");
+ 	PG_RETURN_BOOL(false);
+ }
+ 
+@@ -1008,7 +1116,6 @@
+ 	struct curl_slist *headers = NULL;
+ 	StringInfoData si_data;
+ 	StringInfoData si_headers;
+-	StringInfoData si_read;
+ 
+ 	int http_return;
+ 	long long_status;
+@@ -1043,6 +1150,8 @@
+ 	tup_typmod = HeapTupleHeaderGetTypMod(rec);
+ 	tup_desc = lookup_rowtype_tupdesc(tup_type, tup_typmod);
+ 	ncolumns = tup_desc->natts;
++	if (ncolumns != 5)
++		elog(ERROR, "mip_http_request_refused");
+ 
+ 	/* Build a temporary HeapTuple control structure */
+ 	tuple.t_len = HeapTupleHeaderGetDatumLength(rec);
+@@ -1057,17 +1166,14 @@
+ 	/* Break down the tuple into values/nulls lists */
+ 	heap_deform_tuple(&tuple, tup_desc, values, nulls);
+ 
+-	/* Read the URI */
+-	if ( nulls[REQ_URI] )
+-		elog(ERROR, "http_request.uri is NULL");
+-	uri = TextDatumGetCString(values[REQ_URI]);
+-
+-	/* Read the method */
+-	if ( nulls[REQ_METHOD] )
+-		elog(ERROR, "http_request.method is NULL");
+-	method_str = TextDatumGetCString(values[REQ_METHOD]);
++	/* Refuse unsafe URI and method shapes before configuring curl. */
++	if (nulls[REQ_URI] || nulls[REQ_METHOD])
++		elog(ERROR, "mip_http_request_refused");
++	uri = http_text_to_cstring(DatumGetTextP(values[REQ_URI]));
++	method_str = http_text_to_cstring(DatumGetTextP(values[REQ_METHOD]));
+ 	method = request_type(method_str);
+-	elog(DEBUG2, "pgsql-http: method_str: '%s', method: %d", method_str, method);
++	if (!http_uri_allowed(uri) || method != HTTP_POST || !settable_curlopts[0].curlopt_val)
++		elog(ERROR, "mip_http_request_refused");
+ 
+ 	/* Set up global HTTP handle */
+ 	g_http_handle = http_get_handle();
+@@ -1077,16 +1183,6 @@
+ 
+ 	/* Set the target URL */
+ 	CURL_SETOPT(g_http_handle, CURLOPT_URL, uri);
+-
+-
+-	/* Restrict to just http/https. Leaving unrestricted */
+-	/* opens possibility of users requesting file:/// urls */
+-	/* locally */
+-#if LIBCURL_VERSION_NUM >= 0x075400  /* 7.84.0 */
+-	CURL_SETOPT(g_http_handle, CURLOPT_PROTOCOLS_STR, "http,https");
+-#else
+-	CURL_SETOPT(g_http_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+-#endif
+ 
+ 
+ 	if ( g_use_keepalive )
+@@ -1116,32 +1212,31 @@
  #endif
- 	else
-@@ -1122,12 +1140,9 @@
+ 
+ 	/* Set up the HTTP timeout */
++	if (g_timeout_msec < 0 || g_timeout_msec > HTTP_TIMEOUT_MAX_MS)
++		elog(ERROR, "mip_http_curl_option_refused");
+ 	if (g_timeout_msec > 0)
+-		CURL_SETOPT(g_http_handle, CURLOPT_TIMEOUT_MS, g_timeout_msec);
++		CURL_SETOPT(g_http_handle, CURLOPT_TIMEOUT_MS, (long)g_timeout_msec);
+ 
  	/* Set the HTTP content encoding to all curl supports */
  	CURL_SETOPT(g_http_handle, CURLOPT_ACCEPT_ENCODING, "");
  
@@ -84,7 +766,126 @@
  
  	if ( g_use_keepalive )
  	{
-@@ -1238,7 +1253,7 @@
+ 		/* Add a keep alive option to the headers to reuse network sockets */
+-		headers = curl_slist_append(headers, "Connection: Keep-Alive");
++		headers = http_append_request_header(headers, "Connection", "Keep-Alive");
+ 	}
+ 	else
+ 	{
+ 		/* Add a close option to the headers to avoid open network sockets */
+-		headers = curl_slist_append(headers, "Connection: close");
++		headers = http_append_request_header(headers, "Connection", "close");
+ 	}
+ 
+ 	/* Let our charset preference be known */
+-	headers = curl_slist_append(headers, "Charsets: utf-8");
++	headers = http_append_request_header(headers, "Charsets", "utf-8");
+ 
+ 	/* Handle optional headers */
+ 	if ( ! nulls[REQ_HEADERS] )
+@@ -1150,85 +1245,29 @@
+ 		headers = header_array_to_slist(array, headers);
+ 	}
+ 
+-	/* If we have a payload we send it, assuming we're either POST, GET, PATCH, PUT or DELETE or UNKNOWN */
+-	if ( ! nulls[REQ_CONTENT] && values[REQ_CONTENT] )
++	/* This fork supports only a bounded POST payload. */
++	if (!nulls[REQ_CONTENT] && values[REQ_CONTENT])
+ 	{
+ 		text *content_text;
+ 		long content_size;
+ 		char *cstr;
+-		char buffer[1024];
+-
+-		/* Read the content type */
+-		if ( nulls[REQ_CONTENT_TYPE] || ! values[REQ_CONTENT_TYPE] )
+-			elog(ERROR, "http_request.content_type is NULL");
+-		cstr = TextDatumGetCString(values[REQ_CONTENT_TYPE]);
+-
+-		/* Add content type to the headers */
+-		snprintf(buffer, sizeof(buffer), "Content-Type: %s", cstr);
+-		headers = curl_slist_append(headers, buffer);
++		if (nulls[REQ_CONTENT_TYPE] || !values[REQ_CONTENT_TYPE])
++			elog(ERROR, "mip_http_request_refused");
++		cstr = http_text_to_cstring(DatumGetTextP(values[REQ_CONTENT_TYPE]));
++		if (!*cstr)
++			elog(ERROR, "mip_http_request_header_refused");
++		headers = http_append_request_header(headers, "Content-Type", cstr);
+ 		pfree(cstr);
+-
+-		/* Read the content */
+ 		content_text = DatumGetTextP(values[REQ_CONTENT]);
+ 		content_size = VARSIZE_ANY_EXHDR(content_text);
+-
+-		if ( method == HTTP_GET || method == HTTP_POST || method == HTTP_DELETE )
+-		{
+-			/* Add the content to the payload */
+-			CURL_SETOPT(g_http_handle, CURLOPT_POST, 1);
+-			if ( method == HTTP_GET )
+-			{
+-				/* Force the verb to be GET */
+-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "GET");
+-			}
+-			else if( method == HTTP_DELETE )
+-			{
+-				/* Force the verb to be DELETE */
+-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
+-			}
+-
+-			CURL_SETOPT(g_http_handle, CURLOPT_POSTFIELDS, (char *)(VARDATA(content_text)));
+-			CURL_SETOPT(g_http_handle, CURLOPT_POSTFIELDSIZE, content_size);
+-		}
+-		else if ( method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_UNKNOWN )
+-		{
+-			if ( method == HTTP_PATCH )
+-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "PATCH");
+-
+-			/* Assume the user knows what they are doing and pass unchanged */
+-			if ( method == HTTP_UNKNOWN )
+-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, method_str);
+-
+-			initStringInfo(&si_read);
+-			appendBinaryStringInfo(&si_read, VARDATA(content_text), content_size);
+-			CURL_SETOPT(g_http_handle, CURLOPT_UPLOAD, 1);
+-			CURL_SETOPT(g_http_handle, CURLOPT_READFUNCTION, http_readback);
+-			CURL_SETOPT(g_http_handle, CURLOPT_READDATA, &si_read);
+-			CURL_SETOPT(g_http_handle, CURLOPT_INFILESIZE, content_size);
+-		}
+-		else
+-		{
+-			/* Never get here */
+-			elog(ERROR, "illegal HTTP method");
+-		}
+-	}
+-	else if ( method == HTTP_DELETE )
+-	{
+-		CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
+-	}
+-	else if ( method == HTTP_HEAD )
+-	{
+-		CURL_SETOPT(g_http_handle, CURLOPT_NOBODY, 1);
+-	}
+-	else if ( method == HTTP_PUT || method == HTTP_POST )
+-	{
+-		/* If we had a content we do not reach that part */
+-		elog(ERROR, "http_request.content is NULL");
+-	}
+-	else if ( method == HTTP_UNKNOWN ){
+-		/* Assume the user knows what they are doing and pass unchanged */
+-		CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, method_str);
+-	}
++		if (content_size > HTTP_REQUEST_MAX_BYTES)
++			elog(ERROR, "mip_http_request_refused");
++		CURL_SETOPT(g_http_handle, CURLOPT_POST, 1L);
++		CURL_SETOPT(g_http_handle, CURLOPT_POSTFIELDS, (char *)(VARDATA_ANY(content_text)));
++		CURL_SETOPT(g_http_handle, CURLOPT_POSTFIELDSIZE, content_size);
++	}
++	else
++		elog(ERROR, "mip_http_request_refused");
+ 
+ 	pfree(method_str);
+ 	/* Set the headers */
+@@ -1238,7 +1277,7 @@
  	* PERFORM THE REQUEST!
  	**************************************************************************/
  	http_return = curl_easy_perform(g_http_handle);
@@ -93,3 +894,12 @@
  	elog(DEBUG2, "pgsql-http: http_return '%d'", http_return);
  
  	/* Clean up some input things we don't need anymore */
+@@ -1557,7 +1596,7 @@
+  					break;
+  				}
+  				default: {
+-					elog(DEBUG2, "skipping non-scalar value of '%s'", key);
++					elog(DEBUG2, "pgsql-http: non-scalar value skipped");
+ 					continue;
+  				}
+ 
