@@ -40,6 +40,19 @@ for (const fixture of [
       assert.ok(receipt.total > 0);
       for (const field of fixture.executed) assert.equal(receipt[field], true, field);
       assert.ok(Object.values(receipt.checks).every(value => value === true));
+      if (fixture.file === 'original_trigger_harness.py') {
+        const head = spawnSync('git', ['rev-parse', 'HEAD', 'HEAD^{tree}'], { encoding: 'utf8' });
+        assert.equal(head.status, 0, head.stderr);
+        const [commit, tree] = head.stdout.trim().split('\n');
+        assert.equal(receipt.sourceCommit, commit);
+        assert.equal(receipt.sourceTree, tree);
+        assert.equal(receipt.historicalSourceCommit, '948f83d050ec6b15badd9aa96d867e2840e54840');
+        assert.equal(receipt.sourceUnchangedDuringRun, true);
+        assert.deepEqual(receipt.sourceCheckoutAfterRun, receipt.sourceCheckout);
+        assert.deepEqual(receipt.sourceInputsAfterRun, receipt.sourceInputs);
+        assert.equal(Object.keys(receipt.sourceInputs).length, 11);
+        assert.equal(receipt.sourceInputs['checkout:scripts/qualification/qik-composition-20261012/original_trigger_harness.py'].sha256, receipt.harnessSha256);
+      }
       for (const field of ['productionAuthorized', 'providerQualified', 'durableCommitQualified', 'qikExecuted', 'liveReady']) {
         assert.equal(receipt[field], false, field);
       }

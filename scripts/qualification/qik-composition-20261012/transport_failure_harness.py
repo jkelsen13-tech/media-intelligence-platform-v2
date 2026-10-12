@@ -68,7 +68,7 @@ def main():
             assert hashlib.sha256(source).hexdigest() == STOCK_SHA
             (evidence / 'stock-http-v1.6.1.c').write_bytes(source)
             receipt.update(stockSourceUrl=public, stockSourceSha256=hashlib.sha256(source).hexdigest(),
-                           stockSourceCustody='Primary public GitHub commit fetched during qualification, retained exact hash-pinned bytes; reruns offline.',
+                           stockSourceCustody='Vendored exact hash-pinned bytes; source URL identifies the declared upstream commit; this run does not fetch upstream.',
                            stockSqlSha256=digest(here/'stock-http--1.6.sql'))
             assert receipt['stockSqlSha256']=='96873193304e4c0adf288c219d7ae75bb6d64ac5d24b8e457a35c61e04ef3c48'
             shutil.copy2(here/'stock-http--1.6.sql', evidence/'stock-http--1.6.sql')

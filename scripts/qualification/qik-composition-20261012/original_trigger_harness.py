@@ -12,9 +12,41 @@ HERE = pathlib.Path(__file__).resolve().parent
 IMAGE = 'postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826'
 ORIGINAL_SHA = '2b782d7d1698f165173ce6f3129e2fb0f02869956a0401d03922a7c3edcf4765'
 FORK_SHA = '2082cadc2e31ada55db1ea06759c0e05cbef6847127b9c0df85eb395abfb4741'
+HISTORICAL_COMMIT = '948f83d050ec6b15badd9aa96d867e2840e54840'
+HISTORICAL_PATH = 'supabase/qualification/mip-cutover-authority/009_factual_enforcement.sql'
+HISTORICAL_BLOB = '60e6198c3ad389c335dfe56024153a187f30f0a4'
 
 def sha(path): return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
 def literal(value): return "'" + str(value).replace("'", "''") + "'"
+
+def checkout_identity(source_path):
+ """Sample the harness's checkout, never the process's unrelated current dir.
+
+ HEAD/tree identify committed history. Status and input hashes separately
+ identify executed working-tree bytes; a dirty checkout is never called pristine.
+ Missing Git provenance fails before any runtime starts.
+ """
+ path=pathlib.Path(source_path).resolve()
+ def git(*args):
+  result=subprocess.run(['git','-C',str(path.parent if path.is_file() else path),*args],
+   text=True,capture_output=True,check=True)
+  return result.stdout.rstrip('\n')
+ head=git('rev-parse','HEAD')
+ status=git('status','--porcelain=v1','--untracked-files=all')
+ return {'root':git('rev-parse','--show-toplevel'),'headCommit':head,
+  'committedTree':git('rev-parse',head+'^{tree}'),
+  'parents':git('show','-s','--format=%P',head).split(),
+  'dirty':bool(status),'porcelainStatus':status.splitlines()}
+
+def source_input_manifest(paths,checkout_root):
+ """Hash compilation/runtime source inputs, including external historical input."""
+ root=pathlib.Path(checkout_root).resolve();result={}
+ for path in paths:
+  path=pathlib.Path(path).resolve();data=path.read_bytes()
+  try:key='checkout:'+path.relative_to(root).as_posix()
+  except ValueError:key='external:'+path.as_posix()
+  result[key]={'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)}
+ return result
 
 def main():
  p = argparse.ArgumentParser()
@@ -33,7 +65,8 @@ def main():
  'actualHttpExecuted':False,'postgrestHttpExecuted':False,'curlForkHttpExecuted':False,'originalTriggerExecuted':False,
  'providerQualified':False,'durableCommitQualified':False,'productionAuthorized':False,'qikExecuted':False,'liveReady':False,
  'hold':'PROVIDER_SERVER_DBLINK_VERIFY_FULL_HOLD','checks':{},'events':[], 'failedRuns':[],
- 'sourceCommit':'948f83d050ec6b15badd9aa96d867e2840e54840',
+ 'historicalSourceCommit':HISTORICAL_COMMIT,'historicalSourcePath':HISTORICAL_PATH,
+ 'historicalSourceBlob':HISTORICAL_BLOB,
  'limitations':['synthetic dependency schemas/fences/roles, not compiled installed source',
  'synthetic dblink extension routes only original logger fixed INSERT to HTTP',
  'qualification sender admits response shape only; unchanged production sender retains fail-closed gate',
@@ -57,6 +90,24 @@ def main():
   return result.returncode!=0 and expected in result.stderr
  try:
   verify('original009BytePin',sha(a.historical_source)==ORIGINAL_SHA)
+  receipt['sourceCheckout']=checkout_identity(__file__)
+  receipt['sourceCommit']=receipt['sourceCheckout']['headCommit']
+  receipt['sourceTree']=receipt['sourceCheckout']['committedTree']
+  src=HERE.parent/'qik-http-source-proposal-20261007';arch=HERE.parent/'qik-architecture-20261012'
+  source_paths=[pathlib.Path(__file__),pathlib.Path(a.historical_source),
+   HERE/'original_fixture_dependencies.sql',HERE/'original_transport_shim.sql',
+   src/'003_ack_contract.sql',src/'002_http_transport_proposal.sql',
+   src/'src/http-bounded-response.c',src/'tests/component_support.py',
+   arch/'strict_header_parser.c',arch/'receiver_fixture.sql',arch/'http_receiver_adapter.sql']
+  receipt['sourceInputs']=source_input_manifest(source_paths,receipt['sourceCheckout']['root'])
+  for path in source_paths:
+   path=path.resolve()
+   try:target=inputs/'source'/path.relative_to(receipt['sourceCheckout']['root'])
+   except ValueError:target=inputs/'source/external-historical'/path.name
+   target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(path,target)
+  historical=subprocess.run(['git','-C',receipt['sourceCheckout']['root'],'cat-file','blob',
+   HISTORICAL_COMMIT+':'+HISTORICAL_PATH],capture_output=True)
+  receipt['historicalGitObjectVerified']=historical.returncode==0 and hashlib.sha256(historical.stdout).hexdigest()==ORIGINAL_SHA
   receipt['original009Sha256']=sha(a.historical_source)
   receipt['harnessSha256']=sha(__file__)
   prefix=pathlib.Path(a.pg_prefix).resolve()
@@ -68,7 +119,6 @@ def main():
   def b64(value):return base64.urlsafe_b64encode(value).decode().rstrip('=')
   jwt_parts=[b64(json.dumps({'alg':'HS256','typ':'JWT'}).encode()),b64(json.dumps({'role':'mip_synthetic_http_caller','exp':int(time.time())+3600}).encode())]
   jwt_message='.'.join(jwt_parts);dummy_token=jwt_message+'.'+b64(hmac.new(dummy_secret.encode(),jwt_message.encode(),hashlib.sha256).digest())
-  src=HERE.parent/'qik-http-source-proposal-20261007';arch=HERE.parent/'qik-architecture-20261012'
   original=(src/'src/http-bounded-response.c').read_text()
   verify('fullForkBytePin',hashlib.sha256(original.encode()).hexdigest()==FORK_SHA)
   sys.path.insert(0,str(src/'tests'));from component_support import function
@@ -382,6 +432,13 @@ setInterval(()=>{},10000);
   shutil.rmtree(stage);receipt['ownedStageRemoved']=not stage.exists()
   receipt['privateTlsFixturesRemoved']=receipt['ownedStageRemoved']
   receipt['loggingAssumptions']={'localOnly':True,'log_statement':'none','log_min_error_statement':'panic','log_error_verbosity':'terse','providerPrivacyQualified':False}
+  if 'sourceCheckout' in receipt:
+   try:
+    receipt['sourceCheckoutAfterRun']=checkout_identity(__file__)
+    receipt['sourceInputsAfterRun']=source_input_manifest(source_paths,receipt['sourceCheckout']['root'])
+    receipt['sourceUnchangedDuringRun']=receipt['sourceCheckoutAfterRun']==receipt['sourceCheckout'] and receipt['sourceInputsAfterRun']==receipt['sourceInputs']
+   except (OSError,subprocess.SubprocessError):receipt['sourceUnchangedDuringRun']=False
+   if not receipt['sourceUnchangedDuringRun']:receipt['status']='FAILED_SOURCE_CHANGED';receipt['allChecksPassed']=False
   if not receipt['ownedContainerRemoved'] or not receipt['ownedStageRemoved']:receipt['status']='FAILED_CLEANUP';receipt['allChecksPassed']=False
   (evidence/'original-trigger-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
   print(json.dumps({'status':receipt['status'],'total':len(receipt['checks']),'actualHttpExecuted':receipt['actualHttpExecuted'],'receipt':str(evidence/'original-trigger-receipt.json')}))
