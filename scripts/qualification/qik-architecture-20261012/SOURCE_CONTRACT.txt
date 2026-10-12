@@ -1,0 +1,71 @@
+Source-only receiver adapter proposal
+
+This directory contains isolated qualification source. It supplies no provider
+installation, runtime trust, credentials, deployment or production authority.
+The original sender, source-summary pins and HOLD gates remain unchanged.
+
+Request contract
+- POST application/json with Prefer: return=minimal, tx=commit.
+- Exactly five string fields: id, explanation_id, assertion_digest,
+  attempted_transition and rule. No payload-provided authority or commit flag.
+- Canonical lowercase UUIDs, a lowercase64-character hex digest, published
+  transition and one of provenance/human_review/source_state.
+- The unnamed jsonb RPC argument consumes the whole sender JSON object without
+  renaming its keys. Mapping to the typed append function is internal.
+
+Response contract
+The adapter returns void and sets only transaction-local response.status201
+AFTER append succeeds. It never sets Preference-Applied, issues COMMIT, changes
+transaction-end policy or returns the receiver row as a success payload.
+PostgREST owns request transaction end and applied-preference headers. An exact
+future receiver configuration must genuinely acknowledge tx=commit; overriding
+server modes can honor the sender's preference. Plain commit or rollback modes
+must not be treated as sufficient when their applied acknowledgement is absent.
+
+The existing sender requires201, an empty body and exactly one qualifying
+Preference-Applied header. Even valid shape still raises
+mip_http_commit_unqualified. Neither adapter success nor a returned row establishes
+accepted durable event-specific commit proof. The adapter's extra type checks are
+stricter input rejection; the sender's policy is never weakened.
+
+Receiver semantics
+The disposable typed receiver pins its own binding, appends a minimal exact event,
+refuses changed payloads under the same eventID, exposes only a protected append
+function to the writer and read-only observation to a separate role. It has no
+foreign key to an uncommitted parent. Existing publication trigger/caller coverage
+is not replaced or qualified by this fixture. Same-transaction rollback still
+removes a receiver insert; the HTTP service must finish its independent request
+transaction before acknowledgement. Lost acknowledgement or failure after POST
+remains an unknown remote result; no live retry or commit authority is supplied.
+
+Qualification paths
+native_parser.py compiles the complete reviewed C fork plus a qualification-only
+parser entrypoint into an isolated PG17 cluster. --strict-candidate substitutes
+the proposed bounded header parser; --sanitize instruments the fork with ASan
+and UBSan. With --postgrest-path, adapter_contract_tests.py starts only official
+PostgREST13.0.7 on127.0.0.1 with a private local PG Unix socket and disposable
+synthetic roles. It tests real plaintext HTTP and SQL transaction outcomes.
+The curl fork's HTTP entrypoint is not connected to this server: its immutable
+HTTPS/endpoint/TLS policies are preserved. Mocked raw transport tests of the
+unchanged sender are separately labeled; loopback HTTP is not provider/TLS proof.
+
+Explicit native invocation (user-owned cloud tooling only):
+python3 scripts/qualification/qik-architecture-20261012/native_parser.py --pg-prefix <local-PG17-prefix> --evidence <cloud-local-output> --strict-candidate --sanitize --postgrest-path <local-official-PostgREST13.0.7-binary>
+
+The registered Node integration test requires MIP_ADAPTER_PG_PREFIX and
+MIP_ADAPTER_POSTGREST_PATH to opt in. Without them it is explicitly skipped,
+so generic npm/CI success must not be labeled native adapter qualification.
+No execution receipts or private proof are included in this source-only branch.
+
+Remaining qualification
+Actual fork HTTPS/curl transport, accepted receiver/credential/key custody,
+provider install/support/privacy, all-admitted-SQL caller equivalence, current
+catalog/compiler correspondence, concurrent request/timeout/crash behavior and
+accepted durable event observation remain separate requirements. This candidate
+keeps every production/provider/live authority flag false. Consequential source
+changes require fresh independent review on the exact final head.
+
+Primary interface references
+https://docs.postgrest.org/en/v13/references/api/functions.html
+https://docs.postgrest.org/en/v13/references/transactions.html
+https://docs.postgrest.org/en/v13/references/api/preferences.html
