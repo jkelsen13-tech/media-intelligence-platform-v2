@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "completedUtc": "2026-10-14T02:54:04.6665758Z",
+  "temporaryFolder": "MIP-Logo48-20261014-01a13736",
+  "localFolderAbsent": true,
+  "loopbackPreviewStopped": true,
+  "custody": "Only the owner-authorized task-created temporary folder was removed, after durable remote byte verification. No pre-existing owner files removed.",
+  "candidate": {
+    "commit": "310352b455ce58c255c01ec51014a49f1b50c5f9",
+    "tree": "3a367585a20a9dc6ff07a151e786ba1aba548ef9"
+  },
+  "evidenceCaptures": {
+    "commit": "ebd30977aed9b0034172285235d5a9f3360fb4e8",
+    "tree": "ee12bdd32c6bfb63e3341301876085974139a86c",
+    "files": 89,
+    "screenshots": 49,
+    "bytes": 7949801,
+    "verification": "PASS; independent raw download SHA256 and exact sizes"
+  },
+  "remoteByteVerificationReceiptCommit": "53632572d3fb9a59f974466ef4696629a7f98c96",
+  "merged": false,
+  "deployed": false,
+  "ownerVisualAcceptance": "PENDING",
+  "ownerInChatImageDelivery": "Parent has separately addressable verified PNGs; owner receipt is not inferred from tool-side rendering"
+}
