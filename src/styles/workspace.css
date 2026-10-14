@@ -160,9 +160,9 @@
 
 .ws-mobius {
   display: block;
-  width: 33px;
-  height: 33px;
-  flex: 0 0 33px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   object-fit: contain;
 }
 
@@ -185,6 +185,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .ws-logo {
@@ -266,11 +267,11 @@
   font-size: 11px;
 }
 
-.ws-nav-collapsed .ws-nav-label,
+.ws-nav-collapsed .ws-nav .ws-nav-label,
 .ws-nav-collapsed .ws-nav-active p,
 .ws-nav-collapsed .ws-nav-active .ws-change-btn,
 .ws-nav-collapsed .ws-collapse-btn span,
-.ws-nav-collapsed .ws-brand-wordmark {
+.ws-nav-collapsed .ws-nav .ws-brand-wordmark {
   display: none;
 }
 
@@ -665,7 +666,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.ws-drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ws-drawer-brand .ws-brand-name {
+  display: block;
+}
+
+.ws-drawer-head .ws-icon-btn {
+  flex: 0 0 44px;
+  width: 44px;
 }
 
 .ws-drawer-nav .ws-nav-links {

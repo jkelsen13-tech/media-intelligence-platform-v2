@@ -52,9 +52,10 @@ function MobiusMark() {
   return (
     <img
       className="ws-mobius"
-      src={`${import.meta.env.BASE_URL}assets/mip-mobius-logo.png`}
-      width="33"
-      height="33"
+      src={`${import.meta.env.BASE_URL}assets/MIP_B_Square_48px.png`}
+      srcSet={`${import.meta.env.BASE_URL}assets/MIP_B_Square_48px.png 1x, ${import.meta.env.BASE_URL}assets/MIP_B_Square_96px.png 2x, ${import.meta.env.BASE_URL}assets/MIP_B_Square_144px.png 3x`}
+      width="48"
+      height="48"
       alt=""
       aria-hidden="true"
     />
@@ -63,7 +64,7 @@ function MobiusMark() {
 
 function BrandWordmark() {
   return (
-    <span className="ws-brand-wordmark">
+    <span className="ws-brand-wordmark" aria-hidden="true">
       <span className="ws-brand-mip">MIP</span>
       <span className="ws-brand-name">Media Intelligence Platform</span>
     </span>
@@ -157,7 +158,7 @@ export default function InvestigationWorkspace({
       data-inspector-state={sharedInspectorHidden ? 'native' : inspectorOpen ? 'open' : 'collapsed'}
     >
       <aside className="ws-nav" aria-label="Investigation views">
-        <div className="ws-nav-brand">
+        <div className="ws-nav-brand" role="img" aria-label="MIP — Media Intelligence Platform">
           <MobiusMark />
           {!navCollapsed && <BrandWordmark />}
         </div>
@@ -226,7 +227,10 @@ export default function InvestigationWorkspace({
             }
           >
             <div className="ws-drawer-head">
-              <MobiusMark />
+              <div className="ws-drawer-brand" role="img" aria-label="MIP — Media Intelligence Platform">
+                <MobiusMark />
+                <BrandWordmark />
+              </div>
               <button type="button" className="ws-icon-btn" aria-label="Close navigation" onClick={closeDrawer}>
                 <X size={18} />
               </button>

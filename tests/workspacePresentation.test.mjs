@@ -214,7 +214,7 @@ test('workspace visual frame restores reviewed tokens and rail/inspector layout'
   assert.match(SHELL, /workspace-app/)
   assert.match(SHELL, /has-native-inspector/)
   assert.match(SHELL, /ws-mobius/)
-  assert.match(SHELL, /mip-mobius-logo\.png/)
+  assert.match(SHELL, /MIP_B_Square_48px\.png/)
   assert.match(SHELL, /import\.meta\.env\.BASE_URL/)
   assert.match(SHELL, /Media Intelligence Platform/)
   assert.doesNotMatch(SHELL, /className="ws-logo"/)
