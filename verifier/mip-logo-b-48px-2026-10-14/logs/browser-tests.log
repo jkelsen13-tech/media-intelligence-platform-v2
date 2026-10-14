@@ -1,0 +1,1 @@
+{"status":"PASS","cases":[{"name":"tablet","status":"PASS","checks":24},{"name":"tablet-narrow","status":"PASS","checks":24},{"name":"mobile-portrait","status":"PASS","checks":18},{"name":"mobile-narrow","status":"PASS","checks":18},{"name":"mobile-landscape","status":"PASS","checks":18},{"name":"mobile-wide-landscape","status":"PASS","checks":24}]}

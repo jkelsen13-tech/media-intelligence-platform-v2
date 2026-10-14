@@ -1,0 +1,41 @@
+Γ£ö global search Enter opens discovery with current input and preserves composition (21.7968ms)
+Γ£ö dimmed graph controls use native disabling and cannot execute graph actions (11.7709ms)
+Γ£ö mobile panel resize offers keyboard expansion, touch toggle, drag snap and cancellation (35.0737ms)
+Γ£ö evidence tabs support one tab stop and arrow/home/end selection with focus (6.5324ms)
+Γ£ö workspace evidence views use navigation semantics with current page (8.833ms)
+Γ£ö article source locators cannot expose unsafe clickable URLs and preserve titles (43.2429ms)
+Γ£ö policy and relationship unsafe locators remain non-clickable without hiding evidence (144.0036ms)
+Γ£ö coverage metrics stay honest stored counts, never a completeness score (78.0565ms)
+Γ£ö coverage disclosure is compact by default and still exposes every stored metric (0.7048ms)
+Γ£ö canvas keeps a usable minimum height instead of collapsing under chrome (1.1784ms)
+Γ£ö zoom controls stay inside the canvas wrap, not over coverage chrome (1.1372ms)
+Γ£ö significant canvas size changes and layoutRevision refit the graph (0.9255ms)
+Γ£ö inspector and legend use overlay or collapse on tablet without changing phone graph semantics (2.4661ms)
+Γ£ö graph remains the primary workspace on short viewports (1.0822ms)
+Γ£ö tablet overlay drawer paints above its backdrop, including ancestor stacking contexts (2.7821ms)
+Γ£ö layout fixture mounts the real overlay backdrop and inspector drawers (0.7958ms)
+Γ£ö layout-only change does not invent graph data or alter relationship checks (1.2874ms)
+Γ£ö light presentation applies without a backend flag (8.6246ms)
+Γ£ö five evidence dimensions stay separate; no aggregate score (1.849ms)
+Γ£ö canonical header ignores a selected child and keeps missing location explicit (3.4281ms)
+Γ£ö graph inspector stays dismissed until explicit select or a different subject (0.7158ms)
+Γ£ö optional denied arc metadata is distinguished from unexpected server errors (1.4134ms)
+Γ£ö failed assessment hashing withholds with hash_unavailable and still enforces integrity (2.0728ms)
+Γ£ö graph disposal destroys the renderer before clearing cards (0.8055ms)
+Γ£ö workspace tabs, chronology, honest unavailable, and phosphor are wired (1.424ms)
+Γ£ö phone drawer Escape dismisses and focus trap wraps (1.1863ms)
+Γ£ö workspace visual frame restores reviewed tokens and rail/inspector layout (1.4036ms)
+Γ£ö shared inspector grid collapses when Graph occupies the dock; World View inspector wraps (0.8712ms)
+Γ£ö raw backend errors stay behind disclosures; fail-closed copy is preserved (0.7845ms)
+Γ£ö shared workspace dates preserve date-only and clock precision (0.6153ms)
+Γ£ö shared workspace dates retain source offset and calendar day (0.4781ms)
+Γ£ö shared workspace dates distinguish malformed values from absent time (0.4571ms)
+Γ£ö canonical date-only context cannot acquire UTC from a selected child (3.0878ms)
+Γä╣ tests 33
+Γä╣ suites 0
+Γä╣ pass 33
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 32272.6476

@@ -1,0 +1,167 @@
+{
+  "status": "PASS_FOR_SCOPED_FRONTEND_INTEGRATION_AWAITING_OWNER_VISUAL_ACCEPTANCE",
+  "candidate": {
+    "repository": "jkelsen13-tech/media-intelligence-platform-v2",
+    "branch": "codex/mip-logo-b-48px-20261014",
+    "commit": "310352b455ce58c255c01ec51014a49f1b50c5f9",
+    "tree": "3a367585a20a9dc6ff07a151e786ba1aba548ef9"
+  },
+  "parent": {
+    "branch": "codex/mip-frontend-source-map-patch-20261007",
+    "commit": "c143cddf0f4bb6e6815b85a179fb1f54d6f3cef1",
+    "tree": "1a7136b74d9d42924acf77277d9b0e72d2415300",
+    "reviewed_qualified_ancestor": "06833f99de62877182305eda6fb034800b905f1e",
+    "qualification_limit": "Dependency-only c143 successor preserved; no new broader qualification or independent Cursor receipt claimed for it."
+  },
+  "source_changed_files": [
+    {
+      "path": "docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json",
+      "mode": "100644",
+      "bytes": 91578,
+      "sha256": "7c499f74f3d8727a5c3f52d5c14cf2a51b6b19a59e59996145e2c0677c955266",
+      "blob": "f43536cd200c84d7224860016f944623a74f7f2d"
+    },
+    {
+      "path": "public/assets/MIP_B_Square_144px.png",
+      "mode": "100644",
+      "bytes": 25484,
+      "sha256": "a5ec601bfee7f83622a20ad4f7952b8d80c7b6b48267b0b3a78c342a980f5bc4",
+      "blob": "e28a1f365b08ae24f076db852ae80b1309b7ed80"
+    },
+    {
+      "path": "public/assets/MIP_B_Square_48px.png",
+      "mode": "100644",
+      "bytes": 4460,
+      "sha256": "3807ae0394c05919c3785a2f1293c0d88feb16aa3d20c7e38707520b7ccef25f",
+      "blob": "9bf00c82033dbda8c7c49c61b8d2e4a2060695f7"
+    },
+    {
+      "path": "public/assets/MIP_B_Square_96px.png",
+      "mode": "100644",
+      "bytes": 13045,
+      "sha256": "a9b4d19c775d221283f2391b1a32ed1bd4174df82e28914ac5eb57c4f985e101",
+      "blob": "7b0589a987c5bb3281b063dd38af2719d7dd1b78"
+    },
+    {
+      "path": "src/components/InvestigationWorkspace.jsx",
+      "mode": "100644",
+      "bytes": 15571,
+      "sha256": "82320e10dde5005f6f5c77f7999b7c7f97d68a562ce567609d7405ae76fbcf89",
+      "blob": "f3f115ef6affae477f9a95738348678f2fba9146"
+    },
+    {
+      "path": "src/styles/workspace.css",
+      "mode": "100644",
+      "bytes": 24278,
+      "sha256": "a750954e4390c6dd0b746a9f6de0b2d975360058d59ba2d54f1f9040f865c773",
+      "blob": "6b483db3968b6bc61fe6c4378a9080b9a42ea8d6"
+    },
+    {
+      "path": "tests/workspacePresentation.test.mjs",
+      "mode": "100644",
+      "bytes": 14109,
+      "sha256": "ed4e0f2e8a5c3e5db9e7edfe95136fac6bc38ac9d3ad2203e9ad81b23a7f1d67",
+      "blob": "20f9d6f60832353566dde59dc23251c2ef601d6a"
+    }
+  ],
+  "artwork": {
+    "variation": "B",
+    "master": "MIP_B_Seam_Softened_Controlled_20261012.png",
+    "master_sha256": "b616cbfb7e8210bf2c1e25ef2bc0086de11667174274b47cb8e06fa2a2dbe7a8",
+    "lineage": "Exact qualified density files reused from completed preparation; no master, resize recipe, color, seam, reflection or alpha alteration."
+  },
+  "presentation": {
+    "canvas_css_px": 48,
+    "densities": [
+      1,
+      2,
+      3
+    ],
+    "exceptions": [],
+    "rail_css_widths": [
+      190,
+      160,
+      72
+    ],
+    "layout_note": "Inherited tablet rail breakpoint768-1023; wider landscape844 uses existing rail. Shell tracks unchanged. Logo brand remains noninteractive with one accessible name; no logo link invented."
+  },
+  "verification": {
+    "focused_tests": {
+      "pass": 33,
+      "fail": 0,
+      "files": [
+        "tests/workspacePresentation.test.mjs",
+        "tests/graphPageLayout.test.mjs",
+        "tests/convergenceAccessibility.test.mjs"
+      ],
+      "receipt": "logs/focused-tests-final.log"
+    },
+    "build": {
+      "status": "PASS",
+      "vite": "7.3.6",
+      "receipt": "logs/build-final.log",
+      "warnings": "Existing node:crypto browser externalization, static/dynamic import overlap and large chunks remain."
+    },
+    "browser": {
+      "environment": "Installed Chrome155.0.8059.40; Playwright1.62.1; Node24.19.0 on Windows",
+      "physical_device_test": false,
+      "production_connections": 0,
+      "data": "Bundled demo with backend environment unset; root matrix honest empty canonical and independent checks selected evt-theft demo",
+      "matrix_layouts": 9,
+      "matrix_phase": "Nine initial layouts passed before final narrowly scoped drawer-label correction; final changed transition replay and byte/source review passed after rebuild. Unaffected layout receipts retain earlier revision identity.",
+      "final_independent_receipt": "independent/runtime-review-transition.json",
+      "final_static_receipt": "independent/static-review-repaired.json"
+    }
+  },
+  "failure_history": [
+    {
+      "status": "RESOLVED_ENVIRONMENT",
+      "finding": "Default sandbox denied esbuild ancestor directory reads; same scoped checks passed with task-authorized execution access."
+    },
+    {
+      "status": "RESOLVED_HARNESS",
+      "finding": "Root expected160px rail at1024; inherited breakpoint is768-1023. Receipt and screenshot retained."
+    },
+    {
+      "status": "RESOLVED_HARNESS",
+      "finding": "Independent initial accessible-name punctuation and full-wordmark casing expectations corrected to exact source/served values; original failures retained."
+    },
+    {
+      "status": "FIXED_SOURCE",
+      "finding": "Collapsed desktop state hid mobile drawer labels afterresize, leaving unnamed icon controls. Scope hiding to rail descendant; affected independent replay PASS."
+    },
+    {
+      "status": "RESOLVED_RECEIPT",
+      "finding": "Current manifest restored to LF after Windows text write introduced CRLF; semantic entries and all historical qualified bytes preserved."
+    },
+    {
+      "status": "RESOLVED_RECEIPT",
+      "finding": "Independent unstaged-only final diff was empty after staging; original retained and full HEAD-to-candidate delta independently reviewed in source-diff-final.txt with supplement."
+    }
+  ],
+  "independence": {
+    "implementation_worker": "GPT-6.1 Sol medium",
+    "verification_worker": "GPT-6.1 Sol high",
+    "cursor_review": "NOT EXERCISED; bounded routine logo/CSS delta reviewed independently; no broad or fabricated Cursor review",
+    "rea": "NOT EXERCISED; ordinary source/browser tools sufficient"
+  },
+  "custody": {
+    "temporary_local_folder": "Explicit owner-approved disposable task folder; cleanup only after all durable GitHub byte verifications",
+    "evidence_branch": "codex/mip-logo-b-48px-evidence-20261014",
+    "library_upload": {
+      "status": "BLOCKED",
+      "action": "Fresh18-screenshot helper batch upload preparation",
+      "reason": "Library prepare_uploads is not available in current hosted CLI session",
+      "outcome": "No upload reservation/finalization confirmed; no retry and no Library file success claim"
+    },
+    "project_files": "Durable source and exact evidence retained remotely in authorized repository; no cloud task/environment created"
+  },
+  "release": {
+    "merged": false,
+    "deployed": false,
+    "production_changed": false,
+    "ci": "No unrelated Golden/backend CI requested; skip-ci commits. Local focused frontend receipts only.",
+    "remaining_gate": "Owner review of actual application branding screenshots; any merge/release decision remains separately gated."
+  },
+  "cleanup_at_report_time": "PENDING_REMOTE_BYTE_VERIFICATION; see later cleanup-receipt.json for actual outcome"
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "path": "docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json",
+    "mode": "100644",
+    "bytes": 91578,
+    "sha256": "7c499f74f3d8727a5c3f52d5c14cf2a51b6b19a59e59996145e2c0677c955266",
+    "blob": "f43536cd200c84d7224860016f944623a74f7f2d"
+  },
+  {
+    "path": "public/assets/MIP_B_Square_144px.png",
+    "mode": "100644",
+    "bytes": 25484,
+    "sha256": "a5ec601bfee7f83622a20ad4f7952b8d80c7b6b48267b0b3a78c342a980f5bc4",
+    "blob": "e28a1f365b08ae24f076db852ae80b1309b7ed80"
+  },
+  {
+    "path": "public/assets/MIP_B_Square_48px.png",
+    "mode": "100644",
+    "bytes": 4460,
+    "sha256": "3807ae0394c05919c3785a2f1293c0d88feb16aa3d20c7e38707520b7ccef25f",
+    "blob": "9bf00c82033dbda8c7c49c61b8d2e4a2060695f7"
+  },
+  {
+    "path": "public/assets/MIP_B_Square_96px.png",
+    "mode": "100644",
+    "bytes": 13045,
+    "sha256": "a9b4d19c775d221283f2391b1a32ed1bd4174df82e28914ac5eb57c4f985e101",
+    "blob": "7b0589a987c5bb3281b063dd38af2719d7dd1b78"
+  },
+  {
+    "path": "src/components/InvestigationWorkspace.jsx",
+    "mode": "100644",
+    "bytes": 15571,
+    "sha256": "82320e10dde5005f6f5c77f7999b7c7f97d68a562ce567609d7405ae76fbcf89",
+    "blob": "f3f115ef6affae477f9a95738348678f2fba9146"
+  },
+  {
+    "path": "src/styles/workspace.css",
+    "mode": "100644",
+    "bytes": 24278,
+    "sha256": "a750954e4390c6dd0b746a9f6de0b2d975360058d59ba2d54f1f9040f865c773",
+    "blob": "6b483db3968b6bc61fe6c4378a9080b9a42ea8d6"
+  },
+  {
+    "path": "tests/workspacePresentation.test.mjs",
+    "mode": "100644",
+    "bytes": 14109,
+    "sha256": "ed4e0f2e8a5c3e5db9e7edfe95136fac6bc38ac9d3ad2203e9ad81b23a7f1d67",
+    "blob": "20f9d6f60832353566dde59dc23251c2ef601d6a"
+  }
+]

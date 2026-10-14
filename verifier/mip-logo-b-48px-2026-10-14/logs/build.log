@@ -1,0 +1,23 @@
+
+> media-intelligence-platform@0.0.0 build
+> vite build
+
+X [ERROR] Cannot read directory "../../../../..": Access is denied.
+
+X [ERROR] Could not resolve "C:\\Users\\joseph\\AppData\\Local\\Temp\\MIP-Logo48-20261014-01a13736\\checkout\\vite.config.js"
+
+failed to load config from C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\vite.config.js
+error during build:
+Error: Build failed with 2 errors:
+error: Cannot read directory "../../../../..": Access is denied.
+error: Could not resolve "C:\\Users\\joseph\\AppData\\Local\\Temp\\MIP-Logo48-20261014-01a13736\\checkout\\vite.config.js"
+    at failureErrorWithLog (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1752:15)
+    at C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1211:25
+    at runOnEndCallbacks (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1592:45)
+    at buildResponseToResult (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1209:7)
+    at C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1236:16
+    at responseCallbacks.<computed> (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:886:9)
+    at handleIncomingPacket (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:941:12)
+    at Socket.readFromStdout (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:864:7)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)

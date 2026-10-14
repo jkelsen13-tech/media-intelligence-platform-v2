@@ -1,0 +1,105 @@
+X [ERROR] Cannot read directory "../../../../..": Access is denied.
+
+X [ERROR] Could not resolve "./src/components/InvestigationWorkspace.jsx"
+
+    <stdin>:1:62:
+      1 Γöé ...arch} from './src/components/InvestigationWorkspace.jsx'; export...
+        Γò╡               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+X [ERROR] Could not resolve "./src/graph/GraphViewControls.jsx"
+
+    <stdin>:1:143:
+      1 Γöé ...Controls} from './src/graph/GraphViewControls.jsx'; export {defa...
+        Γò╡                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+X [ERROR] Could not resolve "./src/panels/ArticlePanel.jsx"
+
+    <stdin>:1:213:
+      1 Γöé ...as Article} from './src/panels/ArticlePanel.jsx'; export {defaul...
+        Γò╡                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+X [ERROR] Could not resolve "./src/components/EvidenceTabs.jsx"
+
+    <stdin>:1:276:
+      1 Γöé ... as Tabs} from './src/components/EvidenceTabs.jsx'; export {defa...
+        Γò╡                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+X [ERROR] Could not resolve "./src/panels/PolicyPanel.jsx"
+
+    <stdin>:1:345:
+      1 Γöé ... as Policy} from './src/panels/PolicyPanel.jsx'; export {default...
+        Γò╡                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+X [ERROR] Could not resolve "./src/panels/RelationshipPanel.jsx"
+
+    <stdin>:1:415:
+      1 Γöé ...{default as Relationship} from './src/panels/RelationshipPanel.jsx'
+        Γò╡                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1752
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 7 errors:
+error: Cannot read directory "../../../../..": Access is denied.
+<stdin>:1:62: ERROR: Could not resolve "./src/components/InvestigationWorkspace.jsx"
+<stdin>:1:143: ERROR: Could not resolve "./src/graph/GraphViewControls.jsx"
+<stdin>:1:213: ERROR: Could not resolve "./src/panels/ArticlePanel.jsx"
+<stdin>:1:276: ERROR: Could not resolve "./src/components/EvidenceTabs.jsx"
+...
+    at failureErrorWithLog (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1752:15)
+    at C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1211:25
+    at C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1163:52
+    at buildResponseToResult (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1209:7)
+    at C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:1236:16
+    at responseCallbacks.<computed> (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:886:9)
+    at handleIncomingPacket (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:941:12)
+    at Socket.readFromStdout (C:\Users\joseph\AppData\Local\Temp\MIP-Logo48-20261014-01a13736\checkout\node_modules\esbuild\lib\main.js:864:7)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v24.19.0
+Γ£û tests\convergenceAccessibility.test.mjs (2669.4626ms)
+Γ£ö coverage metrics stay honest stored counts, never a completeness score (142.4266ms)
+Γ£ö coverage disclosure is compact by default and still exposes every stored metric (0.6709ms)
+Γ£ö canvas keeps a usable minimum height instead of collapsing under chrome (3.4777ms)
+Γ£ö zoom controls stay inside the canvas wrap, not over coverage chrome (1.2655ms)
+Γ£ö significant canvas size changes and layoutRevision refit the graph (2.0695ms)
+Γ£ö inspector and legend use overlay or collapse on tablet without changing phone graph semantics (1.008ms)
+Γ£ö graph remains the primary workspace on short viewports (1.1451ms)
+Γ£ö tablet overlay drawer paints above its backdrop, including ancestor stacking contexts (5.3337ms)
+Γ£ö layout fixture mounts the real overlay backdrop and inspector drawers (0.7377ms)
+Γ£ö layout-only change does not invent graph data or alter relationship checks (1.5402ms)
+Γ£ö light presentation applies without a backend flag (10.4624ms)
+Γ£ö five evidence dimensions stay separate; no aggregate score (1.6559ms)
+Γ£ö canonical header ignores a selected child and keeps missing location explicit (1.8233ms)
+Γ£ö graph inspector stays dismissed until explicit select or a different subject (0.676ms)
+Γ£ö optional denied arc metadata is distinguished from unexpected server errors (1.5995ms)
+Γ£ö failed assessment hashing withholds with hash_unavailable and still enforces integrity (1.9321ms)
+Γ£ö graph disposal destroys the renderer before clearing cards (2.7708ms)
+Γ£ö workspace tabs, chronology, honest unavailable, and phosphor are wired (1.3266ms)
+Γ£ö phone drawer Escape dismisses and focus trap wraps (0.9091ms)
+Γ£ö workspace visual frame restores reviewed tokens and rail/inspector layout (1.2313ms)
+Γ£ö shared inspector grid collapses when Graph occupies the dock; World View inspector wraps (1.1142ms)
+Γ£ö raw backend errors stay behind disclosures; fail-closed copy is preserved (0.8718ms)
+Γ£ö shared workspace dates preserve date-only and clock precision (1.0181ms)
+Γ£ö shared workspace dates retain source offset and calendar day (0.3783ms)
+Γ£ö shared workspace dates distinguish malformed values from absent time (0.3817ms)
+Γ£ö canonical date-only context cannot acquire UTC from a selected child (0.8021ms)
+Γä╣ tests 27
+Γä╣ suites 0
+Γä╣ pass 26
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 2714.0043
+
+Γ£û failing tests:
+
+test at tests\convergenceAccessibility.test.mjs:1:1
+Γ£û tests\convergenceAccessibility.test.mjs (2669.4626ms)
+  'test failed'

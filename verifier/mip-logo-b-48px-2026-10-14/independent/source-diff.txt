@@ -1,0 +1,122 @@
+diff --git a/src/components/InvestigationWorkspace.jsx b/src/components/InvestigationWorkspace.jsx
+index 184857d..f3f115e 100644
+--- a/src/components/InvestigationWorkspace.jsx
++++ b/src/components/InvestigationWorkspace.jsx
+@@ -52,9 +52,10 @@ function MobiusMark() {
+   return (
+     <img
+       className="ws-mobius"
+-      src={`${import.meta.env.BASE_URL}assets/mip-mobius-logo.png`}
+-      width="33"
+-      height="33"
++      src={`${import.meta.env.BASE_URL}assets/MIP_B_Square_48px.png`}
++      srcSet={`${import.meta.env.BASE_URL}assets/MIP_B_Square_48px.png 1x, ${import.meta.env.BASE_URL}assets/MIP_B_Square_96px.png 2x, ${import.meta.env.BASE_URL}assets/MIP_B_Square_144px.png 3x`}
++      width="48"
++      height="48"
+       alt=""
+       aria-hidden="true"
+     />
+@@ -63,7 +64,7 @@ function MobiusMark() {
+ 
+ function BrandWordmark() {
+   return (
+-    <span className="ws-brand-wordmark">
++    <span className="ws-brand-wordmark" aria-hidden="true">
+       <span className="ws-brand-mip">MIP</span>
+       <span className="ws-brand-name">Media Intelligence Platform</span>
+     </span>
+@@ -157,7 +158,7 @@ export default function InvestigationWorkspace({
+       data-inspector-state={sharedInspectorHidden ? 'native' : inspectorOpen ? 'open' : 'collapsed'}
+     >
+       <aside className="ws-nav" aria-label="Investigation views">
+-        <div className="ws-nav-brand">
++        <div className="ws-nav-brand" role="img" aria-label="MIP — Media Intelligence Platform">
+           <MobiusMark />
+           {!navCollapsed && <BrandWordmark />}
+         </div>
+@@ -226,7 +227,10 @@ export default function InvestigationWorkspace({
+             }
+           >
+             <div className="ws-drawer-head">
+-              <MobiusMark />
++              <div className="ws-drawer-brand" role="img" aria-label="MIP — Media Intelligence Platform">
++                <MobiusMark />
++                <BrandWordmark />
++              </div>
+               <button type="button" className="ws-icon-btn" aria-label="Close navigation" onClick={closeDrawer}>
+                 <X size={18} />
+               </button>
+diff --git a/src/styles/workspace.css b/src/styles/workspace.css
+index 533386c..7c99c7e 100644
+--- a/src/styles/workspace.css
++++ b/src/styles/workspace.css
+@@ -160,9 +160,9 @@
+ 
+ .ws-mobius {
+   display: block;
+-  width: 33px;
+-  height: 33px;
+-  flex: 0 0 33px;
++  width: 48px;
++  height: 48px;
++  flex: 0 0 48px;
+   object-fit: contain;
+ }
+ 
+@@ -185,6 +185,7 @@
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+   color: var(--text-secondary);
++  overflow-wrap: anywhere;
+ }
+ 
+ .ws-logo {
+@@ -270,7 +271,7 @@
+ .ws-nav-collapsed .ws-nav-active p,
+ .ws-nav-collapsed .ws-nav-active .ws-change-btn,
+ .ws-nav-collapsed .ws-collapse-btn span,
+-.ws-nav-collapsed .ws-brand-wordmark {
++.ws-nav-collapsed .ws-nav .ws-brand-wordmark {
+   display: none;
+ }
+ 
+@@ -665,9 +666,26 @@
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
++  gap: 8px;
+   margin-bottom: 12px;
+ }
+ 
++.ws-drawer-brand {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  min-width: 0;
++}
++
++.ws-drawer-brand .ws-brand-name {
++  display: block;
++}
++
++.ws-drawer-head .ws-icon-btn {
++  flex: 0 0 44px;
++  width: 44px;
++}
++
+ .ws-drawer-nav .ws-nav-links {
+   padding: 0;
+ }
+diff --git a/tests/workspacePresentation.test.mjs b/tests/workspacePresentation.test.mjs
+index 1788888..20f9d6f 100644
+--- a/tests/workspacePresentation.test.mjs
++++ b/tests/workspacePresentation.test.mjs
+@@ -214,7 +214,7 @@ test('workspace visual frame restores reviewed tokens and rail/inspector layout'
+   assert.match(SHELL, /workspace-app/)
+   assert.match(SHELL, /has-native-inspector/)
+   assert.match(SHELL, /ws-mobius/)
+-  assert.match(SHELL, /mip-mobius-logo\.png/)
++  assert.match(SHELL, /MIP_B_Square_48px\.png/)
+   assert.match(SHELL, /import\.meta\.env\.BASE_URL/)
+   assert.match(SHELL, /Media Intelligence Platform/)
+   assert.doesNotMatch(SHELL, /className="ws-logo"/)

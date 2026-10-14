@@ -1,0 +1,103 @@
+{
+  "recorded_at_utc": "2026-10-14T02:24:10.087663+00:00",
+  "review_type": "independent internal static review; not Cursor review or global qualification",
+  "scope": "Approved immutable density PNG integration, 48 CSS pixels, navigation rail/drawer branding, bounded a11y and source-binding preservation",
+  "branch": "codex/mip-logo-b-48px-20261014",
+  "parent_head": "c143cddf0f4bb6e6815b85a179fb1f54d6f3cef1",
+  "parent_tree": "1a7136b74d9d42924acf77277d9b0e72d2415300",
+  "git_history_limit": "Archive-reconstructed checkout lacks predecessor 06833f9 Git object; exact c143 HEAD object/tree verified and parent relationship previously checked via GitHub",
+  "working_diff": [
+    "docs/MIP_LAUNCH_RC_SOURCE_2026-10-03.json",
+    "src/components/InvestigationWorkspace.jsx",
+    "src/styles/workspace.css",
+    "tests/workspacePresentation.test.mjs"
+  ],
+  "untracked": [
+    "public/assets/MIP_B_Square_144px.png",
+    "public/assets/MIP_B_Square_48px.png",
+    "public/assets/MIP_B_Square_96px.png"
+  ],
+  "assets": [
+    {
+      "path": "public/assets/MIP_B_Square_48px.png",
+      "bytes": 4460,
+      "sha256": "3807ae0394c05919c3785a2f1293c0d88feb16aa3d20c7e38707520b7ccef25f",
+      "dimensions": [
+        48,
+        48
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "path": "public/assets/MIP_B_Square_96px.png",
+      "bytes": 13045,
+      "sha256": "a9b4d19c775d221283f2391b1a32ed1bd4174df82e28914ac5eb57c4f985e101",
+      "dimensions": [
+        96,
+        96
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "path": "public/assets/MIP_B_Square_144px.png",
+      "bytes": 25484,
+      "sha256": "a5ec601bfee7f83622a20ad4f7952b8d80c7b6b48267b0b3a78c342a980f5bc4",
+      "dimensions": [
+        144,
+        144
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    }
+  ],
+  "checks": {
+    "original_metadata_fields_preserved": true,
+    "qualified_manifests": {
+      "count": 12,
+      "entries_preserved": true,
+      "file_hashes_match": true
+    },
+    "historical_snapshots": {
+      "count": 20,
+      "entries_preserved": true,
+      "file_hashes_match": true
+    },
+    "current_source_bindings": {
+      "original_count": 370,
+      "current_count": 376,
+      "original_entries_preserved": true,
+      "all_bytes_and_hashes_match": true,
+      "added_paths": [
+        "public/assets/MIP_B_Square_144px.png",
+        "public/assets/MIP_B_Square_48px.png",
+        "public/assets/MIP_B_Square_96px.png",
+        "src/components/InvestigationWorkspace.jsx",
+        "src/styles/workspace.css",
+        "tests/workspacePresentation.test.mjs"
+      ]
+    }
+  },
+  "consequential_findings": [],
+  "accessibility_source_observations": [
+    "Both visible branding containers have role=img and a full accessible label",
+    "Logo image alt is empty and aria-hidden=true; text wordmark is aria-hidden=true to prevent duplicate announcements",
+    "Brand containers remain noninteractive; no new focus target or navigation is introduced",
+    "Mobile drawer close retains existing button/label and a 44px fixed width/minimum height",
+    "Collapsed rail selector is scoped to rail; drawer wordmark remains visible after collapsed-to-mobile resize"
+  ],
+  "cursor_review_assessment": "Fresh Cursor review is not independently warranted for this routine bounded logo/layout/a11y delta alone; this internal review does not clear broader candidate or release gates",
+  "browser_status": "PENDING parent preview-ready notice; no independent runtime claim",
+  "tests": "Parent owns focused test/build/browser matrix; reviewer did not rerun tests",
+  "source_mutations_by_reviewer": 0
+}

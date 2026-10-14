@@ -1,0 +1,17 @@
+{"status":"FAIL","cases":[{"name":"desktop","status":"PASS","checks":24},{"name":"desktop-dpr2","status":"PASS","checks":24},{"name":"desktop-dpr3","status":"PASS","checks":24},{"name":"tablet","status":"FAIL","checks":8}],"error":"existing expanded rail width (tablet)"}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: existing expanded rail width (tablet)
+    at check (file:///C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/verify_logo.mjs:44:41)
+    at file:///C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/verify_logo.mjs:115:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

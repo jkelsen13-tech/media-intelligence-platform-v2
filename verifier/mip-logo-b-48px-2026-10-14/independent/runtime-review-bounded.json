@@ -1,0 +1,169 @@
+{
+  "startedAt": "2026-10-14T02:35:56.619Z",
+  "scope": "Independent actual built App replay; synthetic bundled demo; remote requests aborted; physical devices not exercised",
+  "node": "v24.19.0",
+  "playwright": "1.62.1",
+  "cases": [
+    {
+      "name": "desktop-bounded-independent",
+      "width": 1280,
+      "height": 900,
+      "dpr": 1,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "inherited rail breakpoint retained",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "compact rail72px",
+        "collapse preserves focus",
+        "keyboard focus visible",
+        "rail navigation selects Timeline",
+        "rail navigation returns Graph",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "desktop-bounded-independent-expanded.png",
+          "bytes": 182208,
+          "sha256": "62de99014e017ea595a5c49819556f463c6e912b7d67df57cb6e0a186121a978"
+        },
+        {
+          "file": "desktop-bounded-independent-compact.png",
+          "bytes": 145928,
+          "sha256": "40b678b54825d60852c5a70a349b80697700e1b2078c63dfd16a7d0696a23ffa"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "expandedRail": {
+        "x": 0,
+        "y": 0,
+        "width": 190,
+        "height": 900,
+        "right": 190,
+        "bottom": 900
+      },
+      "compactRail": {
+        "x": 0,
+        "y": 0,
+        "width": 72,
+        "height": 900,
+        "right": 72,
+        "bottom": 900
+      },
+      "canonicalAfter": "evt-theft"
+    },
+    {
+      "name": "narrow-bounded-independent",
+      "width": 320,
+      "height": 740,
+      "dpr": 3,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "drawer initially focuses Close",
+        "Close has44px target",
+        "Close target clear at9 hit points",
+        "Tab wraps to first control",
+        "Shift Tab wraps to last control",
+        "Escape restores trigger focus",
+        "drawer navigation selects Timeline",
+        "drawer navigation returns Graph",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "narrow-bounded-independent-closed.png",
+          "bytes": 187749,
+          "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+        },
+        {
+          "file": "narrow-bounded-independent-drawer.png",
+          "bytes": 82875,
+          "sha256": "f9a5ed6df5519e59a9b5ef1797078d0bb90b6b16011a8b1035c4776df619aa2d"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_144px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "canonicalAfter": "evt-theft"
+    }
+  ],
+  "status": "PASS",
+  "chrome": "155.0.8059.40",
+  "finishedAt": "2026-10-14T02:36:04.370Z"
+}

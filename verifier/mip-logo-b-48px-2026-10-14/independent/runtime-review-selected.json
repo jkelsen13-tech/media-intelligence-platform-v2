@@ -1,0 +1,141 @@
+{
+  "startedAt": "2026-10-14T02:33:29.406Z",
+  "scope": "Independent actual built App replay; synthetic bundled demo; remote requests aborted; physical devices not exercised",
+  "node": "v24.19.0",
+  "playwright": "1.62.1",
+  "cases": [
+    {
+      "name": "desktop-selected-independent",
+      "width": 1280,
+      "height": 900,
+      "dpr": 1,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive"
+      ],
+      "screenshots": [
+        {
+          "file": "desktop-selected-independent-failure.png",
+          "bytes": 194178,
+          "sha256": "a2f625783eb0436289e7320e73602756d9b186432e839fc5fe3a81296830f2d2"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "wordmark retains full name"
+    },
+    {
+      "name": "tablet-selected-independent",
+      "width": 768,
+      "height": 900,
+      "dpr": 2,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive"
+      ],
+      "screenshots": [
+        {
+          "file": "tablet-selected-independent-failure.png",
+          "bytes": 333981,
+          "sha256": "386553950eff4af73757e58675526f885a9f5d04ed3a2b736648e329b782606b"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "wordmark retains full name"
+    },
+    {
+      "name": "narrow-selected-independent",
+      "width": 320,
+      "height": 740,
+      "dpr": 3,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive"
+      ],
+      "screenshots": [
+        {
+          "file": "narrow-selected-independent-closed.png",
+          "bytes": 187749,
+          "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+        },
+        {
+          "file": "narrow-selected-independent-failure.png",
+          "bytes": 82036,
+          "sha256": "063227d092596d0d92221ca4a103c19da46b0dee819abd5edbdf6145ad956c0f"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "wordmark retains full name"
+    },
+    {
+      "name": "landscape-selected-independent",
+      "width": 740,
+      "height": 390,
+      "dpr": 2,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive"
+      ],
+      "screenshots": [
+        {
+          "file": "landscape-selected-independent-closed.png",
+          "bytes": 91900,
+          "sha256": "8b81e3911afc1748df54bca97188a6be7fbd8162e135eb29566b6a3703a57c2e"
+        },
+        {
+          "file": "landscape-selected-independent-failure.png",
+          "bytes": 71037,
+          "sha256": "addec40c72aaef479afa27206fb655cda9b78054868b868af66bf41a79642a98"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "wordmark retains full name"
+    }
+  ],
+  "status": "FAIL",
+  "chrome": "155.0.8059.40",
+  "finishedAt": "2026-10-14T02:33:41.741Z"
+}

@@ -1,0 +1,296 @@
+[
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-compact.png",
+    "local_path": "remote-evidence\\matrix\\desktop-compact.png",
+    "bytes": 102095,
+    "sha256": "18d019b674b04cdc939a0f8c8b83805f952d99be1c9fef6b2b59244db9bd8ee9"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-dpr2-compact.png",
+    "local_path": "remote-evidence\\matrix\\desktop-dpr2-compact.png",
+    "bytes": 345500,
+    "sha256": "066049e378d983478088136ec0b77caa5e082a3323e59438671031c96ac43dc9"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-dpr2-expanded.png",
+    "local_path": "remote-evidence\\matrix\\desktop-dpr2-expanded.png",
+    "bytes": 393201,
+    "sha256": "683c1a1dc9bcae98d7f08c0435c1be9f462bc10d9afcccc7ab5797f14c793170"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-dpr3-compact.png",
+    "local_path": "remote-evidence\\matrix\\desktop-dpr3-compact.png",
+    "bytes": 576744,
+    "sha256": "b63d14ac60fa4c28c51e1b6eeb529d776dc77ef5fe3b1351f831c006c49d49c8"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-dpr3-expanded.png",
+    "local_path": "remote-evidence\\matrix\\desktop-dpr3-expanded.png",
+    "bytes": 654314,
+    "sha256": "5cf9549e3c7346d4d02d7fea0f17e30b359720f3703befec9e5665601a8dd300"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/desktop-expanded.png",
+    "local_path": "remote-evidence\\matrix\\desktop-expanded.png",
+    "bytes": 116489,
+    "sha256": "bac201cb2b88b20376ae2d2dc970fc4392ce0e87b9d5d74c2eb2ecba7e4347ad"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-landscape-closed.png",
+    "local_path": "remote-evidence\\matrix\\mobile-landscape-closed.png",
+    "bytes": 73152,
+    "sha256": "0edbd7b655b8ce3b32db8560cf4bda6dd5f1b609c4f326dc52a23c5afa501e7c"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-landscape-drawer.png",
+    "local_path": "remote-evidence\\matrix\\mobile-landscape-drawer.png",
+    "bytes": 64336,
+    "sha256": "a4aea1391e6b2fbe8ca7a816d6fd13614376b85a0582222f15fb071b73bd98fc"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-narrow-closed.png",
+    "local_path": "remote-evidence\\matrix\\mobile-narrow-closed.png",
+    "bytes": 207975,
+    "sha256": "48f4bfa5961a78a64ff4b03209315a332a13e6f9f24529d4435b91d8c746583f"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-narrow-drawer.png",
+    "local_path": "remote-evidence\\matrix\\mobile-narrow-drawer.png",
+    "bytes": 88492,
+    "sha256": "e27cc68a57eac7d4fef04f0a478145779940cf2ff8cce4bf3bc64bf6c8846b21"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-portrait-closed.png",
+    "local_path": "remote-evidence\\matrix\\mobile-portrait-closed.png",
+    "bytes": 155380,
+    "sha256": "c98790ea371ff4f7f325bdbfad51f43151b430c28be56bceb64efe507f16436f"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-portrait-drawer.png",
+    "local_path": "remote-evidence\\matrix\\mobile-portrait-drawer.png",
+    "bytes": 76326,
+    "sha256": "1c110051e3a0a6fca0e36eea7646fbc52fd7b807b6b7f6a82e6ef74f82f430db"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-wide-landscape-compact.png",
+    "local_path": "remote-evidence\\matrix\\mobile-wide-landscape-compact.png",
+    "bytes": 106011,
+    "sha256": "45ec3b48348895e5b7c47fd34db585b21c807e23e51355c912a168efe59238db"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/mobile-wide-landscape-expanded.png",
+    "local_path": "remote-evidence\\matrix\\mobile-wide-landscape-expanded.png",
+    "bytes": 144498,
+    "sha256": "066fcaa0751ea180bf15a0229ce125badb3ce2a7c4021e5fe64995acaa69bc4a"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/tablet-compact.png",
+    "local_path": "remote-evidence\\matrix\\tablet-compact.png",
+    "bytes": 96070,
+    "sha256": "08862391f71f260e86a9366e497a6bd70c1faaefbab1a6140f2415302d4a793d"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/tablet-expanded.png",
+    "local_path": "remote-evidence\\matrix\\tablet-expanded.png",
+    "bytes": 105151,
+    "sha256": "5bddd8d2376f9946004f8f2787a4f059a176af2878b2c86b0b147d8f7bf4acdc"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/tablet-failure.png",
+    "local_path": "remote-evidence\\matrix\\tablet-failure.png",
+    "bytes": 105151,
+    "sha256": "5bddd8d2376f9946004f8f2787a4f059a176af2878b2c86b0b147d8f7bf4acdc"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/tablet-narrow-compact.png",
+    "local_path": "remote-evidence\\matrix\\tablet-narrow-compact.png",
+    "bytes": 64768,
+    "sha256": "7a2e9140fe675d1fa853a1156f75a8cb364260bc5316212deb1c340d39281a44"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/matrix/tablet-narrow-expanded.png",
+    "local_path": "remote-evidence\\matrix\\tablet-narrow-expanded.png",
+    "bytes": 79056,
+    "sha256": "08edca6b5d36982767b57717b987367ecfc9aadd56a3269fab18afe94d817f06"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-bounded-independent-compact.png",
+    "local_path": "remote-evidence\\independent\\desktop-bounded-independent-compact.png",
+    "bytes": 145928,
+    "sha256": "40b678b54825d60852c5a70a349b80697700e1b2078c63dfd16a7d0696a23ffa"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-bounded-independent-expanded.png",
+    "local_path": "remote-evidence\\independent\\desktop-bounded-independent-expanded.png",
+    "bytes": 182208,
+    "sha256": "62de99014e017ea595a5c49819556f463c6e912b7d67df57cb6e0a186121a978"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-final-independent-compact.png",
+    "local_path": "remote-evidence\\independent\\desktop-final-independent-compact.png",
+    "bytes": 163012,
+    "sha256": "85cb6b2aeea356c17a867bbe35bd3b4b891c6041706e5acf274e9326871fd724"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-final-independent-drawer.png",
+    "local_path": "remote-evidence\\independent\\desktop-final-independent-drawer.png",
+    "bytes": 12486,
+    "sha256": "1c4aac962bcf4906a289afe70f0f76ebbde08c8478048245974932c6f9f76cb5"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-final-independent-expanded.png",
+    "local_path": "remote-evidence\\independent\\desktop-final-independent-expanded.png",
+    "bytes": 160863,
+    "sha256": "ec8ff9a544d0ffd432b40b3a008f3557ffa69070ab41dc2aa20cb4cacde80b7a"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-final-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\desktop-final-independent-failure.png",
+    "bytes": 12601,
+    "sha256": "992c81ff12a15695731f2d694d9c775f7009134d55a8eeb150739db5cb496cd3"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\desktop-independent-failure.png",
+    "bytes": 116489,
+    "sha256": "bac201cb2b88b20376ae2d2dc970fc4392ce0e87b9d5d74c2eb2ecba7e4347ad"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/desktop-selected-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\desktop-selected-independent-failure.png",
+    "bytes": 194178,
+    "sha256": "a2f625783eb0436289e7320e73602756d9b186432e839fc5fe3a81296830f2d2"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-final-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\landscape-final-independent-closed.png",
+    "bytes": 91900,
+    "sha256": "8b81e3911afc1748df54bca97188a6be7fbd8162e135eb29566b6a3703a57c2e"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-final-independent-drawer.png",
+    "local_path": "remote-evidence\\independent\\landscape-final-independent-drawer.png",
+    "bytes": 68951,
+    "sha256": "13c89a86f6e2dc7068f0b3f53e8f29ebf36582d74d89d383db485018c0a16bf6"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\landscape-independent-closed.png",
+    "bytes": 73152,
+    "sha256": "0edbd7b655b8ce3b32db8560cf4bda6dd5f1b609c4f326dc52a23c5afa501e7c"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\landscape-independent-failure.png",
+    "bytes": 64336,
+    "sha256": "a4aea1391e6b2fbe8ca7a816d6fd13614376b85a0582222f15fb071b73bd98fc"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-selected-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\landscape-selected-independent-closed.png",
+    "bytes": 91900,
+    "sha256": "8b81e3911afc1748df54bca97188a6be7fbd8162e135eb29566b6a3703a57c2e"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/landscape-selected-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\landscape-selected-independent-failure.png",
+    "bytes": 71037,
+    "sha256": "addec40c72aaef479afa27206fb655cda9b78054868b868af66bf41a79642a98"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-bounded-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\narrow-bounded-independent-closed.png",
+    "bytes": 187749,
+    "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-bounded-independent-drawer.png",
+    "local_path": "remote-evidence\\independent\\narrow-bounded-independent-drawer.png",
+    "bytes": 82875,
+    "sha256": "f9a5ed6df5519e59a9b5ef1797078d0bb90b6b16011a8b1035c4776df619aa2d"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-final-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\narrow-final-independent-closed.png",
+    "bytes": 187749,
+    "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-final-independent-drawer.png",
+    "local_path": "remote-evidence\\independent\\narrow-final-independent-drawer.png",
+    "bytes": 82875,
+    "sha256": "f9a5ed6df5519e59a9b5ef1797078d0bb90b6b16011a8b1035c4776df619aa2d"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\narrow-independent-closed.png",
+    "bytes": 207975,
+    "sha256": "48f4bfa5961a78a64ff4b03209315a332a13e6f9f24529d4435b91d8c746583f"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\narrow-independent-failure.png",
+    "bytes": 88492,
+    "sha256": "e27cc68a57eac7d4fef04f0a478145779940cf2ff8cce4bf3bc64bf6c8846b21"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-selected-independent-closed.png",
+    "local_path": "remote-evidence\\independent\\narrow-selected-independent-closed.png",
+    "bytes": 187749,
+    "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/narrow-selected-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\narrow-selected-independent-failure.png",
+    "bytes": 82036,
+    "sha256": "063227d092596d0d92221ca4a103c19da46b0dee819abd5edbdf6145ad956c0f"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/repaired-transition-compact.png",
+    "local_path": "remote-evidence\\independent\\repaired-transition-compact.png",
+    "bytes": 171612,
+    "sha256": "7a738d3f08e7735110f491854ba289e9216948ec0859dceb815dfad7c951e38f"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/repaired-transition-drawer.png",
+    "local_path": "remote-evidence\\independent\\repaired-transition-drawer.png",
+    "bytes": 17325,
+    "sha256": "d2ec0e1a61b199a532d05f341380c4b148bb5f6c100be2156f06c07585523bff"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/repaired-transition-expanded.png",
+    "local_path": "remote-evidence\\independent\\repaired-transition-expanded.png",
+    "bytes": 167136,
+    "sha256": "fe9022533c3291c77cca85891381205e567d324c6d1c3262d38efacd5aac39fd"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/repaired-transition-mobile-closed.png",
+    "local_path": "remote-evidence\\independent\\repaired-transition-mobile-closed.png",
+    "bytes": 32825,
+    "sha256": "2000ffba0ff96244547296957d10cbd4e341fee53996b94d6f7071f280b99064"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/tablet-final-independent-compact.png",
+    "local_path": "remote-evidence\\independent\\tablet-final-independent-compact.png",
+    "bytes": 295552,
+    "sha256": "efbdbb98529a0423dd2667828aa271d042fd7fe4ed32d25fa5a8e401967dc695"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/tablet-final-independent-expanded.png",
+    "local_path": "remote-evidence\\independent\\tablet-final-independent-expanded.png",
+    "bytes": 335342,
+    "sha256": "a6e803296465b92ae6adb43efb04a08bc48f730b493c1f2d104056460e72e225"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/tablet-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\tablet-independent-failure.png",
+    "bytes": 259950,
+    "sha256": "6a96716cd6e046dcfcd0f49c6b06cbc8dbc6260f8a7cd61a3ee5c2b964d22015"
+  },
+  {
+    "path": "verifier/mip-logo-b-48px-2026-10-14/independent/tablet-selected-independent-failure.png",
+    "local_path": "remote-evidence\\independent\\tablet-selected-independent-failure.png",
+    "bytes": 333981,
+    "sha256": "386553950eff4af73757e58675526f885a9f5d04ed3a2b736648e329b782606b"
+  }
+]

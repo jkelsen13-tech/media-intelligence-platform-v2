@@ -1,0 +1,24 @@
+{
+  "recorded_at_utc": "2026-10-14T02:46:12.903892+00:00",
+  "purpose": "Correct evidence capture omission; no source or runtime change",
+  "empty_file_preserved": {
+    "path": "source-diff-repaired.txt",
+    "bytes": 0,
+    "reason": "git diff without HEAD inspected only unstaged changes after final source had been staged; it does not contain reviewed code"
+  },
+  "complete_source_diff": {
+    "path": "source-diff-final.txt",
+    "command": "git diff HEAD -- src/styles/workspace.css src/components/InvestigationWorkspace.jsx tests/workspacePresentation.test.mjs",
+    "bytes": 4088,
+    "sha256": "692b7f7f32972a60ee850aec76546e5582b7da8c00750f339e44678a9fcc84e5"
+  },
+  "reviewed_delta": "48px immutable 1x/2x/3x mark, full named noninteractive brand, decorative child hiding, drawer wordmark/Close sizing, rail-only collapsed wordmark and navigation-label hiding, bounded wrapping and stale asset-name test expectation",
+  "confirmation": "Complete final three-file HEAD delta read and reviewed; no new consequential finding; final CSS and current manifest hashes unchanged from repaired source/runtime receipt",
+  "parent_reported_remote_candidate": {
+    "commit": "310352b455ce58c255c01ec51014a49f1b50c5f9",
+    "tree": "3a367585a20a9dc6ff07a151e786ba1aba548ef9",
+    "verification_scope": "Supplied by parent; this supplement independently verifies local reviewed source bytes only"
+  },
+  "runtime_repeated": false,
+  "source_edits_by_reviewer": 0
+}

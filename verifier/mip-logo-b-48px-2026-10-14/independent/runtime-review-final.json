@@ -1,0 +1,362 @@
+{
+  "startedAt": "2026-10-14T02:34:05.556Z",
+  "scope": "Independent actual built App replay; synthetic bundled demo; remote requests aborted; physical devices not exercised",
+  "node": "v24.19.0",
+  "playwright": "1.62.1",
+  "cases": [
+    {
+      "name": "desktop-final-independent",
+      "width": 1280,
+      "height": 900,
+      "dpr": 1,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "inherited rail breakpoint retained",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "compact rail72px",
+        "collapse preserves focus",
+        "keyboard focus visible",
+        "rail navigation selects Timeline",
+        "rail navigation returns Graph",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "drawer initially focuses Close",
+        "Close has44px target",
+        "Close target clear at9 hit points",
+        "Tab wraps to first control",
+        "Shift Tab wraps to last control",
+        "Escape restores trigger focus"
+      ],
+      "screenshots": [
+        {
+          "file": "desktop-final-independent-expanded.png",
+          "bytes": 160863,
+          "sha256": "ec8ff9a544d0ffd432b40b3a008f3557ffa69070ab41dc2aa20cb4cacde80b7a"
+        },
+        {
+          "file": "desktop-final-independent-compact.png",
+          "bytes": 163012,
+          "sha256": "85cb6b2aeea356c17a867bbe35bd3b4b891c6041706e5acf274e9326871fd724"
+        },
+        {
+          "file": "desktop-final-independent-drawer.png",
+          "bytes": 12486,
+          "sha256": "1c4aac962bcf4906a289afe70f0f76ebbde08c8478048245974932c6f9f76cb5"
+        },
+        {
+          "file": "desktop-final-independent-failure.png",
+          "bytes": 12601,
+          "sha256": "992c81ff12a15695731f2d694d9c775f7009134d55a8eeb150739db5cb496cd3"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "expandedRail": {
+        "x": 0,
+        "y": 0,
+        "width": 190,
+        "height": 900,
+        "right": 190,
+        "bottom": 900
+      },
+      "compactRail": {
+        "x": 0,
+        "y": 0,
+        "width": 72,
+        "height": 900,
+        "right": 72,
+        "bottom": 900
+      },
+      "failure": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Investigation navigation', exact: true }).getByRole('button', { name: 'Timeline', exact: true })\u001b[22m\n"
+    },
+    {
+      "name": "tablet-final-independent",
+      "width": 768,
+      "height": 900,
+      "dpr": 2,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "inherited rail breakpoint retained",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "compact rail72px",
+        "collapse preserves focus",
+        "keyboard focus visible",
+        "rail navigation selects Timeline",
+        "rail navigation returns Graph",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "tablet-final-independent-expanded.png",
+          "bytes": 335342,
+          "sha256": "a6e803296465b92ae6adb43efb04a08bc48f730b493c1f2d104056460e72e225"
+        },
+        {
+          "file": "tablet-final-independent-compact.png",
+          "bytes": 295552,
+          "sha256": "efbdbb98529a0423dd2667828aa271d042fd7fe4ed32d25fa5a8e401967dc695"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_96px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_96px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "expandedRail": {
+        "x": 0,
+        "y": 0,
+        "width": 160,
+        "height": 900,
+        "right": 160,
+        "bottom": 900
+      },
+      "compactRail": {
+        "x": 0,
+        "y": 0,
+        "width": 72,
+        "height": 900,
+        "right": 72,
+        "bottom": 900
+      },
+      "canonicalAfter": "evt-theft"
+    },
+    {
+      "name": "narrow-final-independent",
+      "width": 320,
+      "height": 740,
+      "dpr": 3,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "drawer initially focuses Close",
+        "Close has44px target",
+        "Close target clear at9 hit points",
+        "Tab wraps to first control",
+        "Shift Tab wraps to last control",
+        "Escape restores trigger focus",
+        "drawer navigation selects Timeline",
+        "drawer navigation returns Graph",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "narrow-final-independent-closed.png",
+          "bytes": 187749,
+          "sha256": "b36301c281cd4987f32d6351d5a573cafd108871dd40b2e9217e9de402029923"
+        },
+        {
+          "file": "narrow-final-independent-drawer.png",
+          "bytes": 82875,
+          "sha256": "f9a5ed6df5519e59a9b5ef1797078d0bb90b6b16011a8b1035c4776df619aa2d"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_144px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "canonicalAfter": "evt-theft"
+    },
+    {
+      "name": "landscape-final-independent",
+      "width": 740,
+      "height": 390,
+      "dpr": 2,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "drawer initially focuses Close",
+        "Close has44px target",
+        "Close target clear at9 hit points",
+        "Tab wraps to first control",
+        "Shift Tab wraps to last control",
+        "Escape restores trigger focus",
+        "drawer navigation selects Timeline",
+        "drawer navigation returns Graph",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "landscape-final-independent-closed.png",
+          "bytes": 91900,
+          "sha256": "8b81e3911afc1748df54bca97188a6be7fbd8162e135eb29566b6a3703a57c2e"
+        },
+        {
+          "file": "landscape-final-independent-drawer.png",
+          "bytes": 68951,
+          "sha256": "13c89a86f6e2dc7068f0b3f53e8f29ebf36582d74d89d383db485018c0a16bf6"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_96px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "canonicalAfter": "evt-theft"
+    }
+  ],
+  "status": "FAIL",
+  "chrome": "155.0.8059.40",
+  "finishedAt": "2026-10-14T02:34:52.119Z"
+}

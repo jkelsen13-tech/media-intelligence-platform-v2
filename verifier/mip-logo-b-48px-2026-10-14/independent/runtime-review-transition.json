@@ -1,0 +1,149 @@
+{
+  "startedAt": "2026-10-14T02:39:15.744Z",
+  "scope": "Independent actual built App replay; synthetic bundled demo; remote requests aborted; physical devices not exercised",
+  "node": "v24.19.0",
+  "playwright": "1.62.1",
+  "cases": [
+    {
+      "name": "repaired-transition",
+      "width": 1280,
+      "height": 900,
+      "dpr": 1,
+      "checks": [
+        "bundled demo canonical subject selected",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "inherited rail breakpoint retained",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "compact rail72px",
+        "collapse preserves focus",
+        "keyboard focus visible",
+        "rail navigation selects Timeline",
+        "rail navigation returns Graph",
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility",
+        "single named graphic semantics",
+        "brand remains noninteractive",
+        "wordmark retains full name",
+        "wordmark no horizontal clipping",
+        "drawer initially focuses Close",
+        "Close has44px target",
+        "Close target clear at9 hit points",
+        "Tab wraps to first control",
+        "Shift Tab wraps to last control",
+        "Escape restores trigger focus",
+        "drawer navigation selects Timeline",
+        "drawer navigation returns Graph",
+        "collapsed rail to mobile drawer keeps full wordmark visible",
+        "canonical investigation preserved",
+        "no horizontal document overflow",
+        "no App page errors"
+      ],
+      "screenshots": [
+        {
+          "file": "repaired-transition-expanded.png",
+          "bytes": 167136,
+          "sha256": "fe9022533c3291c77cca85891381205e567d324c6d1c3262d38efacd5aac39fd"
+        },
+        {
+          "file": "repaired-transition-compact.png",
+          "bytes": 171612,
+          "sha256": "7a738d3f08e7735110f491854ba289e9216948ec0859dceb815dfad7c951e38f"
+        },
+        {
+          "file": "repaired-transition-mobile-closed.png",
+          "bytes": 32825,
+          "sha256": "2000ffba0ff96244547296957d10cbd4e341fee53996b94d6f7071f280b99064"
+        },
+        {
+          "file": "repaired-transition-drawer.png",
+          "bytes": 17325,
+          "sha256": "d2ec0e1a61b199a532d05f341380c4b148bb5f6c100be2156f06c07585523bff"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "PASS",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "canonicalBefore": "evt-theft",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "brandObservations": [
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        },
+        {
+          "src": "http://127.0.0.1:4178/media-intelligence-platform-v2/assets/MIP_B_Square_48px.png",
+          "w": 48,
+          "h": 48,
+          "flexBasis": "48px",
+          "objectFit": "contain",
+          "imageRendering": "auto",
+          "alt": "",
+          "ariaHidden": "true",
+          "widthAttribute": "48",
+          "heightAttribute": "48"
+        }
+      ],
+      "expandedRail": {
+        "x": 0,
+        "y": 0,
+        "width": 190,
+        "height": 900,
+        "right": 190,
+        "bottom": 900
+      },
+      "compactRail": {
+        "x": 0,
+        "y": 0,
+        "width": 72,
+        "height": 900,
+        "right": 72,
+        "bottom": 900
+      },
+      "canonicalAfter": "evt-theft"
+    }
+  ],
+  "status": "PASS",
+  "chrome": "155.0.8059.40",
+  "finishedAt": "2026-10-14T02:39:21.691Z"
+}

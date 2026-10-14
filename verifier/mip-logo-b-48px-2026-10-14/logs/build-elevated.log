@@ -1,0 +1,78 @@
+
+> media-intelligence-platform@0.0.0 build
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/temporalAssessment.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+Γ£ô 7369 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/data/demoData.js is dynamically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/arcGroupedTimeline.js but also statically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/supabase.js, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/timelineDedup.js is dynamically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/arcGroupedTimeline.js but also statically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/supabase.js, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/supabase.js is dynamically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/arcGroupedTimeline.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/explanationReadPath.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/phase3ReadPath.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/phase3ReadPath.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/sourceComparisonReadPath.js but also statically imported by C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/App.jsx, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/auth.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/chronologyBackend.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/evidenceBackend.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/investigationSurface.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/mipBackend.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/newsBackend.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/publicDataBackend.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/spatialProjection.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/themeFlag.js, C:/Users/joseph/AppData/Local/Temp/MIP-Logo48-20261014-01a13736/checkout/src/lib/workspacePresentation.js, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/licenses/maplibre/@mapbox/point-geometry/LICENSE                    0.73 kB
+dist/licenses/maplibre/maplibre-gl/earcut/LICENSE                        0.74 kB
+dist/licenses/maplibre/potpack/LICENSE                                   0.74 kB
+dist/licenses/maplibre/kdbush/LICENSE                                    0.75 kB
+dist/licenses/maplibre/quickselect/LICENSE                               0.75 kB
+dist/licenses/maplibre/tinyqueue/LICENSE                                 0.75 kB
+dist/index.html                                                          0.86 kB Γöé gzip:     0.50 kB
+dist/licenses/maplibre/@deck.gl/core/LICENSE                             1.06 kB
+dist/licenses/maplibre/@deck.gl/layers/LICENSE                           1.06 kB
+dist/licenses/maplibre/@deck.gl/maplibre/LICENSE                         1.06 kB
+dist/licenses/maplibre/@mapbox/jsonlint-lines-primitives/LICENSE         1.07 kB
+dist/licenses/maplibre/minimist/LICENSE                                  1.07 kB
+dist/licenses/maplibre/protocol-buffers-schema/LICENSE                   1.08 kB
+dist/licenses/maplibre/resolve-protobuf-schema/LICENSE                   1.08 kB
+dist/licenses/maplibre/mjolnir.js/LICENSE                                1.08 kB
+dist/licenses/maplibre/gl-matrix/LICENSE.md                              1.08 kB
+dist/licenses/maplibre/json-stringify-pretty-compact/LICENSE             1.11 kB
+dist/licenses/maplibre/@types/geojson/LICENSE                            1.14 kB
+dist/licenses/maplibre/@mapbox/tiny-sdf/LICENSE.txt                      1.29 kB Γöé gzip:     0.71 kB
+dist/licenses/maplibre/@mapbox/unitbezier/LICENSE                        1.39 kB
+dist/licenses/maplibre/pbf/LICENSE                                       1.47 kB
+dist/licenses/maplibre/@mapbox/vector-tile/LICENSE.txt                   1.50 kB Γöé gzip:     0.81 kB
+dist/licenses/maplibre/@webgpu/types/LICENSE                             1.50 kB
+dist/licenses/maplibre/@luma.gl/core/LICENSE                             1.86 kB
+dist/licenses/maplibre/@luma.gl/engine/LICENSE                           1.86 kB
+dist/licenses/maplibre/@luma.gl/shadertools/LICENSE                      1.86 kB
+dist/licenses/maplibre/@luma.gl/webgl/LICENSE                            1.86 kB
+dist/licenses/maplibre/@luma.gl/gpgpu/LICENSE                            1.86 kB
+dist/licenses/maplibre/@luma.gl/webgpu/LICENSE                           1.86 kB
+dist/licenses/maplibre/@maplibre/geojson-vt/LICENSE                      1.91 kB
+dist/licenses/maplibre/murmurhash-js/README.md                           1.94 kB
+dist/licenses/maplibre/@maplibre/vt-pbf/LICENSE                          2.79 kB
+dist/world-view-bundle-graph.json                                        3.68 kB Γöé gzip:     0.54 kB
+dist/licenses/maplibre/maplibre-gl/LICENSE.txt                           5.98 kB Γöé gzip:     1.54 kB
+dist/licenses/maplibre/@maplibre/maplibre-gl-style-spec/LICENSE.txt      5.98 kB Γöé gzip:     1.54 kB
+dist/licenses/maplibre/inventory.json                                    9.89 kB Γöé gzip:     3.22 kB
+dist/licenses/maplibre/@maplibre/mlt/LICENSE.txt                        11.98 kB Γöé gzip:     4.42 kB
+dist/assets/maplibre-gl-worker-q9LE5wrS.js                             471.07 kB
+dist/assets/WorldViewBillboardPrototype-z7VNIdpH.css                     2.65 kB Γöé gzip:     0.88 kB
+dist/assets/cesium-globe-CGNOqgEs.css                                   24.45 kB Γöé gzip:     5.49 kB
+dist/assets/map-stack-DvulA2N7.css                                      83.04 kB Γöé gzip:    10.52 kB
+dist/assets/index-C-gmqqUJ.css                                         197.87 kB Γöé gzip:    33.76 kB
+dist/assets/worldViewBillboardLayout-g27mZxQ5.js                        12.38 kB Γöé gzip:     4.56 kB
+dist/assets/WorldViewBillboardPrototype-lENyHb46.js                     24.63 kB Γöé gzip:     9.29 kB
+dist/assets/index-DqjIuWU1.js                                           44.60 kB Γöé gzip:    14.45 kB
+dist/assets/worldViewCesiumEllipsoidRendererAdapter-j9WcaukM.js         48.29 kB Γöé gzip:    17.48 kB
+dist/assets/server.browser-Dhybiosi.js                                  70.06 kB Γöé gzip:    22.82 kB
+dist/assets/index-x8gphiJ6.js                                          733.22 kB Γöé gzip:   269.63 kB
+dist/assets/index-CUKR1Rz8.js                                        1,817.45 kB Γöé gzip:   544.71 kB
+dist/assets/map-stack-CmZE4Qtc.js                                    1,991.78 kB Γöé gzip:   529.78 kB
+dist/assets/cesium-globe-DTDRnoxI.js                                 4,195.57 kB Γöé gzip: 1,089.04 kB
+dist/assets/index.es-BD_iSvml.js                                     4,975.62 kB Γöé gzip: 1,043.05 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[vite-plugin-static-copy] Copied 4 items.
+Γ£ô built in 1m 44s

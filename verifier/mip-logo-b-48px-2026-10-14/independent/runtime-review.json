@@ -1,0 +1,125 @@
+{
+  "startedAt": "2026-10-14T02:31:49.578Z",
+  "scope": "Independent actual built App replay; synthetic bundled demo; remote requests aborted; physical devices not exercised",
+  "node": "v24.19.0",
+  "playwright": "1.62.1",
+  "cases": [
+    {
+      "name": "desktop-independent",
+      "width": 1280,
+      "height": 900,
+      "dpr": 1,
+      "checks": [
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility"
+      ],
+      "screenshots": [
+        {
+          "file": "desktop-independent-failure.png",
+          "bytes": 116489,
+          "sha256": "bac201cb2b88b20376ae2d2dc970fc4392ce0e87b9d5d74c2eb2ecba7e4347ad"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "single named graphic semantics"
+    },
+    {
+      "name": "tablet-independent",
+      "width": 768,
+      "height": 900,
+      "dpr": 2,
+      "checks": [
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility"
+      ],
+      "screenshots": [
+        {
+          "file": "tablet-independent-failure.png",
+          "bytes": 259950,
+          "sha256": "6a96716cd6e046dcfcd0f49c6b06cbc8dbc6260f8a7cd61a3ee5c2b964d22015"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "single named graphic semantics"
+    },
+    {
+      "name": "narrow-independent",
+      "width": 320,
+      "height": 740,
+      "dpr": 3,
+      "checks": [
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility"
+      ],
+      "screenshots": [
+        {
+          "file": "narrow-independent-closed.png",
+          "bytes": 207975,
+          "sha256": "48f4bfa5961a78a64ff4b03209315a332a13e6f9f24529d4435b91d8c746583f"
+        },
+        {
+          "file": "narrow-independent-failure.png",
+          "bytes": 88492,
+          "sha256": "e27cc68a57eac7d4fef04f0a478145779940cf2ff8cce4bf3bc64bf6c8846b21"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "single named graphic semantics"
+    },
+    {
+      "name": "landscape-independent",
+      "width": 740,
+      "height": 390,
+      "dpr": 2,
+      "checks": [
+        "fixed48 CSS-pixel reserved square",
+        "normal image smoothing and contain",
+        "correct density image selected",
+        "served density body exact immutable hash",
+        "image fits branding bounds",
+        "decorative child image hidden from accessibility"
+      ],
+      "screenshots": [
+        {
+          "file": "landscape-independent-closed.png",
+          "bytes": 73152,
+          "sha256": "0edbd7b655b8ce3b32db8560cf4bda6dd5f1b609c4f326dc52a23c5afa501e7c"
+        },
+        {
+          "file": "landscape-independent-failure.png",
+          "bytes": 64336,
+          "sha256": "a4aea1391e6b2fbe8ca7a816d6fd13614376b85a0582222f15fb071b73bd98fc"
+        }
+      ],
+      "errors": [],
+      "blockedRequests": [],
+      "status": "FAIL",
+      "accessibilitySnapshot": "- img \"MIP — Media Intelligence Platform\"",
+      "failure": "single named graphic semantics"
+    }
+  ],
+  "status": "FAIL",
+  "chrome": "155.0.8059.40",
+  "finishedAt": "2026-10-14T02:32:00.610Z"
+}
